@@ -61,20 +61,23 @@ def run(pes_rlst, spc_rlst,
         # Print what is being run PESs that are being run
         ioprinter.runlst((fml, pes_idx, subpes_idx), run_lst)
 
-        # Build a TS dictionary and add it to the spc dct if needed
-        if (fml != 'SPC' and
-           any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst)):
-            ts_dct, ts_queue = parser.spc.ts_dct_from_estsks(
-                pes_idx, es_tsk_lst, run_lst,
-                thy_dct, spc_dct,
-                run_prefix, save_prefix)
-            spc_dct = parser.spc.combine_sadpt_spc_dcts(
-                ts_dct, spc_dct, glob_dct)
-        else:
-            ts_queue = ()
+        # Initialize an empty ts_dct for the PES
+        ts_dct = None
 
         # Loop over the tasks
         for tsk_lst in es_tsk_lst:
+
+            # Build a TS dictionary and add it to the spc dct if needed
+            # will only build a ts dct for 1st ts task on the PES
+            if (fml != 'SPC' and tsk_lst[0] in ('ts', 'all')):
+                if ts_dct is None:
+                    ts_dct = parser.spc.ts_dct_from_estsks(
+                        pes_idx, es_tsk_lst, run_lst,
+                        thy_dct, spc_dct,
+                        run_prefix, save_prefix)
+                    spc_dct = parser.spc.combine_sadpt_spc_dcts(
+                        ts_dct, spc_dct, glob_dct)
+            ts_queue = tuple(x for x in ts_dct) if ts_dct is not None else ()
 
             # Unpack the options
             [obj, tsk, es_keyword_dct] = tsk_lst

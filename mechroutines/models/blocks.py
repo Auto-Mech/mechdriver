@@ -321,7 +321,7 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
         inf_dct_i['geom'], inf_dct_j['geom'])
 
     # Set the auxiliary flux file information
-    flux_file_name = '{}_flux.dat'.format('ts')
+    flux_file_name = f'{"ts"}_flux.dat'
     dat_dct[flux_file_name] = inf_dct_ts['flux_str']
 
     # Write the MESS string for the VRCTST TS (change rotd to file)
@@ -364,8 +364,8 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
 
         # Iniialize the header of the rxn path pt string
         rpath_str = '!-----------------------------------------------\n'
-        rpath_str += '! Rxn Path Pt {0}: '.format(str(idx+1))
-        rpath_str += 'R = {0:.2f} Ang'.format(dct['rval'] * phycon.BOHR2ANG)
+        rpath_str += f'! Rxn Path Pt {str(idx+1)}: '
+        rpath_str += f'R = {dct["rval"]*phycon.BOHR2ANG:.2f} Ang'
         rpath_str += '\n\n'
 
         # Write MESS string for the rxn path pt; add to rxn path pt string

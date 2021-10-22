@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name='mechdriver',
-    version='0.1.2',
+    version='0.2.0',
     packages=[
         'drivers',
         'mechroutines',
@@ -26,7 +26,8 @@ setup(
         'mechlib.amech_io.reader',
         'mechlib.amech_io.writer',
         'mechlib.filesys',
-        'mechlib.reaction'],
+        'mechlib.reaction'
+    ],
     package_dir={
         'drivers': 'drivers',
         'mechroutines': 'mechroutines',

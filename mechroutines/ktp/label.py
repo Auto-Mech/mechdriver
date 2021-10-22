@@ -2,7 +2,7 @@
   Handle labels
 """
 
-from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
+from mechlib.amech_io.parser.spc import base_tsname
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models.typ import need_fake_wells
 

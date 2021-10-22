@@ -52,12 +52,13 @@ def multireference_calculation_parameters(zma, spc_info, hs_spc_info,
         num_act_orb, num_act_elc, num_states, guess_str = aspace
         guess_lines = guess_str.splitlines()
         casscf_options = cas_options(
-            spc_info, zma, num_act_elc, num_act_orb, num_states,
+            zma, spc_info, num_act_elc, num_act_orb, num_states,
             add_two_closed=False)
         ioprinter.info_message('Using wfn guess from file...', newline=1)
     else:
         _inf = rxn_info if rxn_info is not None else spc_info
         typ = 'ts' if rxn_info is not None else 'spc'
+        print('inf test', _inf, typ)
         num_act_orb, num_act_elc, num_states = active_space(
             _inf, typ=typ)
 
@@ -66,10 +67,10 @@ def multireference_calculation_parameters(zma, spc_info, hs_spc_info,
         # (2) Build wfn with active space + 2 closed orbitals for stability
         cas_opt = (
             cas_options(
-                spc_info, zma, num_act_elc, num_act_orb, num_states,
+                zma, spc_info, num_act_elc, num_act_orb, num_states,
                 add_two_closed=False),
             cas_options(
-                spc_info, zma, num_act_elc, num_act_orb, num_states,
+                zma, spc_info, num_act_elc, num_act_orb, num_states,
                 add_two_closed=True)
         )
 
@@ -111,6 +112,10 @@ def active_space(info_obj, typ='ts'):
             num_act_elc = (mul - 1)
             num_states = 1
 
+        print('active test')
+        print(ich, mul)
+        print(num_act_orb, num_act_elc, num_states)
+
         return num_act_orb, num_act_elc, num_states
 
     if typ == 'spc':
@@ -121,13 +126,16 @@ def active_space(info_obj, typ='ts'):
         rct_ichs = rinfo.value(info_obj, 'inchi')[0]
         rct_muls = rinfo.value(info_obj, 'mult')[0]
 
+        print('rct test', rct_ichs, rct_muls)
+
         num_act_orb, num_act_elec, num_states = 0, 0, 1
-        for ich, mul in enumerate(zip(rct_ichs, rct_muls)):
-            if ich in act_space.DCT:
-                norb, nelec, nstat = _active_space(ich, mul)
-                num_act_orb += norb
-                num_act_elec += nelec
-                num_states *= nstat
+        for ich, mul in zip(rct_ichs, rct_muls):
+            norb, nelec, nstat = _active_space(ich, mul)
+            num_act_orb += norb
+            num_act_elec += nelec
+            num_states *= nstat
+    print('active test2')
+    print(num_act_orb, num_act_elec, num_states)
 
     return num_act_orb, num_act_elec, num_states
 
@@ -140,6 +148,8 @@ def cas_options(zma, spc_info, num_act_elc, num_act_orb, num_states,
     # Set the number of closed and occupied orbitals
     fml = automol.zmat.formula(zma)
     elec_cnt = automol.formula.electron_count(fml)
+
+    print('count test', elec_cnt)
 
     closed_orb = (elec_cnt - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb
@@ -173,7 +183,7 @@ def multiref_wavefunction_guess(zma, spc_info, hs_spc_info,
 
     # Set variables for the programs
     [_, charge, mul] = spc_info
-    high_mul = hs_spc_info
+    [_, _, high_mul] = hs_spc_info
     prog, _, basis, _ = mod_thy_info
 
     # Write a string to for high-spin UHF wfn calculation
@@ -226,42 +236,3 @@ def multiref_wavefunction_guess(zma, spc_info, hs_spc_info,
         guess_str += guess_str3 + '\n'
 
     return guess_str
-
-
-# STRING WRITER FOR VRC-TST TO REPLACE
-def wfn_string(ts_info, mod_var_scn_thy_info, inf_sep_ene, cas_kwargs):
-    """  Prepare a wfn string for VRC-TST
-    """
-
-    method_dct = {
-        'caspt2': 'rs2',
-        'caspt2c': 'rs2c',
-    }
-    method = method_dct[mod_var_scn_thy_info[1]]
-
-    # Set the lines for methods
-    method_lines = (
-        "if (iterations.ge.0) then",
-        "  {{{},shift=0.25}}".format(method),
-        "  molpro_energy = energy + {}".format(inf_sep_ene),
-        "else",
-        "  molpro_energy = 10.0"
-    )
-
-    # Update the cas kwargs dct
-    gen_lines_dct = cas_kwargs.get('gen_lines')
-    gen_lines_dct.update({3: method_lines})
-    cas_kwargs.update({'gen_lines': gen_lines_dct})
-
-    inp_str = elstruct.writer.energy(
-        geo='GEOMETRY_HERE',
-        charge=ts_info[1],
-        mult=ts_info[2],
-        method='casscf',
-        basis=mod_var_scn_thy_info[2],
-        prog=mod_var_scn_thy_info[0],
-        orb_type=mod_var_scn_thy_info[3],
-        **cas_kwargs
-        )
-
-    return inp_str

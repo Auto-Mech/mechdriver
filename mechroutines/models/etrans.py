@@ -112,8 +112,7 @@ def lj_params(well_info, bath_info, etrans_dct):
                 ioprinter.info_message(
                     '    - Series to use for estimation for estimation...')
                 ioprinter.info_message(
-                    '      Bath: {}, Target: {} '.format(
-                        bath_model, tgt_model))
+                    f'      Bath: {bath_model}, Target: {tgt_model} ')
 
                 ioprinter.info_message(
                     '    - Effective atom numbers for estimation...')
@@ -167,8 +166,7 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
                 ioprinter.info_message(
                     '    - Series to use for estimation for estimation...')
                 ioprinter.info_message(
-                    '      Bath: {}, Target: {} '.format(bath_model, tgt_model)
-                )
+                    f'      Bath: {bath_model}, Target: {tgt_model} ')
 
                 ioprinter.info_message(
                     '    - Calculating the LJ collisional frequencies...')
@@ -253,8 +251,7 @@ def set_bath(spc_dct, etrans_dct):
     bath_dct = spc_dct.get(bath_name, None)
     if bath_dct is not None:
         bath_info = sinfo.from_dct(bath_dct)
-        ioprinter.info_message(
-            '  - Using bath {} input by user'.format(bath_name))
+        ioprinter.info_message(f'  - Using bath {bath_name} input by user')
     else:
         bath_info = ['InChI=1S/Ar', 0, 1]
         ioprinter.info_message(

@@ -195,7 +195,7 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
 
     if tra is not None:
         ioprinter.info_message('\nFound instability files at path:')
-        ioprinter.info_message('  {}'.format(path))
+        ioprinter.info_message(f'  {path}')
 
         zrxn, _ = tra
         prd_gras = automol.reac.product_graphs(zrxn)
@@ -212,6 +212,6 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
                             if i not in _split_names[:n])
 
         print('- Splitting species...')
-        print('- New species: {}'.format(' '.join(split_names)))
+        print(f'- New species: {split_names}')
 
     return split_names

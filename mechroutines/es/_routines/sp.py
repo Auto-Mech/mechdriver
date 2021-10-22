@@ -3,6 +3,9 @@
     electronic structure method.A
 
     * Maybe put long description from run_energy here
+
+    ** no reason to pass the geo and zma since the functions have the fs
+       and locs and can therefore read them. the geo and zma are unneeded
 """
 
 import automol
@@ -86,7 +89,7 @@ def run_energy(zma, geo, spc_info, thy_info,
         else:
             errs = ()
             optmat = ()
-    
+
         sp_run_fs[-1].create(thy_info[1:4])
         run_fs = autofile.fs.run(sp_run_path)
 
@@ -273,7 +276,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                     geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
                     geo_save_fs[-1].file.hessian.write(hess, locs)
                 ioprinter.info_message(
-                    " - Save path: {}".format(geo_save_path))
+                    f" - Save path: {geo_save_path}")
 
                 if thy_info[0] == 'gaussian09':
                     _hess_grad(inf_obj.prog, out_str, geo_save_fs,
@@ -315,7 +318,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 automol.zmat.geometry(job_geo))
         else:
             ioprinter.warning_message(
-                'Need a zma for high-symmetry of {}.'.format(spc_info[0]),
+                f'Need a zma for high-symmetry of {spc_info[0]}.',
                 'Skipping task')
             job_geo = None
             is_atom = False

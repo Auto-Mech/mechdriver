@@ -36,14 +36,14 @@ def multi_stage_optimization(script_str, run_fs,
     """
 
     ioprinter.info_message(
-        'Running {}-Stage Optimization'.format(len(frozen_coords_lst)))
+        f'Running {len(frozen_coords_lst)}-Stage Optimization')
     for idx, coords in enumerate(frozen_coords_lst):
 
         if idx >= 1:
             overwrite = True
 
-        ioprinter.info_message('Beginning Stage {}...'.format(idx+1))
-        print('idx, coords test:', idx, coords)
+        ioprinter.info_message(f'Beginning Stage {idx+1}...')
+        ioprinter.info_message(f'Constrained coordinates: {coords}')
         success, ret = execute_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,

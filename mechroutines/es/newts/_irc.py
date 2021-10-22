@@ -87,8 +87,8 @@ def run_irc(zma, irc_job, coord_name, run_fs, ini_scn_save_fs,
         )
         need_irc = not opt_success
     else:
-        print('Found IRC directory at {}'.format(
-            ini_scn_save_fs[1].path([coord_name])))
+        print('Found IRC directory at '
+              f'{ini_scn_save_fs[1].path([coord_name])}')
         need_irc = False
 
     if need_irc:
@@ -127,7 +127,7 @@ def save_irc(irc_job, coord_name,
         # Write the data for each geom along IRC to the filesystem
         save_path = ini_scn_save_fs[1].path([coord_name])
         print(" - Saving...")
-        print(" - Save path: {}".format(save_path))
+        print(f" - Save path: {save_path}")
         locs_lst = []
         for idx, val in enumerate(coord_vals):
 
@@ -199,7 +199,7 @@ def launch_point_zmatrices(ts_dct, mod_thy_info,
             ioprinter.info_message(
                 ' - Z-Matrix found.')
             ioprinter.info_message(
-                ' - Reading Z-Matrix from path {}'.format(geo_path))
+                f' - Reading Z-Matrix from path {geo_path}')
             irc_zmas = (zma_fs[-1].file.zmatrix.read(zma_locs),)
     elif 'max' in scn_alg:
         _, scn_save_fs = scn_fs

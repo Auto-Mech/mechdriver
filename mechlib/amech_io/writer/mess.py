@@ -16,5 +16,6 @@ def output(formulastr, final_pf, mess_path, filename='pf.dat'):
     ioprinter.messpf('write_output', mess_path)
     if not os.path.exists(mess_path):
         os.makedirs(mess_path)
-    with open(os.path.join(mess_path, filename), 'w') as mess_file:
+    fpath = os.path.join(mess_path, filename)
+    with open(fpath, mode='w', encoding='utf-8') as mess_file:
         mess_file.write(mess_out_str)

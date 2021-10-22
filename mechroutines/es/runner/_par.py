@@ -60,7 +60,7 @@ def _gaussian(method_dct, prog, job=None):
     script_str = SCRIPT_DCT[prog]
 
     # Build the options dictionary
-    machine_options = ['%NProcShared={}'.format(nprocs)]
+    machine_options = [f'%NProcShared={nprocs}']
 
     gen_lines = method_dct.get('gen_lines', {})
     if not gen_lines:
@@ -95,8 +95,8 @@ def _gaussian(method_dct, prog, job=None):
         kwargs.update({
             'job_options': [
                 'calcfc',
-                'stepsize={}'.format(irc_step),
-                'maxpoints={}'.format(irc_pts),
+                f'stepsize={irc_step}',
+                f'maxpoints={irc_pts}',
                 irc_dir
             ]
         })
@@ -118,11 +118,19 @@ def _molpro(method_dct, prog, job=None):
     method = method_dct.get('method')
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         nprocs = method_dct.get('nprocs', 4)
-        memory = method_dct.get('mem', 10)
+        memory = method_dct.get('mem', 20)
+        nprocs = nprocs if nprocs is not None else 4
+        memory = memory if memory is not None else 10
     else:
         nprocs = method_dct.get('nprocs', 4)
         memory = method_dct.get('mem', 20)
+        nprocs = nprocs if nprocs is not None else 4
+        memory = memory if memory is not None else 20
 
+    print('method test')
+    print(method)
+    print(method_dct)
+    print('---')
     # Build the script string
     if method in ('caspt2c', 'caspt2i'):
         script_str = SCRIPT_DCT[prog+'_mppx'].format(nprocs)
@@ -242,12 +250,13 @@ def molpro_opts_mat(spc_info, geo):
 
     # Build the strings UHF and CASSCF wf card and set the errors and options
     uhf_str = (
-        "{{uhf,maxit=300;wf,{0},1,{1};orbprint,3}}"
-    ).format(elec_count, two_spin)
+        f"{{uhf,maxit=300;wf,{elec_count},1,{two_spin};orbprint,3}}"
+    )
     cas_str = (
         "{{casscf,maxit=40;"
-        "closed,{0};occ,{1};wf,{2},1,{3};canonical;orbprint,3}}"
-    ).format(closed_orb, occ_orb, elec_count, two_spin)
+        f"closed,{closed_orb};occ,{occ_orb};"
+        f"wf,{elec_count},1,{two_spin};canonical;orbprint,3}}"
+    )
 
     errors = [elstruct.Error.SCF_NOCONV]
     options_mat = [

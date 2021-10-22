@@ -52,6 +52,7 @@ from mechlib.amech_io.printer._stat import checking
 from mechlib.amech_io.printer._stat import generating
 
 from mechlib.amech_io.printer._tsk import task_header
+from mechlib.amech_io.printer._tsk import task_footer
 from mechlib.amech_io.printer._tsk import keyword_list
 from mechlib.amech_io.printer._tsk import output_task_header
 from mechlib.amech_io.printer._tsk import output_keyword_list
@@ -125,6 +126,7 @@ __all__ = [
     'generating',
 
     'task_header',
+    'task_footer',
     'keyword_list',
     'output_task_header',
     'output_keyword_list',

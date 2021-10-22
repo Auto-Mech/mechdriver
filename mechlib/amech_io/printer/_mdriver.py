@@ -72,7 +72,8 @@ AMECH_MSG = """
           ================================================================
           ==                        AUTOMECHANIC                        ==
           ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
-          ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
+          ===            Luna Pratali Maffei, Daniel Moberg,           ===
+          ===            Carlo Cavallotti, Yuri Georgievski,           ===
           ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
           ================================================================"""
 

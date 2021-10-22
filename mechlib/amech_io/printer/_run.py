@@ -19,4 +19,4 @@ def runlst(run_inf, run_lst):
             print_channel(cidx+1, rxn[0], rxn[1])
     else:
         for i, spc in enumerate(run_lst):
-            message('Running SPC {}: {}'.format(i+1, spc))
+            message(f'Running SPC {i+1}: {spc}')

@@ -2,6 +2,7 @@
 """
 
 import copy
+import itertools
 
 
 # Overall run lst for both reactions and species
@@ -71,6 +72,58 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
                 red_pes_dct[(form, pidx, sidx)] = red_chnls
 
     return red_pes_dct
+
+
+def pes_groups(pes_dct, pes_grp_dct):
+    """ Group the PES into ordered lists to handle multiPES effects.
+
+        pes_dct = {(fml, pes_idx, sub_pes_idx): (chnls,)}
+        pes_grp_idxs = ((pes_idx, subpes_idx), (pes_idx, subpes_idx),)
+
+        Tries to sort by all single-PES groups, then multi-PES groups. There
+        is a subsort on the PES-SUBPES indices after that.
+
+        :return: pes_dct lst (({pes_dct}, {par_dct}), ...),
+        where each dictionary contains all PESs that are member of PES group
+    """
+
+    # Build pes grp idx lists to loop over an build master list
+    # run_pes_idxs = tuple(frozenset({x, y}) for _, x, y in pes_dct.keys())
+    run_pes_idxs = tuple((x, y) for _, x, y in pes_dct.keys())
+    print(run_pes_idxs)
+
+    # Get the groupings specified by the user
+    if pes_grp_dct is not None:
+        pes_grp_idxs = tuple(pes_grp_dct.keys())
+        flat_pes_grp_idxs = tuple(itertools.chain(*pes_grp_idxs))
+    else:
+        pes_grp_idxs, flat_pes_grp_idxs = (), ()
+
+    # Get all of the PESs not grouped, then add the ones grouped by user
+    grp_lst = tuple(((x, y),) for (x, y) in run_pes_idxs
+                    if (x, y) not in flat_pes_grp_idxs)
+    grp_lst_sort = tuple(sorted(grp_lst, key=lambda x: x[0]))
+    grp_lst_sort += pes_grp_idxs
+    print(grp_lst)
+    print(grp_lst_sort)
+
+    # Need to build a group for PESs
+    pes_grps = ()
+    for grp_idxs in grp_lst_sort:
+        print(1, grp_idxs)
+        pes_grp = {}
+        for idxs in grp_idxs:
+            for (form, pidx, sidx), chnls in pes_dct.items():
+                print(2, idxs, (pidx, sidx))
+                if idxs == (pidx, sidx):
+                    pes_grp.update({(form, pidx, sidx): chnls})
+        print(3, pes_grp)
+        if pes_grp_dct is None:
+            pes_grps += ((pes_grp, None),)
+        else:
+            pes_grps += ((pes_grp, pes_grp_dct.get(grp_idxs)),)
+
+    return pes_grps
 
 
 def spc_queue(runlst, fml):

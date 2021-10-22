@@ -10,4 +10,4 @@ def missing_input(prop):
         missing from an input file.
     """
     if prop is not None:
-        error_message('The {} needs to be specified in input'.format(prop))
+        error_message(f'The {prop} needs to be specified in input')

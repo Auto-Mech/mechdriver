@@ -15,16 +15,15 @@ from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 import mechlib.amech_io.printer as ioprinter
 from mechlib.amech_io import reader
+from mechroutines.models import _rot as rot
 from mechroutines.models import _vib as vib
 from mechroutines.models import _tors as tors
+from mechroutines.models import _symm as symm
 from mechroutines.models import ene
+from mechroutines.models import blocks
 from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
 
-from mechroutines.models import _rot as rot
-from mechroutines.models import _symm as symm
-from mechroutines.models import _vib as vib
-from mechroutines.models import build, blocks
 
 def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     """collect a zmatrix
@@ -35,15 +34,15 @@ def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
         zma = automol.geom.zmatrix(geo)
         sp_fs = autofile.fs.single_point(locs_path)
         _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-        comment = 'energy: {0:>15.10f}\n'.format(_ene)
+        comment = f'energy: {_ene:>15.10f}\n'
         zma_str = automol.zmat.string(zma)
         miss_data = None
     else:
         zma_str = '\t -- Missing --'
         miss_data = (spc_name, mod_thy_info, 'zmatrix')
 
-    spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
-        spc_name, locs, locs_path) + comment + zma_str
+    spc_data = f'\n\nSPC: {spc_name}\tConf: {locs}\tPath: {locs_path}\n'
+    spc_data += comment + zma_str
 
     return spc_data, miss_data
 
@@ -55,9 +54,8 @@ def molden(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
         geo = cnf_fs[-1].file.geometry.read(locs)
         sp_fs = autofile.fs.single_point(locs_path)
         _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-        comment = 'energy: {0:>15.10f}'.format(_ene)
-        comment += 'SPC: {}\tConf: {}\tPath: {}'.format(
-            spc_name, locs, locs_path)
+        comment = f'energy: {_ene:>15.10f}\n'
+        comment = f'\n\nSPC: {spc_name}\tConf: {locs}\tPath: {locs_path}\n'
         xyz_str = automol.geom.xyz_string(geo, comment=comment)
         miss_data = None
     else:
@@ -76,7 +74,7 @@ def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
         sp_fs = autofile.fs.single_point(locs_path)
         if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
             _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-            comment = 'energy: {0:>15.10f}'.format(_ene)
+            comment = f'energy: {_ene:>15.10f}\n'
             xyz_str = automol.geom.xyz_string(geo, comment=comment)
             miss_data = None
         else:
@@ -87,8 +85,8 @@ def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
         xyz_str = '\t -- Missing --'
         miss_data = (spc_name, mod_thy_info, 'geometry')
 
-    spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
-        spc_name, locs, locs_path) + xyz_str
+    spc_data = f'\n\nSPC: {spc_name}\tConf: {locs}\tPath: {locs_path}\n'
+    spc_data += xyz_str
 
     return spc_data, miss_data
 
@@ -135,7 +133,7 @@ def frequencies(
         if ret is not None:
             freqs, imag, zpe, sfactor, _, torsfreqs, all_freqs, disps = ret
             if saddle:
-                print('Imaginary Frequencies[cm-1]: {}'.format(imag))
+                print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
             miss_data = None
     else:
@@ -147,9 +145,10 @@ def frequencies(
             freqs, imag, zpe, disps = ret
             if freqs and proc_keyword_dct['scale'] is not None:
                 freqs, zpe = vib.scale_frequencies(
-                    freqs, 0.0, spc_mod_dct_i, scale_method=proc_keyword_dct['scale'])
+                    freqs, 0.0, spc_mod_dct_i,
+                    scale_method=proc_keyword_dct['scale'])
             if saddle:
-                print('Imaginary Frequencies[cm-1]: {}'.format(imag))
+                print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
             miss_data = None
 

@@ -23,7 +23,8 @@ from mechroutines.models import _vib as vib
 from mechroutines.models import _flux as flux
 from mechroutines.models import _util as util
 from mechroutines.thermo import basis
-import thermfit
+# import thermfit
+
 
 # General readers
 def read_spc_data(spc_dct, spc_name,
@@ -57,8 +58,7 @@ def read_spc_data(spc_dct, spc_name,
     """
 
     ioprinter.obj('line_plus')
-    ioprinter.reading(
-        'filesystem info for {}'.format(spc_name), newline=1)
+    ioprinter.reading(f'filesystem info for {spc_name}', newline=1)
 
     vib_model = spc_mod_dct_i['vib']['mod']
     tors_model = spc_mod_dct_i['tors']['mod']
@@ -120,8 +120,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     """
 
     ioprinter.obj('line_plus')
-    ioprinter.reading(
-        'Reading filesystem info for {}'.format(tsname), newline=1)
+    ioprinter.reading(f'Reading filesystem info for {tsname}', newline=1)
 
     ts_dct = spc_dct[tsname]
     reac_dcts = [spc_dct[name] for name in rcts]
@@ -615,10 +614,10 @@ def pst_data(ts_dct, reac_dcts,
 
     ioprinter.info_message(
         'Determining parameters for Phase Space Theory (PST)',
-        'treatment that yields k({} K) = {}'.format(temp_pst, kt_pst),
+        f'treatment that yields k({temp_pst} K) = {kt_pst}',
         newline=1)
     ioprinter.info_message(
-        'Assuming PST model potential V = C0 / R^{}'.format(n_pst),
+        f'Assuming PST model potential V = C0 / R^{n_pst}',
         indent=1)
 
     # Obtain the reduced mass of the reactants
@@ -666,9 +665,9 @@ def tau_data(spc_dct_i,
     # Get the rotor info
     rotors = tors.build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
-    run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
+    # run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
     tors_strs = tors.make_hr_strings(rotors)
-    [_, hr_str, flux_str, prot_str, _] = tors_strs
+    [_, _, flux_str, _, _] = tors_strs
 
     # Use model to determine whether to read grads and hessians
     vib_model = spc_mod_dct_i['vib']['mod']

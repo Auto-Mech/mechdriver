@@ -21,7 +21,7 @@ def run_tsk(tsk, spc_queue,
     ioprinter.info_message('Options for transport task:', newline=1)
 
     for key, val in etrans_keyword_dct.items():
-        ioprinter.info_message('{} = {}'.format(key, val))
+        ioprinter.info_message(f'{key} = {val}')
 
     if tsk == 'onedmin':
         ioprinter.obj('vspace')

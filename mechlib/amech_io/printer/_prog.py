@@ -9,4 +9,4 @@ def program_run_message(prog, path):
     """ message for a program
     """
 
-    message('Run path for {}:'.format(prog), path)
+    message(f'Run path for {prog}: {path}')

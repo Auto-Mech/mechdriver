@@ -12,19 +12,16 @@ import automol.par
 import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
-from mechlib.filesys import build_fs, rcts_cnf_fs
+from mechlib.filesys import build_fs
 from mechlib import filesys
 from mechroutines.es._routines import _sadpt as sadpt
-# for isc code
-import elstruct
-import autorun
-from mechroutines.es.runner import qchem_params
 
 
-def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
+def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
     """ New run function
     """
+    _ = tsk
 
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
 
@@ -58,7 +55,7 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
     overwrite = es_keyword_dct['overwrite']
     if not cnf_save_locs[0]:
         print('No transition state found in filesys',
-              'at {} level...'.format(es_keyword_dct['runlvl']),
+              f'at {es_keyword_dct["runlvl"]} level...',
               'Proceeding to find it...')
         _run = True
     elif overwrite:
@@ -93,62 +90,11 @@ def run_pst(spc_dct, tsname, savefs_dct,
 
     zma_path = zma_save_fs[-1].path(zma_locs)
     print('Saving reaction class data for pst at')
-    print('  {}'.format(zma_path))
+    print(f'  {zma_path}')
 
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-
-
-def run_isc(spc_dct, tsname, method_dct, es_keyword_dct,
-            runfs_dct, savefs_dct):
-    """ Search for an ISC TS by looking for
-        the minimum on the crossing seam
-    """
-
-    ts_dct = spc_dct[tsname]
-
-    # Get all of the structural information
-    ts_geo = automol.zmatrix.geometry(ts_zma['zma'])
-    ts_chg = rinfo.ts_chg(ts_dct['rxn_info'])
-    ts_mult = rinfo.ts_mult(ts_dct['rxn_info'])
-
-    # Set quantum chemistry parameters
-    thy_info = method_dct['runlvl']
-    prog, method, basis, orb_label = thy_info
-
-    if elstruct.Method.is_multireference(method):
-        cas_kwargs = multireference_calculation_parameters(
-            ref_zma, ts_info, ts_formula, high_mul,
-            rct_ichs, rct_info,
-            aspace, mod_var_scn_thy_info)
-    else:
-        cas_kwargs = None
-
-    _, kwargs = qchem_params(
-        method_dct, job=elstruct.Job.OPTIMIZATION)
-
-    # Get the run directory
-    runlvl_cnf_run_fs, _ = runfs_dct['runlvl_cnf_fs']
-    run_fs = autofile.fs.run()
-    run_path = run_fs[-1].path(['NST'])
-
-    # Perform the ISC TS search
-    msx_geo, hessians, flux_str = autorun.isc_flux(
-        run_dir, prog, ts_geo, ts_chg, mults,
-        method, basis, orb_label, ini_kwargs)
-
-    print('')
-    print('geo')
-    if msx_geo is not None:
-        print(automol.geom.string(msx_geo))
-    print('hessians')
-    if hessians is not None:
-        for hess in hessians:
-            print(hess)
-    print('flux')
-    if flux_str is not None:
-        print(flux_str)
 
 
 # SET THE SEARCHING ALGORITHM
@@ -162,8 +108,8 @@ def _ts_search_method(ts_dct):
     # Set search algorithm to one specified by the user, if specified
     if ts_dct.get('ts_search') is not None:
         _search_method = ts_dct['ts_search']
-        print('Running search algorithm according to {},'.format(
-            ts_dct['ts_search']),
+        print('Running search algorithm according to {},',
+              ts_dct['ts_search'],
               'as requested by the user')
     else:
         _search_method = None
@@ -198,7 +144,6 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
 
     rxn_info = ts_dct['rxn_info']
     ts_info = rinfo.ts_info(rxn_info)
-    rct_info = rinfo.rgt_info(rxn_info, 'reacs')
     rxn_info = rinfo.sort(rxn_info)
 
     ts_locs = (int(tsname.split('_')[-1]),)
@@ -335,9 +280,9 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     # Get the conformer filesys for the reactants
     # cnf_range = es_keyword_dct['cnf_range']
     # hbond_cutoffs = ts_dct['hbond_cutoffs']
-    _rcts_cnf_fs = rcts_cnf_fs(
-        rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
-        # cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
+    # _rcts_cnf_fs = rcts_cnf_fs(
+    #     rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
+    #     # cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
 
     thy_inf_dct = {
         'inplvl': ini_thy_info,
@@ -374,7 +319,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
-        'rcts_cnf_fs': _rcts_cnf_fs,
+        # 'rcts_cnf_fs': _rcts_cnf_fs,
         'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs
     }
 

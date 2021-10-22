@@ -15,15 +15,21 @@ def therm_paths_messpf_write_locations(
         written for each conformer and model
     """
     info_message('MESSPF location table:')
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        'species name', 'rid', 'cid', 'model', 'path'))
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        '============', '=======', '=======', '=======', '=========='))
+    info_message(f'{"species name":<16}'
+                 f'{"rid":<16}{"cid":<16}{"model":<16}{"path":<16}')
+    info_message(f'{"============":<16}'
+                 f'{"=======":<16}{"=======":<16}{"=======":<16}'
+                 f'{"============":<16}')
     for spc_locs in spc_locs_lst:
         for spc_mod in spc_mods:
-            info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-                spc_name, spc_locs[0], spc_locs[1], spc_mod,
-                thm_paths_dct[spc_name][tuple(spc_locs)][spc_mod][0]))
+            path = thm_paths_dct[spc_name][tuple(spc_locs)][spc_mod][0]
+            info_message(
+                f'{spc_name:<16}'
+                f'{spc_locs[0]:<16}'
+                f'{spc_locs[1]:<16}'
+                f'{spc_mod:<16}'
+                f'{path:<16}'
+            )
 
 
 def therm_paths_messpf_run_locations(
@@ -32,21 +38,36 @@ def therm_paths_messpf_run_locations(
         for each conformer and model
     """
     info_message('MESSPF location table:')
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        'species name', 'rid', 'cid', 'model', 'path'))
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        '============', '=======', '=======', '======', '=========='))
+    info_message(f'{"species name":<16}'
+                 f'{"rid":<16}{"cid":<16}{"model":<16}{"path":<16}')
+    info_message(f'{"============":<16}'
+                 f'{"=======":<16}{"=======":<16}{"=======":<16}'
+                 f'{"============":<16}')
     for spc_locs in spc_locs_lst:
         for spc_mod in spc_mods:
-            info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-                spc_name, spc_locs[0], spc_locs[1], spc_mod,
-                thm_paths_dct[spc_name][tuple(spc_locs)][spc_mod][0]))
-            info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-                spc_name, spc_locs[0], spc_locs[1], 'mod combo',
-                thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0]))
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        spc_name, 'spc combo', '', 'mod combo',
-        thm_paths_dct[spc_name]['spc_total'][0]))
+            path1 = thm_paths_dct[spc_name][tuple(spc_locs)][spc_mod][0]
+            path2 = thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0]
+            info_message(
+                f'{spc_name:<16}'
+                f'{spc_locs[0]:<16}'
+                f'{spc_locs[1]:<16}'
+                f'{spc_mod:<16}'
+                f'{path1:<16}'
+            )
+            info_message(
+                f'{spc_name:<16}'
+                f'{spc_locs[0]:<16}'
+                f'{spc_locs[1]:<16}'
+                f'{"mod combo":<16}'
+                f'{path2:<16}'
+            )
+    info_message(
+        f'{spc_name:<16}'
+        f'{"":<16}'
+        f'{"spc combo":<16}'
+        f'{"mod combo":<16}'
+        f'{thm_paths_dct[spc_name]["spc_total"][0]:<16}'
+    )
 
 
 def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
@@ -78,17 +99,17 @@ def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
                 spc_dct[spc_name]['Hfs']['final'][0]
                 * phycon.EH2KCAL)
             info_message(
-                '{}---{}'.format(spc_name, 'boltzmann_weighted_combo'))
+                f'{spc_name}---{"boltzmann_weighted_combo"}')
         else:
             hf0 = (
                 spc_dct[spc_name]['Hfs'][spc_locs_idx-1][spc_mod][0]
                 * phycon.EH2KCAL)
-            info_message(
-                '{}---{}'.format(spc_name, '_'.join(spc_locs_dct[spc_name][spc_locs_idx-1])))
+            idx_str = '_'.join(spc_locs_dct[spc_name][spc_locs_idx-1])
+            info_message(f'{spc_name}---{idx_str}')
         hf298 = mechanalyzer.calculator.thermo.enthalpy(
             nasa7_params, 298.15) / 1000.
         info_message(
-            '{}{:>9.2f}{:>9.2f}'.format(whitespace2, hf0, hf298))
+            f'{whitespace2}{hf0:>9.2f}{hf298:>9.2f}')
         hincref = hf298
         for temp in templist:
             hinct = mechanalyzer.calculator.thermo.enthalpy(
@@ -98,5 +119,4 @@ def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
             cpt = mechanalyzer.calculator.thermo.heat_capacity(
                 nasa7_params, temp)
             info_message(
-                '{:>8.2f}{:>9.2f}{:>9.2f}{:>9.2f}'
-                .format(temp, hinct, entt, cpt))
+                f'{temp:>8.2f}{hinct:>9.2f}{entt:>9.2f}{cpt:>9.2f}')

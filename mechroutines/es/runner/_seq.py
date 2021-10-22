@@ -14,10 +14,7 @@ note: options (`opts_dct`) are a subset of keyword arguments (`kwargs_dct`)
 
 import itertools
 import warnings
-try:
-    from collections.abc import Sequence as _Sequence
-except ImportError:
-    from collections import Sequence as _Sequence
+from collections.abc import Sequence as _Sequence
 import automol
 import elstruct
 import autofile
@@ -128,7 +125,7 @@ def options_matrix_optimization(script_str, prefix,
             # failure
             warnings.resetwarnings()
             warnings.warn("elstruct robust run failed; "
-                          "last run was in, {}".format(path))
+                          f"last run was in {path}")
             break
 
     return inp_str, out_str
@@ -202,7 +199,7 @@ def options_matrix_run(input_writer, script_str, prefix,
             # failure
             warnings.resetwarnings()
             warnings.warn("elstruct robust run failed; "
-                          "last run was in, {}".format(path))
+                          f"last run was in {path}")
             break
 
     return inp_str, out_str

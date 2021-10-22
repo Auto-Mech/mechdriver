@@ -9,6 +9,7 @@ import thermfit
 from phydat import phycon
 import automol.zmat
 import automol.geom
+from automol.reac import relabel_for_geometry
 from automol.geom import hydrogen_bonded_structure
 from mechlib.amech_io import printer as ioprinter
 
@@ -106,8 +107,7 @@ def conformer_locators(
                     fin_locs_lst = tuple(_rrange_locs(
                         cnf_locs_lst, cnf_range, already_counted_locs_lst))
         else:
-            print('No conformers located in {}'.format(
-                cnf_save_fs[0].path()))
+            print(f'No conformers located in {cnf_save_fs[0].path()}')
 
         if print_enes:
             header = '\nConformer Ordering'
@@ -118,16 +118,13 @@ def conformer_locators(
             elif not only_hbnds:
                 header += ' for all conformers'
             print(header)
-            print(
-                '{:<16}{:<16}{:<16}'.format('rid', 'cid', 'energy[kcal/mol]'))
-            print(
-                '{:<16}{:<16}{:<16}'.format('-------', '-------', '------'))
+            print(f'{"rid":<16}{"cid":<16}{"energy[kcal/mol]":<16}')
+            print(f'{"-------":<16}{"-------":<16}{"-------":<16}')
         for idx, locs in enumerate(fin_locs_lst):
             fin_paths_lst += (cnf_save_fs[-1].path(locs),)
             if print_enes:
-                print('{:<16}{:<16}{:<16.2f}'.format(
-                    *locs,
-                    (cnf_enes_lst[idx] - cnf_enes_lst[0])*phycon.EH2KCAL))
+                _ene = (cnf_enes_lst[idx] - cnf_enes_lst[0]) * phycon.EH2KCAL
+                print(f'{locs[0]:<16}{locs[1]:<16}{_ene:<16.2f}')
 
         return fin_locs_lst, fin_paths_lst
 
@@ -206,6 +203,29 @@ def _sorted_cnf_lsts(
             if sort_ene is not None:
                 fnd_cnf_enes_lst.append(sort_ene)
                 fnd_cnf_locs_lst.append(cnf_locs_lst[idx])
+            # commenting out from merge conflict
+            # elif cnf_save_fs[-1].file.geometry_info.exists(locs):
+            #     ioprinter.info_message(
+            #         'No energy saved in single point directory for '
+            #         f'{cnf_path}')
+            #     geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
+            #         locs)
+            #     geo_end_time = geo_inf_obj.utc_end_time
+            #     current_time = autofile.schema.utc_time()
+            #     save_time = (current_time - geo_end_time).total_seconds()
+            #     if save_time < 120:
+            #         wait_time = 120 - save_time
+            #         ioprinter.info_message(
+            #             f'Geo saved in the last {save_time:3.2f} seconds,'
+            #             f' waiting for {wait_time:3.2f} seconds')
+            #         time.sleep(wait_time)
+            #         if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            #             fnd_cnf_enes_lst.append(sp_fs[-1].file.energy.read(
+            #                 mod_thy_info[1:4]))
+            #             fnd_cnf_locs_lst.append(cnf_locs_lst[idx])
+            #             ioprinter.info_message('the energy is now found')
+            #         else:
+            #             ioprinter.info_message('waiting helped nothing')
 
     # Sort the cnf locs and cnf enes
     if fnd_cnf_locs_lst:
@@ -224,21 +244,17 @@ def _wait_for_energy_to_be_saved(cnf_save_fs, locs, sp_fs, sp_info):
     cnf_path = cnf_save_fs[-1].path(locs)
     if cnf_save_fs[-1].file.geometry_info.exists(locs):
         ioprinter.info_message(
-            'No energy saved in single point directory for {}'
-            .format(cnf_path))
+            f'No energy saved in single point directory for {cnf_path}')
         geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
             locs)
         geo_end_time = geo_inf_obj.utc_end_time
         current_time = autofile.schema.utc_time()
-        if (current_time - geo_end_time).total_seconds() < 120:
-            wait_time = (
-                120 - (current_time - geo_end_time).total_seconds()
-            )
+        _time = (current_time - geo_end_time).total_seconds()
+        if _time < 120:
+            wait_time = 120 - _time
             ioprinter.info_message(
-                'Geo was saved in the last ' +
-                '{:3.2f} seconds, waiting for {:3.2f} seconds'.format(
-                    (current_time - geo_end_time).total_seconds(),
-                    wait_time))
+                f'Geo was saved in the last {_time:3.2f} seconds, '
+                f'waiting for {wait_time:3.2f} seconds')
             time.sleep(wait_time)
             if sp_fs[-1].file.energy.exists(sp_info[1:4]):
                 ene = sp_fs[-1].file.energy.read(sp_info[1:4])
@@ -366,11 +382,11 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
         traj = []
         traj_sort_data = sorted(zip(enes, geos, locs_lst), key=lambda x: x[0])
         for ene, geo, locs in traj_sort_data:
-            comment = 'energy: {0:<15.10f} \t {1}'.format(ene, locs[0])
+            comment = f'energy: {ene:<15.10f} \t {locs[0]}'
             traj.append((geo, comment))
         traj_path = save_fs[0].file.trajectory.path()
 
-        print("Updating ring-torsion trajectory file at {}".format(traj_path))
+        print(f"Updating ring-torsion trajectory file at {traj_path}")
         save_fs[0].file.trajectory.write(traj)
 
         if rid is not None:
@@ -390,11 +406,10 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
                     zip(enes, geos, locs_lst), key=lambda x: x[0])
                 for ene, geo, locs in traj_sort_data:
                     comment = (
-                        'energy: {0:>15.10f} \t {1} {2}'
-                    ).format(ene, locs[0], locs[1])
+                        f'energy: {ene:>15.10f} \t {locs[0]} {locs[1]}')
                     traj.append((geo, comment))
                 traj_path = save_fs[1].file.trajectory.path([rid])
-                print("Updating torsion trajectory file at {}".format(traj_path))
+                print(f"Updating torsion trajectory file at {traj_path}")
                 save_fs[1].file.trajectory.write(traj, [rid])
 
 
@@ -412,7 +427,7 @@ def _remove_hbonded_structures(
             zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
-                grxn = automol.reac.relabel_for_geometry(zrxn)
+                grxn = relabel_for_geometry(zrxn)
             else:
                 grxn = None
 
@@ -420,14 +435,14 @@ def _remove_hbonded_structures(
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
                     geo, *hbond_cutoffs, grxn=grxn)
             else:
-                hydrogen_bonded_structure_ = hydrogen_bonded_structure(geo, grxn=grxn)
+                hydrogen_bonded_structure_ = hydrogen_bonded_structure(
+                    geo, grxn=grxn)
             if not hydrogen_bonded_structure_:
                 fin_locs_lst += (locs,)
                 fin_enes_lst += (enes,)
             else:
-                print(
-                    'Removing ', locs, ' from list because its hbonded. Cutoffs are: ',
-                    hbond_cutoffs)
+                print(f'Removing {locs} from list because its hbonded. '
+                      f'Cutoffs are: {hbond_cutoffs}')
     return fin_locs_lst, fin_enes_lst
 
 
@@ -445,7 +460,7 @@ def _remove_nonhbonded_structures(
             zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
-                grxn = automol.reac.relabel_for_geometry(zrxn)
+                grxn = relabel_for_geometry(zrxn)
             else:
                 grxn = None
 
@@ -453,7 +468,8 @@ def _remove_nonhbonded_structures(
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
                     geo, *hbond_cutoffs, grxn=grxn)
             else:
-                hydrogen_bonded_structure_ = hydrogen_bonded_structure(geo, grxn=grxn)
+                hydrogen_bonded_structure_ = hydrogen_bonded_structure(
+                    geo, grxn=grxn)
             if hydrogen_bonded_structure_:
                 fin_locs_lst += (locs,)
                 fin_enes_lst += (enes,)
@@ -511,24 +527,25 @@ def zpe_from_harmonic_frequencies(
     """ gets zpe from the harmonic frequencies
         that are saved in the filesystem
     """
+
     freqs = None
     if freq_info is not None:
         if mod_thy_info != freq_info:
-            print(
-                'geoemtry level {} does not match requested zpe level {}'
-                .format(mod_thy_info, freq_info))
+            print(f'geometry level {mod_thy_info} '
+                  'does not match requested zpe level zpe_info')
             print('Will read zpe from geometry level instead')
         if cnf_fs[-1].file.harmonic_frequencies.exists(locs):
             freqs = cnf_fs[-1].file.harmonic_frequencies.read(locs)
             zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
         else:
-            print('No harmonic frequencies at: {}.'.format(
-                cnf_fs[-1].path(locs)))
+            print(f'No harmonic frequencies at: {cnf_fs[-1].path(locs)}')
             zpe = None
     return zpe
 
 
 def this_conformer_was_run_in_run(zma, cnf_fs):
+    """ Assess if this conformer was run in RUN.
+    """
     locs_idx = None
     job = elstruct.Job.OPTIMIZATION
 
@@ -550,7 +567,7 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                                              dist_rtol=0.018, ang_atol=.2):
                     ioprinter.info_message(
                         'This conformer was already run ' +
-                        'in {}.'.format(run_path))
+                        f'in {run_path}.')
                     locs_idx = idx
                     break
     # This is to find if it was not saved becaue its equivalent
@@ -583,7 +600,9 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                 out_enes.append(10000)
                 out_geos.append(None)
         for idx, _ in enumerate(out_enes):
-            sym_idx = _sym_unique(ran_geo, ran_ene, [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
+            sym_idx = _sym_unique(
+                ran_geo, ran_ene,
+                [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
             if sym_idx is not None:
                 sym_locs.append(run_locs_lst[idx])
     return locs_idx is not None, sym_locs
@@ -644,6 +663,7 @@ def collect_rrho_params(cnf_save_fs, locs, sp_info, freq_info, mod_thy_info):
 def get_freq_location(geo, freq_info):
     """ find the frequencies for a conformer at a different level of theory
     """
+    _, _ = geo, freq_info
     ioprinter.debug_message(
         'NOTIMPLEMENTED to use a zpe(LVL) that is not the same as inplvl=LVL')
     return None, None
@@ -697,19 +717,18 @@ def _sort_energy_parameter(
     elif sort_prop == 'gibbs':
         zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
         zpe = (zpe) * phycon.EH2KCAL
-        sp = sp_ene * phycon.EH2KCAL
+        spe = sp_ene * phycon.EH2KCAL
         if first_enes is None:
-            first_enes = (sp, zpe)
+            first_enes = (spe, zpe)
             rel_zero_ene = 0.
             rel_sp_ene = 0.
         else:
-            rel_sp_ene = sp - first_enes[0]
+            rel_sp_ene = spe - first_enes[0]
             rel_zero_ene = zpe - first_enes[1]
-        print('rel zero energy is {:.2f} kcal/mol'.format(
-            rel_zero_ene))
+        print(f'rel zero energy is {rel_zero_ene:.2f} kcal/mol')
         sort_ene = thermfit.pf.rrho_gibbs_factor(
             geo, freqs, rel_zero_ene, sort_prop_dct[sort_prop])
-        print('rel gibbs energy is {:.2f} kcal/mol'.format(sort_ene))
+        print(f'rel gibbs energy is {sort_ene:.2f} kcal/mol')
         sort_ene += rel_sp_ene
         sort_ene = sort_ene / phycon.EH2KCAL
     return sort_ene, first_enes

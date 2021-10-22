@@ -56,6 +56,6 @@ def theory_dictionary(thy_str):
 
     # Check each dictionary
     for lvl, dct in full_thy_dct.items():
-        check_dct1(dct, THY_VAL_DCT, THY_REQ, 'Thy-{}'.format(lvl))
+        check_dct1(dct, THY_VAL_DCT, THY_REQ, f'Thy-{lvl}')
 
     return full_thy_dct

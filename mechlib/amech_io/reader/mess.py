@@ -11,7 +11,7 @@ def messpf(pf_path):
     """
     # Read MESSPF file
     messpf_file = os.path.join(pf_path, 'pf.dat')
-    with open(messpf_file, 'r') as pffile:
+    with open(messpf_file, mode='r', encoding='utf-8') as pffile:
         output_string = pffile.read()
     temps, logq, dq_dt, dq2_dt2 = mess_io.reader.pfs.partition_function(
         output_string)
