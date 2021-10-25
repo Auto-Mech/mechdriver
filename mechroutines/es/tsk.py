@@ -405,7 +405,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
                 ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
-                script_str, overwrite,
+                script_str, overwrite, zrxn=zrxn,
                 retryfail=retryfail, method_dct=method_dct,
                 **kwargs)
 

@@ -24,7 +24,7 @@ _JSON_SAVE = []
 
 def run_energy(zma, geo, spc_info, thy_info,
                geo_run_fs, geo_save_fs, locs,
-               script_str, overwrite,
+               script_str, overwrite, zrxn=None,
                retryfail=True, method_dct=None, highspin=False, **kwargs):
     """ Assesses if an electronic energy exists in the CONFS/SP/THY layer
         of the save filesys for a species at the specified level of theory.
@@ -129,7 +129,7 @@ def run_energy(zma, geo, spc_info, thy_info,
 
 def run_gradient(zma, geo, spc_info, thy_info,
                  geo_run_fs, geo_save_fs, locs,
-                 script_str, overwrite,
+                 script_str, overwrite, zrxn=None,
                  retryfail=True, method_dct=None, **kwargs):
     """ Determine the gradient for the geometry in the given location
     """
@@ -210,7 +210,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
 def rerun_hessian_and_opt(
         zma, geo, spc_info, thy_info,
         geo_run_fs, geo_save_fs, locs,
-        script_str, overwrite,
+        script_str, overwrite, zrxn=None,
         retryfail=True, method_dct=None):
 
     """ Perform a tight opt of a geometry and run the hessian.
@@ -220,8 +220,12 @@ def rerun_hessian_and_opt(
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
     run_fs = autofile.fs.run(geo_run_path)
-    script_str, kwargs = qchem_params(
-        method_dct, job='optfreq')
+    if zrxn is None:
+        script_str, kwargs = qchem_params(
+            method_dct, job='optfreq')
+    else:
+        script_str, kwargs = qchem_params(
+            method_dct, job='ts_optfreq')
 
     success, ret = es_runner.execute_job(
         job=elstruct.Job.HESSIAN,
@@ -239,27 +243,28 @@ def rerun_hessian_and_opt(
         inf_obj, inp_str, out_str = ret
 
         save_conformer(
-            ret, geo_save_fs, locs, thy_info,  orig_ich=spc_info[0],
-            init_zma=zma)
+            ret, geo_run_fs, geo_save_fs, locs, thy_info,  orig_ich=spc_info[0],
+            init_zma=zma, zrxn=zrxn)
 
-        ioprinter.info_message(" - Reading hessian from output...")
-        hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-        geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-        geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-        geo_save_fs[-1].file.hessian.write(hess, locs)
-        ioprinter.info_message(
-            " - Save path: {}".format(geo_save_path))
-
-        if thy_info[0] == 'gaussian09':
-            _hess_grad(inf_obj.prog, out_str, geo_save_fs,
-                       geo_save_path, locs, overwrite)
-        _hess_freqs(geo, geo_save_fs,
-                    geo_run_path, geo_save_path, locs, overwrite)
+        if geo_save_fs[-1].exists(locs):
+            ioprinter.info_message(" - Reading hessian from output...")
+            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+            geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+            geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+            geo_save_fs[-1].file.hessian.write(hess, locs)
+            ioprinter.info_message(
+                " - Save path: {}".format(geo_save_path))
+    
+            if thy_info[0] == 'gaussian09':
+                _hess_grad(inf_obj.prog, out_str, geo_save_fs,
+                           geo_save_path, locs, overwrite)
+            _hess_freqs(geo, geo_save_fs,
+                        geo_run_path, geo_save_path, locs, overwrite)
 
 
 def run_hessian(zma, geo, spc_info, thy_info,
                 geo_run_fs, geo_save_fs, locs,
-                script_str, overwrite,
+                script_str, overwrite, zrxn=None,
                 retryfail=True, method_dct=None, **kwargs):
     """ Determine the hessian for the geometry in the given location
     """
@@ -319,7 +324,8 @@ def run_hessian(zma, geo, spc_info, thy_info,
                     inf_obj.prog, out_str)
                 n_neg_freqs = len(
                     list(filter(lambda x: (x < 0), hfrqs)))
-                if n_neg_freqs > 0:
+                if ((zrxn is not None and n_neg_freqs > 1) or
+                        (zrxn is None and n_neg_freqs > 0)):
                     ioprinter.info_message('Too many negative freqs', hfrqs)
                     rinf_obj = run_fs[-1].file.info.read([elstruct.Job.HESSIAN])
                     rinf_obj.status = autofile.schema.RunStatus.FAILURE
@@ -329,7 +335,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                     rerun_hessian_and_opt(
                         zma, geo, spc_info, thy_info,
                         geo_run_fs, geo_save_fs, locs,
-                        script_str, overwrite,
+                        script_str, overwrite, zrxn=zrxn, 
                         retryfail=retryfail, method_dct=method_dct)
 
                 else:
@@ -365,7 +371,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
 def run_vpt2(zma, geo, spc_info, thy_info,
              geo_run_fs, geo_save_fs, locs,
-             script_str, overwrite,
+             script_str, overwrite, zrxn=None,
              retryfail=True, method_dct=None, **kwargs):
     """ Perform vpt2 analysis for the geometry in the given location
     """
@@ -460,7 +466,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
 def run_prop(zma, geo, spc_info, thy_info,
              geo_run_fs, geo_save_fs, locs,
-             script_str, overwrite,
+             script_str, overwrite, zrxn=None,
              retryfail=True, method_dct=None, **kwargs):
     """ Determine the properties in the given location
     """
@@ -539,7 +545,7 @@ def run_prop(zma, geo, spc_info, thy_info,
             geo_save_path)
 
 
-def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
+def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite, zrxn=None):
     """ Calculate harmonic frequencies using Hessian
     """
     if _json_database(save_path):
@@ -588,7 +594,7 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
 
 
 def _hess_grad(prog, out_str, geo_save_fs,
-               save_path, locs, overwrite):
+               save_path, locs, overwrite, zrxn=None):
     """ Grab and save the gradient from a Hessian job if possible.
     """
 

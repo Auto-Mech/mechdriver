@@ -71,6 +71,10 @@ def _gaussian(method_dct, prog, job=None):
         gen_lines = {1: ['# int=superfine', '# Opt=Tight']}
         job = elstruct.Job.OPTIMIZATION
 
+    elif job == 'ts_optfreq':
+        gen_lines = {1: ['# int=superfine', '# Opt=(ts,calcfc,Tight,noeigen)']}
+        job = elstruct.Job.OPTIMIZATION
+
     kwargs = {
         'memory': memory,
         'machine_options': machine_options,
