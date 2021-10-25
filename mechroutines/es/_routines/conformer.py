@@ -147,9 +147,9 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
         debug_message(
             'Removing original conformer save data for instability')
         for locs in ini_cnf_save_fs[-1].existing():
-            cnf_path = ini_cnf_save_fs[-1].path(locs)
-            debug_message(f'Removing {cnf_path}')
-            shutil.rmtree(cnf_path)
+            cnf_save_path = ini_cnf_save_fs[-1].path(locs)
+            debug_message(f'Removing {cnf_save_path}')
+            shutil.rmtree(cnf_save_path)
 
     if geo_init is None:
         if 'geo_inp' in spc_dct_i:
@@ -501,7 +501,7 @@ def conformer_sampling(zma, spc_info, thy_info,
         # save function added here
         if success:
             save_conformer(
-                ret, cnf_save_fs, locs, thy_info,
+                ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
                 init_zma=samp_zma)
 
@@ -653,7 +653,7 @@ def ring_conformer_sampling(
         # save function added here
         if success:
             save_conformer(
-                ret, cnf_save_fs, locs, thy_info,
+                ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False,
                 init_zma=samp_zma)
 
@@ -751,7 +751,7 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
                         else:
                             init_zma = None
                         save_conformer(
-                            ret, cnf_save_fs, locs, thy_info,
+                            ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                             zrxn=zrxn, orig_ich=spc_info[0],
                             init_zma=init_zma)
 
@@ -760,7 +760,7 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
 
-def save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
+def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                    orig_ich='', rid_traj=False, init_zma=None):
     """ save the conformers that have been found so far
           # Only go through save procedure if conf not in save
@@ -805,6 +805,19 @@ def save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
                 sym_locs = saved_locs[sym_id]
                 filesys.save.sym_indistinct_conformer(
                     geo, cnf_save_fs, locs, sym_locs)
+                if cnf_save_fs[-1].exists(locs):
+                    cnf_save_path = cnf_save_fs[-1].path(locs)
+                    shutil.rmtree(cnf_save_path)
+                if cnf_run_fs[-1].exists(locs):
+                    cnf_run_path = cnf_run_fs[-1].path(locs)
+                    shutil.rmtree(cnf_run_path)
+        else:
+            if cnf_save_fs[-1].exists(locs):
+                cnf_save_path = cnf_save_fs[-1].path(locs)
+                shutil.rmtree(cnf_save_path)
+            if cnf_run_fs[-1].exists(locs):
+                cnf_run_path = cnf_run_fs[-1].path(locs)
+                shutil.rmtree(cnf_run_path)
 
         # Update the conformer trajectory file
         obj('vspace')
@@ -1194,7 +1207,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
         checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = automol.geom.ring_fragments_geometry(locs_geo)
-        if frag_locs_geo is None:
+        if frag_locs_geo is None or frag_geo is None:
             rid = locs[0]
             break
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
