@@ -394,7 +394,10 @@ def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
     print(" - Reading Z-Matrix from output...")
     inf_obj, inp_str, _, _, _ = _unpack_ret(ret)
 
-    zma = read_job_zma(ret, init_zma=init_zma, rebuild=False)
+    if init_zma is not None:
+        zma = read_zma_from_geo(init_zma, geo)
+    if zma is None:
+        zma = read_job_zma(ret, init_zma=init_zma)
     _save_zmatrix_parsed(zma, inf_obj, inp_str, zma_fs, zma_locs)
 
 

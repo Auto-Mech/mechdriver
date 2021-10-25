@@ -678,10 +678,10 @@ def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
         if zrxn is None:
             gra = automol.zmat.graph(zma)
             ntaudof = len(automol.graph.rotational_bond_keys(
-               gra, with_h_rotors=False))
+               gra, with_chx_rotors=False))
         else:
             ntaudof = len(automol.reac.rotational_bond_keys(
-                zrxn, zma, with_h_rotors=False))
+                zrxn, zma, with_chx_rotors=False))
             # ntaudof = len(tors_names)
         nsamp = util.nsamp_init(nsamp_par, ntaudof)
 
@@ -798,7 +798,8 @@ def save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
             print('save_conformer locs:', locs, sym_id)
             if sym_id is None:
                 filesys.save.conformer(
-                    ret, None, cnf_save_fs, thy_info[1:], zrxn=zrxn,
+                    ret, None, cnf_save_fs, thy_info[1:],
+                    init_zma=init_zma,  zrxn=zrxn,
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
                 sym_locs = saved_locs[sym_id]
