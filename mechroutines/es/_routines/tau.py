@@ -25,7 +25,7 @@ def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,
     tors_range_dct = dict(zip(
         tuple(grp[0] for grp in tors_name_grps), tors_ranges))
     gra = automol.zmat.graph(zma)
-    ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+    ntaudof = len(automol.graph.rotational_bond_keys(gra, with_chx_rotors=False))
     nsamp = util.nsamp_init(nsamp_par, ntaudof)
     # Run through tau sampling process
     save_tau(
