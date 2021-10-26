@@ -208,64 +208,62 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
 
 def rerun_hessian_and_opt(
-        zma, geo, spc_info, thy_info,
+        zma, spc_info, thy_info,
         geo_run_fs, geo_save_fs, locs,
-        script_str, overwrite, zrxn=None,
-        retryfail=True, method_dct=None):
+        script_str, zrxn=None,
+        retryfail=True, method_dct=None, attempt=0,
+        hess_script_str=None, **hess_kwargs):
 
     """ Perform a tight opt of a geometry and run the hessian.
         Resave all of its info.
     """
     # Set the run filesystem information
-    geo_run_path = geo_run_fs[-1].path(locs)
-    geo_save_path = geo_save_fs[-1].path(locs)
-    run_fs = autofile.fs.run(geo_run_path)
-    if zrxn is None:
+    if attempt < 2:
+        geo_run_path = geo_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(geo_run_path)
+
         script_str, kwargs = qchem_params(
-            method_dct, job='optfreq')
+            method_dct, job='tightopt')
+
+        success, ret = es_runner.execute_job(
+            job=elstruct.Job.OPTIMIZATION,
+            script_str=script_str,
+            run_fs=run_fs,
+            geo=zma,
+            spc_info=spc_info,
+            thy_info=thy_info,
+            overwrite=True,
+            saddle=zrxn is not None,
+            retryfail=retryfail,
+            **kwargs,
+        )
+
+        if success:
+            inf_obj, _, out_str = ret
+            tight_geo = elstruct.reader.opt_geometry(inf_obj.prog, out_str)
+            save_conformer(
+                ret, geo_run_fs, geo_save_fs, locs,
+                thy_info,  orig_ich=spc_info[0],
+                init_zma=zma, zrxn=zrxn)
+            if geo_save_fs[-1].exists(locs):
+                ioprinter.info_message(
+                    'TightOpt complete. Rerunning Hessian Job')
+                ioprinter.info_message(automol.geom.string(tight_geo))
+                run_hessian(
+                    zma, tight_geo, spc_info, thy_info,
+                    geo_run_fs, geo_save_fs, locs,
+                    hess_script_str, True, zrxn=zrxn,
+                    retryfail=retryfail, method_dct=method_dct,
+                    attempt=attempt+1, **hess_kwargs)
     else:
-        script_str, kwargs = qchem_params(
-            method_dct, job='ts_optfreq')
-
-    success, ret = es_runner.execute_job(
-        job=elstruct.Job.HESSIAN,
-        script_str=script_str,
-        run_fs=run_fs,
-        geo=zma,
-        spc_info=spc_info,
-        thy_info=thy_info,
-        overwrite=overwrite,
-        retryfail=retryfail,
-        **kwargs,
-    )
-
-    if success:
-        inf_obj, inp_str, out_str = ret
-
-        save_conformer(
-            ret, geo_run_fs, geo_save_fs, locs, thy_info,  orig_ich=spc_info[0],
-            init_zma=zma, zrxn=zrxn)
-
-        if geo_save_fs[-1].exists(locs):
-            ioprinter.info_message(" - Reading hessian from output...")
-            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-            geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-            geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-            geo_save_fs[-1].file.hessian.write(hess, locs)
-            ioprinter.info_message(
-                " - Save path: {}".format(geo_save_path))
-    
-            if thy_info[0] == 'gaussian09':
-                _hess_grad(inf_obj.prog, out_str, geo_save_fs,
-                           geo_save_path, locs, overwrite)
-            _hess_freqs(geo, geo_save_fs,
-                        geo_run_path, geo_save_path, locs, overwrite)
+        ioprinter.error_message(
+            "Could not get rid of negative frequencies after two attempts")
 
 
 def run_hessian(zma, geo, spc_info, thy_info,
                 geo_run_fs, geo_save_fs, locs,
                 script_str, overwrite, zrxn=None,
-                retryfail=True, method_dct=None, **kwargs):
+                retryfail=True, method_dct=None, attempt=0, **kwargs):
     """ Determine the hessian for the geometry in the given location
     """
 
@@ -301,6 +299,9 @@ def run_hessian(zma, geo, spc_info, thy_info,
             _run = False
 
         if _run:
+            if attempt > 0:
+               script_str, kwargs = qchem_params(
+                   method_dct, job='tightfreq')
 
             run_fs = autofile.fs.run(geo_run_path)
 
@@ -327,16 +328,20 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 if ((zrxn is not None and n_neg_freqs > 1) or
                         (zrxn is None and n_neg_freqs > 0)):
                     ioprinter.info_message('Too many negative freqs', hfrqs)
-                    rinf_obj = run_fs[-1].file.info.read([elstruct.Job.HESSIAN])
+                    rinf_obj = run_fs[-1].file.info.read(
+                        [elstruct.Job.HESSIAN])
                     rinf_obj.status = autofile.schema.RunStatus.FAILURE
-                    run_fs[-1].file.info.write(rinf_obj, [elstruct.Job.HESSIAN])
+                    run_fs[-1].file.info.write(
+                        rinf_obj, [elstruct.Job.HESSIAN])
                     ioprinter.info_message(
                         'Performing a tightopt, superfine to fix it')
                     rerun_hessian_and_opt(
-                        zma, geo, spc_info, thy_info,
+                        zma, spc_info, thy_info,
                         geo_run_fs, geo_save_fs, locs,
-                        script_str, overwrite, zrxn=zrxn, 
-                        retryfail=retryfail, method_dct=method_dct)
+                        script_str, zrxn=zrxn,
+                        retryfail=retryfail,
+                        method_dct=method_dct, attempt=attempt,
+                        hess_script_str=script_str, **kwargs)
 
                 else:
                     hess = elstruct.reader.hessian(inf_obj.prog, out_str)

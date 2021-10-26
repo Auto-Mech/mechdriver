@@ -154,15 +154,17 @@ def run_job(job, script_str, run_fs,
         # Write the initial geo/zma
         _write_input_geo(geo, job, run_fs)
 
+        print('doing a single run here')
         # Set job runner based on user request; set special options as needed
         runner = JOB_RUNNER_DCT[job]
 
         if job == elstruct.Job.OPTIMIZATION:
+            print('set runner')
             runner = functools.partial(
                 runner, feedback=feedback,
                 frozen_coordinates=frozen_coordinates,
                 freeze_dummy_atoms=freeze_dummy_atoms)
-
+        print('about to run')
         inp_str, out_str = runner(
             script_str, run_path, geo=geo, chg=spc_info[1],
             mul=spc_info[2], method=thy_info[1], basis=thy_info[2],

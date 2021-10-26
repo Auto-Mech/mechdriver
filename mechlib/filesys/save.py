@@ -392,9 +392,10 @@ def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
     """
 
     print(" - Reading Z-Matrix from output...")
-    inf_obj, inp_str, _, _, _ = _unpack_ret(ret)
+    inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
 
     if init_zma is not None:
+        geo = elstruct.reader.opt_geometry(prog, out_str)
         zma = read_zma_from_geo(init_zma, geo)
     if zma is None:
         zma = read_job_zma(ret, init_zma=init_zma)

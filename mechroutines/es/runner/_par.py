@@ -66,20 +66,33 @@ def _gaussian(method_dct, prog, job=None):
     if not gen_lines:
         if elstruct.par.Method.is_dft(method):
             gen_lines = {1: ['# int=ultrafine']}
-        
-    if job == 'optfreq':
-        gen_lines = {1: ['# int=superfine', '# Opt=Tight']}
-        job = elstruct.Job.OPTIMIZATION
 
-    elif job == 'ts_optfreq':
-        gen_lines = {1: ['# int=superfine', '# Opt=(ts,calcfc,Tight,noeigen)']}
-        job = elstruct.Job.OPTIMIZATION
+    if job == 'tightfreq':
+        gen_lines = {1: ['# int=superfine']}
+        job = elstruct.Job.HESSIAN
 
     kwargs = {
         'memory': memory,
         'machine_options': machine_options,
         'gen_lines': gen_lines,
     }
+    if job == 'tightopt':
+        kwargs.update({
+            'gen_lines': {1: ['# int=superfine']},
+            'job_options': ['Tight'],
+            'feedback': True,
+            'errors': [
+                elstruct.Error.OPT_NOCONV
+            ],
+            'options_mat': [
+                [{'job_options': ['Tight']},
+                 {'job_options': ['Tight']},
+                 {'job_options': ['Tight']},
+                 {'job_options': ['Tight', 'calcfc']},
+                 {'job_options': ['Tight', 'calcfc']},
+                 {'job_options': ['Tight', 'calcall']}],
+            ],
+        })
 
     if job == elstruct.Job.OPTIMIZATION:
         kwargs.update({

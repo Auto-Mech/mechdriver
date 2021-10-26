@@ -98,6 +98,10 @@ def full_vib_analysis(
         harm_freqs, _ = scale_frequencies(
             harm_freqs, None,
             spc_mod_dct_i, scale_method='c3')
+        #harm_freqs, zpe = scale_frequencies(
+        #    harm_freqs, 0,
+        #    spc_mod_dct_i, scale_method='c3')
+
 
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
             harm_freqs, disps)
