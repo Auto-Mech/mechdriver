@@ -99,7 +99,7 @@ def run(pes_rlst, pes_grp_dct,
             if write_rate_tsk is not None:
                 tsk_key_dct = write_rate_tsk[-1]
                 spc_dct, rxn_lst, instab_chnls, label_dct = _process(
-                    run_fit_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
+                    write_rate_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
                     spc_mod_dct, spc_dct, glob_dct,
                     run_prefix, save_prefix)
                 ktp_tasks.write_messrate_task(

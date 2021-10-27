@@ -20,6 +20,7 @@ from mechroutines.ktp._ene import sum_channel_enes
 
 from mechroutines.ktp._newstuff import energy_dist_params
 from mechroutines.ktp._newstuff import set_prod_density_param
+from mechroutines.ktp._newstuff import set_hot_enes
 
 
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
@@ -27,7 +28,7 @@ BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
 # Headers
 def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
-                    pes_param_dct, label_dct,
+                    pes_param_dct, hot_enes_dct, label_dct,
                     temps, pressures, float_type):
     """ Built the head of the MESS input file that contains various global
         keywords used for running rate calculations.
@@ -67,7 +68,7 @@ def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
     # Set other parameters
     # Need the PES number to pull the correct params out of lists
     ped_spc_lst, hot_enes_dct, micro_out_params = energy_dist_params(
-        pesgrp_num, pes_param_dct, label_dct, enes=(10.0, 20.0, 30.0))
+        pesgrp_num, pes_param_dct, hot_enes_dct, label_dct)
 
     header_str = mess_io.writer.global_rates_input(
         temps, pressures,
@@ -124,8 +125,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
     # Initialize empty MESS strings
     full_well_str, full_bi_str, full_ts_str = '', '', ''
     full_dat_str_dct = {}
-    pes_ene_dct = {}
-    conn_lst = tuple()
 
     # Set the energy and model for the first reference species
     ioprinter.info_message('\nCalculating reference energy for PES')
@@ -165,6 +164,12 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         # Calculate the relative energies of all spc on the channel
         chnl_enes = sum_channel_enes(chnl_infs, ref_ene)
 
+        # Set the hot energies using the relative enes that will be
+        # written into the global key section of MESS input later
+        hot_enes_dct = set_hot_enes(pesgrp_num, reacs, prods,
+                                    chnl_enes, pes_param_dct,
+                                    ene_range=(10.,))
+
         # Write the mess strings for all spc on the channel
         mess_strs, dat_str_dct, written_labels = _make_channel_mess_strs(
             tsname, reacs, prods, pesgrp_num,
@@ -187,7 +192,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
     # Combine all the reaction channel strings
     rxn_chan_str = '\n'.join([full_well_str, full_bi_str, full_ts_str])
 
-    return rxn_chan_str, full_dat_str_dct, pes_ene_dct, conn_lst
+    return rxn_chan_str, full_dat_str_dct, hot_enes_dct
 
 
 def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,

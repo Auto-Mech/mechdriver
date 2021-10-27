@@ -44,10 +44,16 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
     pes_model_dct_i = pes_model_dct[pes_mod]
     spc_model_dct_i = spc_model_dct[spc_mod]
 
+    # Write the MESS strings for all the PES channels
+    rxn_chan_str, dats, hot_enes_dct = make_pes_mess_str(
+        spc_dct, rxn_lst, pes_idx, pesgrp_num, unstab_chnls,
+        run_prefix, save_prefix, label_dct, pes_param_dct,
+        pes_model_dct_i, spc_model_dct_i, spc_mod)
+
     # Write the strings for the MESS input file
     globkey_str = make_header_str(
         spc_dct, rxn_lst, pes_idx, pesgrp_num,
-        pes_param_dct, label_dct,
+        pes_param_dct, hot_enes_dct, label_dct,
         pes_model_dct_i['rate_temps'],
         pes_model_dct_i['pressures'],
         tsk_key_dct['float_precision'])
@@ -56,12 +62,6 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
     etransfer = pes_model_dct_i['glob_etransfer']
     energy_trans_str = make_global_etrans_str(
         rxn_lst, spc_dct, etransfer)
-
-    # Write the MESS strings for all the PES channels
-    rxn_chan_str, dats, _, _ = make_pes_mess_str(
-        spc_dct, rxn_lst, pes_idx, pesgrp_num, unstab_chnls,
-        run_prefix, save_prefix, label_dct, pes_param_dct,
-        pes_model_dct_i, spc_model_dct_i, spc_mod)
 
     # Write base MESS input string into the RUN filesystem
     mess_inp_str = mess_io.writer.messrates_inp_str(
