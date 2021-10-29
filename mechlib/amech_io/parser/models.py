@@ -192,6 +192,10 @@ def _kin_model_build(kin_mod_dct_i):
     new_ratefit = {}
     for key, val in old_ratefit.items():
         if not any(x in key for x in ('pdep', 'arr', 'cheb', 'troe')):
+            if val == 'arrhenius':  # keeps legacy working with the new form
+                val = 'arr'
+            elif val == 'chebyshev':
+                val = 'cheb'
             new_ratefit[key] = val
 
     new_ratefit.update({
