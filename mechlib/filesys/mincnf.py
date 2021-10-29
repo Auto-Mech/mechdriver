@@ -656,7 +656,11 @@ def collect_rrho_params(cnf_save_fs, locs, sp_info, freq_info, mod_thy_info):
             ene = sp_fs[-1].file.energy.read(sp_thy_info)
         else:
             ene = _wait_for_energy_to_be_saved(
-               cnf_save_fs, locs, sp_fs, sp_info)
+                cnf_save_fs, locs, sp_fs, sp_info)
+
+    if freqs is not None:
+        freqs = [freq for freq in freqs if freq > 0.]
+
     return geo, freqs, ene
 
 
@@ -665,7 +669,7 @@ def get_freq_location(geo, freq_info):
     """
     _, _ = geo, freq_info
     ioprinter.debug_message(
-        'NOTIMPLEMENTED to use a zpe(LVL) that is not the same as inplvl=LVL')
+        'NOT IMPLEMENTED to use a zpe(LVL) that is not the same as inplvl=LVL')
     return None, None
 
 
@@ -708,7 +712,7 @@ def _sort_energy_parameter(
         zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
         sort_ene += zpe
     elif sort_prop == 'enthalpy':
-        ioprinter.info_message('Sorting by Enthalpy(T) not implemneted yet')
+        ioprinter.info_message('Sorting by Enthalpy(T) not implemented yet')
         sort_ene = None
     elif sort_prop == 'entropy':
         sort_ene = thermfit.rrho_entropy(
@@ -725,10 +729,8 @@ def _sort_energy_parameter(
         else:
             rel_sp_ene = spe - first_enes[0]
             rel_zero_ene = zpe - first_enes[1]
-        print(f'rel zero energy is {rel_zero_ene:.2f} kcal/mol')
         sort_ene = thermfit.pf.rrho_gibbs_factor(
             geo, freqs, rel_zero_ene, sort_prop_dct[sort_prop])
-        print(f'rel gibbs energy is {sort_ene:.2f} kcal/mol')
         sort_ene += rel_sp_ene
         sort_ene = sort_ene / phycon.EH2KCAL
     return sort_ene, first_enes

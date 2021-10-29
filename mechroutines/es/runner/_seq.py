@@ -174,7 +174,6 @@ def options_matrix_run(input_writer, script_str, prefix,
     while True:
         subrun_fs[-1].create([macro_idx, micro_idx])
         path = subrun_fs[-1].path([macro_idx, micro_idx])
-        print('kwargs in seq', kwargs)
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(

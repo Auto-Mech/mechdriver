@@ -325,10 +325,10 @@ def conformer_tsk(job, spc_dct, spc_name,
         uni_rng_locs_lst, uni_cnf_locs_lst = conformer.unique_fs_ring_confs(
             cnf_save_fs, rng_cnf_locs_lst,
             ini_cnf_save_fs, ini_rng_cnf_locs_lst)
-        ioprinter.debug_message(
-            'uni lst that has no similar ring', uni_rng_locs_lst)
-        ioprinter.debug_message(
-            'uni lst that has similar ring', uni_cnf_locs_lst)
+        # ioprinter.debug_message(
+        #    'uni lst that has no similar ring', uni_rng_locs_lst)
+        # ioprinter.debug_message(
+        #    'uni lst that has similar ring', uni_cnf_locs_lst)
 
         for locs in uni_rng_locs_lst:
             rid, cid = locs
@@ -388,26 +388,27 @@ def conformer_tsk(job, spc_dct, spc_name,
         if not ini_rng_cnf_locs_lst:
             ioprinter.error_message(
                 'No min-energy conformer found for level:')
-            sys.exit()
 
-        # Set up the run scripts
-        script_str, kwargs = qchem_params(
-            method_dct)
+        else:
 
-        # Run the job over all the conformers requested by the user
-        for ini_locs in ini_rng_cnf_locs_lst:
-            ini_cnf_run_fs[-1].create(ini_locs)
-            geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
-            ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
-            print('Running task for geometry at ', geo_save_path)
-            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-            zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-            ES_TSKS[job](
-                zma, geo, spc_info, mod_thy_info,
-                ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
-                script_str, overwrite, zrxn=zrxn,
-                retryfail=retryfail, method_dct=method_dct,
-                **kwargs)
+            # Set up the run scripts
+            script_str, kwargs = qchem_params(
+                method_dct)
+    
+            # Run the job over all the conformers requested by the user
+            for ini_locs in ini_rng_cnf_locs_lst:
+                ini_cnf_run_fs[-1].create(ini_locs)
+                geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
+                ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
+                print('Running task for geometry at ', geo_save_path)
+                geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+                zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+                ES_TSKS[job](
+                    zma, geo, spc_info, mod_thy_info,
+                    ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
+                    script_str, overwrite, zrxn=zrxn,
+                    retryfail=retryfail, method_dct=method_dct,
+                    **kwargs)
 
 
 def tau_tsk(job, spc_dct, spc_name,
