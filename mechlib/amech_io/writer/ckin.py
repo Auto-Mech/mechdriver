@@ -13,6 +13,7 @@ def model_header(spc_mods, spc_mod_dct, refscheme=''):
     mod_str = ''
     for spc_mod in spc_mods:
         mod_str += _model_header(spc_mod_dct[spc_mod], refscheme=refscheme)
+    mod_str += '\n\n'
 
     return mod_str
 
@@ -77,6 +78,7 @@ def _ckin_ene_lvl_str(ene_infos, har_info):
 
 
 # kTP
+# deprecated in ktpdriver.py on 10/29/21 by CRM
 def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
     """ write out the rates
     """

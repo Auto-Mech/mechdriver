@@ -17,6 +17,10 @@ from mechlib.amech_io import parser
 from mechlib.amech_io import rate_paths
 from mechlib.amech_io import printer as ioprinter
 from mechlib.reaction import split_unstable_pes
+from ioformat import pathtools
+from mess_io.reader import rates as mess_reader
+from chemkin_io.writer import mechanism
+from chemkin_io.writer import comments
 
 
 def run(pes_rlst, pes_grp_dct,
@@ -120,6 +124,43 @@ def run(pes_rlst, pes_grp_dct,
                 ktp_tasks.run_fits_task(
                     pes_inf, rate_paths_dct, mdriver_path,
                     label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
+
+                # Read MESS file and get rate constants
+                mess_str = pathtools.read_file(mess_path, 'rate.out')
+                rxn_ktp_dct = mess_reader.get_rxn_ktp_dct(
+                    mess_str,
+                    label_dct=label_dct,
+                    filter_kts=True,
+                    tmin=min(pes_mod_dct[pes_mod]['rate_temps']),
+                    tmax=max(pes_mod_dct[pes_mod]['rate_temps']),
+                    pmin=min(pes_mod_dct[pes_mod]['pressures']),
+                    pmax=max(pes_mod_dct[pes_mod]['pressures'])
+                )
+             
+                # Fit rates
+                ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
+                rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
+                    rxn_ktp_dct,
+                    ratefit_dct['fit_method'],
+                    pdep_dct=ratefit_dct['pdep_fit'],
+                    arrfit_dct=ratefit_dct['arrfit_fit'],
+                    chebfit_dct=ratefit_dct['chebfit_fit'],
+                    troefit_dct=ratefit_dct['troefit_fit'],
+                )
+            
+                # Write the reactions block header, which contains model info
+                rxn_block_cmt = writer.ckin.model_header((spc_mod,), spc_mod_dct)
+    
+                # Get the comments dct and write the Chemkin string
+                rxn_cmts_dct = comments.get_rxn_cmts_dct(
+                    rxn_err_dct=rxn_err_dct, rxn_block_cmt=rxn_block_cmt) 
+                ckin_str = mechanism.write_chemkin_file(
+                    rxn_param_dct=rxn_param_dct, rxn_cmts_dct=rxn_cmts_dct)
+    
+                # Write the file
+                ckin_path = output_path('CKIN', prefix=mdriver_path)
+                ckin_filename = pes_formula + '.ckin'
+                pathtools.write_file(ckin_str, ckin_path, ckin_filename)
 
 
 # ------- #
