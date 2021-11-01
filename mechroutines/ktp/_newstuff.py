@@ -72,7 +72,7 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, label_dct):
         print(f'Ranges for k(E) calculations: {micro_out_params}')
     else:
         ped_spc_lst = None
-        hot_enes_dct = None
+        _hot_enes_dct = None
         micro_out_params = None
 
     return ped_spc_lst, _hot_enes_dct, micro_out_params
@@ -89,24 +89,27 @@ def set_hot_enes(pesgrp_num, reacs, prods,
         are the energies to set in the mechanism file. {side: ene_lst}
     """
 
-    all_hot_spc = pes_param_dct['hot']
-    pes_hot_spc = all_hot_spc[pesgrp_num]
+    if pes_param_dct is not None:
+        all_hot_spc = pes_param_dct['hot']
+        pes_hot_spc = all_hot_spc[pesgrp_num]
 
-    hot_enes_dct = {}
-    for spc in pes_hot_spc:
-        if spc in reacs:
-            ene = chnl_enes['reacs']
-            side = '+'.join(reacs)
-        elif spc in prods:
-            ene = chnl_enes['prods']
-            side = '+'.join(prods)
-        else:
-            side, ene = None, None
+        hot_enes_dct = {}
+        for spc in pes_hot_spc:
+            if spc in reacs:
+                ene = chnl_enes['reacs']
+                side = '+'.join(reacs)
+            elif spc in prods:
+                ene = chnl_enes['prods']
+                side = '+'.join(prods)
+            else:
+                side, ene = None, None
 
-        if side is not None:
-            hot_enes_dct[side] = (ene,) + ene_range
+            if side is not None:
+                hot_enes_dct[side] = (ene,) + ene_range
 
-    if not hot_enes_dct:
+        if not hot_enes_dct:
+            hot_enes_dct = None
+    else:
         hot_enes_dct = None
 
     return hot_enes_dct

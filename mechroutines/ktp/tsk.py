@@ -13,6 +13,10 @@ from mechroutines.models.typ import use_well_extension
 from mechroutines.ktp.rates import make_header_str
 from mechroutines.ktp.rates import make_global_etrans_str
 from mechroutines.ktp.rates import make_pes_mess_str
+from ioformat import pathtools
+from mess_io.reader import rates as mess_reader
+from chemkin_io.writer import mechanism
+from chemkin_io.writer import comments
 
 
 def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
@@ -148,46 +152,56 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
     ioprinter.info_message(
         'Fitting Rate Constants for PES to Functional Forms', newline=1)
 
-    # Set the MESS path to either well-extended or base
-    path_dct = rate_paths_dct[pes_inf]
-    for typ in ('wext', 'base'):
-        mess_path = path_dct[typ]
-        mess_out = os.path.join(mess_path, 'mess.out')
-        if os.path.exists(mess_out):
-            break
-
     # Read and fit rates; write to ckin string
-    base_mess_path = rate_paths_dct[pes_inf]['base']
-    wext_mess_path = rate_paths_dct[pes_inf]['wext']
-    if os.path.exists(wext_mess_path):
-        mess_path = wext_mess_path
-    else:
-        mess_path = base_mess_path
-    ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
+    mess_path = rate_paths_dct[pes_inf]['base']
+    # both base and wext path made even if wext not run; need fix
+    # base_mess_path = rate_paths_dct[pes_inf]['base']
+    # wext_mess_path = rate_paths_dct[pes_inf]['wext']
+    # if os.path.exists(wext_mess_path):
+    #     mess_path = wext_mess_path
+    # else:
+    #     mess_path = base_mess_path
+
     print(f'Fitting rates from {mess_path}')
 
-    # Read the ktp dct
+    # Read MESS file and get rate constants
+    mess_str = pathtools.read_file(mess_path, 'rate.out')
+    rxn_ktp_dct = mess_reader.get_rxn_ktp_dct(
+        mess_str,
+        label_dct=label_dct,
+        filter_kts=True,
+        tmin=min(pes_mod_dct[pes_mod]['rate_temps']),
+        tmax=max(pes_mod_dct[pes_mod]['rate_temps']),
+        pmin=min(pes_mod_dct[pes_mod]['pressures']),
+        pmax=max(pes_mod_dct[pes_mod]['pressures'])
+    )
+    # Read the info needed for doing prompt/nontherm?
 
-    # Fit the ktp dct
-    ckin_dct = ratefit.fit.fit_ktp_dct(
-        mess_path=mess_path,
-        inp_fit_method=ratefit_dct['fit_method'],
+    # Read all of the rxn_ktp_dct
+
+    # Alter the raw ktp values using the branching fractions from prompt
+
+    # Fit rates
+    ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
+    rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
+        rxn_ktp_dct,
+        ratefit_dct['fit_method'],
         pdep_dct=ratefit_dct['pdep_fit'],
         arrfit_dct=ratefit_dct['arrfit_fit'],
         chebfit_dct=ratefit_dct['chebfit_fit'],
         troefit_dct=ratefit_dct['troefit_fit'],
-        label_dct=label_dct,
-        fit_temps=pes_mod_dct[pes_mod]['rate_temps'],
-        fit_pressures=pes_mod_dct[pes_mod]['pressures'],
-        fit_tunit=pes_mod_dct[pes_mod]['temp_unit'],
-        fit_punit=pes_mod_dct[pes_mod]['pressure_unit']
     )
 
-    # Write the header part
-    ckin_dct.update({
-        'header': writer.ckin.model_header((spc_mod,), spc_mod_dct)
-    })
+    # Write the reactions block header, which contains model info
+    rxn_block_cmt = writer.ckin.model_header((spc_mod,), spc_mod_dct)
 
+    # Get the comments dct and write the Chemkin string
+    rxn_cmts_dct = comments.get_rxn_cmts_dct(
+        rxn_err_dct=rxn_err_dct, rxn_block_cmt=rxn_block_cmt)
+    ckin_str = mechanism.write_chemkin_file(
+        rxn_param_dct=rxn_param_dct, rxn_cmts_dct=rxn_cmts_dct)
+
+    # Write the file
     ckin_path = output_path('CKIN', prefix=mdriver_path)
-    writer.ckin.write_rxn_file(
-        ckin_dct, pes_fml, ckin_path)
+    ckin_filename = pes_fml + '.ckin'
+    pathtools.write_file(ckin_str, ckin_path, ckin_filename)

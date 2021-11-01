@@ -72,7 +72,7 @@ def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
 
     header_str = mess_io.writer.global_rates_input(
         temps, pressures,
-        calculation_method='well-reduction',
+        calculation_method='direct',
         well_extension=well_extend,
         ped_spc_lst=ped_spc_lst,
         hot_enes_dct=hot_enes_dct,
