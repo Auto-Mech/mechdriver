@@ -242,8 +242,10 @@ def _optimize_molecule(spc_info, zma_init,
 
         # Remove the imaginary mode
         geo, ret = remove_imag(
-            geo, ret, spc_info, method_dct,
-            run_fs, kickoff_size, kickoff_backward, kickoff_mode=0,
+            geo, ret, spc_info, method_dct, run_fs,
+            kickoff_size=kickoff_size,
+            kickoff_backward=kickoff_backward,
+            kickoff_mode=0,
             overwrite=overwrite)
 
         # Recheck connectivity for imag-checked geometry

@@ -10,6 +10,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
+# from mechroutines.es._routines.sp import rerun_hessian_and_opt
 
 
 def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
@@ -34,29 +35,44 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
         overwrite, **kwargs)
 
     # Make five attempts to remove imag mode if found
-    chk_idx = 0
-    kick_ret = None
-    while imag and chk_idx < 5:
-        chk_idx += 1
-        ioprinter.info_message(
-            f'Attempting kick off along mode, attempt {chk_idx}...')
+    count, kick_ret = 1, None
+    while imag and count <= 2:
 
-        geo, kick_ret = _kickoff_saddle(
-            geo, norm_coords, spc_info, mod_thy_info,
-            run_fs, opt_script_str,
-            kickoff_size, kickoff_backward, kickoff_mode,
-            opt_cart=True, **opt_kwargs)
+        # Either attempt a kickoff-reopt or tight-reopt
+        # Only attempt kickoff-reopt on first two tries
+        if count <= 2:
+            ioprinter.info_message(
+                f'Attempting kick off along mode, attempt {count}...')
 
-        ioprinter.info_message(
-            'Removing faulty geometry from filesystem. Rerunning Hessian...')
-        run_fs[-1].remove([elstruct.Job.HESSIAN])
+            geo, kick_ret = _kickoff_saddle(
+                geo, norm_coords, spc_info, mod_thy_info,
+                run_fs, opt_script_str,
+                kickoff_size=kickoff_size,
+                kickoff_backward=kickoff_backward,
+                kickoff_mode=kickoff_mode,
+                opt_cart=True, **opt_kwargs)
 
+            ioprinter.info_message(
+                'Removing faulty geometry from SAVE filesys. '
+                'Rerunning Hessian...')
+            run_fs[-1].remove([elstruct.Job.HESSIAN])
+        else:
+            pass
+            # rerun_hessian_and_opt(
+            #     zma, spc_info, thy_info,
+            #     geo_run_fs, geo_save_fs, locs,
+            #     script_str, zrxn=None,
+            #     retryfail=True, method_dct=None, attempt=0,
+            #     hess_script_str=None, **hess_kwargs)
+
+        # Assess the imaginary mode after the reoptimization
         ioprinter.info_message('Rerunning Hessian...')
         imag, norm_coords = _check_imaginary(
             spc_info, geo, mod_thy_info, run_fs, script_str,
             overwrite, **kwargs)
 
-        # Update kickoff size
+        # Update the loop counter and kickoff size
+        count += 1
         kickoff_size *= 2.0
 
     if kick_ret is None:
@@ -106,7 +122,7 @@ def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
             # Mode for now set the imaginary frequency check to -100:
             # Should decrease once freq projector functions properly
             if imag_freq:
-                ioprinter.warning_message('Imaginary mode found:')
+                ioprinter.warning_message(f'Imaginary mode found: {imag_freq}')
                 norm_coords = elstruct.reader.normal_coordinates(prog, out_str)
                 has_imag = True
 
@@ -120,25 +136,21 @@ def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,
     """ kickoff from saddle to find connected minima
     """
 
-    # Choose the displacement xyzs
+    # Choose the displacement xyzs and set kickoff direction and size
+    kickoff = kickoff_size if not kickoff_backward else -1.0*kickoff_size
     disp_xyzs = norm_coords[kickoff_mode]
+    disp_xyzs = numpy.multiply(disp_xyzs, kickoff)
+    
+    disp_geo = automol.geom.translate_along_matrix(geo, disp_xyzs)
 
-    # Set the displacement vectors and displace geometry
-    disp_len = kickoff_size * phycon.ANG2BOHR
-    if kickoff_backward:
-        disp_len *= -1
-    disp_xyzs = numpy.multiply(disp_xyzs, disp_len)
     ioprinter.debug_message(
-        'geo test in kickoff_saddle:',
-        automol.geom.string(geo), disp_xyzs)
-
-    geo = automol.geom.translate(geo, disp_xyzs)
+        f'Creating displacement geometry with kickoff size of {kickoff}'
+        f'\ninitial geometry:\n{automol.geom.string(geo)}'
+        f'\ndisplaced geometry:\n{automol.geom.string(disp_geo)}'
+    )
 
     # Optimize displaced geometry
-    if opt_cart:
-        geom = geo
-    else:
-        geom = automol.geom.zmatrix(geo)
+    geom = disp_geo if opt_cart else automol.geom.zmatrix(disp_geo)
     success, ret = es_runner.execute_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=opt_script_str,
@@ -153,6 +165,8 @@ def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,
     if success:
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
-        geo = elstruct.reader.opt_geometry(prog, out_str)
+        ret_geo = elstruct.reader.opt_geometry(prog, out_str)
+    else:
+        ret_geo = None
 
-    return geo, ret
+    return ret_geo, ret
