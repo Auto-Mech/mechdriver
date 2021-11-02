@@ -25,12 +25,12 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
     ioprinter.info_message(
         'Checking the initial geometry for imaginary frequencies...')
     hess, hess_ret = _hess(spc_info, mod_thy_info, geo, run_fs,
-                           hess_script_str, overwrite, **kwargs)
+                           hess_script_str, **kwargs)
     imags, norm_coords = _check_imaginary(geo, hess, hess_ret, run_fs)
 
     # Make five attempts to remove imag mode if found
     count, opt_ret = 1, None
-    while imags and count <= 2:
+    while imags and count <= 4:
 
         # Either attempt a kickoff-reopt or tight-reopt
         # Only attempt kickoff-reopt on first two tries
@@ -45,6 +45,8 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
                 mode=kickoff_mode)
             geo, opt_ret = _opt(spc_info, mod_thy_info, disp_geo, run_fs,
                                 opt_script_str, opt_cart=True, **opt_kwargs)
+            hess_script_str, hess_kwargs = qchem_params(
+                method_dct)
         else:
             ioprinter.info_message(
                 f'Attempting tight opt, attempt {count-2}...')
@@ -52,12 +54,13 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
                 method_dct, job='tightopt')
             geo, opt_ret = _opt(spc_info, mod_thy_info, geo, run_fs,
                                 opt_script_str, opt_cart=True, **opt_kwargs)
+            hess_script_str, hess_kwargs = qchem_params(
+                method_dct, job='tightfreq')
 
         # Assess the imaginary mode after the reoptimization
         ioprinter.info_message('Rerunning Hessian...')
-        run_fs[-1].remove([elstruct.Job.HESSIAN])
         hess, hess_ret = _hess(spc_info, mod_thy_info, geo, run_fs,
-                               hess_script_str, overwrite, **kwargs)
+                               hess_script_str, **hess_kwargs)
         imags, norm_coords = _check_imaginary(geo, hess, hess_ret, run_fs)
 
         # Update the loop counter and kickoff size
@@ -98,7 +101,7 @@ def _check_imaginary(geo, hess, hess_ret, run_fs):
     """
     _, _, imag_freq, _ = autorun.projrot.frequencies(
        autorun.SCRIPT_DCT['projrot'],
-       run_fs[-1].path([elstruct.Job.Hessian]),
+       run_fs[-1].path([elstruct.Job.HESSIAN]),
        [geo], [[]], [hess])
 
     # Mode for now set the imaginary frequency check to -100:
@@ -144,7 +147,7 @@ def _opt(spc_info, mod_thy_info, geo, run_fs,
 
 
 def _hess(spc_info, mod_thy_info, geo, run_fs,
-          script_str, overwrite, **kwargs):
+          script_str, **kwargs):
     """ Calculate the Hessian
     """
 
@@ -156,7 +159,7 @@ def _hess(spc_info, mod_thy_info, geo, run_fs,
         geo=geo,
         run_fs=run_fs,
         script_str=script_str,
-        overwrite=overwrite,
+        overwrite=True,
         **kwargs,
         )
 
