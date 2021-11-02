@@ -27,8 +27,7 @@ def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
     return calc_dens
 
 
-def energy_dist_params(pesgrp_num, pes_param_dct, label_dct,
-                       enes=(10.0, 20.0, 30.0)):
+def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, label_dct):
     """ set values to determine input parameters for handling
         energy distributions in MESS calculations
 
@@ -41,15 +40,15 @@ def energy_dist_params(pesgrp_num, pes_param_dct, label_dct,
 
         # Grab the desired PED and hot enes for the PES in the group
         all_peds = pes_param_dct['peds']
-        all_hot_spc = pes_param_dct['hot']
         pes_peds = all_peds[pesgrp_num]
-        pes_hot_spc = all_hot_spc[pesgrp_num]
 
         # Set the PEDs
         if any(pes_peds):
             ped_spc_lst = tuple()
             for ped in pes_peds:
                 _ped = ped.split('_')
+                print(label_dct)
+                print(_ped)
                 ped_spc_lst += (f'{label_dct[_ped[0]]}_{label_dct[_ped[1]]}',)
             ped_str = ' '.join(ped_spc_lst)
             print(f'Species for PED: {ped_str}')
@@ -57,12 +56,15 @@ def energy_dist_params(pesgrp_num, pes_param_dct, label_dct,
             ped_spc_lst = None
 
         # Set the Hot Energies section
-        if any(pes_hot_spc):
-            hot_enes_dct = {label_dct[spc]: enes for spc in pes_hot_spc}
-            hot_str = ' '.join(hot_enes_dct.keys())
+        print('hot1', hot_enes_dct)
+        if hot_enes_dct is not None:
+            _hot_enes_dct = {label_dct[spc]: enes
+                             for spc, enes in hot_enes_dct.items()}
+            hot_str = ' '.join(_hot_enes_dct.keys())
             print(f'Species for Hot: {hot_str}')
         else:
-            hot_enes_dct = None
+            _hot_enes_dct = None
+        print('hot2', _hot_enes_dct)
 
         # Set the micro params for writing k(E)s
         # When to set this
@@ -70,31 +72,47 @@ def energy_dist_params(pesgrp_num, pes_param_dct, label_dct,
         print(f'Ranges for k(E) calculations: {micro_out_params}')
     else:
         ped_spc_lst = None
-        hot_enes_dct = None
+        _hot_enes_dct = None
         micro_out_params = None
 
-    return ped_spc_lst, hot_enes_dct, micro_out_params
+    return ped_spc_lst, _hot_enes_dct, micro_out_params
 
 
-def set_hot_energies(pesgrp_num, reacs, prods,
-                     chnl_enes, pes_param_dct,
-                     ene_range=(10.,)):
+def set_hot_enes(pesgrp_num, reacs, prods,
+                 chnl_enes, pes_param_dct,
+                 ene_range=(10.,)):
     """ Determine what hot energies should be for the requested
         species.
+
+        Returns a dictionary where keys are the the mechanism names
+        for the side of the reaction the hot spc appears and the values
+        are the energies to set in the mechanism file. {side: ene_lst}
     """
 
-    all_hot_spc = pes_param_dct['hot']
-    pes_hot_spc = all_hot_spc[pesgrp_num]
+    if pes_param_dct is not None:
+        all_hot_spc = pes_param_dct['hot']
+        pes_hot_spc = all_hot_spc[pesgrp_num]
 
-    for spc in pes_hot_spc:
-        if spc in reacs:
-            ene = chnl_enes['reacs']
-        if spc in prods:
-            ene = chnl_enes['prods']
+        hot_enes_dct = {}
+        for spc in pes_hot_spc:
+            if spc in reacs:
+                ene = chnl_enes['reacs']
+                side = '+'.join(reacs)
+            elif spc in prods:
+                ene = chnl_enes['prods']
+                side = '+'.join(prods)
+            else:
+                side, ene = None, None
 
-    enes = (ene,) + ene_range
+            if side is not None:
+                hot_enes_dct[side] = (ene,) + ene_range
 
-    return enes
+        if not hot_enes_dct:
+            hot_enes_dct = None
+    else:
+        hot_enes_dct = None
+
+    return hot_enes_dct
 
 
 # def ped_therm_range():

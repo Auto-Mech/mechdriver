@@ -30,7 +30,7 @@ SPC_VAL_DCT = {
     'elec_levels': ((tuple,), (), None),
     'geo': ((tuple,), (), None),
     'sym_factor': ((float,), (), None),
-    'kickoff': ((tuple,), (), (True, (0.1, False))),
+    'kickoff': ((tuple,), (), (0.1, False)),
     'hind_inc': ((float,), (), 30.0),
     'hbond_cutoffs': ((tuple,), (), (4.55, 1.92)),
     'mc_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
