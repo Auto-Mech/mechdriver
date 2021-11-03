@@ -829,7 +829,7 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
 
-def _saved_cnf_info(cnf_save_fs, mod_thy_info, orig_locs):
+def _saved_cnf_info(cnf_save_fs, mod_thy_info, orig_locs=None):
     """ get the locs, geos and enes for saved conformers
     """
 
@@ -1117,6 +1117,10 @@ def unique_fs_ring_confs(
                 geo = automol.zmat.geometry(zma)
                 # geo = cnf_save_fs[-1].file.geometry.read(tlocs)
                 frag_geo = automol.geom.ring_fragments_geometry(geo)
+                if frag_geo is None:
+                    found_rid = trid
+                    rng_dct[ini_rid] = trid
+                    break
                 frag_zma = automol.geom.zmatrix(frag_geo)
                 if automol.zmat.almost_equal(frag_ini_zma, frag_zma,
                                              dist_rtol=0.1, ang_atol=.4):
