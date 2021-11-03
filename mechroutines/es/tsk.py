@@ -394,8 +394,21 @@ def conformer_tsk(job, spc_dct, spc_name,
             # Set up the run scripts
             script_str, kwargs = qchem_params(
                 method_dct)
-    
+
+            # Grab frequencies for the reference, print ref freqs
+            if job == 'hess':
+                ref_val = ini_cnf_save_fs[-1].file.harmonic_frequencies.read(
+                    ini_rng_cnf_locs_lst[0])
+                if ref_val is not None and zrxn is not None:
+                    ref_path = cnf_save_fs[-1].path(ini_rng_cnf_locs_lst[0])
+                    print('Found reference frequencies for saddle-point '
+                          f'checks for conformer at\n {ref_path}')
+                    ioprinter.frequencies(ref_val)
+            else:
+                ref_val = None
+
             # Run the job over all the conformers requested by the user
+            print('Going over all requested conformers for task...\n')
             for ini_locs in ini_rng_cnf_locs_lst:
                 ini_cnf_run_fs[-1].create(ini_locs)
                 geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
@@ -408,7 +421,9 @@ def conformer_tsk(job, spc_dct, spc_name,
                     ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
                     script_str, overwrite, zrxn=zrxn,
                     retryfail=retryfail, method_dct=method_dct,
+                    ref_val=ref_val,
                     **kwargs)
+                print('\n === FINISHED CONF ===\n')
 
 
 def tau_tsk(job, spc_dct, spc_name,

@@ -245,8 +245,7 @@ def _optimize_molecule(spc_info, zma_init,
             geo, ret, spc_info, method_dct, run_fs,
             kickoff_size=kickoff_size,
             kickoff_backward=kickoff_backward,
-            kickoff_mode=0,
-            overwrite=overwrite)
+            kickoff_mode=0)
 
         # Recheck connectivity for imag-checked geometry
         if geo is not None:
@@ -258,7 +257,8 @@ def _optimize_molecule(spc_info, zma_init,
                     'Saving structure as the first conformer...', newline=1)
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, mod_thy_info[1:],
-                    rng_locs=(locs[0],), tors_locs=(locs[1],))
+                    rng_locs=(locs[0],), tors_locs=(locs[1],),
+                    init_zma=zma)
             else:
                 if not conn:
                     info_message('Saving disconnected species...')
