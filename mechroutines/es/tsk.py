@@ -208,58 +208,59 @@ def conformer_tsk(job, spc_dct, spc_name,
             ini_cnf_save_fs, mod_ini_thy_info)
         ini_locs, ini_min_cnf_path = ini_loc_info
 
-        ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
-
-        # Set up the run scripts
-        script_str, kwargs = qchem_params(
-            method_dct, elstruct.Job.OPTIMIZATION)
-
-        # Set variables if it is a saddle
-        two_stage = saddle
-        mc_nsamp = spc_dct_i['mc_nsamp']
-        resave = es_keyword_dct['resave']
-
-        # Read the geometry and zma from the ini file system
-        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-        zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
-
-        # Read the torsions from the ini file sys
-        if ini_zma_save_fs[-1].file.torsions.exists([0]):
-            tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-            rotors = automol.rotor.from_data(zma, tors_dct)
-            tors_names = automol.rotor.names(rotors, flat=True)
-        else:
-            tors_names = ()
-
-        geo_path = ini_cnf_save_fs[-1].path(ini_locs)
-        ioprinter.initial_geom_path('Sampling started', geo_path)
-
-        # Check runsystem for equal ring CONF make conf_fs
-        # Else make new ring conf directory
-        rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
-
-        if rid is None:
-            conformer.single_conformer(
+        if ini_locs:
+            ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+    
+            # Set up the run scripts
+            script_str, kwargs = qchem_params(
+                method_dct, elstruct.Job.OPTIMIZATION)
+    
+            # Set variables if it is a saddle
+            two_stage = saddle
+            mc_nsamp = spc_dct_i['mc_nsamp']
+            resave = es_keyword_dct['resave']
+    
+            # Read the geometry and zma from the ini file system
+            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+            zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
+    
+            # Read the torsions from the ini file sys
+            if ini_zma_save_fs[-1].file.torsions.exists([0]):
+                tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+                rotors = automol.rotor.from_data(zma, tors_dct)
+                tors_names = automol.rotor.names(rotors, flat=True)
+            else:
+                tors_names = ()
+    
+            geo_path = ini_cnf_save_fs[-1].path(ini_locs)
+            ioprinter.initial_geom_path('Sampling started', geo_path)
+    
+            # Check runsystem for equal ring CONF make conf_fs
+            # Else make new ring conf directory
+            rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+    
+            if rid is None:
+                conformer.single_conformer(
+                    zma, spc_info, mod_thy_info,
+                    cnf_run_fs, cnf_save_fs,
+                    script_str, overwrite,
+                    retryfail=retryfail, zrxn=zrxn,
+                    **kwargs)
+    
+                rid = conformer.rng_loc_for_geo(
+                    geo, cnf_save_fs)
+    
+            # Run the sampling
+            conformer.conformer_sampling(
                 zma, spc_info, mod_thy_info,
-                cnf_run_fs, cnf_save_fs,
+                cnf_run_fs, cnf_save_fs, rid,
                 script_str, overwrite,
-                retryfail=retryfail, zrxn=zrxn,
+                nsamp_par=mc_nsamp,
+                tors_names=tors_names,
+                zrxn=zrxn, two_stage=two_stage,
+                retryfail=retryfail, resave=resave,
+                repulsion_thresh=40.0, print_debug=print_debug,
                 **kwargs)
-
-            rid = conformer.rng_loc_for_geo(
-                geo, cnf_save_fs)
-
-        # Run the sampling
-        conformer.conformer_sampling(
-            zma, spc_info, mod_thy_info,
-            cnf_run_fs, cnf_save_fs, rid,
-            script_str, overwrite,
-            nsamp_par=mc_nsamp,
-            tors_names=tors_names,
-            zrxn=zrxn, two_stage=two_stage,
-            retryfail=retryfail, resave=resave,
-            repulsion_thresh=40.0, print_debug=print_debug,
-            **kwargs)
 
     elif job == 'pucker':
 
