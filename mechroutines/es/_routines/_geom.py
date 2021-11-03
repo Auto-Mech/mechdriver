@@ -12,8 +12,7 @@ from mechroutines.es.runner import qchem_params
 
 
 def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
-                kickoff_size=0.1, kickoff_backward=False, kickoff_mode=0,
-                overwrite=False):
+                kickoff_size=0.1, kickoff_backward=False, kickoff_mode=0):
     """ if there is an imaginary frequency displace geometry along the imaginary
     mode and then reoptimize
     """

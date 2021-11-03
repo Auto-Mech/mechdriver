@@ -125,6 +125,7 @@ def conformer_locators(
             if print_enes:
                 _ene = (cnf_enes_lst[idx] - cnf_enes_lst[0]) * phycon.EH2KCAL
                 print(f'{locs[0]:<16}{locs[1]:<16}{_ene:<16.2f}')
+        print()
 
         return fin_locs_lst, fin_paths_lst
 

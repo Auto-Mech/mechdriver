@@ -37,7 +37,7 @@ def frequencies(freqs):
             freqs, num_per_row=6, val_format='{0:>12.3f}')
         harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2KCAL
         info_message(f'\nHarmonic frequencies [cm-1]:\n{freq_str}')
-        info_message(f'\nHarmonic ZPVE [kcal mol-1]: {harm_zpe}')
+        info_message(f'\nHarmonic ZPVE [kcal mol-1]: {harm_zpe}\n')
 
 
 def molecular_properties(dmom, polar):
