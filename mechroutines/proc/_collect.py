@@ -308,13 +308,15 @@ def enthalpy(
     )
 
 
-def pf(
+def partition_function(
         spc_name, spc_dct_i, spc_mod_dct_i,
         pes_mod_dct_i,
         locs, locs_path,
         cnf_fs, run_prefix, save_prefix):
     """ collect enthalpies
     """
+
+    _, _ = locs_path, cnf_fs  # needed
 
     zrxn = spc_dct_i.get('zrxn')
     saddle = bool(zrxn)
@@ -371,7 +373,8 @@ def pf(
 
     # Combine the strings together to create full MESS input file string
     # tempfile.tempdir = "./messpf_temp"
-    #file_path = '/home/elliott/projects/AutoMech/RO2QOOH/all_conformers/all/temp'
+    # file_path = (
+    # '/home/elliott/projects/AutoMech/RO2QOOH/all_conformers/all/temp')
     with tempfile.TemporaryDirectory() as file_path:
         messpf_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
         autorun.write_input(

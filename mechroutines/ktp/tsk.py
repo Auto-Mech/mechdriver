@@ -3,7 +3,8 @@
 
 import os
 import ioformat
-import mess_io.writer
+import mess_io
+import chemkin_io
 import autorun
 import ratefit
 from mechlib.amech_io import writer
@@ -13,10 +14,6 @@ from mechroutines.models.typ import use_well_extension
 from mechroutines.ktp.rates import make_header_str
 from mechroutines.ktp.rates import make_global_etrans_str
 from mechroutines.ktp.rates import make_pes_mess_str
-from ioformat import pathtools
-from mess_io.reader import rates as mess_reader
-from chemkin_io.writer import mechanism
-from chemkin_io.writer import comments
 
 
 def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
@@ -165,8 +162,8 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
     print(f'Fitting rates from {mess_path}')
 
     # Read MESS file and get rate constants
-    mess_str = pathtools.read_file(mess_path, 'rate.out')
-    rxn_ktp_dct = mess_reader.get_rxn_ktp_dct(
+    mess_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
+    rxn_ktp_dct = mess_io.reader.get_rxn_ktp_dct(
         mess_str,
         label_dct=label_dct,
         filter_kts=True,
@@ -196,12 +193,12 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
     rxn_block_cmt = writer.ckin.model_header((spc_mod,), spc_mod_dct)
 
     # Get the comments dct and write the Chemkin string
-    rxn_cmts_dct = comments.get_rxn_cmts_dct(
+    rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
         rxn_err_dct=rxn_err_dct, rxn_block_cmt=rxn_block_cmt)
-    ckin_str = mechanism.write_chemkin_file(
+    ckin_str = chemkin_io.writer.mechanism.write_chemkin_file(
         rxn_param_dct=rxn_param_dct, rxn_cmts_dct=rxn_cmts_dct)
 
     # Write the file
     ckin_path = output_path('CKIN', prefix=mdriver_path)
     ckin_filename = pes_fml + '.ckin'
-    pathtools.write_file(ckin_str, ckin_path, ckin_filename)
+    ioformat.pathtools.write_file(ckin_str, ckin_path, ckin_filename)

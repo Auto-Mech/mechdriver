@@ -52,6 +52,9 @@ def run_energy(zma, geo, spc_info, thy_info,
         :param overwrite:
     """
 
+    # Set unneeded vals to
+    _, _, _ = zrxn, method_dct, ref_val
+
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
 
@@ -136,6 +139,9 @@ def run_gradient(zma, geo, spc_info, thy_info,
                  ref_val=None, **kwargs):
     """ Determine the gradient for the geometry in the given location
     """
+
+    # Set unneeded vals
+    _, _, _ = zrxn, method_dct, ref_val
 
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
@@ -415,6 +421,9 @@ def run_vpt2(zma, geo, spc_info, thy_info,
     """ Perform vpt2 analysis for the geometry in the given location
     """
 
+    # Set unneeded vals
+    _, _, _ = zrxn, method_dct, ref_val
+
     # Set the run filesystem information
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
@@ -510,6 +519,9 @@ def run_prop(zma, geo, spc_info, thy_info,
              ref_val=None, **kwargs):
     """ Determine the properties in the given location
     """
+
+    # Set unneeded vals
+    _, _, _ = zrxn, method_dct, ref_val
 
     # Set input geom
     geo_run_path = geo_run_fs[-1].path(locs)

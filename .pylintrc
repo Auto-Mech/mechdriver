@@ -1,4 +1,6 @@
 [MASTER]
+max-module-lines=1500
+max-line-length=90
 disable=
     too-few-public-methods,
     too-many-arguments,
@@ -13,5 +15,3 @@ disable=
     no-member,
     eval-used,
     bare-except
-[FORMAT]
-    max-line-length=90
