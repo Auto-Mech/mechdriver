@@ -743,6 +743,6 @@ def parse_script_input(script_input_file):
 
 
 if __name__ == '__main__':
-    SCRIPT_INPUT_FILE = 'insert_options.txt'
+    SCRIPT_INPUT_FILE = sys.argv[1]
     insert_options_dct = parse_script_input(SCRIPT_INPUT_FILE)
     main(insert_options_dct)
