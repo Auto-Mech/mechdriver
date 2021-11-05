@@ -154,7 +154,7 @@ def run_tsk(tsk, obj_queue,
                     csv_data[label] = csv_data_i
 
                 elif 'pf' in tsk:
-                    ret = collect.pf(
+                    ret = collect.partition_function(
                         spc_name, spc_dct_i, spc_mod_dct_i,
                         pes_mod_dct_i, locs, locs_path,
                         cnf_fs, run_prefix, save_prefix)
