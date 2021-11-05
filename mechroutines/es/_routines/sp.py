@@ -358,13 +358,18 @@ def run_hessian(zma, geo, spc_info, thy_info,
                     # perform an additional frequency check for TS
                     # assume lowest frequency is the imaginary mode
                     if zrxn is not None:
-                        success = _assess_imags(
-                            hfrqs, ref_val,
-                            geo_run_fs, geo_save_fs, locs)
+                        if ref_val is None:
+                            print('No reference frequencies available to '
+                                  'perform check')
+                            imag_success = True
+                        else:
+                            imag_success = _assess_imags(
+                                hfrqs, ref_val,
+                                geo_run_fs, geo_save_fs, locs)
                     else:
-                        success = True
+                        imag_success = True
 
-                    if success:
+                    if imag_success:
                         hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
                         ioprinter.info_message(" - Saving Hessian...")
