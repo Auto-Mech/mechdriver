@@ -398,8 +398,12 @@ def conformer_tsk(job, spc_dct, spc_name,
 
             # Grab frequencies for the reference, print ref freqs
             if job == 'hess':
-                ref_val = ini_cnf_save_fs[-1].file.harmonic_frequencies.read(
-                    ini_rng_cnf_locs_lst[0])
+                if ini_cnf_save_fs[-1].file.harmonic_frequencies.exists(
+                    ini_rng_cnf_locs_lst[0]):
+                    ref_val = ini_cnf_save_fs[-1].file.harmonic_frequencies.read(
+                        ini_rng_cnf_locs_lst[0])
+                else:
+                    ref_val = None
                 if ref_val is not None and zrxn is not None:
                     ref_path = cnf_save_fs[-1].path(ini_rng_cnf_locs_lst[0])
                     print('Found reference frequencies for saddle-point '
