@@ -64,7 +64,13 @@ def potential(names, grid_vals, cnf_save_path,
             step_ene = back_ene
 
         if step_ene is not None:
-            pot[vals_conv] = (step_ene - ref_ene) * phycon.EH2KCAL
+            enediff = (step_ene - ref_ene) * phycon.EH2KCAL
+            if idx == 0:
+                if enediff > 0.05:
+                    print('Warning the first potential value does not match the reference energy {:.2f}',enediff)
+                ref_ene = step_ene
+                enediff = 0
+            pot[vals_conv] = enediff
         else:
             pot[vals_conv] = None
 

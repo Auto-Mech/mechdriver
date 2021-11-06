@@ -41,7 +41,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         for name in uni_refs_dct:
             if 'TS' in name:
                 ioprinter.info_message(uni_refs_dct[name]['reacs'])
-                if _ich_in_rxn(ich, spc_dct[name]):
+                if _ich_in_rxn(ich, uni_refs_dct[name]):
                     ich_name_dct[_ich_key_name(ich)] = name
             elif ich == uni_refs_dct[name]['inchi']:
                 ich_name_dct[ich] = name
