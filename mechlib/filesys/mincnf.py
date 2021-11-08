@@ -128,10 +128,11 @@ def conformer_locators(
         print()
 
         return fin_locs_lst, fin_paths_lst
-
+    print('in conformerlocators', sort_info_lst)
     cnf_range_nohb, cnf_range_hb, cnf_range_any = _process_cnf_range(
         cnf_range)
     freq_info, sp_info, sort_prop_dct = _process_sort_info(sort_info_lst)
+    print('in conformerlocators', freq_info, sp_info, sort_prop_dct)
     union_locs_lst, union_paths_lst = (), ()
 
     if cnf_range_hb is not None:
@@ -708,6 +709,7 @@ def _sort_energy_parameter(
     sort_prop = _check_prop_requirements(
         sort_prop_dct, geo, freqs, sp_ene, locs)
     if sort_prop in ['electronic', 'ground']:
+        ioprinter.debug_message('sorting by electronic energy')
         sort_ene = sp_ene
     if sort_prop == 'ground':
         zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
@@ -720,6 +722,7 @@ def _sort_energy_parameter(
             geo, freqs, sort_prop_dct[sort_prop])
         sort_ene = sort_ene / phycon.EH2KCAL
     elif sort_prop == 'gibbs':
+        ioprinter.debug_message('sorting bby gibbs')
         zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
         zpe = (zpe) * phycon.EH2KCAL
         spe = sp_ene * phycon.EH2KCAL

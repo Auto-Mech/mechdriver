@@ -216,18 +216,12 @@ def get_spc_locs_lst(
         run_prefix, save_prefix, saddle=saddle, name=name)
 
     hbond_cutoffs = spc_dct_i['hbond_cutoffs']
-    if cnf_range == 'min':
-        min_locs, _ = min_energy_conformer_locators(
-            cnf_save_fs, levelp, hbond_cutoffs=hbond_cutoffs)
+    min_locs_lst, _ = conformer_locators(
+        cnf_save_fs, levelp, cnf_range=cnf_range,
+        sort_info_lst=mod_info_lst, print_enes=True,
+        hbond_cutoffs=hbond_cutoffs)
+    for min_locs in min_locs_lst:
         cnf_run_fs[-1].create(min_locs)
-        min_locs_lst = [min_locs]
-    else:
-        min_locs_lst, _ = conformer_locators(
-            cnf_save_fs, levelp, cnf_range=cnf_range,
-            sort_info_lst=mod_info_lst, print_enes=True,
-            hbond_cutoffs=hbond_cutoffs)
-        for min_locs in min_locs_lst:
-            cnf_run_fs[-1].create(min_locs)
 
     return min_locs_lst
 
@@ -247,11 +241,13 @@ def _get_prop_fs(
     levelp = tinfo.modify_orb_label(level, spc_info)
     mod_info_lst = []
     if sort_info_lst is not None:
-        for info in sort_info_lst:
+        for info in sort_info_lst[:2]:
             if info is not None:
                 mod_info_lst.append(tinfo.modify_orb_label(info, spc_info))
             else:
-                mod_info_lst.append(None)
+                mod_info_lst.append(info)
+        for info in sort_info_lst[2:]:
+            mod_info_lst.append(info)
 
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
     cnf_run_fs, cnf_save_fs = build_fs(
