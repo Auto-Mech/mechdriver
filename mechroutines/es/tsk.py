@@ -780,7 +780,7 @@ def hr_tsk(job, spc_dct, spc_name,
                     min_locs = (rid, new_cid)
                     save_locs = cnf_save_fs[-1].existing()
                     if min_locs not in save_locs:
-                        locinf = conformer.this_conformer_was_run_in_run(
+                        locinf = filesys.mincnf.this_conformer_was_run_in_run(
                             zma, cnf_run_fs)
                         _, sym_locs_lst = locinf
                         for sym_locs in sym_locs_lst:
