@@ -174,7 +174,7 @@ def _sort_info_lst(sort_str, thy_dct):
         ('gaussian', 'b2plypd3', 'cc-pvtz', 'RU'), None, None, 700.]
     """
     sort_lvls = [None, None, None, None, None]
-    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy' 'gibbs']
+    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy', 'gibbs']
     if sort_str is not None:
         for sort_param in sort_str.split(','):
             idx = None
