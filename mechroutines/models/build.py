@@ -65,13 +65,15 @@ def read_spc_data(spc_dct, spc_name,
     spc_dct_i = spc_dct[spc_name]
     if typ.is_atom(spc_dct_i):
         inf_dct = atm_data(
-            spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
+            spc_dct, spc_name,
+            pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix)
         writer = 'atom_block'
     else:
         if vib_model == 'tau' or tors_model == 'tau':
             inf_dct = tau_data(
-                spc_dct_i, spc_mod_dct_i,
+                spc_dct_i,
+                spc_mod_dct_i,
                 run_prefix, save_prefix, saddle=False)
             writer = 'tau_block'
         else:
@@ -88,7 +90,7 @@ def read_spc_data(spc_dct, spc_name,
     return inf_dct, chn_basis_ene_dct
 
 
-def read_ts_data(spc_dct, tsname, rcts, prds,
+def read_ts_data(spc_dct, tsname, rcts, prds, tsk_key_dct,
                  pes_mod_dct_i, spc_mod_dct_i,
                  run_prefix, save_prefix, chn_basis_ene_dct):
     """ Reads all required data from the SAVE filesystem for a transition state.
@@ -162,6 +164,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
 
             inf_dct, chn_basis_ene_dct = mol_data(
                 tsname, spc_dct,
+                tsk_key_dct,
                 pes_mod_dct_i, spc_mod_dct_i,
                 chn_basis_ene_dct,
                 run_prefix, save_prefix, zrxn=zrxn)
@@ -199,7 +202,8 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
 
 
 # Data Readers
-def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
+def atm_data(spc_dct, spc_name,
+             pes_mod_dct_i, spc_mod_dct_i,
              run_prefix, save_prefix):
     """ Reads all required data from the SAVE filesystem for an atom.
         Stores data into an info dictionary.

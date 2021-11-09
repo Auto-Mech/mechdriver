@@ -8,6 +8,7 @@ import automol
 import mess_io
 from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
 from mechlib.amech_io import printer as ioprinter
+from mechlib import filesys
 from mechroutines.models import blocks
 from mechroutines.models import build
 from mechroutines.models import etrans
@@ -114,7 +115,8 @@ def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
 # Reaction Channel Writers for the PES
 def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
                       unstable_chnls,
-                      run_prefix, save_prefix, label_dct, pes_param_dct,
+                      run_prefix, save_prefix, label_dct,
+                      tsk_key_dct, pes_param_dct,
                       pes_model_dct_i, spc_model_dct_i,
                       spc_model):
     """ Write all the MESS input file strings for the reaction channels
@@ -155,7 +157,8 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         # Pass in full ts class
         chnl_infs, chn_basis_ene_dct = get_channel_data(
             reacs, prods, tsname_allconfigs,
-            spc_dct, basis_energy_dct[spc_model],
+            spc_dct, tsk_key_dct,
+            basis_energy_dct[spc_model],
             pes_model_dct_i, spc_model_dct_i,
             run_prefix, save_prefix)
 
@@ -522,7 +525,8 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
 
 # Data Retriever Functions
 def get_channel_data(reacs, prods, tsname_allconfigs,
-                     spc_dct, model_basis_energy_dct,
+                     spc_dct, tsk_key_dct,
+                     model_basis_energy_dct,
                      pes_model_dct_i, spc_model_dct_i,
                      run_prefix, save_prefix):
     """ For all species and transition state for the channel and
@@ -539,24 +543,38 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
     # Initialize the dict
     chnl_infs = {}
 
+    # Get the data for conformer
+    cnf_range = tsk_key_dct['cnf_range']
+    sort_info_lst = _sort_info_lst(tsk_key_dct['sort'])  # fxn in thermodriver
+
     # Determine the MESS data for the reactants and products
     # Gather data or set fake information for dummy reactants/products
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
     for rgts, side in zip((reacs, prods), ('reacs', 'prods')):
         for rgt in rgts:
+            spc_locs = filesys.models.get_spc_locs_lst(
+                spc_dct[rgt], spc_model_dct_i,
+                run_prefix, save_prefix, saddle=False,
+                cnf_range=cnf_range, sort_info_lst=sort_info_lst)
             chnl_infs_i, model_basis_energy_dct = build.read_spc_data(
-                spc_dct, rgt,
+                spc_dct, rgt, tsk_key_dct,
                 pes_model_dct_i, spc_model_dct_i,
-                run_prefix, save_prefix, model_basis_energy_dct)
+                run_prefix, save_prefix, model_basis_energy_dct,
+                spc_locs=spc_locs)
             chnl_infs[side].append(chnl_infs_i)
 
     # Get data for all configurations for a TS
     chnl_infs['ts'] = []
     for name in tsname_allconfigs:
+        spc_locs = filesys.models.get_spc_locs_lst(
+            name, spc_model_dct_i,
+            run_prefix, save_prefix, saddle=True,
+            cnf_range=cnf_range, sort_info_lst=sort_info_lst)
         inf_dct, model_basis_energy_dct = build.read_ts_data(
             spc_dct, name, reacs, prods,
             pes_model_dct_i, spc_model_dct_i,
-            run_prefix, save_prefix, model_basis_energy_dct)
+            run_prefix, save_prefix, model_basis_energy_dct,
+            spc_locs=spc_locs)
         chnl_infs['ts'].append(inf_dct)
 
     # Set up the info for the wells

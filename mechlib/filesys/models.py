@@ -128,7 +128,8 @@ def set_model_filesys(spc_dct_i, level,
         cnf_run_fs[-1].create(min_rngs_locs)
     else:
         min_rngs_locs_lst, min_rngs_path_lst = conformer_locators(
-            cnf_save_fs, levelp, cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
+            cnf_save_fs, levelp,
+            cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
         for min_locs in min_rngs_locs_lst:
             cnf_run_fs[-1].create(min_locs)
         min_rngs_locs = min_rngs_locs_lst[0]

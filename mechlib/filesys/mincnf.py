@@ -11,6 +11,7 @@ import automol.zmat
 import automol.geom
 from automol.reac import relabel_for_geometry
 from automol.geom import hydrogen_bonded_structure
+from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
 
 

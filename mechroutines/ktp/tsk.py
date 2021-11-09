@@ -48,7 +48,8 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
     # Write the MESS strings for all the PES channels
     rxn_chan_str, dats, hot_enes_dct = make_pes_mess_str(
         spc_dct, rxn_lst, pes_idx, pesgrp_num, unstab_chnls,
-        run_prefix, save_prefix, label_dct, pes_param_dct,
+        run_prefix, save_prefix, label_dct,
+        tsk_key_dct, pes_param_dct,
         pes_model_dct_i, spc_model_dct_i, spc_mod)
 
     # Write the strings for the MESS input file
