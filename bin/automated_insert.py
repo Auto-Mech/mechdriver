@@ -373,6 +373,7 @@ def choose_cutoff_distance(geo):
 
 def get_zrxn(geo, rxn_info, rxn_class):
     ts_gra, oversaturated_atom = choose_cutoff_distance(geo)
+    ts_gra = automol.graph.set_stereo_from_geometry(ts_gra, geo)
     atoms_bnd = automol.graph.atoms_bond_keys(ts_gra)
     bonds = atoms_bnd[oversaturated_atom]
     if len(bonds) != 2:
@@ -435,6 +436,15 @@ def get_zrxn(geo, rxn_info, rxn_class):
         elif ts_ichs[1][::-1] == rxn_ichs[-1]:
             ts_ichs[1] = ts_ichs[1][::-1]
             product_match = True
+    # force matches to be True because stereo doesn't work
+    if not reactant_match or not product_match:
+        print(
+            'The reactants and products found for the transition state' +
+            ' did not match those specified in user input',
+            ts_ichs, rxn_ichs)
+    reactant_match = True
+    product_match = True
+    # remove above lines if stereo is available for sp
     if reactant_match and product_match:
         reactant_keys = []
         for gra in rxn_gras[0]:
@@ -448,7 +458,7 @@ def get_zrxn(geo, rxn_info, rxn_class):
             std_rxn, geo)
         std_zrxn = automol.reac.relabel_for_zmatrix(
             std_rxn, zma_keys, dummy_key_dct)
-        rxn_info = (ts_ichs, *rxn_info[1:])
+        # rxn_info = (ts_ichs, *rxn_info[1:])
         ts_geo = automol.zmat.geometry(ts_zma)
     else:
         print(

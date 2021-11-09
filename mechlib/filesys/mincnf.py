@@ -235,6 +235,8 @@ def _sorted_cnf_lsts(
     else:
         cnf_locs_lst, cnf_enes_lst = [], []
 
+    # print('sort test:', cnf_locs_lst, cnf_enes_lst)
+
     return cnf_locs_lst, cnf_enes_lst
 
 
