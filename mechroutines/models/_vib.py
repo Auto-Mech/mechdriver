@@ -30,12 +30,8 @@ def full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
     # Squash the rotor potentials as necessary
-    print('rotors test:', rotors)
     if rotors is not None:
-        print('pot test:', automol.rotor.potentials(rotors))
-        print('type test:', typ.squash_tors_pot(spc_mod_dct_i))
         if typ.squash_tors_pot(spc_mod_dct_i):
-            # print('it thinks it is 1dhrfa')
             for rotor in rotors:
                 for torsion in rotor:
                     torsion.pot = automol.pot.relax_scale(torsion.pot)
@@ -98,10 +94,9 @@ def full_vib_analysis(
         harm_freqs, _ = scale_frequencies(
             harm_freqs, None,
             spc_mod_dct_i, scale_method='c3')
-        #harm_freqs, zpe = scale_frequencies(
-        #    harm_freqs, 0,
-        #    spc_mod_dct_i, scale_method='c3')
-
+        # harm_freqs, zpe = scale_frequencies(
+        #     harm_freqs, 0,
+        #     spc_mod_dct_i, scale_method='c3')
 
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
             harm_freqs, disps)

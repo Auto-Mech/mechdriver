@@ -187,11 +187,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         full_ts_str += ts_str
         full_dat_str_dct.update(dat_str_dct)
 
-        ioprinter.debug_message('rxn', rxn)
-        ioprinter.debug_message('enes', chnl_enes)
-        ioprinter.debug_message('label dct', label_dct)
-        ioprinter.debug_message('written labels', written_labels)
-
     # Combine all the reaction channel strings
     rxn_chan_str = '\n'.join([full_well_str, full_bi_str, full_ts_str])
 

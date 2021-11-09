@@ -129,11 +129,9 @@ def conformer_locators(
         print()
 
         return fin_locs_lst, fin_paths_lst
-    print('in conformerlocators', sort_info_lst)
     cnf_range_nohb, cnf_range_hb, cnf_range_any = _process_cnf_range(
         cnf_range)
     freq_info, sp_info, sort_prop_dct = _process_sort_info(sort_info_lst)
-    print('in conformerlocators', freq_info, sp_info, sort_prop_dct)
     union_locs_lst, union_paths_lst = (), ()
 
     if cnf_range_hb is not None:
@@ -709,6 +707,9 @@ def get_freq_location(geo, freq_info):
 
 
 def _check_prop_requirements(sort_prop_dct, geo, freqs, sp_ene, locs):
+    """ Check that there is the correct data available for the desired
+        conformer sorting method.
+    """
     sort_prop = 'electronic'
     if 'enthalpy' in sort_prop_dct:
         if sort_prop_dct['enthalpy'] == 0:
