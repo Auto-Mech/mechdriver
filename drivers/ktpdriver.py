@@ -22,7 +22,7 @@ from mechlib.reaction import split_unstable_pes
 def run(pes_rlst, pes_grp_dct,
         ktp_tsk_lst,
         spc_dct, glob_dct,
-        pes_mod_dct, spc_mod_dct,
+        thy_dct, pes_mod_dct, spc_mod_dct,
         run_prefix, save_prefix, mdriver_path):
     """ Executes all kinetics tasks.
 
@@ -61,15 +61,10 @@ def run(pes_rlst, pes_grp_dct,
     # LOOP OVER ALL OF THE SUBPES in PES_RLST #
     # --------------------------------------- #
 
-    print('pes groups')
-    print(pes_grps_rlst)
-
     for (pes_grp_rlst, pes_param_dct) in pes_grps_rlst:
 
         print('WORKING ON PES GROUP NUM')
-        print('\n\n')
         print(pes_grp_rlst)
-        print(pes_param_dct)
 
         # Generate the paths needed for MESSRATE calculations
         rate_paths_dct = rate_paths(pes_grp_rlst, run_prefix)
@@ -105,7 +100,7 @@ def run(pes_rlst, pes_grp_dct,
                     pesgrp_num, pes_inf, rxn_lst,
                     tsk_key_dct, pes_param_dct,
                     spc_dct,
-                    pes_mod_dct, spc_mod_dct,
+                    thy_dct, pes_mod_dct, spc_mod_dct,
                     instab_chnls, label_dct,
                     rate_paths_dct, run_prefix, save_prefix)
 
@@ -117,16 +112,16 @@ def run(pes_rlst, pes_grp_dct,
         # FIT THE COMBINES RATES FOR ENTIRE GROUP  #
         # ---------------------------------------- #
 
-        # Fit rates to functional forms; write parameters to ChemKin file
-        if run_fit_tsk is not None:
-            if label_dct is None:
-                spc_dct, rxn_lst, _, label_dct = _process(
-                    run_fit_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
-                    spc_mod_dct, spc_dct, glob_dct,
-                    run_prefix, save_prefix)
-            ktp_tasks.run_fits_task(
-                pes_inf, rate_paths_dct, mdriver_path,
-                label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
+            # Fit rates to functional forms; write parameters to ChemKin file
+            if run_fit_tsk is not None:
+                if label_dct is None:
+                    spc_dct, rxn_lst, _, label_dct = _process(
+                        run_fit_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
+                        spc_mod_dct, spc_dct, glob_dct,
+                        run_prefix, save_prefix)
+                ktp_tasks.run_fits_task(
+                    pes_inf, rate_paths_dct, mdriver_path,
+                    label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
 
 
 # ------- #

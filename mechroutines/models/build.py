@@ -65,13 +65,15 @@ def read_spc_data(spc_dct, spc_name,
     spc_dct_i = spc_dct[spc_name]
     if typ.is_atom(spc_dct_i):
         inf_dct = atm_data(
-            spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
+            spc_dct, spc_name,
+            pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix)
         writer = 'atom_block'
     else:
         if vib_model == 'tau' or tors_model == 'tau':
             inf_dct = tau_data(
-                spc_dct_i, spc_mod_dct_i,
+                spc_dct_i,
+                spc_mod_dct_i,
                 run_prefix, save_prefix, saddle=False)
             writer = 'tau_block'
         else:
@@ -90,7 +92,8 @@ def read_spc_data(spc_dct, spc_name,
 
 def read_ts_data(spc_dct, tsname, rcts, prds,
                  pes_mod_dct_i, spc_mod_dct_i,
-                 run_prefix, save_prefix, chn_basis_ene_dct):
+                 run_prefix, save_prefix, chn_basis_ene_dct,
+                 spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a transition state.
         Also sets the writer for appropriately formatting the data into
         an MESS input file string.
@@ -152,6 +155,9 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 run_prefix, save_prefix, sadpt=sadpt)
             writer = 'rpvtst_block'
         else:
+            print('Obtaining a ZRXN object from conformer any TS, '
+                  'shouldn matter')
+            print('-----')
             pf_filesystems = filesys.models.pf_filesys(
                 spc_dct[tsname], spc_mod_dct_i,
                 run_prefix, save_prefix, True, name=tsname)
@@ -159,12 +165,13 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             cnf_path = cnf_fs[-1].path(min_cnf_locs)
             zma_fs = autofile.fs.zmatrix(cnf_path)
             zrxn = zma_fs[-1].file.reaction.read((0,))
+            print('-----')
 
             inf_dct, chn_basis_ene_dct = mol_data(
                 tsname, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i,
                 chn_basis_ene_dct,
-                run_prefix, save_prefix, zrxn=zrxn)
+                run_prefix, save_prefix, zrxn=zrxn, spc_locs=spc_locs)
             writer = 'species_block'
     else:
 
@@ -199,7 +206,8 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
 
 
 # Data Readers
-def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
+def atm_data(spc_dct, spc_name,
+             pes_mod_dct_i, spc_mod_dct_i,
              run_prefix, save_prefix):
     """ Reads all required data from the SAVE filesystem for an atom.
         Stores data into an info dictionary.

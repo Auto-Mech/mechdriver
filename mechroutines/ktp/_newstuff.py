@@ -9,15 +9,15 @@ def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
     """ Figure out if densities should be calculated
     """
     if pes_param_dct is not None:
-        print('prod density test')
+        # print('prod density test')
         all_peds = pes_param_dct['peds']
         pes_peds = all_peds[pesgrp_num]
 
         calc_dens = (False, False)
         for ped in pes_peds:
             ped_spc = ped.split('_')[1]  # Get a string with prds
-            print('ped_spc', ped_spc)
-            print('rgts', rgts)
+            # print('ped_spc', ped_spc)
+            # print('rgts', rgts)
             if all(rgt in ped_spc for rgt in rgts):
                 calc_dens = (True, True)
                 break
@@ -34,8 +34,6 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, label_dct):
         maybe just call this before the writer and pass to make_pes_str
     """
 
-    print('label dct', label_dct)
-
     if pes_param_dct is not None:
 
         # Grab the desired PED and hot enes for the PES in the group
@@ -47,8 +45,6 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, label_dct):
             ped_spc_lst = tuple()
             for ped in pes_peds:
                 _ped = ped.split('_')
-                print(label_dct)
-                print(_ped)
                 ped_spc_lst += (f'{label_dct[_ped[0]]}_{label_dct[_ped[1]]}',)
             ped_str = ' '.join(ped_spc_lst)
             print(f'Species for PED: {ped_str}')
@@ -56,7 +52,6 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, label_dct):
             ped_spc_lst = None
 
         # Set the Hot Energies section
-        print('hot1', hot_enes_dct)
         if hot_enes_dct is not None:
             _hot_enes_dct = {label_dct[spc]: enes
                              for spc, enes in hot_enes_dct.items()}
@@ -64,7 +59,6 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, label_dct):
             print(f'Species for Hot: {hot_str}')
         else:
             _hot_enes_dct = None
-        print('hot2', _hot_enes_dct)
 
         # Set the micro params for writing k(E)s
         # When to set this

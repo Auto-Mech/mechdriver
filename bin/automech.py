@@ -100,7 +100,7 @@ if KTP_TSKS is not None:
         PES_RLST, INPUT['pesgrp'],
         KTP_TSKS,
         SPC_DCT, GLOB_DCT,
-        KMOD_DCT, SMOD_DCT,
+        THY_DCT, KMOD_DCT, SMOD_DCT,
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH,
     )
     ioprinter.program_exit('ktp')

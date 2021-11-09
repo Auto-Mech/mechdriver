@@ -19,7 +19,7 @@ from mechroutines.ktp.rates import make_pes_mess_str
 def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
                         tsk_key_dct, pes_param_dct,
                         spc_dct,
-                        pes_model_dct, spc_model_dct,
+                        thy_dct, pes_model_dct, spc_model_dct,
                         unstab_chnls, label_dct,
                         rate_paths_dct, run_prefix, save_prefix):
     """ Reads and processes all information in the save filesys for
@@ -48,8 +48,9 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
     # Write the MESS strings for all the PES channels
     rxn_chan_str, dats, hot_enes_dct = make_pes_mess_str(
         spc_dct, rxn_lst, pes_idx, pesgrp_num, unstab_chnls,
-        run_prefix, save_prefix, label_dct, pes_param_dct,
-        pes_model_dct_i, spc_model_dct_i, spc_mod)
+        run_prefix, save_prefix, label_dct,
+        tsk_key_dct, pes_param_dct,
+        thy_dct, pes_model_dct_i, spc_model_dct_i, spc_mod)
 
     # Write the strings for the MESS input file
     globkey_str = make_header_str(
@@ -163,7 +164,7 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
 
     # Read MESS file and get rate constants
     mess_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
-    rxn_ktp_dct = mess_io.reader.get_rxn_ktp_dct(
+    rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
         mess_str,
         label_dct=label_dct,
         filter_kts=True,
