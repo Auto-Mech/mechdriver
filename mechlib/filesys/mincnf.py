@@ -334,6 +334,38 @@ def _nrange_locs(cnf_locs, nthresh, ignore_locs_lst=()):
     return min_cnf_locs
 
 
+def sort_info_lst(sort_str, thy_dct):
+    """ Return the levels to sort conformers by if zpve or sp
+        levels were assigned in input
+
+        if we ask for zpe(lvl_wbs),sp(lvl_b2t),gibbs(700)
+        out sort_info_lst will be [('gaussian', 'wb97xd', '6-31*', 'RU'),
+        ('gaussian', 'b2plypd3', 'cc-pvtz', 'RU'), None, None, 700.]
+    """
+    sort_lvls = [None, None, None, None, None]
+    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy', 'gibbs']
+    if sort_str is not None:
+        for sort_param in sort_str.split(','):
+            idx = None
+            for typ_idx, typ_str in enumerate(sort_typ_lst):
+                if typ_str in sort_param:
+                    lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
+                    idx = typ_idx
+            if idx is not None:
+                if idx < 2:
+                    method_dct = thy_dct.get(lvl_key)
+                    if method_dct is None:
+                        ioprinter.warning_message(
+                            f'no {lvl_key} in theory.dat, '
+                            f'not using {sort_typ_lst[idx]} in sorting')
+                        continue
+                    thy_info = tinfo.from_dct(method_dct)
+                    sort_lvls[idx] = thy_info
+                else:
+                    sort_lvls[idx] = float(lvl_key)
+    return sort_lvls
+
+
 def locs_sort(save_fs):
     """ sort trajectory file according to energies
     """

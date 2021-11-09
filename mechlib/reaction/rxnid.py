@@ -82,14 +82,14 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
     # We automatically assess and add stereo to the reaction object, as needed
     if any(rct_geos) and any(prd_geos):
         zrxn_objs = automol.reac.rxn_objs_from_geometry(
-            rct_geos, prd_geos, indexing='zma', stereo=False)
+            rct_geos, prd_geos, indexing='zma', stereo=True)
         print('    Reaction ID from geometries from SAVE filesys')
     else:
         rxn_ichs = rinfo.value(rxn_info, 'inchi')
         rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
         zrxn_objs = automol.reac.rxn_objs_from_inchi(
-            rct_ichs, prd_ichs, indexing='zma', stereo=False)
+            rct_ichs, prd_ichs, indexing='zma', stereo=True)
         print('    Reaction ID from geometries from input InChIs')
 
     # Loop over the found reaction objects

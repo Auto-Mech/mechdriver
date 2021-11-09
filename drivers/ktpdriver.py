@@ -22,7 +22,7 @@ from mechlib.reaction import split_unstable_pes
 def run(pes_rlst, pes_grp_dct,
         ktp_tsk_lst,
         spc_dct, glob_dct,
-        pes_mod_dct, spc_mod_dct,
+        thy_dct, pes_mod_dct, spc_mod_dct,
         run_prefix, save_prefix, mdriver_path):
     """ Executes all kinetics tasks.
 
@@ -105,7 +105,7 @@ def run(pes_rlst, pes_grp_dct,
                     pesgrp_num, pes_inf, rxn_lst,
                     tsk_key_dct, pes_param_dct,
                     spc_dct,
-                    pes_mod_dct, spc_mod_dct,
+                    thy_dct, pes_mod_dct, spc_mod_dct,
                     instab_chnls, label_dct,
                     rate_paths_dct, run_prefix, save_prefix)
 

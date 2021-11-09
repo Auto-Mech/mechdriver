@@ -60,6 +60,7 @@ def read_spc_data(spc_dct, spc_name,
     ioprinter.obj('line_plus')
     ioprinter.reading(f'filesystem info for {spc_name}', newline=1)
 
+    print(spc_mod_dct_i)
     vib_model = spc_mod_dct_i['vib']['mod']
     tors_model = spc_mod_dct_i['tors']['mod']
     spc_dct_i = spc_dct[spc_name]
@@ -90,9 +91,10 @@ def read_spc_data(spc_dct, spc_name,
     return inf_dct, chn_basis_ene_dct
 
 
-def read_ts_data(spc_dct, tsname, rcts, prds, tsk_key_dct,
+def read_ts_data(spc_dct, tsname, rcts, prds,
                  pes_mod_dct_i, spc_mod_dct_i,
-                 run_prefix, save_prefix, chn_basis_ene_dct):
+                 run_prefix, save_prefix, chn_basis_ene_dct,
+                 spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a transition state.
         Also sets the writer for appropriately formatting the data into
         an MESS input file string.
@@ -154,6 +156,9 @@ def read_ts_data(spc_dct, tsname, rcts, prds, tsk_key_dct,
                 run_prefix, save_prefix, sadpt=sadpt)
             writer = 'rpvtst_block'
         else:
+            print('Obtaining a ZRXN object from conformer any TS, '
+                  'shouldn matter')
+            print('-----')
             pf_filesystems = filesys.models.pf_filesys(
                 spc_dct[tsname], spc_mod_dct_i,
                 run_prefix, save_prefix, True, name=tsname)
@@ -161,13 +166,13 @@ def read_ts_data(spc_dct, tsname, rcts, prds, tsk_key_dct,
             cnf_path = cnf_fs[-1].path(min_cnf_locs)
             zma_fs = autofile.fs.zmatrix(cnf_path)
             zrxn = zma_fs[-1].file.reaction.read((0,))
+            print('-----')
 
             inf_dct, chn_basis_ene_dct = mol_data(
                 tsname, spc_dct,
-                tsk_key_dct,
                 pes_mod_dct_i, spc_mod_dct_i,
                 chn_basis_ene_dct,
-                run_prefix, save_prefix, zrxn=zrxn)
+                run_prefix, save_prefix, zrxn=zrxn, spc_locs=spc_locs)
             writer = 'species_block'
     else:
 

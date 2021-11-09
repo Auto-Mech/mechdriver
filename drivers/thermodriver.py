@@ -16,7 +16,6 @@
             (2) Run PACC+ThermP to fit thermo NASA polynomials
             (3) Write functional forms to mechanism file
 """
-from mechanalyzer.inf import thy as tinfo
 
 from mechroutines.thermo import tsk as thermo_tasks
 from mechlib import filesys
@@ -138,7 +137,7 @@ def _set_spc_queue(
     """
     spc_mods = list(spc_mod_dct.keys())  # hack
     spc_mod_dct_i = spc_mod_dct[spc_mods[0]]
-    sort_info_lst = _sort_info_lst(sort_str, thy_dct)
+    sort_info_lst = filesys.mincnf.sort_info_lst(sort_str, thy_dct)
     split_rlst = split_unstable_full(
         pes_rlst, spc_rlst, spc_dct, spc_mod_dct_i, save_prefix)
     spc_queue = parser.rlst.spc_queue(
@@ -163,35 +162,3 @@ def _set_spc_locs_dct(
             cnf_range=cnf_range, sort_info_lst=sort_info_lst)
         spc_locs_dct[spc_name] = spc_locs_lst
     return spc_locs_dct
-
-
-def _sort_info_lst(sort_str, thy_dct):
-    """ Return the levels to sort conformers by if zpve or sp
-        levels were assigned in input
-
-        if we ask for zpe(lvl_wbs),sp(lvl_b2t),gibbs(700)
-        out sort_info_lst will be [('gaussian', 'wb97xd', '6-31*', 'RU'),
-        ('gaussian', 'b2plypd3', 'cc-pvtz', 'RU'), None, None, 700.]
-    """
-    sort_lvls = [None, None, None, None, None]
-    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy', 'gibbs']
-    if sort_str is not None:
-        for sort_param in sort_str.split(','):
-            idx = None
-            for typ_idx, typ_str in enumerate(sort_typ_lst):
-                if typ_str in sort_param:
-                    lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
-                    idx = typ_idx
-            if idx is not None:
-                if idx < 2:
-                    method_dct = thy_dct.get(lvl_key)
-                    if method_dct is None:
-                        ioprinter.warning_message(
-                            f'no {lvl_key} in theory.dat, '
-                            f'not using {sort_typ_lst[idx]} in sorting')
-                        continue
-                    thy_info = tinfo.from_dct(method_dct)
-                    sort_lvls[idx] = thy_info
-                else:
-                    sort_lvls[idx] = float(lvl_key)
-    return sort_lvls
