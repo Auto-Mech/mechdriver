@@ -348,6 +348,29 @@ def read_user_filesystem(dct):
     return dct['save_filesystem']
 
 
+def choose_heavy_cutoff_distance(geo):
+    rqqs = [x * 0.1 for x in range(32, 48, 2)]
+    chosen_ts_gra = []
+    chosen_oversaturated_atom = None
+    for rqq in rqqs:
+        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=rqq, rqh_bond_max=2.7, rhh_bond_max=2.3)
+        ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
+        ts_gras = automol.graph.connected_components(ts_gras)
+        if len(ts_gras) != 1:
+            continue
+        for ts_gra_i in ts_gras:
+            vals = automol.graph.atom_unsaturated_valences(ts_gra_i, bond_order=True)
+            oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
+            if len(oversaturated_atoms) == 1:
+                chosen_ts_gra = ts_gras[0]
+                chosen_oversaturated_atom = oversaturated_atoms[0]
+                break
+    if chosen_oversaturated_atom is None:
+        print('could not figure out which H is being transfered')
+        sys.exit()
+    return chosen_ts_gra, chosen_oversaturated_atom
+
+
 def choose_cutoff_distance(geo):
     rqhs = [x * 0.1 for x in range(26, 38, 2)]
     chosen_ts_gra = []
@@ -371,7 +394,43 @@ def choose_cutoff_distance(geo):
     return chosen_ts_gra, chosen_oversaturated_atom
 
 
-def get_zrxn(geo, rxn_info, rxn_class):
+def ringformsci_gra(geo):
+    ts_gra, oversat_atm = choose_heavy_cutoff_distance(geo)
+    atoms_bnd = automol.graph.atoms_bond_keys(ts_gra)
+    bnds = list(atoms_bnd[oversat_atm])
+    bnded_atms = [list(bnd - set({oversat_atm}))[0] for bnd in bnds]
+    print(bnds, bnded_atms)
+
+    brk_atm_idx = None
+    for i in range(len(bnds)):
+        gra_i = automol.graph.remove_bonds(ts_gra, (bnds[i],))
+        for j in range(len(bnds)):
+            if j != i:
+                pth_btwn = automol.graph.shortest_path_between_atoms(
+                    gra_i, bnded_atms[i], bnded_atms[j])
+                if pth_btwn is None:
+                    brk_atm_idx = i
+    frm_atm_idx = None
+    if brk_atm_idx is not None:
+        len_pth_to_brk = 0
+        for i in range(len(bnds)):
+            if i != brk_atm_idx:
+                gra_i = automol.graph.remove_bonds(ts_gra, (bnds[i],))
+                pth_btwn = automol.graph.shortest_path_between_atoms(
+                    gra_i, bnded_atms[i], bnded_atms[brk_atm_idx])
+                if len(pth_btwn) > len_pth_to_brk:
+                    print('bigger path', pth_btwn)
+                    frm_atm_idx = i
+                    len_pth_to_brk = len(pth_btwn)
+    breaking_bond = None
+    forming_bond = None
+    if frm_atm_idx is not None and brk_atm_idx is not None:
+        breaking_bond = bnds[brk_atm_idx]
+        forming_bond = bnds[frm_atm_idx]
+    return ts_gra, breaking_bond, forming_bond
+
+
+def h_transfer_gra(geo):
     ts_gra, oversaturated_atom = choose_cutoff_distance(geo)
     ts_gra = automol.graph.set_stereo_from_geometry(ts_gra, geo)
     atoms_bnd = automol.graph.atoms_bond_keys(ts_gra)
@@ -383,37 +442,10 @@ def get_zrxn(geo, rxn_info, rxn_class):
     breaking_bond, forming_bond = bonds
     # when we move on to other reaction types we have to check for double
     # bonds when doing bond orders
-    forw_bnd_ord_dct = {breaking_bond: 0.9, forming_bond: 0.1}
-    back_bnd_ord_dct = {breaking_bond: 0.1, forming_bond: 0.9}
-    forward_gra = automol.graph.set_bond_orders(ts_gra, forw_bnd_ord_dct)
-    backward_gra = automol.graph.set_bond_orders(ts_gra, back_bnd_ord_dct)
-    reactant_gras = automol.graph.without_dummy_bonds(
-        automol.graph.without_fractional_bonds(forward_gra))
-    reactant_gras = automol.graph.connected_components(reactant_gras)
-    product_gras = automol.graph.without_dummy_bonds(
-        automol.graph.without_fractional_bonds(backward_gra))
-    product_gras = automol.graph.connected_components(product_gras)
-    ts_gras = [forward_gra, backward_gra]
-    rxn_gras = [reactant_gras, product_gras]
-    rxn_ichs = [[], []]
-    for i, side in enumerate(rxn_info[0]):
-        for ich in side:
-            rxn_ichs[i].append(ich)
-    ts_ichs = [[], []]
-    for rgra in reactant_gras:
-        try:
-            rich = automol.graph.inchi(rgra, stereo=True)
-        except IndexError:
-            rich = automol.graph.inchi(rgra)
-        rsmi = automol.inchi.smiles(rich)
-        ts_ichs[0].append(rich)
-    for pgra in product_gras:
-        try:
-            pich = automol.graph.inchi(pgra, stereo=True)
-        except IndexError:
-            pich = automol.graph.inchi(pgra)
-        psmi = automol.inchi.smiles(pich)
-        ts_ichs[1].append(pich)
+    return ts_gra, breaking_bond, forming_bond
+
+
+def _check_ichs_match(ts_ichs, rxn_ichs, ts_gras, rxn_gras):
     reactant_match = False
     product_match = False
     if ts_ichs[0] == rxn_ichs[0]:
@@ -436,16 +468,62 @@ def get_zrxn(geo, rxn_info, rxn_class):
         elif ts_ichs[1][::-1] == rxn_ichs[-1]:
             ts_ichs[1] = ts_ichs[1][::-1]
             product_match = True
-    # force matches to be True because stereo doesn't work
-    if not reactant_match or not product_match:
-        print(
-            'The reactants and products found for the transition state' +
-            ' did not match those specified in user input',
-            ts_ichs, rxn_ichs)
-    reactant_match = True
-    product_match = True
-    # remove above lines if stereo is available for sp
-    if reactant_match and product_match:
+    return reactant_match and product_match, ts_ichs, ts_gras, rxn_gras
+
+
+def all_reaction_graphs(ts_gra, breaking_bond, forming_bond):
+    forw_bnd_ord_dct = {breaking_bond: 0.9, forming_bond: 0.1}
+    back_bnd_ord_dct = {breaking_bond: 0.1, forming_bond: 0.9}
+    forward_gra = automol.graph.set_bond_orders(ts_gra, forw_bnd_ord_dct)
+    backward_gra = automol.graph.set_bond_orders(ts_gra, back_bnd_ord_dct)
+    reactant_gras = automol.graph.without_dummy_bonds(
+        automol.graph.without_fractional_bonds(forward_gra))
+    reactant_gras = automol.graph.connected_components(reactant_gras)
+    product_gras = automol.graph.without_dummy_bonds(
+        automol.graph.without_fractional_bonds(backward_gra))
+    product_gras = automol.graph.connected_components(product_gras)
+    ts_gras = [forward_gra, backward_gra]
+    rxn_gras = [reactant_gras, product_gras]
+    return ts_gras, rxn_gras
+
+
+def get_zrxn(geo, rxn_info, rxn_class):
+    if rxn_class in ['hydrogen abstraction', 'hydrogen migration']:
+        ts_gra, breaking_bond, forming_bond = h_transfer_gra(geo)
+    elif rxn_class in ['ring forming scission']:
+        ts_gra, breaking_bond, forming_bond = ringformsci_gra(geo)
+    ts_gras, rxn_gras = all_reaction_graphs(
+        ts_gra, breaking_bond, forming_bond)
+
+    rxn_ichs = [[], []]
+    for i, side in enumerate(rxn_info[0]):
+        for ich in side:
+            rxn_ichs[i].append(ich)
+
+    ts_ichs = [[], []]
+    for rgra in rxn_gras[0]:
+        try:
+            rich = automol.graph.inchi(rgra, stereo=True)
+        except IndexError:
+            rich = automol.graph.inchi(rgra)
+        ts_ichs[0].append(rich)
+    for pgra in rxn_gras[1]:
+        try:
+            pich = automol.graph.inchi(pgra, stereo=True)
+        except IndexError:
+            pich = automol.graph.inchi(pgra)
+        ts_ichs[1].append(pich)
+
+    # match_ich_info, ts_ichs, ts_gras, rxn_gras = _check_ichs_match(
+    #     ts_ichs, rxn_ichs, ts_gras, rxn_gras)
+    match_ich_info = False
+    if not match_ich_info:
+        print('make sure these look right')
+        print('my ichs  ', ts_ichs)
+        print('your ichs', rxn_ichs)
+        match_ich_info = True
+
+    if match_ich_info:
         reactant_keys = []
         for gra in rxn_gras[0]:
             reactant_keys.append(automol.graph.atom_keys(gra))
@@ -454,6 +532,7 @@ def get_zrxn(geo, rxn_info, rxn_class):
             product_keys.append(automol.graph.atom_keys(gra))
         std_rxn = automol.reac.Reaction(
             rxn_class, *ts_gras, reactant_keys, product_keys)
+        print(std_rxn)
         ts_zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(
             std_rxn, geo)
         std_zrxn = automol.reac.relabel_for_zmatrix(
@@ -476,49 +555,13 @@ def main(insert_dct):
     thy_info = parse_user_theory(insert_dct)
     prog, method, basis, _ = thy_info
 
-    hess_job = False
-    zrxn = None
-    zma = None
     # Read in the input and output files that we
     # Are inserting into the filesystem
     inp_str = read_user_file(insert_dct, 'input_file')
     out_str = read_user_file(insert_dct, 'output_file')
     output_type = insert_dct['output_type']
-    if output_type == 'geo':
-        geo = automol.geom.from_xyz_string(out_str)
-        ene = float(automol.geom.xyz_string_comment(out_str))
-    elif output_type == 'zma':
-        out_lines = out_str.splitlines()
-        ene = float(out_lines[0])
-        out_str = '\n'.join(out_lines[1:])
-        zma = automol.zmat.from_string(out_str)
-        geo = automol.zmat.geometry(zma)
-    elif output_type == 'optimization':
-        ene = elstruct.reader.energy(prog, method, out_str)
-        geo = elstruct.reader.opt_geometry(prog, out_str)
-        zma = elstruct.reader.opt_zmatrix(prog, out_str)
-        if geo is None:
-            print(
-                'No geometry could be parsed from output' +
-                'Check that the program matches user specied' +
-                ' {}'.format(prog) + ' and method matches' +
-                ' {}'.format(method))
-            sys.exit()
-    elif output_type == 'frequencies':
-        ene = elstruct.reader.energy(prog, method, out_str)
-        geo = elstruct.reader.opt_geometry(prog, out_str)
-        zma = elstruct.reader.opt_zmatrix(prog, out_str)
-        hess_job = True
-        if geo is None:
-            print(
-                'No geometry could be parsed from output' +
-                'Check that the program matches user specied' +
-                ' {}'.format(prog) + ' and method matches' +
-                ' {}'.format(method))
-            sys.exit()
-    if zma is None:
-        zma = automol.geom.zmatrix(geo)
-        geo = automol.zmat.geometry(zma)
+    geo, zma, ene, hess_job = _struct_based_on_input(
+        output_type, out_str, prog, method)
 
     # Parse out user specified save location
     if insert_dct['saddle']:
@@ -526,6 +569,11 @@ def main(insert_dct):
         zrxn, zma, geo, rxn_info = get_zrxn(geo, rxn_info, rxn_class)
     else:
         spc_info = parse_user_species(insert_dct)
+
+    if zma is None:
+        zma = automol.geom.zmatrix(geo)
+        geo = automol.zmat.geometry(zma)
+
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     rng_locs, tors_locs, locs = parse_user_locs(insert_dct)
 
@@ -550,6 +598,7 @@ def main(insert_dct):
             ' info matches the info in user given output')
         sys.exit()
 
+    # update info object and save conformer
     inf_obj = autofile.schema.info_objects.run(
         job=elstruct.Job.OPTIMIZATION, prog=prog, version='',
         method=method, basis=basis, status=autofile.schema.RunStatus.SUCCESS)
@@ -750,6 +799,49 @@ def parse_script_input(script_input_file):
             )
             sys.exit()
     return insert_dct
+
+
+def _struct_based_on_input(
+        output_type, out_str, prog, method):
+    """ read in geo, ene, zma, based on what user specified in
+        out_str
+    """
+    hess_job = False
+    zrxn = None
+    zma = None
+    if output_type == 'geo':
+        geo = automol.geom.from_xyz_string(out_str)
+        ene = float(automol.geom.xyz_string_comment(out_str))
+    elif output_type == 'zma':
+        out_lines = out_str.splitlines()
+        ene = float(out_lines[0])
+        out_str = '\n'.join(out_lines[1:])
+        zma = automol.zmat.from_string(out_str)
+        geo = automol.zmat.geometry(zma)
+    elif output_type == 'optimization':
+        ene = elstruct.reader.energy(prog, method, out_str)
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+        if geo is None:
+            print(
+                'No geometry could be parsed from output' +
+                'Check that the program matches user specied' +
+                ' {}'.format(prog) + ' and method matches' +
+                ' {}'.format(method))
+            sys.exit()
+    elif output_type == 'frequencies':
+        ene = elstruct.reader.energy(prog, method, out_str)
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+        hess_job = True
+        if geo is None:
+            print(
+                'No geometry could be parsed from output' +
+                'Check that the program matches user specied' +
+                ' {}'.format(prog) + ' and method matches' +
+                ' {}'.format(method))
+            sys.exit()
+    return geo, zma, ene, hess_job
 
 
 if __name__ == '__main__':
