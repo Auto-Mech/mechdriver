@@ -9,6 +9,7 @@ from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io import job_path
 from mechlib import filesys
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
@@ -54,6 +55,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     # cid = [autofile.schema.generate_new_conformer_id()]
     # run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cid))
 
+    run_prefix = runfs_dct['prefix']
     runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
     rid = autofile.schema.generate_new_ring_id()
     cid = autofile.schema.generate_new_conformer_id()
@@ -74,7 +76,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
         # (maybe just have remove imag do this?)
         hess_ret, _, imags = saddle_point_hessian(
             opt_ret, ts_info, method_dct,
-            run_fs, overwrite)
+            run_fs, run_prefix, overwrite)
 
         sadpt_status = saddle_point_checker(imags)
         # ted_status = ted_coordinate_check(opt_ret, hess_ret, ts_dct, run_fs)
@@ -251,7 +253,7 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
 
 
 def saddle_point_hessian(opt_ret, ts_info, method_dct,
-                         run_fs, overwrite):
+                         run_fs, run_prefix, overwrite):
     """ run things for checking Hessian
     """
 
@@ -280,11 +282,14 @@ def saddle_point_hessian(opt_ret, ts_info, method_dct,
     if hess_success:
         hess_inf_obj, _, hess_out_str = hess_ret
         hess = elstruct.reader.hessian(hess_inf_obj.prog, hess_out_str)
-        freq_run_path = run_fs[-1].path(['hessian'])
+
+        fml_str = automol.geom.formula_string(geo)
+        vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
+
         run_fs[-1].create(['hessian'])
         script_str = autorun.SCRIPT_DCT['projrot']
         freqs, _, imags, _ = autorun.projrot.frequencies(
-            script_str, freq_run_path, [geo], [[]], [hess])
+            script_str, vib_path, [geo], [[]], [hess])
     else:
         freqs, imags = [], []
 

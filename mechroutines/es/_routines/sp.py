@@ -15,6 +15,7 @@ import autofile
 import autorun
 from phydat import phycon, symm
 from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io import job_path
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner._par import qchem_params
 from mechroutines.es._routines.conformer import save_conformer
@@ -24,7 +25,7 @@ _JSON_SAVE = []
 
 
 def run_energy(zma, geo, spc_info, thy_info,
-               geo_run_fs, geo_save_fs, locs,
+               geo_run_fs, geo_save_fs, locs, run_prefix,
                script_str, overwrite, zrxn=None,
                retryfail=True, method_dct=None, highspin=False,
                ref_val=None, **kwargs):
@@ -53,7 +54,7 @@ def run_energy(zma, geo, spc_info, thy_info,
     """
 
     # Set unneeded vals to
-    _, _, _ = zrxn, method_dct, ref_val
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
 
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
@@ -133,7 +134,7 @@ def run_energy(zma, geo, spc_info, thy_info,
 
 
 def run_gradient(zma, geo, spc_info, thy_info,
-                 geo_run_fs, geo_save_fs, locs,
+                 geo_run_fs, geo_save_fs, locs, run_prefix,
                  script_str, overwrite, zrxn=None,
                  retryfail=True, method_dct=None,
                  ref_val=None, **kwargs):
@@ -141,7 +142,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
     """
 
     # Set unneeded vals
-    _, _, _ = zrxn, method_dct, ref_val
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
 
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
@@ -218,7 +219,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
 def rerun_hessian_and_opt(
         zma, spc_info, thy_info,
-        geo_run_fs, geo_save_fs, locs,
+        geo_run_fs, geo_save_fs, locs, run_prefix,
         script_str, zrxn=None,
         retryfail=True, method_dct=None,
         ref_val=None, attempt=0,
@@ -261,7 +262,7 @@ def rerun_hessian_and_opt(
                 ioprinter.info_message(automol.geom.string(tight_geo))
                 run_hessian(
                     zma, tight_geo, spc_info, thy_info,
-                    geo_run_fs, geo_save_fs, locs,
+                    geo_run_fs, geo_save_fs, locs, run_prefix,
                     hess_script_str, True, zrxn=zrxn,
                     retryfail=retryfail, method_dct=method_dct,
                     ref_val=ref_val, attempt=attempt+1, **hess_kwargs)
@@ -271,7 +272,7 @@ def rerun_hessian_and_opt(
 
 
 def run_hessian(zma, geo, spc_info, thy_info,
-                geo_run_fs, geo_save_fs, locs,
+                geo_run_fs, geo_save_fs, locs, run_prefix,
                 script_str, overwrite,
                 zrxn=None,
                 retryfail=True,
@@ -352,7 +353,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                         'Performing a tightopt, superfine to fix it')
                     rerun_hessian_and_opt(
                         zma, spc_info, thy_info,
-                        geo_run_fs, geo_save_fs, locs,
+                        geo_run_fs, geo_save_fs, locs, run_prefix,
                         script_str, zrxn=zrxn,
                         retryfail=retryfail,
                         method_dct=method_dct,
@@ -399,22 +400,21 @@ def run_hessian(zma, geo, spc_info, thy_info,
                         if thy_info[0] == 'gaussian09':
                             _hess_grad(inf_obj.prog, out_str, geo_save_fs,
                                        geo_save_path, locs, overwrite)
-                        _hess_freqs(geo, geo_save_fs,
-                                    geo_run_path, geo_save_path,
-                                    locs, overwrite)
+                        _hess_freqs(geo, geo_save_fs, geo_save_path,
+                                    locs, run_prefix, overwrite)
 
         else:
             ioprinter.existing_path('Hessian', geo_save_path)
 
-            _hess_freqs(geo, geo_save_fs,
-                        geo_run_path, geo_save_path, locs, overwrite)
+            _hess_freqs(geo, geo_save_fs, geo_save_path,
+                        locs, run_prefix, overwrite)
 
     else:
         ioprinter.info_message('Species is an atom. Skipping Hessian task.')
 
 
 def run_vpt2(zma, geo, spc_info, thy_info,
-             geo_run_fs, geo_save_fs, locs,
+             geo_run_fs, geo_save_fs, locs, run_prefix,
              script_str, overwrite, zrxn=None,
              retryfail=True, method_dct=None,
              ref_val=None, **kwargs):
@@ -422,7 +422,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
     """
 
     # Set unneeded vals
-    _, _, _ = zrxn, method_dct, ref_val
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
 
     # Set the run filesystem information
     geo_run_path = geo_run_fs[-1].path(locs)
@@ -513,7 +513,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
 
 def run_prop(zma, geo, spc_info, thy_info,
-             geo_run_fs, geo_save_fs, locs,
+             geo_run_fs, geo_save_fs, locs, run_prefix,
              script_str, overwrite, zrxn=None,
              retryfail=True, method_dct=None,
              ref_val=None, **kwargs):
@@ -521,7 +521,7 @@ def run_prop(zma, geo, spc_info, thy_info,
     """
 
     # Set unneeded vals
-    _, _, _ = zrxn, method_dct, ref_val
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
 
     # Set input geom
     geo_run_path = geo_run_fs[-1].path(locs)
@@ -597,7 +597,7 @@ def run_prop(zma, geo, spc_info, thy_info,
             geo_save_path)
 
 
-def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
+def _hess_freqs(geo, geo_save_fs, save_path, locs, run_prefix, overwrite):
     """ Calculate harmonic frequencies using Hessian
     """
     if _json_database(save_path):
@@ -627,8 +627,10 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         ioprinter.info_message(
                 " - Calculating harmonic frequencies from Hessian...")
         script_str = autorun.SCRIPT_DCT['projrot']
+        fml_str = automol.geom.formula_string(geo)
+        vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
         rt_freqs, _, rt_imags, _ = autorun.projrot.frequencies(
-            script_str, run_path, [geo], [[]], [hess])
+            script_str, vib_path, [geo], [[]], [hess])
         rt_imags = tuple(-1 * imag_freq for imag_freq in rt_imags)
         freqs = sorted(rt_imags + rt_freqs)
         ioprinter.frequencies(freqs)
