@@ -42,7 +42,8 @@ SPC_VAL_DCT = {
     'lj': ((str,), (), None),
     'edown': ((str,), (), None),
     'active': ((tuple,), (), None),
-    'zma_idx': ((int,), (), 0)
+    'zma_idx': ((int,), (), 0),
+    'conf_id': ((tuple, list), (), None)
 }
 TS_VAL_DCT = {
     'rxndirn': ((str,), (), 'forw'),

@@ -211,18 +211,25 @@ def get_spc_locs_lst(
         cnf_range='min', sort_info_lst=None, name=None):
     """ return the locations for a pf level
     """
-    # Set the spc_info
-    cnf_run_fs, cnf_save_fs, levelp, mod_info_lst = _get_prop_fs(
-        spc_model_dct_i, spc_dct_i, 'vib', sort_info_lst,
-        run_prefix, save_prefix, saddle=saddle, name=name)
 
-    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
-    min_locs_lst, _ = conformer_locators(
-        cnf_save_fs, levelp, cnf_range=cnf_range,
-        sort_info_lst=mod_info_lst, print_enes=True,
-        hbond_cutoffs=hbond_cutoffs)
-    for min_locs in min_locs_lst:
-        cnf_run_fs[-1].create(min_locs)
+    # Use the locs from the dict
+    user_conf_ids = spc_dct_i.get('conf_id')
+    if user_conf_ids is None:
+        # Set the spc_info
+        cnf_run_fs, cnf_save_fs, levelp, mod_info_lst = _get_prop_fs(
+            spc_model_dct_i, spc_dct_i, 'vib', sort_info_lst,
+            run_prefix, save_prefix, saddle=saddle, name=name)
+
+        hbond_cutoffs = spc_dct_i['hbond_cutoffs']
+        min_locs_lst, _ = conformer_locators(
+            cnf_save_fs, levelp, cnf_range=cnf_range,
+            sort_info_lst=mod_info_lst, print_enes=True,
+            hbond_cutoffs=hbond_cutoffs)
+        for min_locs in min_locs_lst:
+            cnf_run_fs[-1].create(min_locs)
+    else:
+        print('Using user specified conformer IDs')
+        min_locs_lst = (user_conf_ids,)
 
     return min_locs_lst
 

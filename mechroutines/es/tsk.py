@@ -203,9 +203,14 @@ def conformer_tsk(job, spc_dct, spc_name,
     if job == 'samp':
 
         # Build the ini zma filesys
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_locs, ini_min_cnf_path = ini_loc_info
+        user_conf_ids = spc_dct_i.get('conf_id')
+        if user_conf_ids is None:
+            ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+                ini_cnf_save_fs, mod_ini_thy_info)
+            ini_locs, ini_min_cnf_path = ini_loc_info
+        else:
+            print(f'Using user specified conformer IDs: {user_conf_ids}')
+            ini_locs = user_conf_ids
 
         if ini_locs:
             ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
@@ -378,11 +383,16 @@ def conformer_tsk(job, spc_dct, spc_name,
         cnf_sort_info_lst = _sort_info_lst(
             es_keyword_dct['sort'], thy_dct, spc_info)
 
-        ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info,
-            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
-            hbond_cutoffs=hbond_cutoffs,
-            print_enes=True)
+        user_conf_ids = spc_dct_i.get('conf_id')
+        if user_conf_ids is None:
+            ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+                ini_cnf_save_fs, mod_ini_thy_info,
+                cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+                hbond_cutoffs=hbond_cutoffs,
+                print_enes=True)
+        else:
+            print(f'Using user specified conformer IDs: {user_conf_ids}')
+            ini_rng_cnf_locs_lst = (user_conf_ids,)
 
         # Check if locs exist, kill if it doesn't
         if not ini_rng_cnf_locs_lst:
@@ -423,7 +433,7 @@ def conformer_tsk(job, spc_dct, spc_name,
                 zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
                 ES_TSKS[job](
                     zma, geo, spc_info, mod_thy_info,
-                    ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
+                    ini_cnf_run_fs, ini_cnf_save_fs, ini_locs, run_prefix,
                     script_str, overwrite, zrxn=zrxn,
                     retryfail=retryfail, method_dct=method_dct,
                     ref_val=ref_val,
@@ -605,7 +615,7 @@ def tau_tsk(job, spc_dct, spc_name,
                 zma = None
                 ES_TSKS[job](
                     zma, geo, spc_info, mod_thy_info,
-                    tau_save_fs, locs,
+                    tau_save_fs, locs, run_prefix,
                     script_str, overwrite,
                     retryfail=retryfail, **kwargs)
                 ioprinter.obj('vspace')
@@ -641,7 +651,7 @@ def tau_tsk(job, spc_dct, spc_name,
                 tau_run_fs[-1].create(locs)
                 ES_TSKS[job](
                     None, geo, spc_info, mod_thy_info,
-                    tau_run_fs, tau_save_fs, locs,
+                    tau_run_fs, tau_save_fs, locs, run_prefix,
                     script_str, overwrite,
                     retryfail=retryfail, **kwargs)
                 hess_cnt += 1
@@ -919,7 +929,7 @@ def hr_tsk(job, spc_dct, spc_name,
                         scn_run_fs[-1].create(locs)
                         ES_TSKS[job](
                             zma, geo, spc_info, mod_thy_info,
-                            scn_run_fs, scn_save_fs, locs,
+                            scn_run_fs, scn_save_fs, locs, run_prefix,
                             script_str, overwrite,
                             retryfail=retryfail, **kwargs)
                         ioprinter.obj('vspace')

@@ -309,6 +309,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_scn_fs': vscnlvl_scn_run_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_run_fs,
         'vrctst_fs': vrctst_run_fs,
+        'prefix': run_prefix
     }
 
     savefs_dct = {
@@ -320,7 +321,8 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
         # 'rcts_cnf_fs': _rcts_cnf_fs,
-        'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs
+        'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs,
+        'prefix': save_prefix
     }
 
     return thy_inf_dct, runfs_dct, savefs_dct
