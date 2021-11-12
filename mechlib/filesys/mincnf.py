@@ -758,7 +758,7 @@ def _sort_energy_parameter(
             geo, freqs, sort_prop_dct[sort_prop])
         sort_ene = sort_ene / phycon.EH2KCAL
     elif sort_prop == 'gibbs':
-        ioprinter.debug_message('sorting bby gibbs')
+        ioprinter.debug_message('sorting by Gibbs')
         zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
         zpe = (zpe) * phycon.EH2KCAL
         spe = sp_ene * phycon.EH2KCAL

@@ -640,6 +640,7 @@ def main(insert_dct):
             print(
                 'geometry is now saved at {}'.format(cnf_fs[-1].path(locs)))
     else:
+        print('{}'.format(cnf_fs[-1].path(locs)))
         print(
             'the geometry in the output is not unique to filesystem' +
             '... not saving')
