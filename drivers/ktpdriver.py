@@ -69,39 +69,33 @@ def run(pes_rlst, pes_grp_dct,
         # Generate the paths needed for MESSRATE calculations
         rate_paths_dct = rate_paths(pes_grp_rlst, run_prefix)
 
+        # Process info required ro run all of the PESs
+        if write_rate_tsk is not None:
+            proc_tsk = write_rate_tsk
+        else:
+            proc_tsk = run_fit_tsk
+        spc_dct, all_rxn_lst, all_instab_chnls, label_dct = _process2(
+            proc_tsk, ktp_tsk_lst, pes_grp_rlst,
+            spc_mod_dct, spc_dct, glob_dct,
+            run_prefix, save_prefix)
+
         # ---------------------------------------- #
         # WRITE AND RUN TASK FOR EACH PES IN GROUP #
         # ---------------------------------------- #
         for pesgrp_num, (pes_inf, rxn_lst) in enumerate(pes_grp_rlst.items()):
 
-            # ---------------------------------------------- #
-            # PREPARE INFORMATION TO PASS TO KTPDRIVER TASKS #
-            # ---------------------------------------------- #
-
-            # Set objects
-            _, pes_idx, _ = pes_inf
-            label_dct = None
-
             # Print PES Channels that are being run
             ioprinter.runlst(pes_inf, rxn_lst)
-
-            # --------------------------------- #
-            # RUN THE REQUESTED KTPDRIVER TASKS #
-            # --------------------------------- #
 
             # Write the MESS file
             if write_rate_tsk is not None:
                 tsk_key_dct = write_rate_tsk[-1]
-                spc_dct, rxn_lst, instab_chnls, label_dct = _process(
-                    write_rate_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
-                    spc_mod_dct, spc_dct, glob_dct,
-                    run_prefix, save_prefix)
                 ktp_tasks.write_messrate_task(
-                    pesgrp_num, pes_inf, rxn_lst,
+                    pesgrp_num, pes_inf, all_rxn_lst[pesgrp_num],
                     tsk_key_dct, pes_param_dct,
                     spc_dct,
                     thy_dct, pes_mod_dct, spc_mod_dct,
-                    instab_chnls, label_dct,
+                    all_instab_chnls[pesgrp_num], label_dct,
                     rate_paths_dct, run_prefix, save_prefix)
 
             # Run mess to produce rates (urrently nothing from tsk lst used)
@@ -112,48 +106,55 @@ def run(pes_rlst, pes_grp_dct,
         # FIT THE COMBINES RATES FOR ENTIRE GROUP  #
         # ---------------------------------------- #
 
-            # Fit rates to functional forms; write parameters to ChemKin file
-            if run_fit_tsk is not None:
-                if label_dct is None:
-                    spc_dct, rxn_lst, _, label_dct = _process(
-                        run_fit_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
-                        spc_mod_dct, spc_dct, glob_dct,
-                        run_prefix, save_prefix)
-                ktp_tasks.run_fits_task(
-                    pes_inf, rate_paths_dct, mdriver_path,
-                    label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
+        # Fit rates to functional forms; write parameters to ChemKin file
+        if run_fit_tsk is not None:
+            tsk_key_dct = run_fit_tsk[-1]
+            ktp_tasks.run_fits_task(
+                pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
+                label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
 
 
 # ------- #
 # UTILITY #
 # ------- #
-def _process(tsk, ktp_tsk_lst, pes_idx, rxn_lst,
-             spc_mod_dct, spc_dct, glob_dct,
-             run_prefix, save_prefix):
+def _process2(tsk, ktp_tsk_lst, pes_grp_rlst,
+              spc_mod_dct, spc_dct, glob_dct,
+              run_prefix, save_prefix):
     """ Build info needed for the task
     """
 
+    # Generic task/model info independent of PESs
     tsk_key_dct = tsk[-1]
     spc_mod = tsk_key_dct['spc_model']
 
     spc_mod_dct_i = spc_mod_dct[spc_mod]
 
-    # Obtain all of the transitions states
-    ioprinter.message(
-        'Identifying reaction classes for transition states...')
-    ts_dct = parser.spc.ts_dct_from_ktptsks(
-        pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct,
-        spc_dct, run_prefix, save_prefix)
-    spc_dct = parser.spc.combine_sadpt_spc_dcts(
-        ts_dct, spc_dct, glob_dct)
+    label_dct = {}
+    all_chkd_rxn_lst, all_instab_chnls = (), ()
+    for _, (pes_inf, rxn_lst) in enumerate(pes_grp_rlst.items()):
 
-    # Set reaction list with unstable species broken apart
-    ioprinter.message('Identifying stability of all species...', newline=1)
-    chkd_rxn_lst, instab_chnls = split_unstable_pes(
-        rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
+        _, pes_idx, _ = pes_inf
 
-    # Build the MESS label idx dictionary for the PES
-    label_dct = ktp_label.make_pes_label_dct(
-        chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i)
+        # Obtain all of the transitions states
+        ioprinter.message(
+            'Identifying reaction classes for transition states...')
+        ts_dct = parser.spc.ts_dct_from_ktptsks(
+            pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct,
+            spc_dct, run_prefix, save_prefix)
+        spc_dct = parser.spc.combine_sadpt_spc_dcts(
+            ts_dct, spc_dct, glob_dct)
 
-    return spc_dct, chkd_rxn_lst, instab_chnls, label_dct
+        # Set reaction list with unstable species broken apart
+        ioprinter.message('Identifying stability of all species...', newline=1)
+        chkd_rxn_lst, instab_chnls = split_unstable_pes(
+            rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
+
+        all_chkd_rxn_lst += (chkd_rxn_lst,)
+        all_instab_chnls += (instab_chnls,)
+
+        # Build the MESS label idx dictionary for the PES
+        label_dct.update(
+            ktp_label.make_pes_label_dct(
+                chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i))
+
+    return spc_dct, all_chkd_rxn_lst, all_instab_chnls, label_dct

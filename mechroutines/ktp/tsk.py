@@ -132,7 +132,7 @@ def run_messrate_task(rate_paths_dct, pes_inf):
             break
 
 
-def run_fits_task(pes_inf, pes_param_dct, rate_paths_dct, mdriver_path,
+def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
                   label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct):
     """ Run the fits and potentially
 
@@ -177,5 +177,6 @@ def run_fits_task(pes_inf, pes_param_dct, rate_paths_dct, mdriver_path,
 
     # Write the file
     ckin_path = output_path('CKIN', prefix=mdriver_path)
-    ckin_filename = pes_inf[0] + '.ckin'
+    ckin_filename = 'FULL' + '.ckin'
+    # ckin_filename = pes_inf[0] + '.ckin'
     ioformat.pathtools.write_file(ckin_str, ckin_path, ckin_filename)

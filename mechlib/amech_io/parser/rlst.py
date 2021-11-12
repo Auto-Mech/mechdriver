@@ -90,7 +90,6 @@ def pes_groups(pes_dct, pes_grp_dct):
     # Build pes grp idx lists to loop over an build master list
     # run_pes_idxs = tuple(frozenset({x, y}) for _, x, y in pes_dct.keys())
     run_pes_idxs = tuple((x, y) for _, x, y in pes_dct.keys())
-    print(run_pes_idxs)
 
     # Get the groupings specified by the user
     if pes_grp_dct is not None:
@@ -104,20 +103,15 @@ def pes_groups(pes_dct, pes_grp_dct):
                     if (x, y) not in flat_pes_grp_idxs)
     grp_lst_sort = tuple(sorted(grp_lst, key=lambda x: x[0]))
     grp_lst_sort += pes_grp_idxs
-    print(grp_lst)
-    print(grp_lst_sort)
 
     # Need to build a group for PESs
     pes_grps = ()
     for grp_idxs in grp_lst_sort:
-        print(1, grp_idxs)
         pes_grp = {}
         for idxs in grp_idxs:
             for (form, pidx, sidx), chnls in pes_dct.items():
-                print(2, idxs, (pidx, sidx))
                 if idxs == (pidx, sidx):
                     pes_grp.update({(form, pidx, sidx): chnls})
-        print(3, pes_grp)
         if pes_grp_dct is None:
             pes_grps += ((pes_grp, None),)
         else:
