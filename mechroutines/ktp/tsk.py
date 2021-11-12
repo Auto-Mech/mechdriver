@@ -14,6 +14,7 @@ from mechroutines.models.typ import use_well_extension
 from mechroutines.ktp.rates import make_header_str
 from mechroutines.ktp.rates import make_global_etrans_str
 from mechroutines.ktp.rates import make_pes_mess_str
+from mechroutines.ktp._newstuff import obtain_multipes_rxn_ktp_dct
 
 
 def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
@@ -131,55 +132,30 @@ def run_messrate_task(rate_paths_dct, pes_inf):
             break
 
 
-def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
+def run_fits_task(pes_inf, pes_param_dct, rate_paths_dct, mdriver_path,
                   label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct):
     """ Run the fits and potentially
+
+        assume that the rate_paths_dct will come in with all PESs in group
     """
 
     # Get the model
     pes_mod = tsk_key_dct['kin_model']
     spc_mod = tsk_key_dct['spc_model']
 
-    pes_fml, _, _ = pes_inf
-
-    # Potentially try and combine the information
-    # get lumped, non-thermal rates
-
     ioprinter.obj('vspace')
     ioprinter.obj('line_dash')
+
+    # Obtain the rate constants from the MESS files
+    ioprinter.info_message(
+        'Reading Rate Constants from MESS outputs', newline=1)
+    rxn_ktp_dct = obtain_multipes_rxn_ktp_dct(
+        rate_paths_dct, pes_param_dct,
+        label_dct, pes_mod_dct, pes_mod)
+
+    # Fit the rate constants
     ioprinter.info_message(
         'Fitting Rate Constants for PES to Functional Forms', newline=1)
-
-    # Read and fit rates; write to ckin string
-    mess_path = rate_paths_dct[pes_inf]['base']
-    # both base and wext path made even if wext not run; need fix
-    # base_mess_path = rate_paths_dct[pes_inf]['base']
-    # wext_mess_path = rate_paths_dct[pes_inf]['wext']
-    # if os.path.exists(wext_mess_path):
-    #     mess_path = wext_mess_path
-    # else:
-    #     mess_path = base_mess_path
-
-    print(f'Fitting rates from {mess_path}')
-
-    # Read MESS file and get rate constants
-    mess_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
-    rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
-        mess_str,
-        label_dct=label_dct,
-        filter_kts=True,
-        tmin=min(pes_mod_dct[pes_mod]['rate_temps']),
-        tmax=max(pes_mod_dct[pes_mod]['rate_temps']),
-        pmin=min(pes_mod_dct[pes_mod]['pressures']),
-        pmax=max(pes_mod_dct[pes_mod]['pressures'])
-    )
-    # Read the info needed for doing prompt/nontherm?
-
-    # Read all of the rxn_ktp_dct
-
-    # Alter the raw ktp values using the branching fractions from prompt
-
-    # Fit rates
     ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
     rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
         rxn_ktp_dct,
@@ -201,5 +177,5 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
 
     # Write the file
     ckin_path = output_path('CKIN', prefix=mdriver_path)
-    ckin_filename = pes_fml + '.ckin'
+    ckin_filename = pes_inf[0] + '.ckin'
     ioformat.pathtools.write_file(ckin_str, ckin_path, ckin_filename)
