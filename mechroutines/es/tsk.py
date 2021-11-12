@@ -473,6 +473,7 @@ def tau_tsk(job, spc_dct, spc_name,
     retryfail = es_keyword_dct['retryfail']
     # scan_increment = spc_dct_i['hind_inc']
     nsamp_par = spc_dct_i['tau_nsamp']
+    zrxn = spc_dct_i.get('zrxn', None)
 
     # Modify the theory
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
@@ -520,6 +521,7 @@ def tau_tsk(job, spc_dct, spc_name,
         tau_run_fs, tau_save_fs = build_fs(
             run_prefix, save_prefix, 'TAU',
             spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+
         # db_style = 'jsondb'
         db_style = 'directory'
         if db_style == 'jsondb':
@@ -588,14 +590,19 @@ def tau_tsk(job, spc_dct, spc_name,
                 method_dct, elstruct.Job.OPTIMIZATION)
 
             tors_names = automol.rotor.names(torsions, flat=True)
-            # Run sampling
+            resave = es_keyword_dct['resave']
+
             tau.tau_sampling(
-                zma, ref_ene,
-                spc_info, tors_names, nsamp_par,
+                zma, ref_ene, spc_info,
                 mod_ini_thy_info,
                 tau_run_fs, tau_save_fs,
                 script_str, overwrite,
-                saddle=saddle, **kwargs)
+                db_style='directory',
+                nsamp_par=nsamp_par,
+                tors_names=tors_names,
+                repulsion_thresh=40.0,
+                zrxn=zrxn, resave=resave,
+                **kwargs)
 
         elif job in ('energy', 'grad'):
 
@@ -617,7 +624,8 @@ def tau_tsk(job, spc_dct, spc_name,
                     zma, geo, spc_info, mod_thy_info,
                     tau_save_fs, locs, run_prefix,
                     script_str, overwrite,
-                    retryfail=retryfail, **kwargs)
+                    retryfail=retryfail,
+                    **kwargs)
                 ioprinter.obj('vspace')
 
         elif job == 'hess':
@@ -631,7 +639,7 @@ def tau_tsk(job, spc_dct, spc_name,
 
             # Run the job over all the conformers requested by the user
             hess_cnt = 0
-            for locs in tau_save_fs.existing():
+            for locs in tau_save_fs[-1].existing():
                 ioprinter.info_message(
                     f'HESS Number {hess_cnt+1}', newline=1)
                 if db_style == 'directory':
@@ -653,7 +661,9 @@ def tau_tsk(job, spc_dct, spc_name,
                     None, geo, spc_info, mod_thy_info,
                     tau_run_fs, tau_save_fs, locs, run_prefix,
                     script_str, overwrite,
-                    retryfail=retryfail, **kwargs)
+                    retryfail=retryfail, method_dct=method_dct,
+                    correct_vals=False,
+                    **kwargs)
                 hess_cnt += 1
                 if hess_cnt == hessmax:
                     break

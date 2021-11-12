@@ -16,7 +16,8 @@ from mechlib import filesys
 
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
-def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
+def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                 read_potentials=True):
     """ Add more rotor info
     """
 
@@ -52,7 +53,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
                 multi=bool('1d' in tors_model))
 
         # Read the potential grids
-        if rotors is not None:
+        if read_potentials and rotors is not None:
             rotors = _read_potentials(
                 rotors, spc_dct_i, run_path, cnf_save_path,
                 ref_ene, mod_tors_ene_info,

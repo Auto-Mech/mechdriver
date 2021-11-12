@@ -11,6 +11,7 @@ import autofile
 import autorun
 from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models import ene
@@ -655,40 +656,60 @@ def tau_data(spc_dct_i,
     """ Read the filesystem to get information for TAU
     """
 
-    # Set up all the filesystem objects using models and levels
+    # Set up model and basic thy objects
+    spc_info = sinfo.from_dct(spc_dct_i)
+    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    mod_thy_info = tinfo.modify_orb_label(
+        thy_info, spc_info)
+
+    vib_model = spc_mod_dct_i['vib']['mod']
+
+    # Set up reference conformer filesys
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i, run_prefix, save_prefix, saddle)
-    [harm_cnf_fs, _,
-     harm_min_locs, harm_save, _] = pf_filesystems['harm']
-    # [tors_cnf_fs, _, tors_min_locs, _, _] = pf_filesystems['tors']
+    [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
 
-    # Get the conformer filesys for the reference geom and energy
-    if harm_min_locs:
-        geom = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
-        min_ene = harm_cnf_fs[-1].file.energy.read(harm_min_locs)
+    # Obtain all values from initial reference conformer
+    rotors = tors.build_rotors(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i, read_potentials=False)
+    vib_info = vib.full_vib_analysis(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i,
+        run_prefix, zrxn=None)
+    freqs, _, zpe, _, tors_strs, _, harm_freqs, _ = vib_info
+    harm_zpve = 0.5 * sum(harm_freqs) * phycon.WAVEN2EH
 
-    # Set the filesystem
-    tau_save_fs = autofile.fs.tau(harm_save)
+    ioprinter.info_message('Determining the symmetry factor...', newline=1)
+    sym_factor = symm.symmetry_factor(
+        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
+    )
 
-    # Get the rotor info
-    rotors = tors.build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i)
-
-    # run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
-    tors_strs = tors.make_hr_strings(rotors)
-    [_, _, flux_str, _, _] = tors_strs
-
-    # Use model to determine whether to read grads and hessians
-    vib_model = spc_mod_dct_i['vib']['mod']
-    freqs = ()
-    harm_zpve = 'fix broken'
-    proj_zpve = 'fix broken'
-    # _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
-    #     pf_filesystems, hr_str, prot_str, run_prefix, zrxn=None)
-    zpe_chnlvl = proj_zpve * phycon.EH2KCAL
-
-    # Set reference energy to harmonic zpve
-    db_style = 'directory'
+    zpe_chnlvl = zpe * phycon.EH2KCAL
     reference_energy = harm_zpve * phycon.EH2KCAL
+
+    ref_geom, ref_grad, ref_hessian = [], [], []
+    if vib_model != 'tau':
+        geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
+        geo_str = autofile.data_types.swrite.geometry(geo)
+        ref_geom.append(geo_str)
+
+        grad = harm_save_fs[-1].file.gradient.read(harm_min_locs)
+        grad_str = autofile.data_types.swrite.gradient(grad)
+        ref_grad.append(grad_str)
+
+        hess = harm_save_fs[-1].file.hessian.read(harm_min_locs)
+        hess_str = autofile.data_types.swrite.hessian(hess)
+        ref_hessian.append(hess_str)
+
+    min_cnf_ene = filesys.read.energy(
+        harm_save_fs, harm_min_locs, mod_thy_info)
+
+    # Set up the TAU filesystem objects, get locs, and read info
+    _, tau_save_fs = filesys.build_fs(
+        run_prefix, save_prefix, 'TAU',
+        spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+
+    db_style = 'directory'
+    vib_model = spc_mod_dct_i['vib']['mod']
     if vib_model == 'tau':
         if db_style == 'directory':
             tau_locs = [locs for locs in tau_save_fs[-1].existing()
@@ -702,7 +723,6 @@ def tau_data(spc_dct_i,
         elif db_style == 'jsondb':
             tau_locs = tau_save_fs[-1].json_existing()
 
-    # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
     for locs in tau_locs:
 
@@ -721,7 +741,7 @@ def tau_data(spc_dct_i,
             tau_ene = tau_save_fs[-1].file.energy.read(locs)
         elif db_style == 'jsondb':
             tau_ene = tau_save_fs[-1].json.energy.read(locs)
-        rel_ene = (tau_ene - min_ene) * phycon.EH2KCAL
+        rel_ene = (tau_ene - min_cnf_ene) * phycon.EH2KCAL
         ene_str = autofile.data_types.swrite.energy(rel_ene)
         samp_enes.append(ene_str)
 
@@ -740,38 +760,14 @@ def tau_data(spc_dct_i,
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
 
-    # Read a geometry, grad, and hessian for a reference geom if needed
-    ref_geom, ref_grad, ref_hessian = [], [], []
-    if vib_model != 'tau':
-
-        # Get harmonic filesystem information
-        [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
-
-        # Read the geometr, gradient, and Hessian
-        geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
-        geo_str = autofile.data_types.swrite.geometry(geo)
-        ref_geom.append(geo_str)
-
-        grad = harm_save_fs[-1].file.gradient.read(harm_min_locs)
-        grad_str = autofile.data_types.swrite.gradient(grad)
-        ref_grad.append(grad_str)
-
-        hess = harm_save_fs[-1].file.hessian.read(harm_min_locs)
-        hess_str = autofile.data_types.swrite.hessian(hess)
-        ref_hessian.append(hess_str)
-
-    # Obtain symmetry factor
-    ioprinter.info_message('Determining the symmetry factor...', newline=1)
-    sym_factor = symm.symmetry_factor(
-        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
-    )
-
     # Create info dictionary
-    keys = ['geom', 'sym_factor', 'elec_levels', 'freqs', 'flux_mode_str',
+    keys = ['geom', 'sym_factor', 'elec_levels',
+            'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'ref_geom', 'ref_grad', 'ref_hessian',
             'zpe_chnlvl', 'reference_energy']
-    vals = [geom, sym_factor, spc_dct_i['elec_levels'], freqs, flux_str,
+    vals = [ref_geom[0], sym_factor, spc_dct_i['elec_levels'],
+            freqs, tors_strs[2],
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             ref_geom, ref_grad, ref_hessian,
             zpe_chnlvl, reference_energy]

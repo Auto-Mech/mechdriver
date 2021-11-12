@@ -7,96 +7,105 @@ import elstruct
 import autofile
 from phydat import phycon
 from mechlib import filesys
-from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io.printer import reading, info_message
+from mechlib.amech_io.printer import debug_message, warning_message
+from mechlib.amech_io.printer import save_geo, save_energy
 from mechroutines.es import runner as es_runner
 from mechroutines.es._routines import _util as util
 
 
-def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,
+def tau_sampling(zma, ref_ene, spc_info,
                  mod_thy_info,
                  tau_run_fs, tau_save_fs,
                  script_str, overwrite,
-                 saddle=False, **opt_kwargs):
+                 db_style='directory',
+                 nsamp_par=(False, 3, 3, 1, 50, 50),
+                 tors_names=(),
+                 repulsion_thresh=40.0,
+                 zrxn=None, resave=False,
+                 **kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
 
-    # Read the geometry from the initial filesystem and set sampling
-    tors_ranges = automol.zmat.torsional_sampling_ranges(tors_name_grps)
-    tors_range_dct = dict(zip(
-        tuple(grp[0] for grp in tors_name_grps), tors_ranges))
-    gra = automol.zmat.graph(zma)
-    ntaudof = len(automol.graph.rotational_bond_keys(gra, with_chx_rotors=False))
-    nsamp = util.nsamp_init(nsamp_par, ntaudof)
-    # Run through tau sampling process
-    save_tau(
-        tau_run_fs=tau_run_fs,
-        tau_save_fs=tau_save_fs,
-        mod_thy_info=mod_thy_info
-    )
+    if resave:
+        save_tau(
+            tau_run_fs=tau_run_fs,
+            tau_save_fs=tau_save_fs,
+            mod_thy_info=mod_thy_info,
+            db_style=db_style
+        )
 
     run_tau(
         zma=zma,
         spc_info=spc_info,
         thy_info=mod_thy_info,
-        nsamp=nsamp,
-        tors_range_dct=tors_range_dct,
         tau_run_fs=tau_run_fs,
         tau_save_fs=tau_save_fs,
         script_str=script_str,
         overwrite=overwrite,
-        saddle=saddle,
-        **opt_kwargs,
+        nsamp_par=nsamp_par,
+        tors_names=tors_names,
+        repulsion_thresh=repulsion_thresh,
+        zrxn=zrxn,
+        **kwargs,
     )
 
     save_tau(
         tau_run_fs=tau_run_fs,
         tau_save_fs=tau_save_fs,
-        mod_thy_info=mod_thy_info
+        mod_thy_info=mod_thy_info,
+        db_style=db_style
     )
 
-    ioprinter.info_message(
+    info_message(
         'Assessing the convergence of the Monte Carlo Partition Function...')
     assess_pf_convergence(tau_save_fs, ref_ene)
 
 
-def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
+def run_tau(zma, spc_info, thy_info,
             tau_run_fs, tau_save_fs, script_str, overwrite,
-            saddle, **kwargs):
+            nsamp_par=(False, 3, 3, 1, 50, 50),
+            tors_names=(),
+            repulsion_thresh=40.0,
+            zrxn=None, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
-    if not tors_range_dct:
-        ioprinter.info_message(
-            "No torsional coordinates. Setting nsamp to 1.")
-        nsamp = 1
 
+    # Set the filesystem objects
     tau_save_fs[0].create()
 
-    vma = automol.zmat.var_(zma)
-    if tau_save_fs[0].file.vmatrix.exists():
-        existing_vma = tau_save_fs[0].file.vmatrix.read()
-        assert vma == existing_vma
-    tau_save_fs[0].file.vmatrix.write(vma)
-    idx = 0
-    nsamp0 = nsamp
-    inf_obj = autofile.schema.info_objects.tau_trunk(0, tors_range_dct)
-    while True:
-        if tau_save_fs[0].file.info.exists():
-            inf_obj_s = tau_save_fs[0].file.info.read()
-            nsampd = inf_obj_s.nsamp
-        elif tau_run_fs[0].file.info.exists():
-            inf_obj_r = tau_run_fs[0].file.info.read()
-            nsampd = inf_obj_r.nsamp
-        else:
-            nsampd = 0
+    # Check if the structure is consistent with the filesystem
+    _check_vma(zma, tau_save_fs)
 
+    # Set the samples
+    nsamp, tors_range_dct = util.calc_nsamp(
+        tors_names, nsamp_par, zma, zrxn=zrxn)
+    nsamp0 = nsamp
+    nsampd = util.calc_nsampd(tau_save_fs, tau_run_fs, rid=None)
+
+    tot_samp = nsamp - nsampd
+
+    info_message(
+        ' - Number of samples that have been currently run:', nsampd)
+    info_message(' - Number of samples requested:', nsamp)
+
+    if nsamp-nsampd > 0:
+        info_message(
+            f'Running {nsamp-nsampd} samples...', newline=1)
+    samp_idx = 1
+
+    # Set the filesystem objects
+    inf_obj = autofile.schema.info_objects.tau_trunk(0, tors_range_dct)
+
+    while True:
         nsamp = nsamp0 - nsampd
+
+        # Break the while loop if enough sampls completed
         if nsamp <= 0:
-            ioprinter.info_message(
+            info_message(
                 'Reached requested number of samples. ',
                 'Tau sampling complete.')
             break
-
-        ioprinter.info_message(f"New nsamp is {nsamp:d}.", indent=1)
 
         samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
         tid = autofile.schema.generate_new_tau_id()
@@ -106,15 +115,18 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         tau_run_prefix = tau_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(tau_run_prefix)
 
-        idx += 1
-        ioprinter.info_message(f"Run {idx}/{nsamp0}")
+        info_message(f"\nRun {samp_idx}/{tot_samp}")
+        samp_idx += 1
 
-        ioprinter.debug_message(
-            'Checking if ZMA has high repulsion...', newline=1)
-        geo = automol.zmat.geometry(zma)
-        samp_geo = automol.zmat.geometry(samp_zma)
-        if automol.pot.low_repulsion_struct(geo, samp_geo):
-            ioprinter.debug_message('ZMA fine.')
+        info_message(
+            'Generating sample Z-Matrix that does not have',
+            'high intramolecular repulsion...')
+        ref_pot = automol.pot.intramol_interaction_potential_sum(
+            automol.zmat.geometry(zma))
+        samp_pot = automol.pot.intramol_interaction_potential_sum(
+            automol.zmat.geometry(samp_zma))
+        if samp_pot-ref_pot < repulsion_thresh:
+            debug_message('ZMA fine.')
             es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
@@ -122,13 +134,13 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
                 geo=samp_zma,
                 spc_info=spc_info,
                 thy_info=thy_info,
-                saddle=saddle,
+                saddle=bool(zrxn is not None),
                 overwrite=overwrite,
                 frozen_coordinates=tors_range_dct.keys(),
                 **kwargs
             )
         else:
-            ioprinter.warning_message('repulsive ZMA:')
+            warning_message('repulsive ZMA:')
             inp_str = elstruct.writer.optimization(
                 geo=samp_zma,
                 charge=spc_info[1],
@@ -141,13 +153,8 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
                 frozen_coordinates=tors_range_dct.keys(),
             )
             tau_run_fs[-1].file.geometry_input.write(inp_str, locs)
-            ioprinter.warning_message(
+            warning_message(
                 'geometry for bad ZMA at', tau_run_fs[-1].path(locs))
-
-        # nsampd += 1
-        # inf_obj.nsamp = nsampd
-        # tau_save_fs[0].file.info.write(inf_obj)
-        # tau_run_fs[0].file.info.write(inf_obj)
 
         if tau_save_fs[0].file.info.exists():
             inf_obj_s = tau_save_fs[0].file.info.read()
@@ -161,11 +168,10 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         tau_run_fs[0].file.info.write(inf_obj)
 
 
-def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
+def save_tau(tau_run_fs, tau_save_fs, mod_thy_info, db_style='directory'):
     """ save the tau dependent geometries that have been found so far
     """
-    # db_style = 'jsondb'
-    db_style = 'directory'
+
     if db_style == 'jsondb':
         saved_locs = tau_save_fs[-1].json_existing()
         saved_geos = tau_save_fs[-1].json.geometry.read_all(saved_locs)
@@ -173,7 +179,7 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
         saved_geos = [tau_save_fs[-1].file.geometry.read(locs)
                       for locs in tau_save_fs[-1].existing()]
     if not tau_run_fs[0].exists():
-        ioprinter.info_message("No tau geometries to save. Skipping...")
+        info_message("No tau geometries to save. Skipping...")
     else:
         if db_style == 'jsondb':
             save_info = [[], [], [], [], []]
@@ -183,7 +189,7 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
             run_fs = autofile.fs.run(run_path)
             save_path = tau_save_fs[-1].root.path()
 
-            ioprinter.reading("tau run", run_path)
+            reading("tau run", run_path)
 
             success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
@@ -195,26 +201,23 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
 
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 if db_style == 'directory':
-                    ioprinter.save_geo(save_path)
+                    save_geo(save_path)
                     tau_save_fs[-1].create(locs)
                     tau_save_fs[-1].file.geometry_info.write(inf_obj, locs)
                     tau_save_fs[-1].file.geometry_input.write(inp_str, locs)
                     tau_save_fs[-1].file.energy.write(ene, locs)
                     tau_save_fs[-1].file.geometry.write(geo, locs)
+
                     # Saving the energy to a SP filesystem
                     save_path = tau_save_fs[-1].path(locs)
-                    ioprinter.save_energy(save_path)
+                    save_energy(save_path)
                     sp_save_fs = autofile.fs.single_point(save_path)
                     sp_save_fs[-1].create(mod_thy_info[1:4])
                     sp_save_fs[-1].file.input.write(inp_str, mod_thy_info[1:4])
                     sp_save_fs[-1].file.info.write(inf_obj, mod_thy_info[1:4])
                     sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
                 elif db_style == 'jsondb':
-                    # tau_save_fs[-1].json.geometry_info.write(inf_obj, locs)
-                    # tau_save_fs[-1].json.geometry_input.write(inp_str, locs)
-                    # tau_save_fs[-1].json.energy.write(ene, locs)
-                    # tau_save_fs[-1].json.geometry.write(geo, locs)
-                    ioprinter.info_message(
+                    info_message(
                         " - Saving energy and geo of unique geometry...")
                     save_info[0].append(locs)
                     save_info[1].append(inf_obj)
@@ -268,7 +271,7 @@ def assess_pf_convergence(tau_save_fs, ref_ene,
         sumq = 0.
         sum2 = 0.
         idx = 0
-        ioprinter.debug_message('integral convergence for T = ', temp)
+        debug_message('integral convergence for T = ', temp)
         inf_obj_s = tau_save_fs[0].file.info.read()
         nsamp = inf_obj_s.nsamp
         saved_locs = tau_save_fs[-1].existing()
@@ -282,10 +285,23 @@ def assess_pf_convergence(tau_save_fs, ref_ene,
             sum2 = sum2 + tmp**2
             sigma = numpy.sqrt(
                 (abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
-            ioprinter.debug_message(
+            debug_message(
                 sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
         inf_obj_s = tau_save_fs[0].file.info.read()
         nsamp = inf_obj_s.nsamp
         saved_locs = tau_save_fs[-1].existing()
         ratio = len(saved_locs) / float(nsamp)
-        ioprinter.info_message('Ratio of good to sampled geometries: ', ratio)
+        info_message('Ratio of good to sampled geometries: ', ratio)
+
+
+def _check_vma(zma, tau_save_fs):
+    """ Assess of the vma matches the zma used to sample.
+        Write the vma if needed.
+    """
+
+    vma = automol.zmat.vmatrix(zma)
+    if tau_save_fs[0].file.vmatrix.exists():
+        existing_vma = tau_save_fs[0].file.vmatrix.read()
+        assert vma == existing_vma
+    else:
+        tau_save_fs[0].file.vmatrix.write(vma)
