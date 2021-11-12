@@ -274,11 +274,11 @@ def assess_pf_convergence(tau_save_fs, ref_ene,
         debug_message('integral convergence for T = ', temp)
         inf_obj_s = tau_save_fs[0].file.info.read()
         nsamp = inf_obj_s.nsamp
-        saved_locs = tau_save_fs[-1].existing()
+        saved_locs = tau_save_fs[-1].json_existing()
         ratio = float(nsamp) / len(saved_locs)
-        for locs in tau_save_fs[-1].existing():
+        for locs in saved_locs:
             idx += 1
-            ene = tau_save_fs[-1].file.energy.read(locs)
+            ene = tau_save_fs[-1].json.energy.read(locs)
             ene = (ene - ref_ene) * phycon.EH2KCAL
             tmp = numpy.exp(-ene*349.7/(0.695*temp))
             sumq = sumq + tmp
@@ -287,10 +287,6 @@ def assess_pf_convergence(tau_save_fs, ref_ene,
                 (abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
             debug_message(
                 sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
-        inf_obj_s = tau_save_fs[0].file.info.read()
-        nsamp = inf_obj_s.nsamp
-        saved_locs = tau_save_fs[-1].existing()
-        ratio = len(saved_locs) / float(nsamp)
         info_message('Ratio of good to sampled geometries: ', ratio)
 
 

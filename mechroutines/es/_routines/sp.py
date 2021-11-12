@@ -20,8 +20,8 @@ from mechroutines.es import runner as es_runner
 from mechroutines.es.runner._par import qchem_params
 from mechroutines.es._routines.conformer import save_conformer
 
-# _JSON_SAVE = ['TAU']
-_JSON_SAVE = []
+
+_JSON_SAVE = ('TAU',)
 
 
 def run_energy(zma, geo, spc_info, thy_info,
