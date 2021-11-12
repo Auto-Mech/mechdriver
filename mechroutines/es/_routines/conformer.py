@@ -404,9 +404,10 @@ def conformer_sampling(zma, spc_info, thy_info,
     inf_obj = autofile.schema.info_objects.conformer_branch(0)
 
     # Set the samples
-    nsamp, tors_range_dct = _calc_nsamp(tors_names, nsamp_par, zma, zrxn=zrxn)
+    nsamp, tors_range_dct = util.calc_nsamp(
+        tors_names, nsamp_par, zma, zrxn=zrxn)
     nsamp0 = nsamp
-    nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
+    nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
 
     tot_samp = nsamp - nsampd
     brk_tot_samp = nsamp * 5
@@ -418,6 +419,8 @@ def conformer_sampling(zma, spc_info, thy_info,
     if nsamp-nsampd > 0:
         info_message(
             f'Running {nsamp-nsampd} samples...', newline=1)
+
+    # Generate all of the conformers, as needed    
     samp_idx = 1
     samp_attempt_idx = 1
     while True:
@@ -507,7 +510,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
                 init_zma=samp_zma)
 
-            nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
+            nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
             nsampd += 1
             samp_idx += 1
             inf_obj.nsamp = nsampd
@@ -665,63 +668,6 @@ def ring_conformer_sampling(
             inf_obj.nsamp = nsampd
             cnf_save_fs[0].file.info.write(inf_obj)
             cnf_run_fs[0].file.info.write(inf_obj)
-
-
-def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
-    """ Determine the number of samples to od
-    """
-    ntaudof = None
-    if not any(tors_names):
-        info_message(
-            " - No torsional coordinates. Setting nsamp to 1.")
-        nsamp = 1
-        tors_range_dct = None
-    else:
-        if zrxn is None:
-            gra = automol.zmat.graph(zma)
-            ntaudof = len(automol.graph.rotational_bond_keys(
-               gra, with_chx_rotors=False))
-        else:
-            ntaudof = len(automol.reac.rotational_bond_keys(
-                zrxn, zma, with_chx_rotors=False))
-            # ntaudof = len(tors_names)
-        nsamp = util.nsamp_init(nsamp_par, ntaudof)
-
-        tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
-        tors_range_dct = dict(zip(tors_names, tors_ranges))
-
-    print('test')
-    print(tors_range_dct)
-    print(ntaudof)
-    return nsamp, tors_range_dct
-
-
-def _calc_nsampd(cnf_save_fs, cnf_run_fs, rid=None):
-    """ Determine the number of samples completed
-    """
-
-    if rid is None:
-        cnf_save_fs[0].create()
-        if cnf_save_fs[0].file.info.exists():
-            inf_obj_s = cnf_save_fs[0].file.info.read()
-            nsampd = inf_obj_s.nsamp
-        elif cnf_run_fs[0].file.info.exists():
-            inf_obj_r = cnf_run_fs[0].file.info.read()
-            nsampd = inf_obj_r.nsamp
-        else:
-            nsampd = 0
-    else:
-        cnf_save_fs[1].create([rid])
-        if cnf_save_fs[1].file.info.exists([rid]):
-            inf_obj_s = cnf_save_fs[1].file.info.read([rid])
-            nsampd = inf_obj_s.nsamp
-        elif cnf_run_fs[1].file.info.exists([rid]):
-            inf_obj_r = cnf_run_fs[1].file.info.read([rid])
-            nsampd = inf_obj_r.nsamp
-        else:
-            nsampd = 0
-
-    return nsampd
 
 
 def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,

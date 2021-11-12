@@ -406,7 +406,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
     """
 
     ioprinter.info_message(
-        'Saving any newly run HR scans in run filesys...', newline=1)
+        'Saving any newly run scans in run filesys...', newline=1)
 
     # Set job
     job = _set_job(scn_typ)

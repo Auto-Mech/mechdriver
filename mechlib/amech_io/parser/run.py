@@ -80,7 +80,7 @@ TSK_KEY_DCT = {
     'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
     'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh',
                                         'cnf_range', 'sort',)),
-    'tau_samp': (('spc', 'ts'), BASE),
+    'tau_samp': (('spc', 'ts'), BASE + ('resave',)),
     'tau_energy': (('spc', 'ts'), BASE),
     'tau_grad': (('spc', 'ts'), BASE),
     'tau_hess': (('spc', 'ts'), BASE + ('hessmax',)),

@@ -265,7 +265,8 @@ def rerun_hessian_and_opt(
                     geo_run_fs, geo_save_fs, locs, run_prefix,
                     hess_script_str, True, zrxn=zrxn,
                     retryfail=retryfail, method_dct=method_dct,
-                    ref_val=ref_val, attempt=attempt+1, **hess_kwargs)
+                    ref_val=ref_val,
+                    correct_vals=True, attempt=attempt+1, **hess_kwargs)
     else:
         ioprinter.error_message(
             "Could not get rid of negative frequencies after two attempts")
@@ -278,6 +279,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 retryfail=True,
                 method_dct=None,
                 ref_val=None,
+                correct_vals=True,
                 attempt=0,
                 **kwargs):
     """ Determine the hessian for the geometry in the given location
@@ -337,12 +339,20 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 inf_obj, inp_str, out_str = ret
 
                 ioprinter.info_message(" - Reading hessian from output...")
-                hfrqs = elstruct.reader.harmonic_frequencies(
-                    inf_obj.prog, out_str)
-                imags = tuple(x for x in hfrqs if x < 0.0)
-                n_neg_freqs = len(imags)
-                if ((zrxn is not None and n_neg_freqs > 1) or
-                        (zrxn is None and n_neg_freqs > 0)):
+
+                # If requested, determine if there are too many frequencies
+                if correct_vals:
+                    hfrqs = elstruct.reader.harmonic_frequencies(
+                        inf_obj.prog, out_str)
+                    imags = tuple(x for x in hfrqs if x < 0.0)
+                    nimags = len(imags)
+                    too_many_imags = (
+                        (zrxn is not None and nimags > 1) or
+                        (zrxn is None and nimags > 0))
+                else:
+                    too_many_imags = False
+
+                if too_many_imags:
                     ioprinter.info_message('Too many negative freqs', hfrqs)
                     rinf_obj = run_fs[-1].file.info.read(
                         [elstruct.Job.HESSIAN])

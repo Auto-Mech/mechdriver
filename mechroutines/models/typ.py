@@ -38,8 +38,10 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
     tors_model = spc_mod_dct_i['tors']['mod']
     has_tors = bool(rotors is not None)
     tors_hr_model = bool(
-        tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'))
-    tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
+        tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv',
+                       'tau-1dhr', 'tau-1dhrf', 'tau-1dhrfa')
+    )
+    tau_hr_model = bool('tau' in tors_model and vib_model != 'vib')
 
     return has_tors and (tors_hr_model or tau_hr_model)
 
@@ -55,7 +57,7 @@ def tau_pf(spc_mod_dct_i):
     """ determine if pf is done with tau
     """
     tors_model = spc_mod_dct_i['tors']['mod']
-    return bool(tors_model == 'tau')
+    return bool(tors_model in ('tau', 'tau-1dhr', 'tau-1dhrf', 'tau-1dhrfa'))
 
 
 def scale_1d(spc_mod_dct_i):
@@ -78,7 +80,7 @@ def squash_tors_pot(spc_mod_dct_i):
     """
     ioprinter.debug_message(
         'tors model in scale set', spc_mod_dct_i['tors']['mod'])
-    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa',))
+    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', 'tau-1dhrfa'))
 
 
 def vib_tau(spc_mod_dct_i):

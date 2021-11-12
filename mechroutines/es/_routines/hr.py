@@ -18,20 +18,22 @@ def hindered_rotor_scans(
     """ Perform scans over each of the torsional coordinates
     """
 
-    backstep = False
     if tors_model != '1dhrfa':
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.OPTIMIZATION)
         scn_typ = 'relaxed'
         update_guess = True
         backstep = True
+        reverse_sweep = True
     else:
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.ENERGY)
         scn_typ = 'rigid'
         update_guess = False
+        backstep = False
+        reverse_sweep = False
 
-    #backstep = False
+    # backstep = False
     run_tors_names = automol.rotor.names(rotors)
     run_tors_grids = automol.rotor.grids(rotors, increment=increment)
 
@@ -61,7 +63,7 @@ def hindered_rotor_scans(
             script_str=script_str,
             overwrite=overwrite,
             update_guess=update_guess,
-            reverse_sweep=True,
+            reverse_sweep=reverse_sweep,
             saddle=saddle,
             constraint_dct=constraint_dct,
             retryfail=retryfail,
