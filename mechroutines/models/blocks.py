@@ -112,7 +112,7 @@ def tau_block(inf_dct):
     """
 
     # Write the data string and set its name
-    dat_str = mess_io.writer.monte_carlo.mc_data(
+    dat_str = mess_io.writer.monte_carlo_data(
         geos=inf_dct['samp_geoms'],
         enes=inf_dct['samp_enes'],
         grads=inf_dct['samp_grads'],
@@ -126,9 +126,9 @@ def tau_block(inf_dct):
     # Write additional reference configuration file if needed
     if inf_dct['ref_geom'] and inf_dct['ref_grad'] and inf_dct['ref_hessian']:
         ref_config_file_name = 'reftau.dat'
-        ref_dat_str = mess_io.writer.monte_carlo.mc_data(
+        ref_dat_str = mess_io.writer.monte_carlo_data(
             geos=inf_dct['ref_geom'],
-            enes=['0.00'],
+            enes=[0.00],
             grads=inf_dct['ref_grad'],
             hessians=inf_dct['ref_hessian']
         )
@@ -138,15 +138,15 @@ def tau_block(inf_dct):
         ref_config_file_name = ''
 
     # Write the core string (seperate energies?)
-    spc_str = mess_io.writer.monte_carlo.mc_species(
+    spc_str = mess_io.writer.monte_carlo_species(
         geo=inf_dct['geom'],
         sym_factor=inf_dct['sym_factor'],
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,
-        reference_energy=inf_dct['reference_energy'],
+        reference_ene=inf_dct['ref_ene'],
         ref_config_file_name=ref_config_file_name,
-        ground_energy=0.0,
+        ground_ene=0.0,
         freqs=inf_dct['freqs'],
         use_cm_shift=True
     )

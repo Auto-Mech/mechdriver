@@ -71,7 +71,7 @@ def read_spc_data(spc_dct, spc_name,
             run_prefix, save_prefix)
         writer = 'atom_block'
     else:
-        if vib_model == 'tau' or tors_model == 'tau':
+        if vib_model == 'tau' or 'tau' in tors_model:
             inf_dct = tau_data(
                 spc_dct_i,
                 spc_mod_dct_i,
@@ -684,21 +684,21 @@ def tau_data(spc_dct_i,
     )
 
     zpe_chnlvl = zpe * phycon.EH2KCAL
-    reference_energy = harm_zpve * phycon.EH2KCAL
+    ref_ene = harm_zpve * phycon.EH2KCAL
 
     ref_geom, ref_grad, ref_hessian = [], [], []
     if vib_model != 'tau':
         geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
-        geo_str = autofile.data_types.swrite.geometry(geo)
-        ref_geom.append(geo_str)
+        # geo_str = autofile.data_types.swrite.geometry(geo)
+        ref_geom.append(geo)
 
         grad = harm_save_fs[-1].file.gradient.read(harm_min_locs)
-        grad_str = autofile.data_types.swrite.gradient(grad)
-        ref_grad.append(grad_str)
+        # grad_str = autofile.data_types.swrite.gradient(grad)
+        ref_grad.append(grad)
 
         hess = harm_save_fs[-1].file.hessian.read(harm_min_locs)
-        hess_str = autofile.data_types.swrite.hessian(hess)
-        ref_hessian.append(hess_str)
+        # hess_str = autofile.data_types.swrite.hessian(hess)
+        ref_hessian.append(hess)
 
     min_cnf_ene = filesys.read.energy(
         harm_save_fs, harm_min_locs, mod_thy_info)
@@ -734,43 +734,43 @@ def tau_data(spc_dct_i,
         elif db_style == 'jsondb':
             geo = tau_save_fs[-1].json.geometry.read(locs)
 
-        geo_str = autofile.data_types.swrite.geometry(geo)
-        samp_geoms.append(geo_str)
+        # geo_str = autofile.data_types.swrite.geometry(geo)
+        samp_geoms.append(geo)
 
         if db_style == 'directory':
             tau_ene = tau_save_fs[-1].file.energy.read(locs)
         elif db_style == 'jsondb':
             tau_ene = tau_save_fs[-1].json.energy.read(locs)
         rel_ene = (tau_ene - min_cnf_ene) * phycon.EH2KCAL
-        ene_str = autofile.data_types.swrite.energy(rel_ene)
-        samp_enes.append(ene_str)
+        # ene_str = autofile.data_types.swrite.energy(rel_ene)
+        samp_enes.append(rel_ene)
 
         if vib_model == 'tau':
             if db_style == 'directory':
                 grad = tau_save_fs[-1].file.gradient.read(locs)
             elif db_style == 'jsondb':
                 grad = tau_save_fs[-1].json.gradient.read(locs)
-            grad_str = autofile.data_types.swrite.gradient(grad)
-            samp_grads.append(grad_str)
+            # grad_str = autofile.data_types.swrite.gradient(grad)
+            samp_grads.append(grad)
 
             if db_style == 'directory':
                 hess = tau_save_fs[-1].file.hessian.read(locs)
             elif db_style == 'jsondb':
                 hess = tau_save_fs[-1].json.hessian.read(locs)
-            hess_str = autofile.data_types.swrite.hessian(hess)
-            samp_hessians.append(hess_str)
+            # hess_str = autofile.data_types.swrite.hessian(hess)
+            samp_hessians.append(hess)
 
     # Create info dictionary
     keys = ['geom', 'sym_factor', 'elec_levels',
             'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'ref_geom', 'ref_grad', 'ref_hessian',
-            'zpe_chnlvl', 'reference_energy']
+            'zpe_chnlvl', 'ref_ene']
     vals = [ref_geom[0], sym_factor, spc_dct_i['elec_levels'],
             freqs, tors_strs[2],
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             ref_geom, ref_grad, ref_hessian,
-            zpe_chnlvl, reference_energy]
+            zpe_chnlvl, ref_ene]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct

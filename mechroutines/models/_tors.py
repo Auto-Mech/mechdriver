@@ -88,7 +88,6 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
         for tidx, torsion in enumerate(rotor):
             # Read and spline-fit potential
             tors_grid = rotor_grids[ridx][tidx]
-            print('TORSION: ', torsion.name)
             constraint_dct = automol.zmat.constraint_dct(
                 rotor_zma, const_names, (torsion.name,))
             pot, _, _, _, _, _ = filesys.read.potential(
@@ -96,7 +95,6 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct)
-
             if pot:
                 fit_pot = automol.pot.fit_1d_potential(
                     pot, min_thresh=-0.0001, max_thresh=50.0)

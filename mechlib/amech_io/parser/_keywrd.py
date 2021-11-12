@@ -209,6 +209,6 @@ def check_model_combinations(pf_dct):
     if pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == '1dhr':
         print('*ERROR: VPT2 and 1DHR combination is not yet implemented')
         sys.exit()
-    elif pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == 'tau':
+    elif pf_dct['vib'] == 'vpt2' and 'tau' in pf_dct['tors']:
         print('*ERROR: VPT2 and TAU combination is not yet implemented')
         sys.exit()
