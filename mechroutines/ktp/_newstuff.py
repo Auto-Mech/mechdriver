@@ -120,109 +120,138 @@ def set_hot_enes(pesgrp_num, reacs, prods,
 #         Still need to find a way to rewrite the reactions...
 #     """
 #     return NotImplementedError
-# def prompt_process(mess_path, pes_param_dct):
-#     """ Read the MESS strings and call the prompt dissoc rate code
-#     """
-#
-#     # Get prompt dissociation parameters
-#     rad_name = pes_param_dct['rad_name']
-#     modeltype = pes_param_dct['modeltype']
-#     bf_thresh = pes_param_dct['bf_threshold']
-#
-#     # Read the MESS input and output strings
-#     inp_str = ioformat.read_file(mess_path, 'mess.inp')
-#     ktp_out_str = ioformat.read_file(mess_path, 'mess.out')
-#     ke_out_str = ioformat.read_file(mess_path, 'ke.out')
-#     log_str = ioformat.read_file(mess_path, 'mess.log')
-#
-#     ktp_dct = prompt_dissoctiation_ktp_dct(
-#         rad_name, modeltype,
-#         inp_str, ktp_out_str, ke_out_str, log_str,
-#         bf_threshold=bf_thresh)
-#
-#     return ktp_dct
-# def prompt_dissoctiation_ktp_dct(rad_name, modeltype,
-#                                  inp_str, ktp_out_str, ke_out_str, log_str,
-#                                  bf_threshold=0.1):
-#     """ Evaluate the prompt dissociation k(T,P) values.
-#
-#         Reads the k(T,P) values from the MESSRATE output, as well as the
-#         PEDS and hot energies to modify the values accounting for prompt
-#         dissociation.
-#
-#         :param temps: temperatures to evaluate prompt dissociation rates
-#         :type temps: numpy.array
-#         :param rad_name: mechanism name of radical that is dissociated
-#         :type rad_name: str
-#         :param modeltype: statistical energy
-#             distribution model for hot radical
-#         :type modeltype: str
-#         :param inp_str: MESSRATE input string
-#         :type inp_str: str
-#         :param ktp_out_str: MESSRATE output string with k(T,P) values
-#         :type ktp_out_str: str
-#         :param ke_out_str: MESSRATE output string with k(E) values
-#         :type ke_out_str: str
-#         :param log_str: MESSRATE output .log string
-#         :type log_str: str
-#         :param bf_threshold: % branching fraction to include species in prods
-#         :type bf_threshold: float
-#         :rtype: dict[]
-#     """
-#     # Get the PED info
-#     pedspecies, pedoutput = mess_io.reader.ped.ped_names(inp_str)
-#     reacs, prods = pedspecies
-#
-#     # Read the rates and energies
-#     ktp_dct = mess_io.reader.rates.ktp_dct(ktp_out_str, reacs, prods)
-#     enes_sp, enes_ts = mess_io.reader.rates.energies(ktp_out_str)
-#     _, ene_bw = mess_io.reader.rates.barriers(enes_ts, enes_sp, reacs, prods)
-#
-#     # 2. READ THE HOTENERGIES OUTPUT
-#     spc_blocks = mess_io.reader.get_species(inp_str)
-#     hot_temps,_= mess_io.reader.rates.temperatures(inp_str, mess_file='inp')
-#     hot_pressures,_= mess_io.reader.rates.pressures(inp_str, mess_file='inp')
-#     # drop the last element in the pressure list ('high')
-#     hot_pressures = hot_pressures[:-1]
-#     hotspecies = mess_io.reader.hotenergies.get_hot_names(inp_str)
-#     hoten_dct = mess_io.reader.hotenergies.extract_hot_branching(
-#         log_str, hotspecies,
-#         list(spc_blocks.keys()), hot_temps, hot_pressures)
-#
-#     # 1. READ PEDOUTPUT file and reconstruct the energy distribution
-#     pedspecies, pedoutput = mess_io.reader.ped.ped_names(inp_str)
-#     reacs, prods = pedspecies
-#     ped_df = mess_io.reader.ped.get_ped(ktp_out_str, pedspecies, enes_sp)
-#     dof_info = mess_io.reader.ped.ped_dof_MW(spc_blocks[prods])
-#
-#     # 1b. READ ke_ped.out file and extract energy density of each fragment
-#     dos_df = mess_io.reader.rates.dos_rovib(ke_out_str)
-#
-#     ped_df_prod1 = mess_io.reader.ped.ped_prod1(
-#         ped_df, rad_name, modeltype,
-#         dos_df=dos_df, dof_info=dof_info, ene_bw=ene_bw)
-#
-#     # 3. DERIVE T,P-PROD BRANCHING FRACTIONS; decide which species to keep
-#     bf_tp_df = mess_io.reader.bf.bf_tp_df_full(
-#         rad_name, ped_df_prod1, hoten_dct)
-#     bf_tp_dct = mess_io.reader.bf.bf_tp_dct_filter(
-#         bf_tp_df, bf_threshold, modeltype, T_all=temps)
-#
-#     # 4. DO ARRHENIUS FITS FOR THE SELECTED BFs
-#     rxn_ktp_dct = mess_io.reader.bf.merge_bf_rates(bf_tp_dct, ktp_dct)
-#
-#     # rename the ktp dictionary with appropriate reaction names
-#     rxn_ktp_dct = rename_ktp_dct(rxn_ktp_dct, pedspecies, label_dct)
-#     # print(rxn_ktp_dct)
-#
-#     fitted_dct = fit_ktp_dct(rxn_ktp_dct, CWD)
-#
-#     return fitted_ktp_dct
-# def _hot_enes_(hot_spc, all_chn_enes):
-#     """ Determine the hot energies using the relative energies of PES
-#     """
-#     return None
-# def _map_hot_names(hot_lst, label_dct):
-#     """ Change the names of the hot species to the mess labels
-#     """
-#     return None
+ def prompt_process(mess_path, pes_param_dct):
+     """ Read the MESS strings and call the prompt dissoc rate code
+     """
+
+     # Get prompt dissociation parameters
+     rad_name = pes_param_dct['rad_name']
+     modeltype = pes_param_dct['modeltype']
+     bf_thresh = pes_param_dct['bf_threshold']
+
+     # Read the MESS input and output strings
+     inp_str = ioformat.read_file(mess_path, 'mess.inp')
+     ktp_out_str = ioformat.read_file(mess_path, 'mess.out')
+     ke_out_str = ioformat.read_file(mess_path, 'ke.out')
+     log_str = ioformat.read_file(mess_path, 'mess.log')
+
+     ktp_dct = prompt_dissoctiation_ktp_dct(
+         rad_name, modeltype,
+         inp_str, ktp_out_str, ke_out_str, log_str,
+         bf_threshold=bf_thresh)
+
+     return ktp_dct
+
+
+def prompt_dissoctiation_ktp_dct(rad_name, modeltype,
+                                 inp_str, ktp_out_str, ke_out_str, log_str,
+                                 bf_threshold=0.1):
+    """ Evaluate the prompt dissociation k(T,P) values.
+
+        Reads the k(T,P) values from the MESSRATE output, as well as the
+        PEDS and hot energies to modify the values accounting for prompt
+        dissociation.
+
+        :param temps: temperatures to evaluate prompt dissociation rates
+        :type temps: numpy.array
+        :param rad_name: mechanism name of radical that is dissociated
+        :type rad_name: str
+        :param modeltype: statistical energy
+            distribution model for hot radical
+        :type modeltype: str
+        :param inp_str: MESSRATE input string
+        :type inp_str: str
+        :param ktp_out_str: MESSRATE output string with k(T,P) values
+        :type ktp_out_str: str
+        :param ke_out_str: MESSRATE output string with k(E) values
+        :type ke_out_str: str
+        :param log_str: MESSRATE output .log string
+        :type log_str: str
+        :param bf_threshold: % branching fraction to include species in prods
+        :type bf_threshold: float
+        :rtype: dict[]
+    """
+
+    # 0. EXTRACT INPUT INFORMATION from me_ped.inp
+    me_ped_inp = read_file(os.path.join(CWD, OPTS['pedinput']))
+    me_ped_inp = remove_comment_lines(me_ped_inp, delim_pattern=app.escape('!'))
+    me_ped_inp = remove_comment_lines(me_ped_inp, delim_pattern=app.escape('#'))
+    me_ped_out = read_file(os.path.join(CWD, OPTS['pedoutput']))
+    species_blocks_ped = mess_io.reader.get_species(me_ped_inp)
+    T_lst, _ = mess_io.reader.rates.temperatures(me_ped_inp, mess_file='inp')
+    P_lst, _ = mess_io.reader.rates.pressures(me_ped_inp, mess_file='inp')
+    P_lst = P_lst[:-1]  # drop the last element in the pressure list ('high')
+    pedspecies, pedoutput = mess_io.reader.ped.ped_names(me_ped_inp)
+    energy_dct, _, conn_lst_dct, _ = mess_io.reader.pes(me_ped_inp)
+    
+    # 1. INFO FROM rate_ped.out and ke_ped.out: rate dct, energy barriers, dofs, fragment names
+    ktp_dct = {}
+    E_BW_dct = {}
+    dof_dct = {}
+    fragments_dct = {}
+    # get the rates for all set of pedspecies
+    for species in pedspecies:
+        reacs, prods = species
+        label = '->'.join(species)
+        ktp_dct[label] = mess_io.reader.rates.ktp_dct(
+            me_ped_out, reacs, prods)
+        # find the corresponding energy barrier
+        barrier_label = mess_io.reader.find_barrier(conn_lst_dct, reacs, prods)
+        try:
+            E_BW_dct[label] = energy_dct[barrier_label]-energy_dct[prods]
+        except KeyError:
+            E_BW_dct[label] = energy_dct[reacs]-energy_dct[prods]
+        # derive dofs involved
+        dof_info = mechanalyzer.calculator.statmodels.get_dof_info(species_blocks_ped[prods], ask_for_ts=True)
+        dof_dct[label] = dof_info
+        fragments_dct[label] = mess_io.reader.dct_species_fragments(species_blocks_ped)[prods]
+    
+    # 2. read PED
+    pedoutput_str = read_file(os.path.join(CWD, pedoutput))
+    ped_dct = mess_io.reader.ped.get_ped(pedoutput_str, pedspecies, energy_dct)
+    
+    # 3. READ THE ke_ped.out file and extract the energy density of each fragment
+    ke_ped_out = read_file(os.path.join(CWD, OPTS['pedoutputmicro']))
+    dos_df = mess_io.reader.rates.dos_rovib(ke_ped_out)
+    
+    # 4. READ THE HOTENERGIES OUTPUT
+    hot_inp = read_file(os.path.join(CWD, OPTS['hotinput']))
+    hot_out = read_file(os.path.join(CWD, OPTS['hotoutput']))
+    species_blocks_hoten = mess_io.reader.get_species(hot_inp)
+    hot_frag_dct = mess_io.reader.dct_species_fragments(species_blocks_hoten)
+    T_lst_hot, _ = mess_io.reader.rates.temperatures(hot_inp, mess_file='inp')
+    P_lst_hot, _ = mess_io.reader.rates.pressures(hot_inp, mess_file='inp')
+    P_lst_hot = P_lst_hot[:-1] #drop last value of pressure
+    hotspecies = mess_io.reader.hoten.get_hot_names(hot_inp)
+    hoten_dct = mess_io.reader.hoten.extract_hot_branching(
+        hot_out, hotspecies, list(species_blocks_hoten.keys()), T_lst_hot, P_lst_hot)
+    
+    # DERIVE BF AND RATES
+    rxns = {}
+    for species in pedspecies:
+        label = '->'.join(species)
+        ped_df = ped_dct[label]
+        E_BW = E_BW_dct[label]
+        # select the fregment of which you want the PED: it is the one in common with hotspecies
+        fragments = fragments_dct[label]
+        try:
+            frag1 = list(set(hotspecies).intersection(fragments))[0]
+            fragments.remove(frag1)
+            frag2 = fragments[0]
+        except IndexError:
+            print('no superposition between PED fragments and hot fragments - exiting now \n')
+            sys.exit()
+        # DERIVE PED OF THE HOT FRAGMENT
+        ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
+            ped_df, frag1, frag2, modeltype_list, dos_df=dos_df, dof_info=dof_dct[label], E_BW=E_BW)
+    
+        # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
+        bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
+            modeltype_list, ped_df_frag1_dct, hoten_dct[frag1], bf_threshold, savefile=True)
+    
+        # NEW KTP DICTIONARY
+        frag_reacs = mess_io.reader.dct_species_fragments(species_blocks_ped)[species[0]]
+        rxn_ktp_dct = mechanalyzer.builder.bf.merge_bf_ktp(bf_tp_dct, ktp_dct[label], frag_reacs, frag1, frag2, hot_frag_dct)
+        rxns[label] = rxn_ktp_dct
+
+     return fitted_ktp_dct
