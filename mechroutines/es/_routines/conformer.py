@@ -3,7 +3,6 @@
 
 import shutil
 import time
-import numpy
 import automol
 import elstruct
 import autofile
@@ -420,7 +419,7 @@ def conformer_sampling(zma, spc_info, thy_info,
         info_message(
             f'Running {nsamp-nsampd} samples...', newline=1)
 
-    # Generate all of the conformers, as needed    
+    # Generate all of the conformers, as needed
     samp_idx = 1
     samp_attempt_idx = 1
     while True:
@@ -592,7 +591,7 @@ def ring_conformer_sampling(
     # Set the samples
     nsamp = len(unique_zmas)
     nsamp0 = nsamp
-    nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs)
+    nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs)
 
     tot_samp = nsamp - nsampd
     info_message(
@@ -662,7 +661,7 @@ def ring_conformer_sampling(
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False,
                 init_zma=samp_zma)
 
-            nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs)
+            nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs)
             nsampd += 1
             samp_idx += 1
             inf_obj.nsamp = nsampd
@@ -1163,10 +1162,10 @@ def rng_loc_for_geo(geo, cnf_save_fs):
             rid = locs[0]
             break
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
+        # for now: set tolerances to include all ring puckering
+        # previous tolerances: dist_rtol=0.15, ang_atol=.45):
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
                                      dist_rtol=150., ang_atol=45.):
-                                     # for now set to include all ring puckering
-                                     # dist_rtol=0.15, ang_atol=.45):
             rid = locs[0]
             break
 

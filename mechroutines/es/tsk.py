@@ -514,6 +514,10 @@ def tau_tsk(job, spc_dct, spc_name,
 
     saddle = bool('ts_' in spc_name)
 
+    # Set the database style
+    db_style = 'jsondb'
+    # db_style = 'directory'
+
     # Run the task if any torsions exist
     if torsions and not saddle:
 
@@ -522,8 +526,6 @@ def tau_tsk(job, spc_dct, spc_name,
             run_prefix, save_prefix, 'TAU',
             spc_locs=spc_info, thy_locs=mod_thy_info[1:])
 
-        # db_style = 'jsondb'
-        db_style = 'directory'
         if db_style == 'jsondb':
             tau_save_fs[-1].root.create()
             tau_save_fs[-1].json_create()
@@ -597,7 +599,7 @@ def tau_tsk(job, spc_dct, spc_name,
                 mod_ini_thy_info,
                 tau_run_fs, tau_save_fs,
                 script_str, overwrite,
-                db_style='directory',
+                db_style=db_style,
                 nsamp_par=nsamp_par,
                 tors_names=tors_names,
                 repulsion_thresh=40.0,
@@ -611,7 +613,11 @@ def tau_tsk(job, spc_dct, spc_name,
                 method_dct)
 
             # Run the job over all the conformers requested by the user
-            for locs in tau_save_fs[-1].existing():
+            if db_style == 'directory':
+                tau_locs = tau_save_fs[-1].existing()
+            elif db_style == 'jsondb':
+                tau_locs = tau_save_fs[-1].json_existing()
+            for locs in tau_locs:
                 if db_style == 'jsondb':
                     geo_save_path = tau_save_fs[-1].root.path()
                     geo = tau_save_fs[-1].json.geometry.read(locs)
@@ -639,7 +645,11 @@ def tau_tsk(job, spc_dct, spc_name,
 
             # Run the job over all the conformers requested by the user
             hess_cnt = 0
-            for locs in tau_save_fs[-1].existing():
+            if db_style == 'directory':
+                tau_locs = tau_save_fs[-1].existing()
+            elif db_style == 'jsondb':
+                tau_locs = tau_save_fs[-1].json_existing()
+            for locs in tau_locs:
                 ioprinter.info_message(
                     f'HESS Number {hess_cnt+1}', newline=1)
                 if db_style == 'directory':

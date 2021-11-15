@@ -687,11 +687,12 @@ def tau_data(spc_dct_i,
     ref_ene = harm_zpve * phycon.EH2KCAL
 
     ref_geom, ref_grad, ref_hessian = [], [], []
-    if vib_model != 'tau':
-        geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
-        # geo_str = autofile.data_types.swrite.geometry(geo)
-        ref_geom.append(geo)
 
+    geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
+    # geo_str = autofile.data_types.swrite.geometry(geo)
+    ref_geom.append(geo)
+
+    if vib_model != 'tau':
         grad = harm_save_fs[-1].file.gradient.read(harm_min_locs)
         # grad_str = autofile.data_types.swrite.gradient(grad)
         ref_grad.append(grad)
