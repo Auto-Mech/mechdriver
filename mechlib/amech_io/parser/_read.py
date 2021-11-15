@@ -55,7 +55,7 @@ def read_amech_input(job_path):
 
     pes_grp_str = ioformat.pathtools.read_file(
         job_path, INP_FILE['pesgrp'][1],
-        remove_comments='!', remove_whitespace=True)
+        remove_comments='#', remove_whitespace=True)
 
     # Read auxiliary input strings
     dat_str = ioformat.pathtools.read_file(

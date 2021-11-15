@@ -171,7 +171,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         # written into the global key section of MESS input later
         hot_enes_dct = set_hot_enes(pesgrp_num, reacs, prods,
                                     chnl_enes, pes_param_dct,
-                                    ene_range=(10.,))
+                                    ene_range=None)
 
         # Write the mess strings for all spc on the channel
         mess_strs, dat_str_dct, written_labels = _make_channel_mess_strs(
@@ -251,8 +251,20 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 full_dat_dct.update(dat_dct)
 
         # Set the labels to put into the file
-        spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
-                     for name in rgt_names]
+        spc_label = []
+        for name in rgt_names:
+            if name in label_dct:
+                spc_label.append(label_dct[name])
+            else:
+                spc_label.append(
+                    automol.inchi.smiles(spc_dct[name]['inchi']))
+
+        print('label set test:')
+        print(spc_label)
+        print(label_dct)
+
+        # spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
+        #              for name in rgt_names]
         _rxn_str = make_rxn_str(rgt_names)
         _rxn_str_rev = make_rxn_str(rgt_names[::-1])
         if _rxn_str in label_dct:
@@ -577,6 +589,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
     # Set up the info for the wells
     rwell_model = spc_model_dct_i['ts']['rwells']
     pwell_model = spc_model_dct_i['ts']['pwells']
+    print('tsname test', tsname_allconfigs)
     rxn_class = spc_dct[tsname_allconfigs[0]]['class']
     if need_fake_wells(rxn_class, rwell_model):
         chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])

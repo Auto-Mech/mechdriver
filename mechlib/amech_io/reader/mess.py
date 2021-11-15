@@ -27,6 +27,7 @@ def rate_strings(rate_paths_dct):
             'inp': ioformat.pathtools.read_file(mess_path, 'mess.inp'),
             'ktp_out': ioformat.pathtools.read_file(mess_path, 'rate.out'),
             'ke_out': ioformat.pathtools.read_file(mess_path, 'ke.out'),
+            'ped': ioformat.pathtools.read_file(mess_path, 'ped.out'),
             'aux': ioformat.pathtools.read_file(mess_path, 'mess.aux'),
             'log': ioformat.pathtools.read_file(mess_path, 'mess.log')
         }

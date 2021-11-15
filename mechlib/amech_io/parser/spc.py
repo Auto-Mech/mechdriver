@@ -1,6 +1,7 @@
 """ Build species dictionary for all spc and ts
 """
 
+import copy
 import automol
 import ioformat
 import mechanalyzer
@@ -160,12 +161,14 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct, glob_dct):
     """ Create a new dictionary that combines init spc_dct and sadpt dct
     """
 
-    combined_dct = {}
+    # combined_dct = {}
+    #
+    # OLD? Put all elements of spc_dct in combined dct that are NOT TSs
+    # for spc in spc_dct:
+    #     if 'ts' not in spc:
+    #         combined_dct[spc] = spc_dct[spc]
 
-    # Put all elements of spc_dct in combined dct that are NOT TSs
-    for spc in spc_dct:
-        if 'ts' not in spc:
-            combined_dct[spc] = spc_dct[spc]
+    combined_dct = copy.deepcopy(spc_dct)
 
     # Now put in the TSs pulling info from everywhere
     for sadpt in sadpt_dct:
@@ -376,6 +379,7 @@ def tsnames_in_dct(pes_idx, chnl_idx, spc_dct, config_idxs=None):
     """
     _tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}'
     _tsname = _tsname + '_'
+    print('tsname test', pes_idx, chnl_idx, _tsname, spc_dct.keys())
     if config_idxs is None:
         _tsnames = tuple(name for name in spc_dct.keys()
                          if _tsname in name)

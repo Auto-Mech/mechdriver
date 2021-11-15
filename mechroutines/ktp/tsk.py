@@ -139,6 +139,8 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
         assume that the rate_paths_dct will come in with all PESs in group
     """
 
+    tot_fml = '_'.join((pes_inf[0] for pes_inf in pes_grp_rlst.keys()))
+
     # Get the model
     pes_mod = tsk_key_dct['kin_model']
     spc_mod = tsk_key_dct['spc_model']
@@ -177,6 +179,5 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
 
     # Write the file
     ckin_path = output_path('CKIN', prefix=mdriver_path)
-    ckin_filename = 'FULL' + '.ckin'
-    # ckin_filename = pes_inf[0] + '.ckin'
+    ckin_filename = f'{tot_fml}.ckin'
     ioformat.pathtools.write_file(ckin_str, ckin_path, ckin_filename)

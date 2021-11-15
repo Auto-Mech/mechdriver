@@ -126,6 +126,8 @@ def obtain_multipes_rxn_ktp_dct(rate_paths_dct, pes_param_dct,
     # Read MESS file and get rate constants
     if len(rate_strs_dct) == 1:
         mess_path = tuple(mess_paths_dct.values())[0]
+        
+        print('Fitting rates for single PES...')
         print(f'Fitting rates from {mess_path}')
         mess_str = tuple(rate_strs_dct.values())[0]['ktp_out']
         rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
@@ -188,11 +190,13 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
           f'  - HOT: {hot_mess_path}')
 
     ped_strs_dct = tuple(rate_strs_dct.values())[0]
-    ped_inp_str, ped_out_str = ped_strs_dct['inp'], ped_strs_dct['out_ktp']
-    ke_ped_out_str = ped_strs_dct['out_ke']
+    ped_inp_str, ped_out_str = ped_strs_dct['inp'], ped_strs_dct['ktp_out']
+    ped_ped_str = ped_strs_dct['ped']
+    ke_ped_out_str = ped_strs_dct['ke_out']
 
     hot_strs_dct = tuple(rate_strs_dct.values())[1]
-    hot_inp_str, hot_out_str = hot_strs_dct['inp'], hot_strs_dct['out_ktp']
+    hot_inp_str, hot_out_str = hot_strs_dct['inp'], hot_strs_dct['ktp_out']
+    hot_log_str = hot_strs_dct['log']
 
     # 0. EXTRACT INPUT INFORMATION from me_ped.inp
     spc_blocks_ped = mess_io.reader.get_species(ped_inp_str)
@@ -225,7 +229,7 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
             spc_blocks_ped)[prods]
 
     # 2. read PED
-    ped_dct = mess_io.reader.ped.get_ped(ped_out_str, ped_spc, energy_dct)
+    ped_dct = mess_io.reader.ped.get_ped(ped_ped_str, ped_spc, energy_dct)
 
     # 3. READ ke_ped.out file and extract the energy density of each fragment
     dos_df = mess_io.reader.rates.dos_rovib(ke_ped_out_str)
@@ -235,7 +239,7 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
     hot_frag_dct = mess_io.reader.dct_species_fragments(spc_blocks_hoten)
     hot_spc = mess_io.reader.hoten.get_hot_names(hot_inp_str)  # can supply
     hoten_dct = mess_io.reader.hoten.extract_hot_branching(
-        hot_out_str, hot_spc, list(spc_blocks_hoten.keys()),
+        hot_log_str, hot_spc, list(spc_blocks_hoten.keys()),
         temps, pressures)
 
     # DERIVE BF AND RATES
@@ -247,7 +251,10 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
         # select the fragment of which you want the PED:
         # it is the one in common with hotspecies
         fragments = fragments_dct[label]
+        # frag1, frag2 = '[CH]=O', '[HH]'
         try:
+            print('hot_spc', hot_spc)
+            print('fragments', fragments)
             frag1 = list(set(hot_spc).intersection(fragments))[0]
             fragments.remove(frag1)
             frag2 = fragments[0]
@@ -271,5 +278,7 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
         rxn_ktp_dct = mechanalyzer.builder.bf.merge_bf_ktp(
             bf_tp_dct, ktp_dct[label], frag_reacs, frag1, frag2, hot_frag_dct)
         prompt_rxn_ktp_dct[label] = rxn_ktp_dct
+
+    print(prompt_rxn_ktp_dct)
 
     return prompt_rxn_ktp_dct
