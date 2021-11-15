@@ -251,16 +251,19 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 full_dat_dct.update(dat_dct)
 
         # Set the labels to put into the file
-        spc_label = []
+        spc_labels = ()
         for name in rgt_names:
             if name in label_dct:
-                spc_label.append(label_dct[name])
+                spc_labels += (label_dct[name],)
             else:
-                spc_label.append(
-                    automol.inchi.smiles(spc_dct[name]['inchi']))
+                spc_labels += (name,)
 
-        print('label set test:')
-        print(spc_label)
+        aux_labels = tuple(automol.inchi.smiles(spc_dct[name]['inchi'])
+                           for name in rgt_names)
+
+        print('mess label test:')
+        print(spc_labels)
+        print(aux_labels)
         print(label_dct)
 
         # spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
@@ -278,11 +281,11 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
         if chn_label not in written_labels:
             written_labels.append(chn_label)
             if len(rgt_names) == 3:
-                bi_str += (
-                    f'\n! {rgt_names[0]} + {rgt_names[1]} + {rgt_names[2]}\n')
-                bi_str += mess_io.writer.dummy(chn_label, zero_ene=rgt_ene)
-                # bi_str += '\n! DUMMY FOR UNSTABLE SPECIES\n'
-                # bi_str += mess_io.writer.dummy(chn_label, zero_ene=None)
+                aux_str = f'{spc_labels[0]}+{spc_labels[1]}+{spc_labels[2]}'
+                bi_str += mess_io.writer.dummy(
+                    chn_label,
+                    aux_id_label=aux_str,
+                    zero_ene=rgt_ene)
             elif len(rgt_names) == 2:
                 # Determine if product densities should be calc'd
                 if side == 'prods':
@@ -291,24 +294,27 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 else:
                     calc_dens = (False, False)
 
-                # bi_str += mess_io.writer.species_separation_str()
-                bi_str += f'\n! {rgt_names[0]} + {rgt_names[1]}\n'
+                aux_str = f'{spc_labels[0]} + {spc_labels[1]}'
                 bi_str += mess_io.writer.bimolecular(
-                    chn_label, spc_label[0], spc_strs[0],
-                    spc_label[1], spc_strs[1], rgt_ene,
+                    chn_label,
+                    spc_labels[0], spc_strs[0],
+                    spc_labels[1], spc_strs[1],
+                    rgt_ene,
+                    auxbimol_id_label=aux_str,
+                    aux1_id_label=aux_labels[0],
+                    aux2_id_label=aux_labels[1],
                     calc_spc1_density=calc_dens[0],
-                    calc_spc2_density=calc_dens[1])
+                    calc_spc2_density=calc_dens[1]) + '\n'
             else:
                 edown_str = rgt_infs[0].get('edown_str', None)
                 collid_freq_str = rgt_infs[0].get('collid_freq_str', None)
 
-                # well_str += mess_io.writer.species_separation_str()
-                well_str += f'\n! {rgt_names[0]}\n'
                 well_str += mess_io.writer.well(
                     chn_label, spc_strs[0],
+                    aux_id_label=aux_labels[0],
                     zero_ene=rgt_ene,
                     edown_str=edown_str,
-                    collid_freq_str=collid_freq_str)
+                    collid_freq_str=collid_freq_str) + '\n'
 
         # Initialize the reactant and product MESS label
         if side == 'reacs':
@@ -327,7 +333,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
             chnl_enes, label_dct, reac_label)
 
         # Append the fake strings to overall strings
-        well_str += fwell_str
+        well_str += fwell_str + '\n'
         ts_str += fts_str
 
         # Re-set the reactant label for the inner transition state
@@ -344,7 +350,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
             chnl_enes, label_dct, prod_label)
 
         # Append the fake strings to overall strings
-        well_str += fwell_str
+        well_str += fwell_str + '\n'
         ts_str += fts_str
 
         # Reset the product labels for the inner transition state
@@ -364,7 +370,11 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
     ts_str += sts_str
     full_dat_dct.update(ts_dat_dct)
 
-    return [well_str, bi_str, ts_str], full_dat_dct, written_labels
+    return (
+        (well_str.rstrip(), bi_str.rstrip(), ts_str),
+        full_dat_dct,
+        written_labels
+    )
 
 
 def _make_spc_mess_str(inf_dct):
@@ -442,20 +452,26 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
         if write_ts_pt_str:
             ts_ene = chnl_enes['ts'][0]
             ts_str = '\n' + mess_io.writer.ts_sadpt(
-                ts_label, inner_reac_label, inner_prod_label,
-                mess_str, ts_ene, tunnel_str)
+                ts_label, inner_reac_label, inner_prod_label, mess_str,
+                aux_id_label=None,
+                zero_ene=ts_ene,
+                tunnel=tunnel_str)
         else:
             ts_enes = chnl_enes['ts']
             ts_str = '\n' + mess_io.writer.ts_variational(
-                ts_label, inner_reac_label, inner_prod_label,
-                mess_str, ts_enes, tunnel_str)
+                ts_label, inner_reac_label, inner_prod_label, mess_str,
+                aux_id_label=None,
+                zero_enes=ts_enes,
+                tunnel=tunnel_str)
     else:
         ts_enes = chnl_enes['ts']
         mess_str = mess_io.writer.configs_union(
             mess_strs, ts_enes, tunnel_strs=tunnel_strs)
 
         ts_str = '\n' + mess_io.writer.ts_sadpt(
-            ts_label, inner_reac_label, inner_prod_label, mess_str)
+            ts_label, inner_reac_label, inner_prod_label, mess_str,
+            aux_id_label=None,
+            zero_ene=None, tunnel='')
 
     return ts_str, ts_dat_dct
 
@@ -502,10 +518,12 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
         ioprinter.warning_message(f'No label {well_dct_key} in label dict')
     # well_str += mess_io.writer.species_separation_str()
     _side_str = '+'.join(chnl[side_idx])
-    well_str += f'\n! Fake Well for {_side_str}\n'
+    aux_str = f'Fake Well for {_side_str}'
     fake_well, well_dat = blocks.fake_species_block(*fake_inf_dcts)
     well_str += mess_io.writer.well(
-        fake_well_label, fake_well, chnl_enes[well_key])
+        fake_well_label, fake_well,
+        aux_id_label=aux_str,
+        zero_ene=chnl_enes[well_key])
 
     # MESS PST TS string for fake reactant side well -> reacs
     pst_dct_key = make_rxn_str(chnl[side_idx], prepend=prepend_key)
@@ -519,7 +537,9 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
     pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,
-        chnl_enes[ts_key], tunnel='')
+        aux_id_label=None,
+        zero_ene=chnl_enes[ts_key],
+        tunnel='')
 
     # Build the data dct
     if well_dat:
