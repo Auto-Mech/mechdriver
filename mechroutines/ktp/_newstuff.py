@@ -270,6 +270,7 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
         bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
             (modeltype,), ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
             savefile=False)
+        print('bf_tp_dct\n', bf_tp_dct)
 
         # NEW KTP DICTIONARY
         frag_reacs_dct = mess_io.reader.dct_species_fragments(
@@ -277,6 +278,7 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
         frag_reacs = frag_reacs_dct[spc[0]]
         rxn_ktp_dct = mechanalyzer.builder.bf.merge_bf_ktp(
             bf_tp_dct, ktp_dct[label], frag_reacs, frag1, frag2, hot_frag_dct)
+        print('ktp dct\n', rxn_ktp_dct)
         prompt_rxn_ktp_dct[label] = rxn_ktp_dct
 
     print(prompt_rxn_ktp_dct)
