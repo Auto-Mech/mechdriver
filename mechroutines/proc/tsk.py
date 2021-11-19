@@ -29,6 +29,7 @@ def run_tsk(tsk, obj_queue,
         tsk, pes_mod_dct_i, proc_keyword_dct, spc_mod_dct_i)
     chn_basis_ene_dct = {}
     col_array = []
+    spc_array = []
 
     # Exclude unstable species
     # These species break certain checks (e.g. no ene exists for geo collect)
@@ -151,6 +152,15 @@ def run_tsk(tsk, obj_queue,
                         pes_mod_dct_i, chn_basis_ene_dct, spc_array,
                         locs, locs_path, cnf_fs, run_prefix, save_prefix)
                     csv_data_i, chn_basis_ene_dct, spc_array = ret
+                    csv_data[label] = csv_data_i
+
+                elif 'messpf_inp' in tsk:
+                    ret = collect.messpf_input(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        pes_mod_dct_i, locs, locs_path,
+                        cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, _, miss_data_i = ret
+                    print(csv_data_i)
                     csv_data[label] = csv_data_i
 
                 elif 'pf' in tsk:

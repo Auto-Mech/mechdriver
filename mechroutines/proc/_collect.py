@@ -54,8 +54,11 @@ def molden(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
         geo = cnf_fs[-1].file.geometry.read(locs)
         sp_fs = autofile.fs.single_point(locs_path)
         _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-        comment = f'energy: {_ene:>15.10f}\n'
-        comment = f'\n\nSPC: {spc_name}\tConf: {locs}\tPath: {locs_path}\n'
+        # comment = f'energy: {_ene:>15.10f}\n'
+        # comment = f'\n\nSPC: {spc_name}\tConf: {locs}\tPath: {locs_path}\n'
+        comment = 'energy: {0:>15.10f}'.format(_ene)
+        comment += 'SPC: {}\tConf: {}\tPath: {}'.format(
+            spc_name, locs, locs_path)
         xyz_str = automol.geom.xyz_string(geo, comment=comment)
         miss_data = None
     else:
@@ -316,6 +319,40 @@ def partition_function(
     """ collect enthalpies
     """
 
+    messpf_inp_str, dat_str_dct, miss_data = messpf_input(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        pes_mod_dct_i,
+        locs, locs_path,
+        cnf_fs, run_prefix, save_prefix)
+
+    # Combine the strings together to create full MESS input file string
+    # tempfile.tempdir = "./messpf_temp"
+    # file_path = (
+    # '/home/elliott/projects/AutoMech/RO2QOOH/all_conformers/all/temp')
+    with tempfile.TemporaryDirectory() as file_path:
+        autorun.write_input(
+            file_path,
+            messpf_inp_str,
+            aux_dct=dat_str_dct,
+            input_name='pf.inp')
+        autorun.run_script(
+            autorun.SCRIPT_DCT['messpf'],
+            file_path)
+        pf_arrays = reader.mess.messpf(
+            file_path)
+    return (
+        pf_arrays, miss_data
+    )
+
+
+def messpf_input(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        pes_mod_dct_i,
+        locs, locs_path,
+        cnf_fs, run_prefix, save_prefix):
+    """ collect enthalpies
+    """
+
     _, _ = locs_path, cnf_fs  # needed
 
     zrxn = spc_dct_i.get('zrxn')
@@ -370,23 +407,6 @@ def partition_function(
         spc_data=mess_block,
         zero_ene=zero_energy
     )
+    messpf_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
 
-    # Combine the strings together to create full MESS input file string
-    # tempfile.tempdir = "./messpf_temp"
-    # file_path = (
-    # '/home/elliott/projects/AutoMech/RO2QOOH/all_conformers/all/temp')
-    with tempfile.TemporaryDirectory() as file_path:
-        messpf_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
-        autorun.write_input(
-            file_path,
-            messpf_inp_str,
-            aux_dct=dat_str_dct,
-            input_name='pf.inp')
-        autorun.run_script(
-            autorun.SCRIPT_DCT['messpf'],
-            file_path)
-        pf_arrays = reader.mess.messpf(
-            file_path)
-    return (
-        pf_arrays, miss_data
-    )
+    return (messpf_inp_str, dat_str_dct, miss_data)
