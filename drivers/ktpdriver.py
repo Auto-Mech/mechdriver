@@ -63,8 +63,8 @@ def run(pes_rlst, pes_grp_dct,
 
     for (pes_grp_rlst, pes_param_dct) in pes_grps_rlst:
 
-        print('WORKING ON PES GROUP NUM')
-        print(pes_grp_rlst)
+        # print('WORKING ON PES GROUP NUM')
+        # print(pes_grp_rlst)
 
         # Generate the paths needed for MESSRATE calculations
         rate_paths_dct = rate_paths(pes_grp_rlst, run_prefix)
