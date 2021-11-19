@@ -67,6 +67,7 @@ MODPF_VAL_DCT = {
             'rigid'),
         'enelvl': ((str,), (), None),
         'geolvl': ((str,), (), None),
+        'scale': ((str,), (), 'on'),
     },
     'symm': {
         'mod': ((str,), ('none', 'sampling', '1dhr'), 'none'),
