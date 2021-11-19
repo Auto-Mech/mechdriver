@@ -249,6 +249,10 @@ def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
             columns=[
                 *col_array])
         dframe.to_csv(filelabel, float_format='%.2f')
+    elif 'messpf_inp' in tsk:
+        all_data = '\n'.join(spc_data for spc_data in csv_data.values())
+        io.write_file(filelabel, all_data)
+
     elif 'pf' in tsk:
         dframe = pandas.DataFrame.from_dict(
             csv_data, orient='index',
@@ -352,6 +356,9 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
         filelabel += '.csv'
     elif 'torsions' in tsk:
         filelabel = None
+    elif 'messpf_inp' in tsk:
+        filelabel = 'messpf_input_global'
+        filelabel += '.txt'
     elif 'pf' in tsk:
         filelabel = 'pf_global'
         filelabel += '.csv'

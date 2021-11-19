@@ -100,6 +100,7 @@ TSK_KEY_DCT = {
     'torsions': (('spc', 'ts'), PRNT),
     'enthalpy': (('spc', 'ts'), PRNT),
     'pf': (('spc', 'ts'), PRNT),
+    'messpf_inp': (('spc', 'ts'), PRNT),
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
