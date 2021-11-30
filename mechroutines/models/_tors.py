@@ -152,8 +152,8 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
         # test
         # sfactor = 1
         # test
-        for rotor in rotors:
-            for tidx, torsion in enumerate(rotor):
+        for tidx, rotor in enumerate(rotors):
+            for torsion in rotor:
                 if tidx not in scale_indcs and factor is not None:
                     torsion.pot = automol.pot.scale(torsion.pot, sfactor)
                     # following is being used in a test to see how effective

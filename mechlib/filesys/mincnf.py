@@ -745,7 +745,7 @@ def _sort_energy_parameter(
     sort_prop = _check_prop_requirements(
         sort_prop_dct, geo, freqs, sp_ene, locs)
     if sort_prop in ['electronic', 'ground']:
-        ioprinter.debug_message('sorting by electronic energy')
+        # ioprinter.debug_message('sorting by electronic energy')
         sort_ene = sp_ene
     if sort_prop == 'ground':
         zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
@@ -758,7 +758,7 @@ def _sort_energy_parameter(
             geo, freqs, sort_prop_dct[sort_prop])
         sort_ene = sort_ene / phycon.EH2KCAL
     elif sort_prop == 'gibbs':
-        ioprinter.debug_message('sorting by Gibbs')
+        # ioprinter.debug_message('sorting by Gibbs')
         zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
         zpe = (zpe) * phycon.EH2KCAL
         spe = sp_ene * phycon.EH2KCAL
