@@ -7,14 +7,14 @@ from mechlib.amech_io import printer as ioprinter
 from mechroutines.models.typ import need_fake_wells
 
 
-def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
+def make_pes_label_dct(pes_label_dct, rxn_lst, pes_idx,
+                       spc_dct, spc_mod_dct_i):
     """  Loop over all of the reaction channels of the PES to build a
          dictionary that systematically maps the mechanism names of all
          species and transition states to formatted labels used to designate
          each as a well, bimol, or barrier component in a MESS input file.
     """
 
-    pes_label_dct = {}
     for rxn in rxn_lst:
         # Get the wells models
         rwell_mod = spc_mod_dct_i['ts']['rwells']
@@ -41,14 +41,17 @@ def _make_channel_label_dct(tsname, rclass, label_dct, chn_idx, reacs, prods,
     """
 
     # Initialize idxs for bimol, well, and fake species
-    pidx, widx, fidx = 1, 1, 1
-    for val in label_dct.values():
-        if 'P' in val:
-            pidx += 1
-        elif 'W' in val:
-            widx += 1
-        elif 'F' in val:
+    pidx, widx, fidx, bidx = 1, 1, 1, 1
+    for mess_lbl in label_dct.values():
+        if 'F' in mess_lbl:
             fidx += 1
+        else:
+            if 'P' in mess_lbl:
+                pidx += 1
+            elif 'W' in mess_lbl:
+                widx += 1
+            elif 'B' in mess_lbl:
+                bidx += 1
 
     # Determine the idxs for the channel reactants
     reac_label = ''
@@ -101,7 +104,8 @@ def _make_channel_label_dct(tsname, rclass, label_dct, chn_idx, reacs, prods,
                 fidx += 1
                 label_dct[well_dct_key1] = fake_wellr_label
 
-                pst_r_label = 'FRB' + str(chn_idx)
+                # pst_r_label = 'FRB' + str(chn_idx)
+                pst_r_label = f'FRB{bidx}'
                 label_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
             if not fake_wellr_label:
                 fake_wellr_label = label_dct[well_dct_key1]
@@ -121,7 +125,8 @@ def _make_channel_label_dct(tsname, rclass, label_dct, chn_idx, reacs, prods,
                 fidx += 1
                 label_dct[well_dct_key1] = fake_wellp_label
 
-                pst_p_label = 'FPB' + str(chn_idx)
+                # pst_p_label = 'FPB' + str(chn_idx)
+                pst_p_label = f'FPB{bidx}'
                 label_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
             if not fake_wellp_label:
                 ioprinter.debug_message('label test', label_dct, well_dct_key1)
@@ -133,6 +138,7 @@ def _make_channel_label_dct(tsname, rclass, label_dct, chn_idx, reacs, prods,
         else:
             fake_wellp_label = label_dct[well_dct_key1]
 
-    label_dct[tsname] = 'B' + str(chn_idx+1)
+    # label_dct[tsname] = 'B' + str(chn_idx+1)
+    label_dct[tsname] = f'B{bidx}'
 
     return label_dct
