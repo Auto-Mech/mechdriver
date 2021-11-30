@@ -83,15 +83,15 @@ def run_tau(zma, spc_info, thy_info,
     nsamp0 = nsamp
     nsampd = util.calc_nsampd(tau_save_fs, tau_run_fs, rid=None)
 
-    tot_samp = nsamp - nsampd
+    num_to_samp = nsamp - nsampd
 
     info_message(
         ' - Number of samples that have been currently run:', nsampd)
     info_message(' - Number of samples requested:', nsamp)
 
-    if nsamp-nsampd > 0:
+    if num_to_samp > 0:
         info_message(
-            f'Running {nsamp-nsampd} samples...', newline=1)
+            f'Running {num_to_samp} samples...', newline=1)
     samp_idx = 1
 
     # Set the filesystem objects
@@ -115,7 +115,7 @@ def run_tau(zma, spc_info, thy_info,
         tau_run_prefix = tau_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(tau_run_prefix)
 
-        info_message(f"\nRun {samp_idx}/{tot_samp}")
+        info_message(f"\nRun {samp_idx}/{num_to_samp}")
         samp_idx += 1
 
         info_message(
@@ -238,6 +238,7 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info, db_style='directory'):
 
                 saved_geos.append(geo)
 
+        print('\nWriting the geometries and energies into JSON file...')
         if db_style == 'jsondb':
             tau_save_fs[-1].json_create()
             tau_save_fs[-1].json.geometry_info.write_all(
