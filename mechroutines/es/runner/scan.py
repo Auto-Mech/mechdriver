@@ -154,14 +154,26 @@ def run_backsteps(
     for idx, grid_vals in enumerate(mixed_grid_vals_lst):
 
         locs = [coord_names, grid_vals]
+        back_locs = [coord_names, rev_grid_vals_lst[idx]]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
-
+            back_locs = [constraint_dct] + back_locs
         path = scn_save_fs[-1].path(locs)
+        back_path = scn_save_fs[-1].path(back_locs)
         sp_save_fs = autofile.fs.single_point(path)
+        back_sp_save_fs = autofile.fs.single_point(back_path)
+        ene = None
         if sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
             ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
             ene = ene * phycon.EH2KCAL
+        if back_sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            back_ene = back_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+            back_ene = back_ene * phycon.EH2KCAL
+            if ene is None:
+                ene = back_ene
+            if back_ene < ene:
+                ene = back_ene
+        if ene:
             pot[grid_vals] = ene
 
     # Convert the energies to a baseline relative to the first point;
@@ -176,8 +188,7 @@ def run_backsteps(
         conv_grid_vals = (grid_vals[0] * phycon.RAD2DEG,)
         conv_pot[conv_grid_vals] = ene
 
-    bad_grid_vals = (filesys.read.identify_bad_point(conv_pot, thresh=0.02),)
-
+    bad_grid_vals = (filesys.read.identify_bad_point(conv_pot, thresh=0.018),)
     if bad_grid_vals[0] is not None:
         print('Akima spline identified potential hysteresis at ',
               bad_grid_vals[0]*phycon.DEG2RAD)
