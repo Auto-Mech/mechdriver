@@ -81,16 +81,25 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
     # Identify reactants and products from geoms or InChIs, depending
     # We automatically assess and add stereo to the reaction object, as needed
     if any(rct_geos) and any(prd_geos):
-        zrxn_objs = automol.reac.rxn_objs_from_geometry(
-            rct_geos, prd_geos, indexing='zma', stereo=False)
         print('    Reaction ID from geometries from SAVE filesys')
+        # print('geo test used for id')
+        # print('rct geos')
+        # for x in rct_geos:
+        #     print(automol.geom.string(x))
+        #     print('--')
+        # print('prd geos')
+        # for x in prd_geos:
+        #     print(automol.geom.string(x))
+        #     print('--')
+        zrxn_objs = automol.reac.rxn_objs_from_geometry(
+            rct_geos, prd_geos, indexing='zma', stereo=True)
     else:
+        print('    Reaction ID from geometries from input InChIs')
         rxn_ichs = rinfo.value(rxn_info, 'inchi')
         rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
         zrxn_objs = automol.reac.rxn_objs_from_inchi(
-            rct_ichs, prd_ichs, indexing='zma', stereo=False)
-        print('    Reaction ID from geometries from input InChIs')
+            rct_ichs, prd_ichs, indexing='zma', stereo=True)
 
     # Loop over the found reaction objects
     if zrxn_objs is not None:
@@ -198,9 +207,13 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
     ):
         for (_, cnf_save_fs, min_locs, _) in _rcts_cnf_fs:
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            print('rct geo path',
+                  cnf_save_fs[-1].file.geometry.path(min_locs))
             rct_geos += (geo,)
         for (_, cnf_save_fs, min_locs, _) in _prds_cnf_fs:
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            print('prd geo path',
+                  cnf_save_fs[-1].file.geometry.path(min_locs))
             prd_geos += (geo,)
 
     return rct_geos, prd_geos

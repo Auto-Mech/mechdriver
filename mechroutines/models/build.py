@@ -686,20 +686,9 @@ def tau_data(spc_dct_i,
     zpe_chnlvl = zpe * phycon.EH2KCAL
     ref_ene = harm_zpve * phycon.EH2KCAL
 
-    ref_geom, ref_grad, ref_hessian = [], [], []
-
-    geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
-    # geo_str = autofile.data_types.swrite.geometry(geo)
-    ref_geom.append(geo)
-
-    if vib_model != 'tau':
-        grad = harm_save_fs[-1].file.gradient.read(harm_min_locs)
-        # grad_str = autofile.data_types.swrite.gradient(grad)
-        ref_grad.append(grad)
-
-        hess = harm_save_fs[-1].file.hessian.read(harm_min_locs)
-        # hess_str = autofile.data_types.swrite.hessian(hess)
-        ref_hessian.append(hess)
+    ref_geom = [harm_save_fs[-1].file.geometry.read(harm_min_locs)]
+    ref_grad = [harm_save_fs[-1].file.gradient.read(harm_min_locs)]
+    ref_hessian = [harm_save_fs[-1].file.hessian.read(harm_min_locs)]
 
     min_cnf_ene = filesys.read.energy(
         harm_save_fs, harm_min_locs, mod_thy_info)
@@ -709,7 +698,7 @@ def tau_data(spc_dct_i,
         run_prefix, save_prefix, 'TAU',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
 
-    db_style = 'directory'
+    db_style = 'jsondb'
     vib_model = spc_mod_dct_i['vib']['mod']
     if vib_model == 'tau':
         if db_style == 'directory':
@@ -724,11 +713,11 @@ def tau_data(spc_dct_i,
         elif db_style == 'jsondb':
             tau_locs = tau_save_fs[-1].json_existing()
 
+    ioprinter.info_message(
+        'Reading data for the Monte Carlo samples from db.json'
+        f'at path {tau_save_fs[0].path()}')
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
     for locs in tau_locs:
-
-        # ioprinter.info_message('Reading tau info at path {}'.format(
-        #     tau_save_fs[-1].path(locs)))
 
         if db_style == 'directory':
             geo = tau_save_fs[-1].file.geometry.read(locs)
@@ -761,17 +750,23 @@ def tau_data(spc_dct_i,
             # hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess)
 
+    # Determine the successful conformer ratio
+    inf_obj = tau_save_fs[0].file.info.read()
+    success_ratio = len(samp_geoms) / inf_obj.nsamp
+    print('success ratio test:',
+          success_ratio, len(samp_geoms), inf_obj.nsamp)
+
     # Create info dictionary
     keys = ['geom', 'sym_factor', 'elec_levels',
             'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'ref_geom', 'ref_grad', 'ref_hessian',
-            'zpe_chnlvl', 'ref_ene']
+            'zpe_chnlvl', 'ref_ene', 'tau_ratio']
     vals = [ref_geom[0], sym_factor, spc_dct_i['elec_levels'],
             freqs, tors_strs[2],
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             ref_geom, ref_grad, ref_hessian,
-            zpe_chnlvl, ref_ene]
+            zpe_chnlvl, ref_ene, success_ratio]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct

@@ -19,9 +19,9 @@ from mechroutines.models.typ import is_abstraction_pes
 from mechroutines.ktp._ene import set_reference_ene
 from mechroutines.ktp._ene import sum_channel_enes
 
-from mechroutines.ktp._newstuff import energy_dist_params
-from mechroutines.ktp._newstuff import set_prod_density_param
-from mechroutines.ktp._newstuff import set_hot_enes
+from mechroutines.ktp._multipes import energy_dist_params
+from mechroutines.ktp._multipes import set_prod_density_param
+from mechroutines.ktp._multipes import set_hot_enes
 
 
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
@@ -599,11 +599,12 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
             run_prefix, save_prefix, saddle=True,
             cnf_range=cnf_range, sort_info_lst=sort_info_lst,
             name=name)
+        spc_locs = spc_locs_lst[0] if spc_locs_lst else None
         inf_dct, model_basis_energy_dct = build.read_ts_data(
             spc_dct, name, reacs, prods,
             pes_model_dct_i, spc_model_dct_i,
             run_prefix, save_prefix, model_basis_energy_dct,
-            spc_locs=spc_locs_lst[0])
+            spc_locs=spc_locs)
         chnl_infs['ts'].append(inf_dct)
 
     # Set up the info for the wells

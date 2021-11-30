@@ -14,7 +14,7 @@ from mechroutines.models.typ import use_well_extension
 from mechroutines.ktp.rates import make_header_str
 from mechroutines.ktp.rates import make_global_etrans_str
 from mechroutines.ktp.rates import make_pes_mess_str
-from mechroutines.ktp._newstuff import obtain_multipes_rxn_ktp_dct
+from mechroutines.ktp._multipes import obtain_multipes_rxn_ktp_dct
 
 
 def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,

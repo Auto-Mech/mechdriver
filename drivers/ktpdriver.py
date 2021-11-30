@@ -74,7 +74,7 @@ def run(pes_rlst, pes_grp_dct,
             proc_tsk = write_rate_tsk
         else:
             proc_tsk = run_fit_tsk
-        spc_dct, all_rxn_lst, all_instab_chnls, label_dct = _process2(
+        spc_dct, all_rxn_lst, all_instab_chnls, label_dct = _process(
             proc_tsk, ktp_tsk_lst, pes_grp_rlst,
             spc_mod_dct, spc_dct, glob_dct,
             run_prefix, save_prefix)
@@ -117,9 +117,9 @@ def run(pes_rlst, pes_grp_dct,
 # ------- #
 # UTILITY #
 # ------- #
-def _process2(tsk, ktp_tsk_lst, pes_grp_rlst,
-              spc_mod_dct, spc_dct, glob_dct,
-              run_prefix, save_prefix):
+def _process(tsk, ktp_tsk_lst, pes_grp_rlst,
+             spc_mod_dct, spc_dct, glob_dct,
+             run_prefix, save_prefix):
     """ Build info needed for the task
     """
 
@@ -129,14 +129,11 @@ def _process2(tsk, ktp_tsk_lst, pes_grp_rlst,
 
     spc_mod_dct_i = spc_mod_dct[spc_mod]
 
-    print('new ktp loop test')
-
     label_dct = {}
     all_chkd_rxn_lst, all_instab_chnls = (), ()
     for _, (pes_inf, rxn_lst) in enumerate(pes_grp_rlst.items()):
 
         _, pes_idx, _ = pes_inf
-        print(pes_idx)
 
         # Obtain all of the transitions states
         ioprinter.message(
@@ -144,12 +141,8 @@ def _process2(tsk, ktp_tsk_lst, pes_grp_rlst,
         ts_dct = parser.spc.ts_dct_from_ktptsks(
             pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct,
             spc_dct, run_prefix, save_prefix)
-        print(ts_dct.keys())
-        print('before', spc_dct.keys())
         spc_dct = parser.spc.combine_sadpt_spc_dcts(
             ts_dct, spc_dct, glob_dct)
-
-        print('after', spc_dct.keys())
 
         # Set reaction list with unstable species broken apart
         ioprinter.message('Identifying stability of all species...', newline=1)
@@ -162,10 +155,7 @@ def _process2(tsk, ktp_tsk_lst, pes_grp_rlst,
         # Build the MESS label idx dictionary for the PES
         label_dct.update(
             ktp_label.make_pes_label_dct(
-                chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i))
-
-        print('---')
-
-    print(spc_dct.keys())
+                label_dct, chkd_rxn_lst, pes_idx,
+                spc_dct, spc_mod_dct_i))
 
     return spc_dct, all_chkd_rxn_lst, all_instab_chnls, label_dct

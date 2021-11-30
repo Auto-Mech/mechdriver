@@ -48,7 +48,7 @@ def _model_header(spc_mod_dct_i, refscheme=''):
             f'{tors_ene_info[1][3]}{tors_ene_info[1][1]}/{tors_ene_info[1][2]}'
             '//'
             f'{tors_geo_info[1][3]}{tors_geo_info[1][1]}/{tors_geo_info[1][2]}'
-            '{}{}/{}\n'
+            '\n'
         )
     # if vpt2_info is not None:
     #     chemkin_header_str += '! vpt2 level: {}/{}\n'.format(
@@ -62,14 +62,16 @@ def _model_header(spc_mod_dct_i, refscheme=''):
 def _ckin_ene_lvl_str(ene_infos, har_info):
     """ Write the comment lines for the enrgy lvls for ckin
     """
+
+    print('har info test', har_info)
     ene_str = '! energy level:'
     for i, ene_inf in enumerate(ene_infos):
-        # print('ene inf test', ene_inf)
+        print('ene inf test', ene_inf)
         ene_str += (
             f' {ene_inf[1][0]:.2f} x '
             f'{ene_inf[1][1][3]}{ene_inf[1][1][1]}/{ene_inf[1][1][2]}'
             '//'
-            f'{har_info[1][1][3]}{har_info[1][1][1]}/{har_info[1][1][2]}\n'
+            f'{har_info[1][3]}{har_info[1][1]}/{har_info[1][2]}\n'
         )
         if i+1 != len(ene_infos):
             ene_str += ' +'
