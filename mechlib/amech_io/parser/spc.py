@@ -379,7 +379,6 @@ def tsnames_in_dct(pes_idx, chnl_idx, spc_dct, config_idxs=None):
     """
     _tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}'
     _tsname = _tsname + '_'
-    print('tsname test', pes_idx, chnl_idx, _tsname, spc_dct.keys())
     if config_idxs is None:
         _tsnames = tuple(name for name in spc_dct.keys()
                          if _tsname in name)

@@ -610,7 +610,6 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
     # Set up the info for the wells
     rwell_model = spc_model_dct_i['ts']['rwells']
     pwell_model = spc_model_dct_i['ts']['pwells']
-    print('tsname test', tsname_allconfigs)
     rxn_class = spc_dct[tsname_allconfigs[0]]['class']
     if need_fake_wells(rxn_class, rwell_model):
         chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])

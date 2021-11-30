@@ -6,12 +6,12 @@
 """
 
 import sys
-import autofile
 # import argparse
 from mechlib.filesys import prefix_fs
 from mechlib.amech_io import parser as ioparser
 from mechlib.amech_io import printer as ioprinter
 from drivers import esdriver, thermodriver, ktpdriver, transdriver, procdriver
+import autofile
 
 
 # Set runtime options based on user input
