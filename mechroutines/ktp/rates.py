@@ -19,9 +19,9 @@ from mechroutines.models.typ import is_abstraction_pes
 from mechroutines.ktp._ene import set_reference_ene
 from mechroutines.ktp._ene import sum_channel_enes
 
-from mechroutines.ktp._newstuff import energy_dist_params
-from mechroutines.ktp._newstuff import set_prod_density_param
-from mechroutines.ktp._newstuff import set_hot_enes
+from mechroutines.ktp._multipes import energy_dist_params
+from mechroutines.ktp._multipes import set_prod_density_param
+from mechroutines.ktp._multipes import set_hot_enes
 
 
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
