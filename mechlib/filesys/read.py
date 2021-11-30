@@ -156,6 +156,7 @@ def identify_bad_point(pot, thresh=0.05):
 
     # Remove the bad point
     bad_angle = None
+    print('max norm diff of splines ', max_norm_diff, thresh)
     if max_norm_diff > thresh:
         max_idxs = numpy.argsort(abs(shifted_angles - max_fine_angle))[:2]
         suspect_enes = [step_enes[idx] for idx in max_idxs]
