@@ -62,6 +62,8 @@ def _model_header(spc_mod_dct_i, refscheme=''):
 def _ckin_ene_lvl_str(ene_infos, har_info):
     """ Write the comment lines for the enrgy lvls for ckin
     """
+
+    print('har info test', har_info)
     ene_str = '! energy level:'
     for i, ene_inf in enumerate(ene_infos):
         # print('ene inf test', ene_inf)
