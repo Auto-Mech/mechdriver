@@ -717,7 +717,8 @@ def tau_data(spc_dct_i,
         'Reading data for the Monte Carlo samples from db.json'
         f'at path {tau_save_fs[0].path()}')
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
-    for locs in tau_locs:
+    tot_locs = len(tau_locs)
+    for idx, locs in enumerate(tau_locs):
 
         if db_style == 'directory':
             geo = tau_save_fs[-1].file.geometry.read(locs)
@@ -749,24 +750,28 @@ def tau_data(spc_dct_i,
                 hess = tau_save_fs[-1].json.hessian.read(locs)
             # hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess)
+       
+        # Print progress message (every 150 geoms read)
+        if idx % 149 == 0:
+            print(f'Read {idx+1}/{tot_locs} samples...')
 
     # Determine the successful conformer ratio
     inf_obj = tau_save_fs[0].file.info.read()
-    success_ratio = len(samp_geoms) / inf_obj.nsamp
-    print('success ratio test:',
-          success_ratio, len(samp_geoms), inf_obj.nsamp)
+    excluded_volume_factor = len(samp_geoms) / inf_obj.nsamp
+    print('excluded volume factor test:',
+          excluded_volume_factor, len(samp_geoms), inf_obj.nsamp)
 
     # Create info dictionary
     keys = ['geom', 'sym_factor', 'elec_levels',
             'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'ref_geom', 'ref_grad', 'ref_hessian',
-            'zpe_chnlvl', 'ref_ene', 'tau_ratio']
+            'zpe_chnlvl', 'ref_ene', 'excluded_volume_factor']
     vals = [ref_geom[0], sym_factor, spc_dct_i['elec_levels'],
             freqs, tors_strs[2],
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             ref_geom, ref_grad, ref_hessian,
-            zpe_chnlvl, ref_ene, success_ratio]
+            zpe_chnlvl, ref_ene, excluded_volume_factor]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct
