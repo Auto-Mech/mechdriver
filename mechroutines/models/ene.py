@@ -23,14 +23,14 @@ def read_energy(spc_dct_i, pf_filesystems,
     if read_ene:
         e_elec = electronic_energy(
             spc_dct_i, pf_filesystems, spc_model_dct_i, conf=conf)
-        ioprinter.debug_message('e_elec in models ene ', e_elec)
+        ioprinter.info_message(f'Final electronic energy: {e_elec} Eh')
 
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
             spc_dct_i, pf_filesystems, spc_model_dct_i,
             run_prefix, saddle=saddle)
-        ioprinter.debug_message('zpe in models ene ', e_zpe)
+        ioprinter.info_message(f'Final ZPE: {e_zpe} Eh')
 
     # Return the total energy requested
     ene = None
@@ -84,6 +84,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
                 ioprinter.reading('Energy', sp_path)
                 ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
                 e_elec += (coeff * ene)
+                ioprinter.info_message(f'  - Ene = {coeff:>.3f} x {ene} Eh')
             else:
                 ioprinter.warning_message('No energy at path')
                 e_elec = None
