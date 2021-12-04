@@ -137,6 +137,8 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
         {'vib': {'model': '', 'geolvl_info': (), ...}}
 
         Take all of the spc model dcts or just one?
+
+        Defaults does not work since it just replaces the dct entirely
     """
 
     # Expand the wells keyword if it has been set
