@@ -11,6 +11,7 @@ from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner import qchem_params
 from mechroutines.es.newts import _sadpt as sadpt
 from mechroutines.es.newts import _irc as irc
+from mechroutines.es.newts import _vrctst as vrctst
 from mechroutines.es.newts import _rpath as rpath
 from mechroutines.es.newts._util import thy_dcts
 from mechroutines.es.newts._fs import rpath_fs
@@ -74,6 +75,7 @@ def _findts(spc_dct, tsname,
 
     # Determine the TS finding algorithm to use
     search_method = _ts_search_method(spc_dct[tsname])
+    print('search method test', search_method)
 
     # Calculate all required transition state information
     if search_method == 'sadpt':
@@ -82,15 +84,21 @@ def _findts(spc_dct, tsname,
             thy_inf_dct, thy_method_dct, mref_dct,
             es_keyword_dct,
             runfs_dct, savefs_dct)
+    elif search_method == 'pst':
+        success = run_pst(
+            spc_dct, tsname, savefs_dct)
     elif search_method == 'rpvtst':
         success = run_rpvtst(
             spc_dct, tsname,
             thy_inf_dct, thy_method_dct, mref_dct,
             es_keyword_dct,
             runfs_dct, savefs_dct)
-    elif search_method == 'pst':
-        success = run_pst(
-            spc_dct, tsname, savefs_dct)
+    elif search_method == 'vrctst':
+        success = run_vrctst(
+            spc_dct, tsname,
+            thy_inf_dct, thy_method_dct, mref_dct,
+            es_keyword_dct,
+            runfs_dct, savefs_dct)
 
     return success
 
@@ -139,13 +147,13 @@ def run_rpvtst(spc_dct, tsname,
     if success:
         print('Sadpoint located. Will launch IRC from there')
     else:
-        print('No sadlpt. Will launch IRC from max of potential')
+        print('No saddle-point. Will launch IRC from max of potential')
 
     # Run rpath task to run a scan along the IRC
     # Internal logic should allow it to determine if there is sadpt or not
     # based on what happened in above function call
     job = 'scan'
-    es_keyword_dct.update({'rxn_coord': 'irc'})
+    es_keyword_dct.update({'rxncoord': 'irc'})
     rpath_tsk(job, spc_dct, tsname,
               thy_inf_dct, thy_method_dct, mref_dct, es_keyword_dct,
               runfs_dct, savefs_dct)
@@ -187,6 +195,22 @@ def run_pst(spc_dct, tsname, savefs_dct):
               f'at path {zma_path}')
 
     return True  # As long as the if-block passes, code should be successful
+
+
+def run_vrctst(spc_dct, tsname,
+               thy_inf_dct, thy_method_dct, mref_dct,
+               es_keyword_dct,
+               runfs_dct, savefs_dct):
+    """ generate a reaction path
+    """
+
+    success = vrctst.calc_vrctst_flux(
+        spc_dct[tsname],
+        thy_inf_dct, thy_method_dct, mref_dct,
+        es_keyword_dct,
+        runfs_dct, savefs_dct)
+
+    return success
 
 
 # def run_isc(spc_dct, tsname, method_dct, es_keyword_dct,
@@ -292,9 +316,10 @@ def rpath_tsk(job, spc_dct, spc_name,
                 if success:
                     break
         else:
-            zma, zrxn = ts_dct['zma'], ts_dct['zrxn']
+            zma, zrxn, rclass, = ts_dct['zma'], ts_dct['zrxn'], ts_dct['class']
             _ = rpath.internal_coordinates_scan(
-                zma, ts_info, zrxn,
+                zma, zrxn,
+                ts_info, rclass,
                 method_dct, mref_params,
                 scn_fs[0], scn_fs[1],
                 es_keyword_dct)

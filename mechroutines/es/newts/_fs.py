@@ -15,18 +15,16 @@ def rpath_fs(ts_dct, tsname,
 
     # Set up coordinate name
     rxn_coord = es_keyword_dct.get('rxncoord')
-    print('rxn coord', rxn_coord)
 
     # Get the zma and ts locs
     zma_locs = (ts_dct['zma_idx'],)
     ts_locs = (int(tsname.split('_')[-1]),)
 
     # Build filesys object down to TS FS
-    _root = root_locs(ts_dct, saddle=True, name=tsname)
     ts_fs = build_fs(
         run_prefix, save_prefix, 'TRANSITION STATE',
         thy_locs=mod_ini_thy_info[1:],
-        **_root)
+        **root_locs(ts_dct, saddle=True))
     ini_ts_run_fs, ini_ts_save_fs = ts_fs
 
     # generate fs
@@ -35,14 +33,14 @@ def rpath_fs(ts_dct, tsname,
         cnf_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
             thy_locs=mod_ini_thy_info[1:],
-            **_root)
+            **root_locs(ts_dct, saddle=True, name=tsname))
         ini_cnf_run_fs, ini_cnf_save_fs = cnf_fs
 
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         ini_min_locs, ini_pfx_save_path = ini_loc_info
 
-        if ini_min_locs:
+        if any(ini_min_locs):
             # Run IRC from saddle point minimum-energy conformer
             ini_pfx_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
             ini_pfx_save_path = ini_cnf_save_fs[-1].path(ini_min_locs)

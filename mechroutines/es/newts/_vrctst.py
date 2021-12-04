@@ -26,6 +26,7 @@ def calc_vrctst_flux(ts_dct,
 
     # Build VRC-TST stuff
     vrc_fs = runfs_dct['vrctst']
+    print('vrc_fs test\n', vrc_fs)
     vrc_path = vrc_fs[-1].path((0,))
     vrc_dct = autorun.varecof.VRC_DCT  # need code to input one
     machine_dct = {}  # how to do this when on a node
@@ -42,7 +43,7 @@ def calc_vrctst_flux(ts_dct,
         vrc_dct, vrc_path)
 
     # Write the VaReCoF input files
-    inp_strs = autorun.varecof.write_varecof_input(
+    inp_strs = autorun.varecof.write_input(
         vrc_path,
         zma_for_inp, scan_inf_dct['rct_zmas'],
         npot, scan_inf_dct['rxn_frm_keys'],
@@ -66,6 +67,11 @@ def calc_vrctst_flux(ts_dct,
     if flux_str is not None:
         filesys.save.flux(flux_str, inp_strs,
                           savefs_dct['vrctst'], vrc_locs=(0,))
+        success = True
+    else:
+        success = False
+
+    return success
 
 
 def _scan_inf_dct(ts_dct, savefs_dct):
@@ -74,7 +80,11 @@ def _scan_inf_dct(ts_dct, savefs_dct):
 
     # Build initial coord, grid, and other info
     zrxn, ts_zma = ts_dct['zrxn'], ts_dct['zma']
-    scan_inf = automol.reac.build_scan_info(zrxn, ts_zma)
+
+    cls = ts_dct['class']
+    scan_inf = automol.reac.build_scan_info(
+        zrxn, ts_zma,
+        var=(automol.par.is_radrad(cls) and automol.par.is_low_spin(cls)))
     coord_names, _, coord_grids, update_guess = scan_inf
 
     # Get fol constraint dct
@@ -88,10 +98,17 @@ def _scan_inf_dct(ts_dct, savefs_dct):
 
     # Get indices for potentials and input
     frm_bnd_key, = automol.graph.ts.forming_bond_keys(zrxn.forward_ts_graph)
+    print('class test', zrxn.class_)
+    print('coord grids test', coord_grids)
+
+    # Set up zma for the scan
+    inf_sep_zma = automol.zmat.set_values_by_name(
+        ts_zma, {coord_names[0]: coord_grids[0][0]}, angstrom=False)
 
     return {
         'coord_names': coord_names,
-        'full_grid': sorted(list(coord_grids[0]) + list(coord_grids[1])),
+        'coord_grids': coord_grids,
+        'inf_sep_zma': inf_sep_zma,
         'grid_val_for_zma': coord_grids[0][-1],
         'inf_locs': (coord_names, (coord_grids[0][0],)),
         'update_guess': update_guess,
@@ -118,7 +135,7 @@ def _build_correction_potential(ts_dct, scan_inf_dct,
 
     # Obtain the energy at infinite separation
     inf_sep_ene = rpath.inf_sep_ene(
-        ts_dct, thy_inf_dct, mref_params,
+        ts_dct, thy_inf_dct, thy_method_dct, mref_params,
         savefs_dct, runfs_dct, es_keyword_dct)
 
     # Read the values for the correction potential from filesystem
@@ -178,24 +195,27 @@ def _run_potentials(ts_info, scan_inf_dct,
             _save_fs = cscn_save_fs
             ioprinter.info_message('Running constrained scans..', newline=1)
 
-        scan.execute_scan(
-            zma=scan_inf_dct['inf_sep_zma'],
-            spc_info=ts_info,
-            mod_thy_info=thy_inf_dct['mod_var_scnlvl'],
-            coord_names=scan_inf_dct['coord_names'],
-            coord_grids=scan_inf_dct['full_grid'],
-            scn_run_fs=_run_fs,
-            scn_save_fs=_save_fs,
-            scn_typ='relaxed',
-            script_str=opt_script_str,
-            overwrite=es_keyword_dct['overwrite'],
-            update_guess=scan_inf_dct['update_guess'],
-            reverse_sweep=False,
-            saddle=False,
-            constraint_dct=constraints,
-            retryfail=True,
-            **cas_kwargs
-        )
+        # Loop over grids (both should start at same point and go in and out)
+        for grid in scan_inf_dct['coord_grids']:
+            print('grid test', grid)
+            scan.execute_scan(
+                zma=scan_inf_dct['inf_sep_zma'],
+                spc_info=ts_info,
+                mod_thy_info=thy_inf_dct['mod_var_scnlvl'],
+                coord_names=scan_inf_dct['coord_names'],
+                coord_grids=(grid,),
+                scn_run_fs=_run_fs,
+                scn_save_fs=_save_fs,
+                scn_typ='relaxed',
+                script_str=opt_script_str,
+                overwrite=es_keyword_dct['overwrite'],
+                update_guess=scan_inf_dct['update_guess'],
+                reverse_sweep=False,
+                saddle=False,
+                constraint_dct=constraints,
+                retryfail=True,
+                **cas_kwargs
+            )
 
     # Run the single points on top of the initial, full scan
     if sp_thy_info is not None:
@@ -220,7 +240,7 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
     mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
     mod_var_sp1_thy_info = thy_inf_dct['mod_var_splvl1']
     coord_name = scan_inf_dct['coord_names'][0]
-    full_grid = scan_inf_dct['full_grid']
+    coord_grids = scan_inf_dct['coord_grids']
     constraint_dct = scan_inf_dct['constraint_dct']
     grid_val_for_zma = scan_inf_dct['grid_val_for_zma']
 
@@ -233,6 +253,8 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
     if mod_var_sp1_thy_info is not None:
         scans += ((scn_save_fs, mod_var_sp1_thy_info[1:4]),)
 
+    full_grid = (sorted(list(coord_grids[0]) + list(coord_grids[1][1:])),)
+    print('full_grid test\n', full_grid)
     for idx, (scn_fs, thy_info) in enumerate(scans):
         for grid_val in full_grid:
             if idx in (0, 2):
