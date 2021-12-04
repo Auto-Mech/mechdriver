@@ -21,8 +21,10 @@ def root_locs(spc_dct_i, saddle=False, name=None):
     else:
         spc_info = None
         rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
-        ts_num = int(name.split('_')[-1])
-        ts_info = (ts_num,)
+        if name is not None:
+            ts_info = (int(name.split('_')[-1]),)
+        else:
+            ts_info = None
 
     return {'spc_locs': spc_info, 'rxn_locs': rxn_info, 'ts_locs': ts_info}
 
