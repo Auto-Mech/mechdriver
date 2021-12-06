@@ -395,6 +395,7 @@ def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
     inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
     zma = None
     if init_zma is not None:
+        print('using opt geo fro zma')
         geo = elstruct.reader.opt_geometry(prog, out_str)
         zma = read_zma_from_geo(init_zma, geo)
     if zma is None:
