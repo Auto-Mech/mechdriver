@@ -140,28 +140,39 @@ def _molpro(method_dct, prog, job=None):
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         nprocs = method_dct.get('nprocs', 4)
         memory = method_dct.get('mem', 20)
+        econv = method_dct.get('econv', 1.0e-6)
+        gconv = method_dct.get('gconv', 3.0e-4)
         nprocs = nprocs if nprocs is not None else 4
         memory = memory if memory is not None else 10
+        econv = econv if econv is not None else 1.0e-6
+        gconv = gconv if gconv is not None else 3.0e-4
     else:
         nprocs = method_dct.get('nprocs', 4)
         memory = method_dct.get('mem', 20)
+        econv = method_dct.get('econv', 1.0e-6)
+        gconv = method_dct.get('gconv', 3.0e-4)
         nprocs = nprocs if nprocs is not None else 4
         memory = memory if memory is not None else 20
+        econv = econv if econv is not None else 1.0e-6
+        gconv = gconv if gconv is not None else 3.0e-4
+
+    econv_line = f'energy={econv:.1E}'.replace('E', 'd')
+    gconv_line = f'gradient={gconv:.1E}'.replace('E', 'd')
 
     # Build the script string
-    if method in ('caspt2c', 'caspt2i'):
-        script_str = SCRIPT_DCT[prog+'_mppx'].format(nprocs)
-    else:
-        script_str = SCRIPT_DCT[prog].format(nprocs)
+    prog = prog+'_mppx' if method_dct['mppx'] else prog
+    script_str = SCRIPT_DCT[prog].format(nprocs)
 
+    # Set threshholds
     # Build the kwargs
     kwargs = {
         'memory': memory,
         # 'mol_options': ['no_symmetry'],
         'mol_options': ['nosym'],
+        'scf_options': [econv_line, 'maxit=300']
     }
 
-    corr_options = ['maxit=100']
+    corr_options = [econv_line, 'maxit=100']
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         corr_options.append('shift=0.2')
         if method == 'caspt2i':
@@ -170,14 +181,15 @@ def _molpro(method_dct, prog, job=None):
 
     if job == elstruct.Job.OPTIMIZATION:
         kwargs.update({
+            'job_options': [gconv_line],
             'feedback': True,
             'errors': [
                 elstruct.Error.OPT_NOCONV
             ],
             'options_mat': [
-                [{'job_options': ['numhess=0']},
-                 {'job_options': ['numhess=10']},
-                 {'job_options': ['numhess=1']}]
+                [{'job_options': [gconv_line, 'numhess=0']},
+                 {'job_options': [gconv_line, 'numhess=10']},
+                 {'job_options': [gconv_line, 'numhess=1']}]
             ],
         })
 
