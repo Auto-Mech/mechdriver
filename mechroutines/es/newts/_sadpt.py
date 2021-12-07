@@ -106,8 +106,9 @@ def search(ini_zma, spc_dct, tsname,
         # Generate a guess zma by scanning along rxncoord and finding max
         guess_zmas = rpath.internal_coordinates_scan(
             ts_zma=ts_dct['zma'],
-            ts_info=rinfo.ts_info(ts_dct['rxn_info']),
             zrxn=ts_dct['zrxn'],
+            ts_info=rinfo.ts_info(ts_dct['rxn_info']),
+            rxn_class=ts_dct['class'],
             method_dct=thy_method_dct['runlvl'],
             mref_params=mref_dct['runlvl'],
             scn_run_fs=runfs_dct['runlvl_scn'],

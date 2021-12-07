@@ -597,13 +597,18 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                 inp_str = run_fs[-1].file.input.read([job])
                 inp_str = inp_str.replace('=', '')
                 prog = inf_obj.prog
-                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                if automol.zmat.almost_equal(inp_zma, zma,
-                                             dist_rtol=0.018, ang_atol=.2):
+                try:
+                    inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                    if automol.zmat.almost_equal(inp_zma, zma,
+                                                 dist_rtol=0.018, ang_atol=.2):
+                        ioprinter.info_message(
+                            'This conformer was already run ' +
+                            f'in {run_path}.')
+                        locs_idx = idx
+                except:
                     ioprinter.info_message(
-                        'This conformer was already run ' +
-                        f'in {run_path}.')
-                    locs_idx = idx
+                        f'Program {prog} lacks inp ZMA reader for check')
+                if locs_idx is not None:
                     break
     # This is to find if it was not saved becaue its equivalent
     # to other conformers

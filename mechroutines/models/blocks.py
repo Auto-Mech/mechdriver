@@ -148,6 +148,7 @@ def tau_block(inf_dct):
         ref_config_file_name=ref_config_file_name,
         ground_ene=0.0,
         freqs=inf_dct['freqs'],
+        excluded_volume_factor=inf_dct['excluded_volume_factor'],
         use_cm_shift=True
     )
 

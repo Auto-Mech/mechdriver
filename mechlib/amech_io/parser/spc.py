@@ -23,7 +23,7 @@ SPC_VAL_DCT = {
     'inchi': ((str,), (), None),
     'inchikey': ((str,), (), None),
     'smiles': ((str,), (), None),
-    'sens': ((float,), (), None),  # auto from CSV reader, not used
+    'sens': ((int, float), (), None),  # auto from CSV reader, not used
     'fml': ((dict,), (), None),  # auto from CSV reader, not used
     'pst_params': ((tuple,), (), (1.0, 6)),
     # ^^ shouldn't be in spc, but auto dat glob prob for all TS keys)
@@ -32,12 +32,12 @@ SPC_VAL_DCT = {
     'geo': ((tuple,), (), None),
     'sym_factor': ((float,), (), None),
     'kickoff': ((tuple,), (), (0.1, False)),
-    'hind_inc': ((float,), (), 30.0),
+    'hind_inc': ((int, float,), (), 30.0),
     'hbond_cutoffs': ((tuple,), (), (4.55, 1.92)),
     'mc_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
     'tau_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
-    'smin': ((float,), (), None),
-    'smax': ((float,), (), None),
+    'smin': ((int, float), (), None),
+    'smax': ((int, float), (), None),
     'etrans_nsamp': ((int,), (), None),
     'bath': ((str,), (), None),
     'lj': ((str,), (), None),

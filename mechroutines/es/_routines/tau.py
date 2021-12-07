@@ -276,7 +276,7 @@ def assess_pf_convergence(tau_save_fs, ref_ene,
         inf_obj_s = tau_save_fs[0].file.info.read()
         nsamp = inf_obj_s.nsamp
         saved_locs = tau_save_fs[-1].json_existing()
-        ratio = float(nsamp) / len(saved_locs)
+        ratio = len(saved_locs) / float(nsamp)
         for locs in saved_locs:
             idx += 1
             ene = tau_save_fs[-1].json.energy.read(locs)

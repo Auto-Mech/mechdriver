@@ -2,6 +2,7 @@
   Handle vibrational data info
 """
 
+import os
 import autorun
 import automol.pot
 import automol.geom
@@ -231,8 +232,9 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         saddle=(zrxn is not None))
 
     # Obtain the displacements
+    disp_path = os.path.join(vib_path, 'DISP')
     harm_disps = autorun.projrot.displacements(
-        projrot_script_str, vib_path, [harm_geo], [[]], [hess])
+        projrot_script_str, disp_path, [harm_geo], [[]], [hess])
 
     proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
 

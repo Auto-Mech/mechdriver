@@ -8,6 +8,7 @@
        and locs and can therefore read them. the geo and zma are unneeded
 """
 
+import copy
 import shutil
 import automol
 import elstruct
@@ -91,11 +92,10 @@ def run_energy(zma, geo, spc_info, thy_info,
     if _run:
 
         # Add options matrix for energy runs for molpro
+        _kwargs = copy.deepcopy(kwargs)
         if thy_info[0] == 'molpro2015':
             errs, optmat = es_runner.molpro_opts_mat(spc_info, geo)
-        else:
-            errs = ()
-            optmat = ()
+            _kwargs.update({'errors': errs, 'options_mat': optmat})
 
         sp_run_fs[-1].create(thy_info[1:4])
         run_fs = autofile.fs.run(sp_run_path)
@@ -107,11 +107,9 @@ def run_energy(zma, geo, spc_info, thy_info,
             geo=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
-            errors=errs,
-            options_mat=optmat,
             overwrite=overwrite,
             retryfail=retryfail,
-            **kwargs,
+            **_kwargs,
         )
 
         if success:

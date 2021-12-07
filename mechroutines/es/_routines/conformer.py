@@ -332,7 +332,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
             method = inf_obj.method
             ene = elstruct.reader.energy(prog, method, out_str)
             geo = elstruct.reader.opt_geometry(prog, out_str)
-            zma = elstruct.reader.opt_zmatrix(prog, out_str)
+            # zma = elstruct.reader.opt_zmatrix(prog, out_str)
             saved_locs, saved_geos, saved_enes = _saved_cnf_info(
                 cnf_save_fs, mod_thy_info)
 
@@ -366,7 +366,8 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     cnf_save_fs[0].file.info.write(rinf)
                     cnf_save_fs[1].file.info.write(cinf, [locs[0]])
                     filesys.save.conformer(
-                        ret, None, cnf_save_fs, mod_thy_info[1:], zrxn=zrxn,
+                        ret, None, cnf_save_fs, mod_thy_info[1:],
+                        zrxn=zrxn, init_zma=zma,
                         rng_locs=(locs[0],), tors_locs=(locs[1],))
                     saved_geos.append(geo)
                     saved_enes.append(ene)
@@ -857,13 +858,16 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
             inp_str = inp_str.replace('=', '')
             inf_obj = cnf_fs[-1].file.geometry_info.read(locs)
             prog = inf_obj.prog
-            inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-            if automol.zmat.almost_equal(inp_zma, zma,
-                                         dist_rtol=0.018, ang_atol=.2):
-                info_message(
-                    'This conformer was already run in {cnf_path}.')
-                running = True
-                break
+            try:
+                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                if automol.zmat.almost_equal(inp_zma, zma,
+                                             dist_rtol=0.018, ang_atol=.2):
+                    info_message(
+                        'This conformer was already run in {cnf_path}.')
+                    running = True
+                    break
+            except:
+                info_message(f'Program {prog} lacks inp ZMA reader for check')
     return running
 
 

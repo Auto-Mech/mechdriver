@@ -169,7 +169,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
 
     if es_keyword_dct.get('var_splvl1', None) is not None:
 
-        vsp1_method_dct = thy_dct.get(es_keyword_dct['var_scnlvl1'])
+        vsp1_method_dct = thy_dct.get(es_keyword_dct['var_splvl1'])
         vsp1lvl_thy_info = tinfo.from_dct(vsp1_method_dct)
         mod_vsp1lvl_thy_info = tinfo.modify_orb_label(
             vsp1lvl_thy_info, ts_info)
@@ -183,7 +183,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
 
     if es_keyword_dct.get('var_splvl2', None) is not None:
 
-        vsp2_method_dct = thy_dct.get(es_keyword_dct['var_scnlvl2'])
+        vsp2_method_dct = thy_dct.get(es_keyword_dct['var_splvl2'])
         vsp2lvl_thy_info = tinfo.from_dct(vsp2_method_dct)
         mod_vsp2lvl_thy_info = tinfo.modify_orb_label(
             vsp2lvl_thy_info, ts_info)
@@ -196,9 +196,9 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 aspace, mod_vsp2lvl_thy_info, rxn_info=rxn_info)
 
     # Get the conformer filesys for the reactants
-    _rcts_cnf_fs = rcts_cnf_fs(rct_info, thy_info, run_prefix, save_prefix)
-    # _rcts_cnf_fs = rcts_cnf_fs(
-    #     rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
+    _rcts_cnf_fs = rcts_cnf_fs(rct_info, ini_thy_info, run_prefix, save_prefix)
+    if _rcts_cnf_fs is None:
+        _rcts_cnf_fs = rcts_cnf_fs(rct_info, thy_info, run_prefix, save_prefix)
 
     thy_inf_dct = {
         'inplvl': ini_thy_info,
@@ -214,7 +214,8 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'hs_var_scnlvl': hs_vscnlvl_thy_info,
         'hs_var_splvl1': hs_vsp1lvl_thy_info,
         'hs_var_splvl2': hs_vsp2lvl_thy_info,
-        'hs_runlvl': hs_thy_info
+        'hs_runlvl': hs_thy_info,
+        'rct_info': rct_info
     }
 
     thy_method_dct = {

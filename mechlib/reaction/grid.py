@@ -8,7 +8,7 @@ import autofile
 # Main callable function
 def grid_maximum_zmatrices(typ, ts_zma, scan_grids, scan_names, scn_save_fs,
                            mod_thy_info, constraint_dct,
-                           series='max', include_endpts=True):
+                           series='sadpt-maxima', include_endpts=True):
     """ Parses grid(s) of points run along a reaction
         coordinates for the maxima to be able to return guess Z-Matrices
         used in subsequent saddle point optimizations.
@@ -50,7 +50,7 @@ def grid_maximum_zmatrices(typ, ts_zma, scan_grids, scan_names, scn_save_fs,
 # Max Finder Functions
 def _find_max_1d(typ, grid, ts_zma, scan_name,
                  mod_thy_info, scn_save_fs, constraint_dct,
-                 series='max', include_endpts=True):
+                 series='sadpt-maxima', include_endpts=True):
     """ Parses a one-dimensional grid of points run along a reaction
         coordinates for the maxima to be able to return guess Z-Matrices
         used in subsequent saddle point optimizations.
@@ -86,19 +86,18 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
         grid, scan_name, scn_save_fs,
         mod_thy_info, constraint_dct)
 
-    # Get the index where the max energy is found
-    max_idx = automol.pot.find_max1d(
-        enes_lst, max_type='global', include_endpts=include_endpts)
+    # Grab the maxima based on what is desired
+    if series == 'sadpt-maxima':
 
-    if max_idx is not None:
-        print(f'Found maximum at {locs_lst[max_idx]}')
+        # Get the index where the max energy is found
+        max_idx = automol.pot.find_max1d(
+            enes_lst, 'sadpt-global', include_endpts=include_endpts)
 
-        # Build a series of Z-Matrices based on what series is requested
-        max_zmas = ()
-        if series == 'max':
+        if max_idx is not None:
+            print(f'Found maximum at {locs_lst[max_idx]}')
+
             # Get zma at maximum
-            max_zma = scn_save_fs[-1].file.zmatrix.read(locs_lst[max_idx])
-            max_zmas += (max_zma,)
+            max_zmas = (scn_save_fs[-1].file.zmatrix.read(locs_lst[max_idx]),)
 
             # Add second guess zma for migrations:
             # ZMA = original guess zma with val of scan coord at max
@@ -107,14 +106,20 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
                 mig_zma = automol.zmat.set_values_by_name(
                     ts_zma, {scan_name: max_grid_val})
                 max_zmas += (mig_zma,)
-        elif series == 'max-n1':
-            for idx in range(max_idx+1):
-                max_zmas += (scn_save_fs[-1].file.zmatrix.read(locs_lst[idx]),)
-            # Flip list to proceed from max(R) in decreasing order
-            max_zmas = max_zmas[::-1]
-    else:
-        print('No maxima found along the potential')
-        max_zmas = None
+        else:
+            print('No maxima found along the potential')
+            max_zmas = None
+
+    elif series == 'full-n1':
+
+        # Get the index where the max energy is found
+        max_idx = automol.pot.find_max1d(
+            enes_lst, 'full-global', include_endpts=include_endpts)
+
+        # idxs and flip list to proceed from max(R) in decreasing order
+        max_zmas = tuple(scn_save_fs[-1].file.zmatrix.read(locs_lst[idx])
+                         for idx in range(max_idx+1))
+        max_zmas = max_zmas[::-1]
 
     return max_zmas
 
@@ -178,13 +183,9 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
         # Search for the maximum along each idx (coord) to find the max
         # that precludes the endpts (maybe we just find the innermost?)
         max_idx = automol.pot.find_max1d(
-           enes, max_type='innermost', include_endpts=True)
+           enes, 'sadpt-innermost', include_endpts=True)
         max_ene = enes[max_idx]
         max_loc = locs_lst_lst[idx_j][max_idx]
-        # for idx_i, ene in enumerate(enes):
-        #     if ene > max_ene:
-        #         max_ene = ene
-        #         max_loc = locs_lst_lst[idx_j][idx_i]
         max_enes.append(max_ene)
         max_locs.append(max_loc)
 
@@ -195,28 +196,9 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
             min_ene = ene
             locs = max_locs[idx_j]
 
-    print('locs lst')
-    for idx_j, _locs in enumerate(locs_lst_lst):
-        print(idx_j, _locs)
-    print('enes lst')
-    for idx_j, enes in enumerate(enes_lst):
-        print(idx_j, enes)
-
-    print('max enes')
-    for idx_j, ene in enumerate(max_enes):
-        print(ene)
-
     # Use the max locs to determine the max_zma, ret as tuple
     max_locs = locs
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
-
-    print('max locs')
-    print(max_locs)
-
-    max_geo = automol.zmat.geometry(max_zma)
-    max_geo_str = automol.geom.string(max_geo)
-    print('guess')
-    print(max_geo_str)
 
     return (max_zma,)
 
@@ -242,6 +224,13 @@ def _grid_vals(grid, scan_name, scn_save_fs,
     locs_lst = []
     enes_lst = []
 
+    print('enes lst test')
+    print(grid)
+    print(scan_name)
+    print(scn_save_fs)
+    print(mod_thy_info)
+    print(constraint_dct)
+
     # Build the lists of all the locs for the grid
     grid_locs = []
     for grid_val_i in grid:
@@ -252,6 +241,7 @@ def _grid_vals(grid, scan_name, scn_save_fs,
 
     # Get the energies along the grid
     for locs in grid_locs:
+        print(scn_save_fs[-1].path(locs))
         if scn_save_fs[-1].exists(locs):
             scn_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_path)

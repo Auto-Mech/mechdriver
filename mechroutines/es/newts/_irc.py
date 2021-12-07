@@ -210,6 +210,11 @@ def launch_point_zmatrices(ts_dct, mod_thy_info,
 
         irc_zmas = rxngrid.grid_maximum_zmatrices(
             zrxn.class_, zma, coord_grids, coord_names, scn_save_fs,
-            mod_thy_info, constraint_dct, series='max-n1')
+            mod_thy_info, constraint_dct, series='full-n1')
+
+    print('irc zmas', irc_zmas)
+
+    import sys
+    sys.exit()
 
     return irc_zmas

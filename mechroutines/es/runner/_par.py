@@ -148,10 +148,6 @@ def _molpro(method_dct, prog, job=None):
         nprocs = nprocs if nprocs is not None else 4
         memory = memory if memory is not None else 20
 
-    print('method test')
-    print(method)
-    print(method_dct)
-    print('---')
     # Build the script string
     if method in ('caspt2c', 'caspt2i'):
         script_str = SCRIPT_DCT[prog+'_mppx'].format(nprocs)
