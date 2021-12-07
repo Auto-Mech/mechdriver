@@ -8,15 +8,19 @@ import automol
 from . import _seq as optseq
 
 
+BASE_ERRS = (elstruct.Error.SCF_NOCONV,
+             elstruct.Error.MCSCF_NOCONV,
+             elstruct.Error.CC_NOCONV,
+             elstruct.Error.LIN_DEP_BASIS)
 JOB_ERROR_DCT = {
-    elstruct.Job.ENERGY: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.GRADIENT: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.HESSIAN: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.VPT2: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.MOLPROP: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.OPTIMIZATION: elstruct.Error.OPT_NOCONV,
-    elstruct.Job.IRCF: elstruct.Error.IRC_NOCONV,
-    elstruct.Job.IRCR: elstruct.Error.IRC_NOCONV,
+    elstruct.Job.ENERGY: BASE_ERRS,
+    elstruct.Job.GRADIENT: BASE_ERRS,
+    elstruct.Job.HESSIAN: BASE_ERRS,
+    elstruct.Job.VPT2: BASE_ERRS,
+    elstruct.Job.MOLPROP: BASE_ERRS,
+    elstruct.Job.OPTIMIZATION: BASE_ERRS+(elstruct.Error.OPT_NOCONV,),
+    elstruct.Job.IRCF: BASE_ERRS+(elstruct.Error.IRC_NOCONV,),
+    elstruct.Job.IRCR: BASE_ERRS+(elstruct.Error.IRC_NOCONV,)
 }
 
 JOB_SUCCESS_DCT = {
@@ -239,17 +243,20 @@ def is_successful_output(out_str, job, prog):
 
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT
-    error = JOB_ERROR_DCT[job]
+    errors = JOB_ERROR_DCT[job]
     success = JOB_SUCCESS_DCT[job]
 
     ret = False
     if elstruct.reader.has_normal_exit_message(prog, out_str):
-        conv = elstruct.reader.check_convergence_messages(
-            prog, error, success, out_str)
+        for error in errors:
+            conv = elstruct.reader.check_convergence_messages(
+                prog, error, success, out_str)
         if conv:
             ret = True
         else:
             print(" - Output has an error message. Skipping...")
+    else:
+        print(' - Output does not contain normal exit message. Skipping...')
 
     return ret
 
