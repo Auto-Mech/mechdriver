@@ -4,7 +4,7 @@
 import autofile
 import elstruct
 import automol
-# from mechanalyzer.inf import rxn as rinfo
+from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
@@ -91,9 +91,6 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
     var_sp1_method_dct = thy_method_dct['var_splvl1']
     var_sp2_method_dct = thy_method_dct['var_splvl2']
 
-    print('v1 dct', var_sp1_method_dct)
-    print('v2 dct', var_sp2_method_dct)
-
     # Get the filesys stuff
     rcts_cnf_fs = savefs_dct['rcts_cnf']
     vscnlvl_scn_run_fs = runfs_dct['vscnlvl_scn']
@@ -106,20 +103,17 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
            automol.par.is_low_spin(rxn_class))
     if var:
         ts_zma, zrxn = ts_dct['zma'], ts_dct['zrxn']
-        # rxn_info = ts_dct['rxn_info']
-        # aspace = ts_dct['active']
+        rxn_info = ts_dct['rxn_info']
 
-        # ts_info = rinfo.ts_info(rxn_info)
-        hs_ts_info = thy_inf_dct['hs_var_scnlvl']
-        # mod_thy_info = thy_inf_dct['mod_vscnlvl_thy_info']
+        ts_info = rinfo.ts_info(rxn_info)
+        high_mult = rinfo.ts_mult(rxn_info, rxn_mul='high')
+        hs_ts_info = (ts_info[0], ts_info[1], high_mult)
 
         # Build grid and names appropriate for reaction type
-        names, _, grids, _ = automol.reac.build_scan_info(zrxn, ts_zma)
-        far_locs = [[names[0]], [grids[0]]]
+        names, _, grids, _ = automol.reac.build_scan_info(
+            zrxn, ts_zma, var=var)
+        inf_locs = (names, (grids[0][0],))
 
-        # cas_kwargs = es_runner.multireference_calculation_parameters(
-        #     ts_zma, ts_info, hs_ts_info, rxn_info,
-        #     aspace, mod_thy_info)
         cas_kwargs = mref_params['var_scnlvl']
 
         _inf_sep_ene = _multiref_inf_sep_ene(
@@ -128,7 +122,7 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
             var_sp1_thy_info, var_sp2_thy_info,
             hs_var_sp1_thy_info, hs_var_sp2_thy_info,
             var_sp1_method_dct, var_sp2_method_dct,
-            vscnlvl_scn_run_fs, vscnlvl_scn_save_fs, far_locs,
+            vscnlvl_scn_run_fs, vscnlvl_scn_save_fs, inf_locs,
             overwrite=overwrite,
             **cas_kwargs)
     else:
@@ -191,7 +185,6 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
                 " - Running high-spin multi reference energy ...")
 
         # Calculate the single point energy
-        print('meth dct test', meth_dct)
         script_str, kwargs = qchem_params(meth_dct)
         cas_kwargs.update(kwargs)
 

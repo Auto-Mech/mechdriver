@@ -8,7 +8,7 @@ import varecof_io
 import elstruct
 import autorun
 from mechanalyzer.inf import rxn as rinfo
-from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io.printer import info_message, warning_message
 from mechlib import filesys
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
@@ -26,10 +26,10 @@ def calc_vrctst_flux(ts_dct,
 
     # Build VRC-TST stuff
     vrc_fs = runfs_dct['vrctst']
-    print('vrc_fs test\n', vrc_fs)
+    vrc_path = vrc_fs[-1].create((0,))
     vrc_path = vrc_fs[-1].path((0,))
     vrc_dct = autorun.varecof.VRC_DCT  # need code to input one
-    machine_dct = {}  # how to do this when on a node
+    machine_dct = {'bxxx': 10}  # how to do this when on a node
 
     # Get a bunch of info that describes the grid
     scan_inf_dct = _scan_inf_dct(ts_dct, savefs_dct)
@@ -46,7 +46,7 @@ def calc_vrctst_flux(ts_dct,
     inp_strs = autorun.varecof.write_input(
         vrc_path,
         zma_for_inp, scan_inf_dct['rct_zmas'],
-        npot, scan_inf_dct['rxn_frm_keys'],
+        npot, scan_inf_dct['rxn_bond_keys'],
         machine_dct, vrc_dct)
 
     rxn_info = ts_dct['rxn_info']
@@ -56,7 +56,7 @@ def calc_vrctst_flux(ts_dct,
     molp_tmpl_str = varecof_io.writer.molpro_template(
         ts_info, mod_var_sp1_thy_info, inf_sep_ene, cas_kwargs)
 
-    inp_strs += (('', molp_tmpl_str),)
+    inp_strs.update({'mol.tml': molp_tmpl_str})
 
     # Run VaReCoF to generate flux file
     flux_str = autorun.varecof.flux_file(
@@ -98,12 +98,13 @@ def _scan_inf_dct(ts_dct, savefs_dct):
 
     # Get indices for potentials and input
     frm_bnd_key, = automol.graph.ts.forming_bond_keys(zrxn.forward_ts_graph)
-    print('class test', zrxn.class_)
-    print('coord grids test', coord_grids)
 
     # Set up zma for the scan
     inf_sep_zma = automol.zmat.set_values_by_name(
         ts_zma, {coord_names[0]: coord_grids[0][0]}, angstrom=False)
+
+    # set up grid
+    full_grid = tuple(sorted(list(coord_grids[0]) + list(coord_grids[1][1:])))
 
     return {
         'coord_names': coord_names,
@@ -111,9 +112,11 @@ def _scan_inf_dct(ts_dct, savefs_dct):
         'inf_sep_zma': inf_sep_zma,
         'grid_val_for_zma': coord_grids[0][-1],
         'inf_locs': (coord_names, (coord_grids[0][0],)),
+        'full_grid': full_grid,
         'update_guess': update_guess,
         'constraint_dct': constraint_dct,
-        'rxn_bond_keys': (min(frm_bnd_key), max(frm_bnd_key))
+        'rxn_bond_keys': (min(frm_bnd_key), max(frm_bnd_key)),
+        'rct_zmas': rct_zmas
     }
 
 
@@ -145,7 +148,7 @@ def _build_correction_potential(ts_dct, scan_inf_dct,
     # Build correction potential .so file used by VaReCoF
     autorun.varecof.compile_potentials(
         vrc_path, scan_inf_dct['full_grid'], potentials,
-        scan_inf_dct['rxn_bond_idxs'], vrc_dct['fortran_compiler'],
+        scan_inf_dct['rxn_bond_keys'], vrc_dct['fortran_compiler'],
         dist_restrict_idxs=(),
         pot_labels=pot_labels,
         pot_file_names=[vrc_dct['spc_name']],
@@ -172,6 +175,7 @@ def _run_potentials(ts_info, scan_inf_dct,
     scn_save_fs = savefs_dct['vscnlvl_scn']
     cscn_run_fs = runfs_dct['vscnlvl_cscn']
     cscn_save_fs = savefs_dct['vscnlvl_cscn']
+    sp_scn_save_fs = savefs_dct['vscnlvl_scn']
     sp_thy_info = thy_inf_dct['mod_var_splvl1']
 
     opt_script_str, opt_kwargs = qchem_params(
@@ -189,15 +193,14 @@ def _run_potentials(ts_info, scan_inf_dct,
         if constraints is None:
             _run_fs = scn_run_fs
             _save_fs = scn_save_fs
-            ioprinter.info_message('Running full scans..', newline=1)
+            info_message('Running full scans..', newline=1)
         else:
             _run_fs = cscn_run_fs
             _save_fs = cscn_save_fs
-            ioprinter.info_message('Running constrained scans..', newline=1)
+            info_message('Running constrained scans..', newline=1)
 
         # Loop over grids (both should start at same point and go in and out)
         for grid in scan_inf_dct['coord_grids']:
-            print('grid test', grid)
             scan.execute_scan(
                 zma=scan_inf_dct['inf_sep_zma'],
                 spc_info=ts_info,
@@ -218,13 +221,17 @@ def _run_potentials(ts_info, scan_inf_dct,
             )
 
     # Run the single points on top of the initial, full scan
+    print('has sp_thy_info test', sp_thy_info)
     if sp_thy_info is not None:
-        for locs in scn_save_fs[-1].existing(scan_inf_dct['coord_names']):
+        print('scan names', scan_inf_dct['coord_names'])
+        print('exist', scn_save_fs[-1])
+        print('exist', scn_save_fs[-1].existing(scan_inf_dct['coord_names']))
+        for locs in scn_save_fs[-1].existing((scan_inf_dct['coord_names'],)):
             scn_run_fs[-1].create(locs)
             geo = scn_save_fs[-1].file.geometry.read(locs)
             zma = scn_save_fs[-1].file.zmatrix.read(locs)
             sp.run_energy(zma, geo, ts_info, sp_thy_info,
-                          scn_run_fs, scn_save_fs, locs,
+                          scn_run_fs, scn_save_fs, locs, runfs_dct['prefix'],
                           sp_script_str, es_keyword_dct['overwrite'],
                           highspin=False, **sp_kwargs)
 
@@ -240,22 +247,21 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
     mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
     mod_var_sp1_thy_info = thy_inf_dct['mod_var_splvl1']
     coord_name = scan_inf_dct['coord_names'][0]
-    coord_grids = scan_inf_dct['coord_grids']
+    full_grid = scan_inf_dct['full_grid']
     constraint_dct = scan_inf_dct['constraint_dct']
     grid_val_for_zma = scan_inf_dct['grid_val_for_zma']
 
     # build objects for loops
     smp_pot, const_pot, sp_pot = [], [], []
     scans = (
-        (scn_save_fs, mod_var_scn_thy_info[1:4]),
-        (cscn_save_fs, mod_var_scn_thy_info[1:4])
+        (scn_save_fs, mod_var_scn_thy_info),
+        (cscn_save_fs, mod_var_scn_thy_info)
     )
     if mod_var_sp1_thy_info is not None:
-        scans += ((scn_save_fs, mod_var_sp1_thy_info[1:4]),)
+        scans += ((scn_save_fs, mod_var_sp1_thy_info),)
 
-    full_grid = (sorted(list(coord_grids[0]) + list(coord_grids[1][1:])),)
-    print('full_grid test\n', full_grid)
     for idx, (scn_fs, thy_info) in enumerate(scans):
+        print('thy info', thy_info)
         for grid_val in full_grid:
             if idx in (0, 2):
                 locs = [[coord_name], [grid_val]]
@@ -270,16 +276,21 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
                 const_pot.append(sp_ene)
             elif idx == 2:
                 sp_pot.append(sp_ene)
+    print('pots test')
+    print(smp_pot)
+    print(const_pot)
+    print(sp_pot)
 
     # Calculate each of the correction potentials
     relax_corr_pot, sp_corr_pot, full_corr_pot = [], [], []
     for i, _ in enumerate(smp_pot):
         relax_corr = (smp_pot[i] - const_pot[i]) * phycon.EH2KCAL
         relax_corr_pot.append(relax_corr)
-        if sp_pot:
+        if all(ene is not None for ene in sp_pot):
             sp_corr = (sp_pot[i] - smp_pot[i]) * phycon.EH2KCAL
             sp_corr_pot.append(sp_corr)
         else:
+            warning_message("No single point correction applied to potential")
             sp_corr = 0.0
         full_corr_pot.append(relax_corr + sp_corr)
 
