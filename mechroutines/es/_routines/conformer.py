@@ -858,13 +858,16 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
             inp_str = inp_str.replace('=', '')
             inf_obj = cnf_fs[-1].file.geometry_info.read(locs)
             prog = inf_obj.prog
-            inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-            if automol.zmat.almost_equal(inp_zma, zma,
-                                         dist_rtol=0.018, ang_atol=.2):
-                info_message(
-                    'This conformer was already run in {cnf_path}.')
-                running = True
-                break
+            try:
+                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                if automol.zmat.almost_equal(inp_zma, zma,
+                                             dist_rtol=0.018, ang_atol=.2):
+                    info_message(
+                        'This conformer was already run in {cnf_path}.')
+                    running = True
+                    break
+            except:
+                info_message(f'Program {prog} lacks inp ZMA reader for check')
     return running
 
 
