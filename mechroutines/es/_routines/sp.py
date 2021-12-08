@@ -22,7 +22,7 @@ from mechroutines.es.runner._par import qchem_params
 from mechroutines.es._routines.conformer import save_conformer
 
 
-_JSON_SAVE = ('TAU',)
+_JSON_SAVE = ('/TAU',)
 
 
 def run_energy(zma, geo, spc_info, thy_info,
@@ -300,6 +300,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
     if not is_atom:
 
         if _json_database(geo_save_path):
+            print('geo_save_path test:',geo_save_path)
             exists = geo_save_fs[-1].json.hessian.exists(locs)
         else:
             exists = geo_save_fs[-1].file.hessian.exists(locs)
