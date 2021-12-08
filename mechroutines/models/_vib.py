@@ -217,6 +217,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
 
     fml_str = automol.geom.formula_string(harm_geo)
     vib_path = job_path(prefix, 'PROJROT', 'FREQ', fml_str, print_path=True)
+    # print('proj test:', vib_path)
     # tors_path = job_path(run_pfx, 'MESS', 'TORS', fml_str, print_path=True)
     mess_script_str = autorun.SCRIPT_DCT['messpf']
     projrot_script_str = autorun.SCRIPT_DCT['projrot']
