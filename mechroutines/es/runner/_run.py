@@ -206,13 +206,11 @@ def read_job(job, run_fs):
         :rtype: (bool, (autofile.info_object object???, str, str))
     """
 
-    if not run_fs[-1].file.output.exists([job]):
-        print(" - No output file found. Skipping...")
-        success = False
-        ret = None
-    else:
-        assert run_fs[-1].file.info.exists([job])
-        assert run_fs[-1].file.input.exists([job])
+    inf_exists = run_fs[-1].file.info.exists([job])
+    inp_exists = run_fs[-1].file.input.exists([job])
+    out_exists = run_fs[-1].file.output.exists([job])
+
+    if inf_exists and inp_exists and out_exists:
         inf_obj = run_fs[-1].file.info.read([job])
         inp_str = run_fs[-1].file.input.read([job])
         out_str = run_fs[-1].file.output.read([job])
@@ -222,6 +220,16 @@ def read_job(job, run_fs):
         success = bool(is_successful_output(out_str, job, prog))
         if success:
             print(" - Reading successful output...")
+    else:
+        if not out_exists:
+            print(" - No output file found.")
+        if not inp_exists:
+            print(" - No input file found.")
+        if not inf_exists:
+            print(" - No info file found.")
+        print("Skipping...")
+        success = False
+        ret = None
 
     return success, ret
 
