@@ -124,7 +124,7 @@ def run_backsteps(
     job = _set_job(scn_typ)
     mixed_grid_vals_lst = automol.pot.coords(coord_grids)
     # Hold off on backsteps while original scan is running
-    if _rotor_is_running(
+    if _scan_is_running(
             mixed_grid_vals_lst, coord_names, constraint_dct, scn_run_fs, job):
         ioprinter.info_message(
             f'Rotor {coord_names} is currently running, wait to backstep')
@@ -277,7 +277,7 @@ def run_backsteps(
                 break
 
 
-def _rotor_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):
+def _scan_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):
     """ Is the rotor you requested currently being progressed on?
     """
     rotor_is_running = False
@@ -292,7 +292,8 @@ def _rotor_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):
                 if inf_obj.status == autofile.schema.RunStatus.RUNNING:
                     rotor_is_running = True
                     ioprinter.info_message(
-                        'rotor is running at ', coord_names, locs)
+                        'scan job is currently running at ',
+                        coord_names, locs)
                     break
         # else:
         #            break
@@ -337,7 +338,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
     # Set the job
     job = _set_job(scn_typ)
 
-    if not _rotor_is_running(
+    if not _scan_is_running(
             grid_vals, coord_names, constraint_dct, scn_run_fs, job):
         # Read the energies and Hessians from the filesystem
         for vals in grid_vals:

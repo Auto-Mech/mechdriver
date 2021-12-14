@@ -4,6 +4,7 @@ Write and Read MESS files for Rates
 
 import importlib
 import copy
+import ioformat
 import automol
 import mess_io
 from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
@@ -187,8 +188,9 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         full_ts_str += ts_str
         full_dat_str_dct.update(dat_str_dct)
 
-    # Combine all the reaction channel strings
+    # Combine all the reaction channel strings; remove empty lines
     rxn_chan_str = '\n'.join([full_well_str, full_bi_str, full_ts_str])
+    rxn_chan_str = ioformat.remove_empty_lines(rxn_chan_str)
 
     return rxn_chan_str, full_dat_str_dct, hot_enes_dct
 
@@ -260,11 +262,6 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
 
         aux_labels = tuple(automol.inchi.smiles(spc_dct[name]['inchi'])
                            for name in rgt_names)
-
-        print('mess label test:')
-        print(spc_labels)
-        print(aux_labels)
-        print(label_dct)
 
         # spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
         #              for name in rgt_names]
@@ -371,7 +368,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
     full_dat_dct.update(ts_dat_dct)
 
     return (
-        (well_str.rstrip(), bi_str.rstrip(), ts_str),
+        (well_str, bi_str, ts_str),
         full_dat_dct,
         written_labels
     )

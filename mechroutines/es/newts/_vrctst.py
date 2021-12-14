@@ -56,7 +56,7 @@ def calc_vrctst_flux(ts_dct,
     molp_tmpl_str = varecof_io.writer.molpro_template(
         ts_info, mod_var_sp1_thy_info, inf_sep_ene, cas_kwargs)
 
-    inp_strs.update({'mol.tml': molp_tmpl_str})
+    inp_strs.update({'run.tml': molp_tmpl_str})
 
     # Run VaReCoF to generate flux file
     flux_str = autorun.varecof.flux_file(
@@ -184,7 +184,7 @@ def _run_potentials(ts_info, scan_inf_dct,
     opt_kwargs.update(cas_kwargs)
 
     sp_script_str, sp_kwargs = qchem_params(
-        thy_method_dct['var_splvl1'], elstruct.Job.OPTIMIZATION)
+        thy_method_dct['var_splvl1'])
     sp_cas_kwargs = mref_params['var_splvl1']
     sp_kwargs.update(sp_cas_kwargs)
 
