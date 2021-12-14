@@ -49,9 +49,9 @@ def _gaussian(method_dct, prog, job=None):
     """
 
     # Set the options
-    nprocs = method_dct.get('nprocs', 10)
+    nprocs = method_dct.get('nprocs', 9)
     memory = method_dct.get('mem', 20)
-    nprocs = nprocs if nprocs is not None else 10
+    nprocs = nprocs if nprocs is not None else 9
     memory = memory if memory is not None else 20
 
     method = method_dct.get('method')
