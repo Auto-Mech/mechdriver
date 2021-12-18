@@ -224,13 +224,6 @@ def _grid_vals(grid, scan_name, scn_save_fs,
     locs_lst = []
     enes_lst = []
 
-    print('enes lst test')
-    print(grid)
-    print(scan_name)
-    print(scn_save_fs)
-    print(mod_thy_info)
-    print(constraint_dct)
-
     # Build the lists of all the locs for the grid
     grid_locs = []
     for grid_val_i in grid:

@@ -681,6 +681,9 @@ def collect_rrho_params(cnf_save_fs, locs, sp_info, freq_info, mod_thy_info):
     sp_fs = autofile.fs.single_point(cnf_path)
     if cnf_save_fs[-1].file.geometry.exists(locs):
         geo = cnf_save_fs[-1].file.geometry.read(locs)
+        print('freq_info test')
+        print('freq_info', freq_info)
+        print('mod thy info', mod_thy_info)
         if freq_info is None or freq_info == mod_thy_info:
             freq_fs = cnf_save_fs
             freq_locs = locs
