@@ -220,7 +220,7 @@ def enthalpy_calculation(
                     _, ene_basis_trs = basis_energy(
                         spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
                         spc_mod_dct_i,
-                        run_prefix, save_prefix)
+                        run_prefix, save_prefix, read_species=False)
                     for spc_basis_i, ene_basis_i in zip(
                             spc_basis_trs, ene_basis_trs):
                         chn_basis_ene_dct[spc_basis_i] = ene_basis_i
