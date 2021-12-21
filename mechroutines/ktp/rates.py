@@ -125,20 +125,24 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
 
     ioprinter.messpf('channel_section')
 
-    # Initialize empty MESS strings
+    # Initialize data carrying objects and empty MESS strings
+    basis_energy_dct = {}
+    basis_energy_dct[spc_model] = {}
+
     full_well_str, full_bi_str, full_ts_str = '', '', ''
     full_dat_str_dct = {}
 
     # Set the energy and model for the first reference species
     ioprinter.info_message('\nCalculating reference energy for PES')
-    ref_ene = set_reference_ene(
-        rxn_lst, spc_dct,
-        pes_model_dct_i, spc_model_dct_i,
+    ref_ene, model_basis_energy_dct = set_reference_ene(
+        rxn_lst, spc_dct, tsk_key_dct,
+        basis_energy_dct[spc_model],
+        thy_dct, pes_model_dct_i, spc_model_dct_i,
         run_prefix, save_prefix, ref_idx=0)
+    basis_energy_dct[spc_model].update(model_basis_energy_dct)
 
     # Loop over all the channels and write the MESS strings
     written_labels = []
-    basis_energy_dct = {}
     for rxn in rxn_lst:
 
         chnl_idx, (reacs, prods) = rxn
@@ -150,10 +154,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         # Get the names for all of the configurations of the TS
         tsname = base_tsname(pes_idx, chnl_idx)
         tsname_allconfigs = tsnames_in_dct(pes_idx, chnl_idx, spc_dct)
-
-        # Obtain all of the species data
-        if spc_model not in basis_energy_dct:
-            basis_energy_dct[spc_model] = {}
 
         # Pass in full ts class
         chnl_infs, chn_basis_ene_dct = get_channel_data(
