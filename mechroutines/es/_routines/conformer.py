@@ -566,25 +566,33 @@ def ring_conformer_sampling(
 
     # Make sample zmas
     unique_geos, unique_frag_geos, unique_zmas = [], [], []
+    print('tors_dcts test\n', tors_dcts)
     for ring_atoms, samp_range_dct in tors_dcts:
         ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
         dist_value_dct = automol.zmat.ring_distances(zma, ring_atoms)
         nsamp = _num_samp_zmas(ring_atoms, nsamp_par)
         samp_zmas = automol.zmat.samples(zma, nsamp, samp_range_dct)
+        print('samp zma num test\n', len(samp_zmas))
         for samp_zma in samp_zmas:
+            print(' - loop check')
             if automol.zmat.ring_distances_reasonable(
                     samp_zma, ring_atoms, dist_value_dct):
+                print('    - reasonable check 1')
                 samp_geo = automol.zmat.geometry(samp_zma)
                 frag_samp_geo = automol.geom.ring_fragments_geometry(
                     samp_geo, rings_atoms, ngbs)
                 if automol.geom.ring_angles_reasonable(samp_geo, ring_atoms):
+                    print('   - reasonable check 2')
                     if not automol.pot.low_repulsion_struct(geo, samp_geo):
+                        print('   - reasonable check 3')
                         frag_samp_unique = automol.geom.is_unique(
                             frag_samp_geo, frag_saved_geos, check_dct)
                         samp_unique = automol.geom.is_unique(
                             frag_samp_geo, unique_frag_geos, check_dct)
                         if frag_samp_unique:
+                            print('   - reasonable check 4')
                             if samp_unique:
+                                print('   - reasonable check 5')
                                 unique_zmas.append(samp_zma)
                                 unique_geos.append(samp_geo)
                                 unique_frag_geos.append(frag_samp_geo)

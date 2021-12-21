@@ -139,7 +139,12 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
         assume that the rate_paths_dct will come in with all PESs in group
     """
 
-    tot_fml = '_'.join((pes_inf[0] for pes_inf in pes_grp_rlst.keys()))
+    # Combine all PESs into a string for writing the CKIN file
+    pes_strs = ()
+    for pes_inf in pes_grp_rlst.keys():
+        _inf = (pes_inf[0], str(pes_inf[1]+1), str(pes_inf[2]+1))
+        pes_strs += ('_'.join(_inf),)
+    tot_fml = '-'.join(pes_strs)
 
     # Get the model
     pes_mod = tsk_key_dct['kin_model']

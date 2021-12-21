@@ -76,12 +76,17 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
     """
 
     # Check the save filesystem for the reactant and product geometries
-    rct_geos, prd_geos = reagent_geometries(rxn_info, thy_info, save_prefix)
+    rct_geos, prd_geos, rct_paths, prd_paths = reagent_geometries(
+        rxn_info, thy_info, save_prefix)
 
     # Identify reactants and products from geoms or InChIs, depending
     # We automatically assess and add stereo to the reaction object, as needed
     if any(rct_geos) and any(prd_geos):
         print('    Reaction ID from geometries from SAVE filesys')
+        for i, path in enumerate(rct_paths):
+            print(f'     - reactant {i+1}: {path}')
+        for i, path in enumerate(prd_paths):
+            print(f'     - product {i+1}: {path}')
         zrxn_objs = automol.reac.rxn_objs_from_geometry(
             rct_geos, prd_geos, indexing='zma', stereo=True)
     else:
@@ -193,27 +198,22 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
 
     # If min cnfs found for all rcts and prds, read the geometries
     rct_geos, prd_geos = (), ()
+    rct_paths, prd_paths = (), ()
     if (
         _rcts_cnf_fs.count(None) == 0 and _prds_cnf_fs.count(None) == 0
     ):
         for (_, cnf_save_fs, min_locs, _) in _rcts_cnf_fs:
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
-            print('rct geo path',
-                  cnf_save_fs[-1].file.geometry.path(min_locs))
+            path = cnf_save_fs[-1].file.geometry.path(min_locs)
             rct_geos += (geo,)
-            # for x in rct_geos:
-            #     print(automol.geom.string(x))
-            #     print('---')
+            rct_paths += (path,)
         for (_, cnf_save_fs, min_locs, _) in _prds_cnf_fs:
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
-            print('prd geo path',
-                  cnf_save_fs[-1].file.geometry.path(min_locs))
+            path = cnf_save_fs[-1].file.geometry.path(min_locs)
             prd_geos += (geo,)
-            # for x in prd_geos:
-            #     print(automol.geom.string(x))
-            #     print('---')
+            prd_paths += (path,)
 
-    return rct_geos, prd_geos
+    return rct_geos, prd_geos, rct_paths, prd_paths
 
 
 def assess_rxn_ene(reacs, prods, rxn_info,

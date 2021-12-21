@@ -215,7 +215,6 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
         rxn_ktp_dct.update(
             mess_io.reader.rates.get_rxn_ktp_dct(
                 mess_str,
-                label_dct=None,
                 filter_kts=True,
                 tmin=min(temps),
                 tmax=max(temps),
