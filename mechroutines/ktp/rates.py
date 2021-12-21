@@ -570,6 +570,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
     # Get the data for conformer sorting for reading the filesystem
     cnf_range = tsk_key_dct['cnf_range']
     sort_info_lst = filesys.mincnf.sort_info_lst(tsk_key_dct['sort'], thy_dct)
+    print('sort_info list test:',sort_info_lst, tsk_key_dct['sort'], thy_dct)
 
     # Determine the MESS data for the reactants and products
     # Gather data or set fake information for dummy reactants/products
@@ -581,6 +582,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
                 run_prefix, save_prefix, saddle=False,
                 cnf_range=cnf_range, sort_info_lst=sort_info_lst,
                 name=rgt)
+            print('spc_locs_lst test:', spc_locs_lst)
             chnl_infs_i, model_basis_energy_dct = build.read_spc_data(
                 spc_dct, rgt,
                 pes_model_dct_i, spc_model_dct_i,

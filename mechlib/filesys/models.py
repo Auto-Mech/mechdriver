@@ -221,6 +221,7 @@ def get_spc_locs_lst(
             run_prefix, save_prefix, saddle=saddle, name=name)
 
         hbond_cutoffs = spc_dct_i['hbond_cutoffs']
+        print('mod_info_lst test:', mod_info_lst)
         min_locs_lst, _ = conformer_locators(
             cnf_save_fs, levelp, cnf_range=cnf_range,
             sort_info_lst=mod_info_lst, print_enes=True,
