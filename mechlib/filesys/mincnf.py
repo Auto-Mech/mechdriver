@@ -180,7 +180,7 @@ def _sorted_cnf_lsts(
         The conformers are sorted such that the energies are sorted
         in ascedning order.
 
-    `    :param cnf_locs_lst:
+        :param cnf_locs_lst:
         :type cnf_locs_lst: tuple(tuple(tuple(str),tuple(str)))
         :param cnf_save_fs: CONF object with save filesys prefix
         :type cnf_save_fs: autofile.fs.conformer obj
@@ -235,7 +235,7 @@ def _sorted_cnf_lsts(
     else:
         cnf_locs_lst, cnf_enes_lst = [], []
 
-    # print('sort test:', cnf_locs_lst, cnf_enes_lst)
+    print('sort test:', cnf_locs_lst, cnf_enes_lst)
 
     return cnf_locs_lst, cnf_enes_lst
 

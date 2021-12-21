@@ -137,6 +137,7 @@ def obtain_multipes_rxn_ktp_dct(rate_paths_dct, pes_param_dct,
         rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
             mess_str,
             filter_kts=True,
+            read_rev=False,
             tmin=min(pes_mod_dct[pes_mod]['rate_temps']),
             tmax=max(pes_mod_dct[pes_mod]['rate_temps']),
             pmin=min(pes_mod_dct[pes_mod]['pressures']),

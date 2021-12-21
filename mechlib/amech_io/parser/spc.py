@@ -318,7 +318,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
-    print(f'  Preparing for reaction {rct_str} = {prd_str}')
+    print(f'\n  Preparing for reaction {rct_str} = {prd_str}')
 
     # Set the reacs and prods for the desired direction
     reacs, prods = rxnid.set_reaction_direction(
