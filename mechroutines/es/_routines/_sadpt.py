@@ -310,6 +310,7 @@ def saddle_point_checker(imags):
         if len(imags) > 1:
             ioprinter.warning_message(
                 'More than one imaginary mode for geometry')
+            status = 'fail'
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
                 ioprinter.warning_message(
@@ -339,5 +340,8 @@ def saddle_point_checker(imags):
                 status = 'failure'
         elif big_imag == 1:
             status = 'success'
+        elif big_imag == 0:
+            status = 'failure'
+            ioprinter.warning_message('Did not find any appropriate modes')
 
     return status

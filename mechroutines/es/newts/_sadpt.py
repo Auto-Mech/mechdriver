@@ -278,6 +278,7 @@ def _check_freqs(imags):
         if len(imags) > 1:
             ioprinter.warning_message(
                 'More than one imaginary mode for geometry')
+            status = 'fail'
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
                 ioprinter.warning_message(
@@ -307,6 +308,8 @@ def _check_freqs(imags):
                 status = False
         elif big_imag == 1:
             status = True
+        elif big_imag == 0:
+            status = False
 
     return status
 
