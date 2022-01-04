@@ -1,6 +1,7 @@
 """ Build the grid for a transition state search
 """
 
+from phydat import phycon
 import automol
 import autofile
 
@@ -94,7 +95,14 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
             enes_lst, 'sadpt-global', include_endpts=include_endpts)
 
         if max_idx is not None:
-            print(f'Found maximum at {locs_lst[max_idx]}')
+            # Get max locs and coord info (len==2 scn; len==3 cscn)
+            max_locs = locs_lst[max_idx]
+            if len(max_locs) == 2:
+                max_coord, max_val = max_locs[0][0], max_locs[1][0]
+            else:
+                max_coord, max_val = max_locs[1][0], max_locs[2][0]
+            print('  - Found max at '
+                  f'{max_coord} = {max_val*phycon.BOHR2ANG:.2f}')
 
             # Get zma at maximum
             max_zmas = (scn_save_fs[-1].file.zmatrix.read(locs_lst[max_idx]),)
@@ -234,7 +242,6 @@ def _grid_vals(grid, scan_name, scn_save_fs,
 
     # Get the energies along the grid
     for locs in grid_locs:
-        print(scn_save_fs[-1].path(locs))
         if scn_save_fs[-1].exists(locs):
             scn_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_path)
