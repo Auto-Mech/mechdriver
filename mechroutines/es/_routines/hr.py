@@ -12,6 +12,7 @@ def hindered_rotor_scans(
         scn_run_fs, scn_save_fs,
         rotors, tors_model, method_dct,
         overwrite,
+        zrxn=None,
         saddle=False,
         increment=0.5235987756,
         retryfail=True):
@@ -62,6 +63,7 @@ def hindered_rotor_scans(
             scn_typ=scn_typ,
             script_str=script_str,
             overwrite=overwrite,
+            zrxn=zrxn,
             update_guess=update_guess,
             reverse_sweep=reverse_sweep,
             saddle=saddle,
