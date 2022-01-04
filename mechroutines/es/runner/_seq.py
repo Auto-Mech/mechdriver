@@ -23,6 +23,7 @@ import autofile
 # FUNCTIONS FOR HANDLING THE SEQUENCE OF OPTIONS
 def options_matrix_optimization(script_str, prefix,
                                 geo, chg, mul, method, basis, prog,
+                                zrxn=None,
                                 errors=(), options_mat=(), feedback=False,
                                 frozen_coordinates=(),
                                 freeze_dummy_atoms=True,
@@ -119,25 +120,35 @@ def options_matrix_optimization(script_str, prefix,
         if not is_exhausted(options_mat):
             # try again
             micro_idx += 1
-            error_row_idx = errors.index(errs_found[0])
-            print('options mat errs test', errors, errs_found, error_row_idx)
+
+            # Set kwargs with current options row
             kwargs_ = updated_kwargs(kwargs, options_mat)
+
+            # Get current options to use, advance matrix
+            error_row_idx = errors.index(errs_found[0])
+            current_opts = options_mat[error_row_idx][0]
             options_mat = advance(error_row_idx, options_mat)
+            n_remain_opts = len(options_mat[error_row_idx])
+
+            print(f'  - Failure: Now trying with options {current_opts}  '
+                  f'({n_remain_opts} attempts in sequence remaining)')
             if feedback:
+                print('  - Using optimized geometry from previous job')
                 # Try and get ZMA, then geo
                 # if neither present use geo from prev. step (for weird errs)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 if automol.zmat.is_valid(step_geo):
+                    grxn = automol.reac.relabel_for_geometry(zrxn)
                     dum_key_dct = automol.zmat.dummy_key_dictionary(step_geo)
-                    geo_wdum = automol.geom.insert_dummies(geo, dum_key_dct)
+                    geo_wdum = automol.geom.insert_dummies(
+                        geo, dum_key_dct,
+                        gra=grxn.forward_ts_graph)
                     geo = automol.zmat.from_geometry(step_geo, geo_wdum)
                 if geo is not None:
                     step_geo = geo
         else:
             # failure
-            warnings.resetwarnings()
-            warnings.warn("elstruct robust run failed; "
-                          f"last run was in {path}")
+            print("\n - Robust run sequence has failed ")
             break
 
     return inp_str, out_str
@@ -145,6 +156,7 @@ def options_matrix_optimization(script_str, prefix,
 
 def options_matrix_run(input_writer, script_str, prefix,
                        geo, chg, mul, method, basis, prog,
+                       zrxn=None,
                        errors=(), options_mat=(),
                        **kwargs):
     """ try several sets of options to generate an output file
@@ -207,14 +219,11 @@ def options_matrix_run(input_writer, script_str, prefix,
             # try again
             micro_idx += 1
             error_row_idx = errors.index(errs_found[0])
-            print('errs test', errors, errs_found, error_row_idx)
             kwargs_ = updated_kwargs(kwargs, options_mat)
             options_mat = advance(error_row_idx, options_mat)
         else:
             # failure
-            warnings.resetwarnings()
-            warnings.warn("elstruct robust run failed; "
-                          f"last run was in {path}")
+            print("\n - Robust run sequence has failed ")
             break
 
     return inp_str, out_str

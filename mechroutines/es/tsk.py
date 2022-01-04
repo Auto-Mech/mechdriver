@@ -212,7 +212,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             print(f'Using user specified conformer IDs: {user_conf_ids}')
             ini_locs = user_conf_ids
 
-        if ini_locs:
+        if any(ini_locs):
             ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
             # Set up the run scripts
@@ -265,6 +265,9 @@ def conformer_tsk(job, spc_dct, spc_name,
                 retryfail=retryfail, resave=resave,
                 repulsion_thresh=40.0, print_debug=print_debug,
                 **kwargs)
+        else:
+            ioprinter.info_message(
+                'Missing conformers. Skipping task...')
 
     elif job == 'pucker':
 
@@ -368,13 +371,13 @@ def conformer_tsk(job, spc_dct, spc_name,
                 **kwargs)
 
         # print all geometres within cnfrange
-        rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            cnf_save_fs, mod_thy_info,
-            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
-            hbond_cutoffs=hbond_cutoffs)
-        for locs in rng_cnf_locs_lst:
-            geo = cnf_save_fs[-1].file.geometry.read(locs)
-            ioprinter.geometry(geo)
+        # rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+        #     cnf_save_fs, mod_thy_info,
+        #     cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+        #     hbond_cutoffs=hbond_cutoffs)
+        # for locs in rng_cnf_locs_lst:
+        #     geo = cnf_save_fs[-1].file.geometry.read(locs)
+        #     ioprinter.geometry(geo)
 
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
@@ -864,6 +867,7 @@ def hr_tsk(job, spc_dct, spc_name,
                     scn_run_fs, scn_save_fs,
                     torsions, tors_model, method_dct,
                     overwrite,
+                    zrxn=zrxn,
                     saddle=saddle,
                     increment=increment,
                     retryfail=retryfail)
@@ -954,6 +958,7 @@ def hr_tsk(job, spc_dct, spc_name,
                             zma, geo, spc_info, mod_thy_info,
                             scn_run_fs, scn_save_fs, locs, run_prefix,
                             script_str, overwrite,
+                            zrxn=zrxn,
                             retryfail=retryfail, **kwargs)
                         ioprinter.obj('vspace')
         else:

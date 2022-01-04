@@ -142,6 +142,7 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
 
     # Get es keyword info
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
 
     # Get info from the dct
     ts_zma = ts_dct['zma']
@@ -178,11 +179,12 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
         scn_typ='relaxed',
         script_str=script_str,
         overwrite=overwrite,
+        zrxn=zrxn,
         update_guess=update_guess,
         reverse_sweep=False,
         saddle=False,
         constraint_dct=constraint_dct,
-        retryfail=False,
+        retryfail=retryfail,
         **kwargs,
         )
 
@@ -310,6 +312,7 @@ def saddle_point_checker(imags):
         if len(imags) > 1:
             ioprinter.warning_message(
                 'More than one imaginary mode for geometry')
+            status = 'fail'
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
                 ioprinter.warning_message(
@@ -339,5 +342,8 @@ def saddle_point_checker(imags):
                 status = 'failure'
         elif big_imag == 1:
             status = 'success'
+        elif big_imag == 0:
+            status = 'failure'
+            ioprinter.warning_message('Did not find any appropriate modes')
 
     return status
