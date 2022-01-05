@@ -783,6 +783,7 @@ def hr_tsk(job, spc_dct, spc_name,
         else:
             torsions = ()
 
+        zrxn = spc_dct_i.get('zrxn', None)
         # Run the task if any torsions exist
         if any(torsions):
             # Find equivalent conformer in the run filesys, if it doesn't exist
@@ -791,7 +792,6 @@ def hr_tsk(job, spc_dct, spc_name,
             if min_locs is None:
                 script_str, kwargs = qchem_params(
                     method_dct, elstruct.Job.OPTIMIZATION)
-                zrxn = spc_dct_i.get('zrxn', None)
                 rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
                 if rid is None:
                     new_rid = autofile.schema.generate_new_ring_id()
