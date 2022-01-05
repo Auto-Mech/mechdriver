@@ -583,7 +583,6 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
     """
     locs_idx = None
     job = elstruct.Job.OPTIMIZATION
-
     sym_locs = []
     run_locs_lst = cnf_fs[-1].existing(ignore_bad_formats=True)
     for idx, locs in enumerate(run_locs_lst):
@@ -779,3 +778,8 @@ def _sort_energy_parameter(
         sort_ene += rel_sp_ene
         sort_ene = sort_ene / phycon.EH2KCAL
     return sort_ene, first_enes
+# 
+# 
+# def convert_cnf_fs(cnf_fs, freq_info):
+#     prefix = cnf_fs[0].path()
+#     freq_fs = autofile.fs.manager(prefix, freq_info)
