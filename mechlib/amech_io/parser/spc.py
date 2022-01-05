@@ -184,9 +184,14 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct, glob_dct):
             combined_dct[sadpt].update(spc_dct[sadpt])
 
         # Put in stuff from the sadpt_dct build
+        # Assume user has not supplied value if key is
+        # missing, or if value is None
         for key, val in sadpt_dct[sadpt].items():
             if key not in combined_dct[sadpt]:
                 combined_dct[sadpt][key] = val
+            else:
+                if combined_dct[sadpt][key] is None:
+                    combined_dct[sadpt][key] = val
 
         # Put in defaults if they were not defined
         # hindered rotor being set incorrectly here
@@ -348,7 +353,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'prods': prods,
                 'rxn_info': rxn_info,
                 'inchi': '',
-                'charge': rinfo.value(rxn_info, 'charge'),
+                'charge': rinfo.ts_chg(rxn_info),
                 'mult': rinfo.value(rxn_info, 'tsmult'),
                 'elec_levels': ((0.0, rinfo.value(rxn_info, 'tsmult')),),
                 'hind_inc': 30.0*phycon.DEG2RAD,
