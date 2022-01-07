@@ -107,26 +107,32 @@ def conformer_locators(
                 elif 'r' in cnf_range:
                     fin_locs_lst = tuple(_rrange_locs(
                         cnf_locs_lst, cnf_range, already_counted_locs_lst))
+
+            for idx, locs in enumerate(fin_locs_lst):
+                fin_paths_lst += (cnf_save_fs[-1].path(locs),)
+
+            if print_enes:
+                header = '\nConformer Ordering'
+                if only_hbnds:
+                    header += ' for only hydrogen bonded conformers'
+                if only_nonhbnds:
+                    header += ' for only non-hydrogen bonded conformers'
+                elif not only_hbnds:
+                    header += ' for all conformers'
+                print(header)
+                print(f'{"rid":<16}{"cid":<16}{"energy[kcal/mol]":<16}')
+                print(f'{"-------":<16}{"-------":<16}{"-------":<16}')
+                for idx, locs in enumerate(cnf_locs_lst):
+                    _ene = (cnf_enes_lst[idx] - cnf_enes_lst[0]) * phycon.EH2KCAL
+                    if locs in fin_locs_lst:
+                        mark = '*'
+                    else:
+                        mark = ''
+                    print(f'{locs[0]:<16}{locs[1]:<16}{_ene:<6.2f}{mark:<3}')
+                print()
         else:
             print(f'No conformers located in {cnf_save_fs[0].path()}')
 
-        if print_enes:
-            header = '\nConformer Ordering'
-            if only_hbnds:
-                header += ' for only hydrogen bonded conformers'
-            if only_nonhbnds:
-                header += ' for only non-hydrogen bonded conformers'
-            elif not only_hbnds:
-                header += ' for all conformers'
-            print(header)
-            print(f'{"rid":<16}{"cid":<16}{"energy[kcal/mol]":<16}')
-            print(f'{"-------":<16}{"-------":<16}{"-------":<16}')
-        for idx, locs in enumerate(fin_locs_lst):
-            fin_paths_lst += (cnf_save_fs[-1].path(locs),)
-            if print_enes:
-                _ene = (cnf_enes_lst[idx] - cnf_enes_lst[0]) * phycon.EH2KCAL
-                print(f'{locs[0]:<16}{locs[1]:<16}{_ene:<16.2f}')
-        print()
 
         return fin_locs_lst, fin_paths_lst
     cnf_range_nohb, cnf_range_hb, cnf_range_any = _process_cnf_range(
@@ -235,8 +241,6 @@ def _sorted_cnf_lsts(
     else:
         cnf_locs_lst, cnf_enes_lst = [], []
 
-    print('sort test:', cnf_locs_lst, cnf_enes_lst)
-
     return cnf_locs_lst, cnf_enes_lst
 
 
@@ -244,10 +248,10 @@ def _wait_for_energy_to_be_saved(cnf_save_fs, locs, sp_fs, sp_info):
     """ in case a geo was just written and its about to write and ene
     """
     ene = None
-    cnf_path = cnf_save_fs[-1].path(locs)
+    # cnf_path = cnf_save_fs[-1].path(locs)
     if cnf_save_fs[-1].file.geometry_info.exists(locs):
-        ioprinter.info_message(
-            f'No energy saved in single point directory for {cnf_path}')
+        # ioprinter.info_message(
+        #     f'No energy saved in single point directory for {cnf_path}')
         geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
             locs)
         geo_end_time = geo_inf_obj.utc_end_time
@@ -583,7 +587,6 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
     """
     locs_idx = None
     job = elstruct.Job.OPTIMIZATION
-
     sym_locs = []
     run_locs_lst = cnf_fs[-1].existing(ignore_bad_formats=True)
     for idx, locs in enumerate(run_locs_lst):
@@ -677,17 +680,18 @@ def collect_rrho_params(cnf_save_fs, locs, sp_info, freq_info, mod_thy_info):
     geo = None
     freqs = None
     ene = None
-    cnf_path = cnf_save_fs[-1].path(locs)
-    sp_fs = autofile.fs.single_point(cnf_path)
     if cnf_save_fs[-1].file.geometry.exists(locs):
         geo = cnf_save_fs[-1].file.geometry.read(locs)
         if freq_info is None or freq_info == mod_thy_info:
             freq_fs = cnf_save_fs
             freq_locs = locs
         else:
-            freq_fs, freq_locs = get_freq_location(geo, freq_info)
+            freq_fs, freq_locs = get_freq_location(cnf_save_fs, geo, freq_info[1:4], locs)
         if freq_fs[-1].file.harmonic_frequencies.exists(freq_locs):
             freqs = freq_fs[-1].file.harmonic_frequencies.read(freq_locs)
+
+        cnf_path = freq_fs[-1].path(freq_locs)
+        sp_fs = autofile.fs.single_point(cnf_path)
         if sp_info is not None:
             sp_thy_info = sp_info[1:4]
         else:
@@ -704,13 +708,21 @@ def collect_rrho_params(cnf_save_fs, locs, sp_info, freq_info, mod_thy_info):
     return geo, freqs, ene
 
 
-def get_freq_location(geo, freq_info):
+def get_freq_location(cnf_fs, geo, freq_thy_locs, cnf_locs):
     """ find the frequencies for a conformer at a different level of theory
     """
-    _, _ = geo, freq_info
-    ioprinter.debug_message(
-        'NOT IMPLEMENTED to use a zpe(LVL) that is not the same as inplvl=LVL')
-    return None, None
+    path_prefix = autofile.fs.path_prefix(
+        cnf_fs[-1].path(cnf_locs), ['THEORY', 'CONFORMER'])
+    freq_cnf_fs = autofile.fs.manager(
+        path_prefix, [['THEORY', freq_thy_locs]], 'CONFORMER')
+    freq_locs = []
+    for freq_cnf_locs in freq_cnf_fs[-1].existing():
+        if freq_cnf_fs[-1].file.hessian.exists(freq_cnf_locs):
+            freq_locs.append(freq_cnf_locs)
+    match_dct = fs_confs_dict(
+        freq_cnf_fs, freq_locs, cnf_fs, [cnf_locs])
+    match_freqs_locs = tuple(match_dct[tuple(cnf_locs)])
+    return freq_cnf_fs, match_freqs_locs
 
 
 def _check_prop_requirements(sort_prop_dct, geo, freqs, sp_ene, locs):
@@ -727,13 +739,13 @@ def _check_prop_requirements(sort_prop_dct, geo, freqs, sp_ene, locs):
         sort_prop = 'gibbs'
     if sort_prop in ['enthalpy', 'entropy', 'gibbs']:
         if geo is None:
-            ioprinter.warning_message('No geo found for ', locs)
+            # ioprinter.warning_message('No geo found for ', locs)
             sort_prop = None
         if freqs is None:
-            ioprinter.warning_message('No freqs found for ', locs)
+            # ioprinter.warning_message('No freqs found for ', locs)
             sort_prop = None
     if sp_ene is None:
-        ioprinter.warning_message('No energy found for ', locs)
+        # ioprinter.warning_message('No energy found for ', locs)
         sort_prop = None
     return sort_prop
 
@@ -779,3 +791,37 @@ def _sort_energy_parameter(
         sort_ene += rel_sp_ene
         sort_ene = sort_ene / phycon.EH2KCAL
     return sort_ene, first_enes
+
+
+def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
+                  ini_cnf_save_fs, ini_cnf_save_locs_lst):
+    """ Assess which structures from the cnf_save_fs currently exist
+        within the ini_cnf_save_fs. Generate a dictionary to connect
+        the two
+    """
+
+    match_dct = {}
+    for ini_locs in ini_cnf_save_locs_lst:
+
+        match_dct[tuple(ini_locs)] = None
+        # Loop over structs in cnf_save, see if they match the current struct
+        # inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        # inizma = automol.geom.zmatrix(inigeo)
+        # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
+        ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
+        # ioprinter.checking('structures', ini_cnf_save_path)
+        ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+        inizma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+        for locs in cnf_save_locs_lst:
+            # geo = cnf_save_fs[-1].file.geometry.read(locs)
+            # zma = automol.geom.zmatrix(geo)
+            zma_save_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
+            zma = zma_save_fs[-1].file.zmatrix.read((0,))
+            if automol.zmat.almost_equal(inizma, zma,
+                                         dist_rtol=0.1, ang_atol=.4):
+                # cnf_save_path = cnf_save_fs[-1].path(locs)
+                # ioprinter.info_message(
+                #     f'- Similar structure found at {cnf_save_path}')
+                match_dct[tuple(ini_locs)] = tuple(locs)
+                break
+    return match_dct

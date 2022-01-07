@@ -96,6 +96,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct)
             if pot:
+                # fit_pot = automol.pot.setup_1d_potential(
                 fit_pot = automol.pot.fit_1d_potential(
                     pot, min_thresh=-0.0001, max_thresh=50.0)
                 # Scale pot relative to first time
@@ -105,10 +106,11 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 ref_val = gridvals[0][0]
                 for i, val in enumerate(gridvals):
                     final_pot[(val[0] - ref_val,)] = fit_pot[(i,)]
+                # for idx, val in fit_pot.items():
+                #     final_pot[(gridvals[idx[0]][0] - ref_val,)] = val
                 torsion.pot = final_pot
             else:
                 torsion.pot = pot
-
     # if multi_idx is not None:
     #     mdhr_name = automol.rotor.names(rotors)[multi_idx]
     #   mdhr_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]

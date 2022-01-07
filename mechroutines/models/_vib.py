@@ -75,8 +75,9 @@ def full_vib_analysis(
                 tors_strs = tors.make_hr_strings(rotors)
                 [_, hr_str, _, prot_str, _] = tors_strs
                 # print('tors string after scaling',tors_strs)
-                _, _, tors_zpe = tors_projected_freqs_zpe(
-                    pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
+                tors_zpe = tors_projected_scaled_zpe(
+                    pf_filesystems, hr_str, prot_str, run_prefix,
+                    spc_mod_dct_i, zrxn=zrxn)
             freqs = ret[0]  # freqs equal to proj_freqs
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
@@ -91,13 +92,13 @@ def full_vib_analysis(
         freqs, zpe = scale_frequencies(
             freqs, tors_zpe,
             spc_mod_dct_i, scale_method='c3')
-
         harm_freqs, _ = scale_frequencies(
             harm_freqs, None,
             spc_mod_dct_i, scale_method='c3')
+
         # harm_freqs, zpe = scale_frequencies(
         #     harm_freqs, 0,
-        #     spc_mod_dct_i, scale_method='c3')
+        #    spc_mod_dct_i, scale_method='c3')
 
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
             harm_freqs, disps)
@@ -242,17 +243,20 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     return proj_freqs, harm_freqs, tors_freqs, proj_imag, harm_disps
 
 
-def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             prefix, zrxn=None, conf=None):
+def tors_projected_scaled_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
+                             prefix, spc_mod_dct_i, zrxn=None, conf=None):
     """ Get frequencies from one version of ProjRot
     """
     ret = tors_projected_freqs(
         pf_filesystems, mess_hr_str, projrot_hr_str,
         prefix, zrxn=zrxn, conf=conf)
-    proj_freqs, _, tors_freqs, proj_imag, _ = ret
-    tors_zpe = 0.5 * sum(tors_freqs) * phycon.WAVEN2EH
+    _, _, tors_freqs, _, _ = ret
+    scaled_tors_freqs, scaled_tors_zpe = scale_frequencies(
+        tors_freqs, 0.0,
+        spc_mod_dct_i, scale_method='c3')
+    # tors_zpe = 0.5 * sum(tors_freqs) * phycon.WAVEN2EH
 
-    return proj_freqs, proj_imag, tors_zpe
+    return scaled_tors_zpe
 
 
 def potential_scale_factor(harm_freqs, proj_freqs, tors_freqs):

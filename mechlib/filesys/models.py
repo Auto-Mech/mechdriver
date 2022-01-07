@@ -11,6 +11,7 @@ from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys.mincnf import min_energy_conformer_locators
 from mechlib.filesys.mincnf import this_conformer_was_run_in_run
 from mechlib.filesys.mincnf import conformer_locators
+from mechlib.filesys.mincnf import fs_confs_dict as fs_confs_dict
 from mechlib.filesys._build import build_fs
 from mechlib.filesys._build import root_locs
 from mechlib.amech_io import printer as ioprinter
@@ -318,37 +319,3 @@ def get_matching_tors_locs(
     else:
         match_tors_locs = cnf_locs
     return match_tors_locs
-
-
-def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
-                  ini_cnf_save_fs, ini_cnf_save_locs_lst):
-    """ Assess which structures from the cnf_save_fs currently exist
-        within the ini_cnf_save_fs. Generate a dictionary to connect
-        the two
-    """
-
-    match_dct = {}
-    for ini_locs in ini_cnf_save_locs_lst:
-
-        match_dct[tuple(ini_locs)] = None
-        # Loop over structs in cnf_save, see if they match the current struct
-        # inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-        # inizma = automol.geom.zmatrix(inigeo)
-        # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
-        ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
-        ioprinter.checking('structures', ini_cnf_save_path)
-        ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-        inizma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-        for locs in cnf_save_locs_lst:
-            # geo = cnf_save_fs[-1].file.geometry.read(locs)
-            # zma = automol.geom.zmatrix(geo)
-            zma_save_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
-            zma = zma_save_fs[-1].file.zmatrix.read((0,))
-            if automol.zmat.almost_equal(inizma, zma,
-                                         dist_rtol=0.1, ang_atol=.4):
-                cnf_save_path = cnf_save_fs[-1].path(locs)
-                ioprinter.info_message(
-                    f'- Similar structure found at {cnf_save_path}')
-                match_dct[tuple(ini_locs)] = tuple(locs)
-                break
-    return match_dct

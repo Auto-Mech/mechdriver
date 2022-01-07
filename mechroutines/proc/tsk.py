@@ -118,7 +118,7 @@ def run_tsk(tsk, obj_queue,
                     csv_data[label] = csv_data_i
 
                 elif 'torsion' in tsk:
-                    miss_data_i = collect.torsions(
+                    csv_data_i, miss_data_i = collect.torsions(
                         spc_name, spc_dct_i, spc_mod_dct_i,
                         run_prefix, save_prefix)
 
