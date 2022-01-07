@@ -767,7 +767,7 @@ def hr_tsk(job, spc_dct, spc_name,
     all_run_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
         cnf_range='all')
-    ini_to_run_locs_dct = filesys.models.fs_confs_dict(
+    ini_to_run_locs_dct = filesys.mincnf.fs_confs_dict(
         cnf_save_fs, all_run_cnf_locs_lst,
         ini_cnf_save_fs, ini_min_locs_lst)
 

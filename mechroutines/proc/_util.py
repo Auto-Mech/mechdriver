@@ -355,7 +355,14 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
             filelabel += f'_m{spc_mod_dct_i["ene"]["lvl1"][0]}'
         filelabel += '.csv'
     elif 'torsions' in tsk:
-        filelabel = None
+        filelabel = 'tors'
+        geolvl = proc_keyword_dct.get('geolvl')
+        if geolvl is not None:
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
+            filelabel += f'_{proc_keyword_dct["proplvl"]}'
+        else:
+            filelabel += f'_m{spc_mod_dct_i["tors"]["mod"][0]}'
+            filelabel += f'_m{spc_mod_dct_i["tors"]["geolvl"][0]}'
     elif 'messpf_inp' in tsk:
         filelabel = 'messpf_input_global'
         filelabel += '.txt'
