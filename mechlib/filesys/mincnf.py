@@ -721,6 +721,14 @@ def get_freq_location(cnf_fs, geo, freq_thy_locs, cnf_locs):
             freq_locs.append(freq_cnf_locs)
     match_dct = fs_confs_dict(
         freq_cnf_fs, freq_locs, cnf_fs, [cnf_locs])
+    print('match test')
+    print('\nmatch_dct')
+    print(match_dct)
+    print('\nfreq_locs')
+    print(freq_locs)
+    print('\ncnf_locs')
+    print(cnf_locs)
+    
     match_freqs_locs = tuple(match_dct[tuple(cnf_locs)])
     return freq_cnf_fs, match_freqs_locs
 
