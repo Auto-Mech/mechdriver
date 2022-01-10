@@ -371,13 +371,13 @@ def conformer_tsk(job, spc_dct, spc_name,
                 **kwargs)
 
         # print all geometres within cnfrange
-        # rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-        #     cnf_save_fs, mod_thy_info,
-        #     cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
-        #     hbond_cutoffs=hbond_cutoffs)
-        # for locs in rng_cnf_locs_lst:
-        #     geo = cnf_save_fs[-1].file.geometry.read(locs)
-        #     ioprinter.geometry(geo)
+        rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+            cnf_save_fs, mod_thy_info,
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=hbond_cutoffs)
+        for locs in rng_cnf_locs_lst:
+            geo = cnf_save_fs[-1].file.geometry.read(locs)
+            ioprinter.geometry(geo)
 
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 

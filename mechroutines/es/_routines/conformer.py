@@ -875,7 +875,7 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
                 if automol.zmat.almost_equal(inp_zma, zma,
                                              dist_rtol=0.018, ang_atol=.2):
                     info_message(
-                        'This conformer was already run in {cnf_path}.')
+                        f'This conformer was already run in {cnf_path}.')
                     running = True
                     break
             except:

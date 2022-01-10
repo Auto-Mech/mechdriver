@@ -40,9 +40,16 @@ def run_lst(pes_dct, spc_dct, pes_idxs, spc_idxs):
 def _lst_for_spc(spc_dct, spc_idxs):
     """ Get a dictionary of requested species matching the PES_DCT format
     """
-    _lst = tuple(spc for idx, spc in enumerate(spc_dct) if idx in
-                 tuple(spc_idxs.values())[0])
-    run_dct = {('SPC', 0, 0): _lst}
+    idx_lst = tuple(spc_idxs.values())[0]
+    spc_lst = tuple(spc_dct)
+    run_spc_lst = tuple(spc_lst[idx] for idx in idx_lst)
+    run_dct = {('SPC', 0, idx_lst): run_spc_lst}
+
+    # for idx, spc in enumerate(spc_dct):
+
+    # _lst = tuple(spc for idx, spc in enumerate(spc_dct) if idx in
+    #              tuple(spc_idxs.values())[0])
+    # run_dct = {('SPC', 0, 0): _lst}
 
     return run_dct
 

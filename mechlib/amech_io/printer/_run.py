@@ -18,5 +18,5 @@ def runlst(run_inf, run_lst):
             cidx, rxn = chnl
             print_channel(cidx+1, rxn[0], rxn[1])
     else:
-        for i, spc in enumerate(run_lst):
-            message(f'Running SPC {i+1}: {spc}')
+        for idx, spc in zip(sub_pes_idx, run_lst):
+            message(f'Running SPC {idx+1}: {spc}')

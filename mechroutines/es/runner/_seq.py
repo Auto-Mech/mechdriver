@@ -138,11 +138,15 @@ def options_matrix_optimization(script_str, prefix,
                 # if neither present use geo from prev. step (for weird errs)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 if automol.zmat.is_valid(step_geo):
-                    grxn = automol.reac.relabel_for_geometry(zrxn)
+                    if zrxn is not None:
+                        grxn = automol.reac.relabel_for_geometry(zrxn)
+                        gra = grxn.forward_ts_graph
+                    else:
+                        gra = None
                     dum_key_dct = automol.zmat.dummy_key_dictionary(step_geo)
                     geo_wdum = automol.geom.insert_dummies(
                         geo, dum_key_dct,
-                        gra=grxn.forward_ts_graph)
+                        gra=gra)
                     geo = automol.zmat.from_geometry(step_geo, geo_wdum)
                 if geo is not None:
                     step_geo = geo
