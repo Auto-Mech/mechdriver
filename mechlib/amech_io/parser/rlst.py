@@ -68,9 +68,13 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
             # Grab the channels if they are in run_chnl_idxs
             red_chnls = ()
             for chnl in chnls:
-                cidx, _ = chnl
+                cidx, rgts = chnl
                 if cidx in run_chnl_idxs:
-                    red_chnls += (chnl,)
+                    # Only grabbing the reactants and products
+                    # ignoring the bath gas for now
+                    red_chnls += (
+                        (cidx, (rgts[0], rgts[1])),
+                    )
 
             # Only add to reduced dct if any chnls found,
             # main for loop over pes AND subpes, could add
