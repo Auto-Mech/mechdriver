@@ -156,7 +156,8 @@ def _molpro(method_dct, prog, job=None):
         econv = econv if econv is not None else 1.0e-6
         gconv = gconv if gconv is not None else 3.0e-4
 
-    econv_line = f'energy={econv:.1E}'.replace('E', 'd')
+    scf_econv_line = f'energy={econv:.1E}'.replace('E', 'd')
+    corr_econv_line = f'energy={econv:.1E}'.replace('E', 'd')
     gconv_line = f'gradient={gconv:.1E}'.replace('E', 'd')
 
     # Build the script string
@@ -169,10 +170,10 @@ def _molpro(method_dct, prog, job=None):
         'memory': memory,
         # 'mol_options': ['no_symmetry'],
         'mol_options': ['nosym'],
-        'scf_options': [econv_line, 'maxit=300']
+        'scf_options': [scf_econv_line, 'maxit=300']
     }
 
-    corr_options = [econv_line, 'maxit=100']
+    corr_options = [corr_econv_line, 'maxit=100']
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         corr_options.append('shift=0.2')
         if method == 'caspt2i':
@@ -192,6 +193,12 @@ def _molpro(method_dct, prog, job=None):
                  {'job_options': [gconv_line, 'numhess=1']}]
             ],
         })
+
+    # Set glob thresholds
+    thrsh_line = f'gthresh,orbital={econv:.1E}'.replace('E', 'd')
+    if method_dct.get('tight_integral'):
+        thrsh_line += ',oneint=1.0d-16,twoint=1.0d-16,compress=1.0d-13'
+    kwargs.update({'gen_lines': {1: [thrsh_line]}})
 
     return script_str, kwargs
 
