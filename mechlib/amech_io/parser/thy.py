@@ -25,7 +25,8 @@ THY_VAL_DCT = {
     'nprocs': ((int,), (), None),
     'econv': ((float,), (), None),
     'gconv': ((float,), (), None),
-    'mppx': ((bool,), (), False)
+    'mppx': ((bool,), (), False),
+    'tight_integral': ((bool,), (), False),
 }
 
 
