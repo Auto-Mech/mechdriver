@@ -23,15 +23,16 @@ def rate_paths(pes_dct, run_prefix):
     for pes_inf in pes_dct:
         pes_fml, pes_idx, subpes_idx = pes_inf
 
+        _pes_str = f'{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
         # idx1 = f'{pes_idx}-{subpes_idx}-BASE'
         # idx2 = f'{pes_idx}-{subpes_idx}-WEXT'
         idx1 = int(f'{pes_idx}{subpes_idx}0')
         idx2 = int(f'{pes_idx}{subpes_idx}1')
         rate_path_dct[pes_inf] = {
             'base': job_path(
-                run_prefix, 'MESS', 'RATE', pes_fml, locs_idx=idx1),
+                run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx1),
             'wext': job_path(
-                run_prefix, 'MESS', 'RATE', pes_fml, locs_idx=idx2)
+                run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx2)
         }
 
     return rate_path_dct
