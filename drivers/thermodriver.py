@@ -72,7 +72,7 @@ def run(pes_rlst, spc_rlst,
     # and build the paths [(messpf, nasa)], models and levels for each spc
     cnf_range = write_messpf_tsk[-1]['cnf_range']
     sort_str = write_messpf_tsk[-1]['sort']
-    spc_locs_dct, thm_paths_dct = _set_spc_queue(
+    spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst, spc_dct, thy_dct,
         save_prefix, run_prefix, cnf_range, sort_str)
 
@@ -117,7 +117,7 @@ def run(pes_rlst, spc_rlst,
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
-            spc_mod_dct, spc_mods, ref_scheme)
+            spc_mod_dct, spc_mods, sort_info_lst, ref_scheme)
 
         for idx, nasa_str in ckin_nasa_str_dct.items():
             ioprinter.print_thermo(
@@ -146,7 +146,7 @@ def _set_spc_queue(
         spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
         cnf_range, sort_info_lst)
     thm_paths = thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix)
-    return spc_locs_dct, thm_paths
+    return spc_locs_dct, thm_paths, sort_info_lst
 
 
 def _set_spc_locs_dct(

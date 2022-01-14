@@ -7,18 +7,21 @@ from phydat import phycon
 
 
 # COMMON HEADER STUFF FOR kTP and THERMO CKIN FILES
-def model_header(spc_mods, spc_mod_dct, refscheme=''):
+def model_header(spc_mods, spc_mod_dct, sort_info_lst=(), refscheme=''):
     """ Write a model header for multiple models
     """
     mod_str = ''
     for spc_mod in spc_mods:
-        mod_str += _model_header(spc_mod_dct[spc_mod], refscheme=refscheme)
+        mod_str += _model_header(
+            spc_mod_dct[spc_mod],
+            sort_info_lst=sort_info_lst,
+            refscheme=refscheme)
     mod_str += '\n\n'
 
     return mod_str
 
 
-def _model_header(spc_mod_dct_i, refscheme=''):
+def _model_header(spc_mod_dct_i, sort_info_lst=(), refscheme=''):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 
@@ -40,6 +43,28 @@ def _model_header(spc_mod_dct_i, refscheme=''):
     chemkin_header_str = f'! vib model: {vib_model}\n'
     chemkin_header_str += f'! tors model: {tors_model}\n'
     chemkin_header_str += f'! sym model: {sym_model}\n'
+
+    # Sort lvl string
+    if sort_info_lst:
+        sort_str = ''
+        _sort_freq_inf = sort_info_lst[0]
+        _sort_sp_inf = sort_info_lst[1]
+        _sort_h_inf = sort_info_lst[2]
+        _sort_s_inf = sort_info_lst[3]
+        _sort_g_inf = sort_info_lst[4]
+        if _sort_freq_inf is not None:
+            sort_str += f'! sort freqs level: {_sort_freq_inf}\n'
+        if _sort_sp_inf is not None:
+            sort_str += f'! sort sp    level: {_sort_sp_inf}\n'
+        if _sort_h_inf is not None:
+            sort_str += f'! sort H({_sort_h_inf} K) minimum\n'
+        elif _sort_s_inf is not None:
+            sort_str += f'! sort S({_sort_s_inf} K) minimum\n'
+        elif _sort_g_inf is not None:
+            sort_str += f'! sort G({_sort_g_inf} K) minimum\n'
+        else:
+            sort_str += '! sort Eelec minimum\n'
+        chemkin_header_str += sort_str
 
     # Energy level string
     if har_info is not None and ene_infos:

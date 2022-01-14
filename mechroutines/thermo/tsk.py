@@ -231,7 +231,7 @@ def get_heats_of_formation(
 
 def nasa_polynomial_task(
         mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
-        spc_mod_dct, spc_mods, ref_scheme):
+        spc_mod_dct, spc_mods, sort_info_lst, ref_scheme):
     """ generate the nasa polynomials
     """
     ckin_nasa_str_dct = {}
@@ -258,7 +258,9 @@ def nasa_polynomial_task(
             #     ckin_nasa_str += '\n\n'
             ioprinter.message('for: ', spc_locs, ' combined models')
             ckin_nasa_str_dct[idx] += writer.ckin.model_header(
-                spc_mods, spc_mod_dct, refscheme=ref_scheme)
+                spc_mods, spc_mod_dct,
+                sort_info_lst=sort_info_lst,
+                refscheme=ref_scheme)
             ckin_nasa_str_dct[idx] += nasapoly.build_polynomial(
                 spc_name, spc_dct,
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0],
@@ -269,7 +271,9 @@ def nasa_polynomial_task(
             ioprinter.info_message(ckin_nasa_str_dct[idx])
         ioprinter.message('for combined rid cids:', spc_locs_dct[spc_name])
         ckin_nasa_str_dct[0] += writer.ckin.model_header(
-            spc_mods, spc_mod_dct, refscheme=ref_scheme)
+            spc_mods, spc_mod_dct,
+            sort_info_lst=sort_info_lst,
+            refscheme=ref_scheme)
         ckin_nasa_str_dct[0] += nasapoly.build_polynomial(
             spc_name, spc_dct,
             thm_paths_dct[spc_name]['spc_total'][0],

@@ -7,6 +7,7 @@ import mess_io
 import chemkin_io
 import autorun
 import ratefit
+from mechlib import filesys
 from mechlib.amech_io import writer
 from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
@@ -133,7 +134,8 @@ def run_messrate_task(rate_paths_dct, pes_inf):
 
 
 def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
-                  label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct):
+                  label_dct, pes_mod_dct, spc_mod_dct, thy_dct,
+                  tsk_key_dct):
     """ Run the fits and potentially
 
         assume that the rate_paths_dct will come in with all PESs in group
@@ -146,9 +148,10 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
         pes_strs += ('_'.join(_inf),)
     tot_fml = '-'.join(pes_strs)
 
-    # Get the model
+    # Get the model and sort info from tsk key dct
     pes_mod = tsk_key_dct['kin_model']
     spc_mod = tsk_key_dct['spc_model']
+    sort_info_lst = filesys.mincnf.sort_info_lst(tsk_key_dct['sort'], thy_dct)
 
     ioprinter.obj('vspace')
     ioprinter.obj('line_dash')
@@ -174,7 +177,10 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
     )
 
     # Write the reactions block header, which contains model info
-    rxn_block_cmt = writer.ckin.model_header((spc_mod,), spc_mod_dct)
+    rxn_block_cmt = writer.ckin.model_header(
+        (spc_mod,), spc_mod_dct,
+        sort_info_lst=sort_info_lst,
+        refscheme=pes_mod_dct['ref_scheme'])
 
     # Get the comments dct and write the Chemkin string
     rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(

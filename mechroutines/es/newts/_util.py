@@ -150,17 +150,17 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         vscnlvl_scn_run_fs, vscnlvl_scn_save_fs = build_fs(
             run_prefix, save_prefix, 'SCAN',
             rxn_locs=rxn_info_sort, ts_locs=ts_locs,
-            thy_locs=mod_thy_info[1:], zma_locs=zma_locs)
+            thy_locs=mod_vscnlvl_thy_info[1:], zma_locs=zma_locs)
 
         vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs = build_fs(
             run_prefix, save_prefix, 'CSCAN',
             rxn_locs=rxn_info_sort, ts_locs=ts_locs,
-            thy_locs=mod_thy_info[1:], zma_locs=zma_locs)
+            thy_locs=mod_vscnlvl_thy_info[1:], zma_locs=zma_locs)
 
         vrctst_run_fs, vrctst_save_fs = build_fs(
             run_prefix, save_prefix, 'VRCTST',
             rxn_locs=rxn_info_sort, ts_locs=ts_locs,
-            thy_locs=mod_thy_info[1:])
+            thy_locs=mod_vscnlvl_thy_info[1:])
 
         if elstruct.par.Method.is_multiref(vscnlvl_thy_info[1]):
             vscn_mref_params = multireference_calculation_parameters(
