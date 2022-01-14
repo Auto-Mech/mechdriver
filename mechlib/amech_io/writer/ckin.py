@@ -47,21 +47,25 @@ def _model_header(spc_mod_dct_i, sort_info_lst=(), refscheme=''):
     # Sort lvl string
     if sort_info_lst:
         sort_str = ''
-        _sort_freq_inf = sort_info_lst[0]
-        _sort_sp_inf = sort_info_lst[1]
-        _sort_h_inf = sort_info_lst[2]
-        _sort_s_inf = sort_info_lst[3]
-        _sort_g_inf = sort_info_lst[4]
-        if _sort_freq_inf is not None:
-            sort_str += f'! sort freqs level: {_sort_freq_inf}\n'
-        if _sort_sp_inf is not None:
-            sort_str += f'! sort sp    level: {_sort_sp_inf}\n'
-        if _sort_h_inf is not None:
-            sort_str += f'! sort H({_sort_h_inf} K) minimum\n'
-        elif _sort_s_inf is not None:
-            sort_str += f'! sort S({_sort_s_inf} K) minimum\n'
-        elif _sort_g_inf is not None:
-            sort_str += f'! sort G({_sort_g_inf} K) minimum\n'
+        _freq_inf = sort_info_lst[0]
+        _sp_inf = sort_info_lst[1]
+        _h_inf = sort_info_lst[2]
+        _s_inf = sort_info_lst[3]
+        _g_inf = sort_info_lst[4]
+        if _freq_inf is not None:
+            sort_str += (
+                '! sort freqs level: '
+                f'{_freq_inf[3]}{_freq_inf[1]}/{_freq_inf[2]}\n')
+        if _sp_inf is not None:
+            sort_str += (
+                '! sort sp    level: '
+                f'{_sp_inf[3]}{_sp_inf[1]}/{_sp_inf[2]}\n')
+        if _h_inf is not None:
+            sort_str += f'! sort H({_h_inf} K) minimum\n'
+        elif _s_inf is not None:
+            sort_str += f'! sort S({_s_inf} K) minimum\n'
+        elif _g_inf is not None:
+            sort_str += f'! sort G({_g_inf} K) minimum\n'
         else:
             sort_str += '! sort Eelec minimum\n'
         chemkin_header_str += sort_str
