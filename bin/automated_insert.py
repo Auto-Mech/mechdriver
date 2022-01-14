@@ -483,6 +483,37 @@ def ringformsci_gra(geo):
     return ts_gra, breaking_bond, forming_bond
 
 
+def elim_gra(geo):
+    ts_gra_h, oversaturated_h = choose_cutoff_distance(geo)
+    ts_gra_h, _ = choose_heavy_cutoff_distance(geo)
+    atoms_bnd = automol.graph.atoms_bond_keys(ts_gra_h)
+    atms = automol.graph.atoms(ts_gra_h)
+    bonds = atoms_bnd[oversaturated_h]
+    forming_bond = None
+    breaking_bond = None
+    breaking_bond2 = None
+    for bond in bonds:
+        atma, atmb = bond
+        if atma == oversaturated_h:
+            atmb, atma = atma, atmb
+        if atms[atma][0] == 'O':
+            forming_bond = bond
+            adj_bnds = atoms_bnd[atma]
+            for abnd in adj_bnds:
+                if abnd != bond:
+                    oo_bnd = abnd
+                    atmc, atmd = oo_bnd
+                    if atmc == atma:
+                        atmc, atmd = atmd, atmc
+                    cbnds = atoms_bnd[atmc]
+                    for cbnd in cbnds:
+                        if cbnd != oo_bnd:
+                            breaking_bond2 = cbnd
+        else:
+            breaking_bond = bond
+    return ts_gra_h, breaking_bond, breaking_bond2, forming_bond
+
+
 def h_transfer_gra(geo):
     ts_gra, oversaturated_atom = choose_cutoff_distance(geo)
     ts_gra = automol.graph.set_stereo_from_geometry(ts_gra, geo)
@@ -526,10 +557,14 @@ def _check_ichs_match(ts_ichs, rxn_ichs, ts_gras, rxn_gras):
 
 def all_reaction_graphs(
         ts_gra, breaking_bond, forming_bond,
-        no_form):
+        no_form, breaking_bond2):
     if not no_form:
-        forw_bnd_ord_dct = {breaking_bond: 0.9, forming_bond: 0.1}
-        back_bnd_ord_dct = {breaking_bond: 0.1, forming_bond: 0.9}
+        if breaking_bond2 is None:
+            forw_bnd_ord_dct = {breaking_bond: 0.9, forming_bond: 0.1}
+            back_bnd_ord_dct = {breaking_bond: 0.1, forming_bond: 0.9}
+        else:
+            forw_bnd_ord_dct = {breaking_bond: 0.9, breaking_bond2: 0.9, forming_bond: 0.1}
+            back_bnd_ord_dct = {breaking_bond: 0.1, breaking_bond2: 0.1, forming_bond: 0.9}
     else:
         forw_bnd_ord_dct = {breaking_bond: 0.9}
         back_bnd_ord_dct = {breaking_bond: 0.1}
@@ -549,16 +584,19 @@ def all_reaction_graphs(
 
 
 def get_zrxn(geo, rxn_info, rxn_class):
+    breaking_bond2 = None
     if rxn_class in ['hydrogen abstraction', 'hydrogen migration']:
         ts_gra, breaking_bond, forming_bond = h_transfer_gra(geo)
     elif rxn_class in ['ring forming scission']:
         ts_gra, breaking_bond, forming_bond = ringformsci_gra(geo)
     elif rxn_class in ['beta scission']:
         ts_gra, breaking_bond, forming_bond = betasci_gra(geo)
+    elif rxn_class in ['elimination']:
+        ts_gra, breaking_bond, breaking_bond2, forming_bond = elim_gra(geo)
 
     ts_gras, rxn_gras = all_reaction_graphs(
         ts_gra, breaking_bond, forming_bond,
-        rxn_class == 'beta scission')
+        rxn_class == 'beta scission', breaking_bond2)
 
     rxn_ichs = [[], []]
     for i, side in enumerate(rxn_info[0]):
