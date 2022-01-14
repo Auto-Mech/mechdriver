@@ -724,20 +724,22 @@ def collect_rrho_params(
             freq_locs = locs
         else:
             freq_fs, freq_locs = get_freq_location(cnf_save_fs, geo, freq_info[1:4], locs)
-        if freq_fs[-1].file.harmonic_frequencies.exists(freq_locs):
-            freqs = freq_fs[-1].file.harmonic_frequencies.read(freq_locs)
 
-        cnf_path = freq_fs[-1].path(freq_locs)
-        sp_fs = autofile.fs.single_point(cnf_path)
-        if sp_info is not None:
-            sp_thy_info = sp_info[1:4]
-        else:
-            sp_thy_info = mod_thy_info[1:4]
-        if sp_fs[-1].file.energy.exists(sp_thy_info):
-            ene = sp_fs[-1].file.energy.read(sp_thy_info)
-        else:
-            ene = _wait_for_energy_to_be_saved(
-                cnf_save_fs, locs, sp_fs, sp_info)
+        if freq_locs is not None:
+            if freq_fs[-1].file.harmonic_frequencies.exists(freq_locs):
+                freqs = freq_fs[-1].file.harmonic_frequencies.read(freq_locs)
+
+            cnf_path = freq_fs[-1].path(freq_locs)
+            sp_fs = autofile.fs.single_point(cnf_path)
+            if sp_info is not None:
+                sp_thy_info = sp_info[1:4]
+            else:
+                sp_thy_info = mod_thy_info[1:4]
+            if sp_fs[-1].file.energy.exists(sp_thy_info):
+                ene = sp_fs[-1].file.energy.read(sp_thy_info)
+            else:
+                ene = _wait_for_energy_to_be_saved(
+                    cnf_save_fs, locs, sp_fs, sp_info)
 
     if freqs is not None:
         freqs = [freq for freq in freqs if freq > 0.]
@@ -758,7 +760,13 @@ def get_freq_location(cnf_fs, geo, freq_thy_locs, cnf_locs):
             freq_locs.append(freq_cnf_locs)
     match_dct = fs_confs_dict(
         freq_cnf_fs, freq_locs, cnf_fs, [cnf_locs])
-    match_freqs_locs = tuple(match_dct[tuple(cnf_locs)])
+    if match_dct[tuple(cnf_locs)] is None:
+        match_freqs_locs = None
+        print(
+            'No freqs found that match ', cnf_fs[-1].path(cnf_locs),
+            'in the freq location', freq_cnf_fs[0].path())
+    else:
+        match_freqs_locs = tuple(match_dct[tuple(cnf_locs)])
     return freq_cnf_fs, match_freqs_locs
 
 
