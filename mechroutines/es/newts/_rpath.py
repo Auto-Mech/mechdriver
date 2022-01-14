@@ -188,6 +188,9 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
         script_str, kwargs = qchem_params(meth_dct)
         cas_kwargs.update(kwargs)
 
+        print('cas kwargs test')
+        print(cas_kwargs)
+    
         geo = automol.zmat.geometry(ref_zma)
         sp.run_energy(ref_zma, geo, hs_info, thy_inf,
                       scn_run_fs, scn_save_fs, inf_locs, run_prefix,

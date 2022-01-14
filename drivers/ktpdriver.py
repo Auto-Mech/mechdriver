@@ -111,7 +111,8 @@ def run(pes_rlst, pes_grp_dct,
             tsk_key_dct = run_fit_tsk[-1]
             ktp_tasks.run_fits_task(
                 pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
-                label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
+                label_dct, pes_mod_dct, spc_mod_dct, thy_dct,
+                tsk_key_dct)
 
 
 # ------- #
