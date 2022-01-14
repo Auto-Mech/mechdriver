@@ -3,13 +3,15 @@
 """
 
 import sys
+import os
 import automol.inchi
 import automol.geom
 from phydat import phycon
-import thermfit
+from autorun import execute_function_in_parallel
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models.ene import read_energy
+import thermfit
 
 
 # FUNCTIONS TO CALCULATE ENERGIES FOR THERMOCHEMICAL PARAMETERS #
@@ -19,6 +21,54 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     """ Reads the electronic and zero-point energies for a species and
         transition state and their constituent basis set.
     """
+    def _read_basis_energy(
+            ich_name_dct, spc_dct, uni_refs_dct, spc_model_dct_i,
+            run_prefix, save_prefix, ichs, output_queue=None):
+
+        h_basis_dct = {}
+        print(f'Process {os.getpid()} reading energy for species: {ichs}')
+        for ich in ichs:
+            name = ich_name_dct[ich]
+            if name in spc_dct:
+                spc_dct_i = spc_dct[name]
+                prname = name
+            elif name in uni_refs_dct:
+                spc_dct_i = uni_refs_dct[name]
+                prname = name
+            if 'ts' in name or 'TS' in name:
+                reacs, prods = ich.split('PRODS')
+                reacs = reacs.replace('REACS', '')
+                reacs = reacs.split('REAC')
+                prods = prods.split('PROD')
+                reac_lbl = 'r0'
+                if len(reacs) > 1:
+                    reac_lbl += '+r1'
+                prod_lbl = 'p0'
+                if len(prods) > 1:
+                    prod_lbl += '+p1'
+                ioprinter.info_message(
+                    f'Basis Reaction: {reac_lbl}={prod_lbl} 1 1 1 ')
+                for i, reac in enumerate(reacs):
+                    ioprinter.info_message(
+                        f'r{i},{reac},{automol.inchi.smiles(reac)},1')
+                for i, prod in enumerate(prods):
+                    ioprinter.info_message(
+                        f'p{i},{prod},{automol.inchi.smiles(prod)},1')
+            ioprinter.debug_message('bases energies test:', ich, name)
+            pf_filesystems = filesys.models.pf_filesys(
+                spc_dct_i, spc_model_dct_i,
+                run_prefix, save_prefix,
+                saddle=('ts' in name or 'TS' in name),
+                name=name)
+            ioprinter.info_message(
+                f'Calculating energy for basis {prname}...', newline=1)
+            h_basis_dct[ich] = read_energy(
+                    spc_dct_i, pf_filesystems,
+                    spc_model_dct_i, run_prefix,
+                    read_ene=True, read_zpe=True,
+                    saddle='ts' in name or 'TS' in name
+                )
+        output_queue.put((h_basis_dct,))
 
     # Initialize ich name dct to noe
     ich_name_dct = {}
@@ -77,49 +127,20 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
     # Get the energies of the bases
     h_basis = []
-    for ich, name in ich_name_dct.items():
-        if name in spc_dct:
-            spc_dct_i = spc_dct[name]
-            prname = name
-        elif name in uni_refs_dct:
-            spc_dct_i = uni_refs_dct[name]
-            prname = name
-        if 'ts' in name or 'TS' in name:
-            reacs, prods = ich.split('PRODS')
-            reacs = reacs.replace('REACS', '')
-            reacs = reacs.split('REAC')
-            prods = prods.split('PROD')
-            reac_lbl = 'r0'
-            if len(reacs) > 1:
-                reac_lbl += '+r1'
-            prod_lbl = 'p0'
-            if len(prods) > 1:
-                prod_lbl += '+p1'
-            ioprinter.info_message(
-                f'Basis Reaction: {reac_lbl}={prod_lbl} 1 1 1 ')
-            for i, reac in enumerate(reacs):
-                ioprinter.info_message(
-                    f'r{i},{reac},{automol.inchi.smiles(reac)},1')
-            for i, prod in enumerate(prods):
-                ioprinter.info_message(
-                    f'p{i},{prod},{automol.inchi.smiles(prod)},1')
-        ioprinter.debug_message('bases energies test:', ich, name)
-        pf_filesystems = filesys.models.pf_filesys(
-            spc_dct_i, spc_model_dct_i,
-            run_prefix, save_prefix,
-            saddle=('ts' in name or 'TS' in name),
-            name=name)
-        ioprinter.info_message(
-            f'Calculating energy for basis {prname}...', newline=1)
-        h_basis.append(
-            read_energy(
-                spc_dct_i, pf_filesystems,
-                spc_model_dct_i, run_prefix,
-                read_ene=True, read_zpe=True,
-                saddle='ts' in name or 'TS' in name
+    ichs = [*ich_name_dct.keys()]
+    args = (
+            ich_name_dct, spc_dct, uni_refs_dct, spc_model_dct_i,
+            run_prefix, save_prefix
             )
-        )
-
+    h_basis_dct_lst = execute_function_in_parallel(
+        _read_basis_energy, ichs, args, nprocs=4)
+    print('hbasis list', h_basis_dct_lst)
+    for ich in ichs:
+        for h_basis_dct in h_basis_dct_lst:
+            if ich in h_basis_dct:
+                h_basis.append(h_basis_dct[ich])
+                break
+    print(h_basis)
     # Check if all the energies found
     no_ene_cnt = 0
     for basis_ene, basis_name in zip(h_basis, ich_name_dct.values()):
