@@ -36,10 +36,12 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
     """
     vib_model = spc_mod_dct_i['vib']['mod']
     tors_model = spc_mod_dct_i['tors']['mod']
-    has_tors = bool(any(rotors))
+    has_tors = bool(rotors is not None)
     tors_hr_model = bool(
-        tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'))
-    tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
+        tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv',
+                       'tau-1dhr', 'tau-1dhrf', 'tau-1dhrfa')
+    )
+    tau_hr_model = bool('tau' in tors_model and vib_model != 'vib')
 
     return has_tors and (tors_hr_model or tau_hr_model)
 
@@ -55,7 +57,7 @@ def tau_pf(spc_mod_dct_i):
     """ determine if pf is done with tau
     """
     tors_model = spc_mod_dct_i['tors']['mod']
-    return bool(tors_model == 'tau')
+    return bool(tors_model in ('tau', 'tau-1dhr', 'tau-1dhrf', 'tau-1dhrfa'))
 
 
 def scale_1d(spc_mod_dct_i):
@@ -63,7 +65,9 @@ def scale_1d(spc_mod_dct_i):
     """
     ioprinter.debug_message(
         'tors model in scale set', spc_mod_dct_i['tors']['mod'])
-    return bool(spc_mod_dct_i['tors']['mod'] == '1dhrfa')
+    return (
+        bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', '1dhrf', '1dhr'))
+        and spc_mod_dct_i['tors']['scale'] == 'on')
 
 
 def scale_tors_pot(spc_mod_dct_i, to_scale):
@@ -71,6 +75,14 @@ def scale_tors_pot(spc_mod_dct_i, to_scale):
     """
     onedhr_model = bool('1dhr' in spc_mod_dct_i['tors']['mod'])
     return bool(onedhr_model and to_scale)
+
+
+def squash_tors_pot(spc_mod_dct_i):
+    """ determine if we need to scale the potential
+    """
+    ioprinter.debug_message(
+        'tors model in scale set', spc_mod_dct_i['tors']['mod'])
+    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', 'tau-1dhrfa'))
 
 
 def vib_tau(spc_mod_dct_i):
@@ -139,6 +151,15 @@ def treat_tunnel(ts_mod, rxn_class):
     return treat
 
 
+def use_well_extension(spc_dct, rxn_lst, pes_idx, well_extension_value):
+    """ Decide if the well-extenson method can be used.
+    """
+    return (
+        not is_abstraction_pes(spc_dct, rxn_lst, pes_idx) and
+        well_extension_value
+    )
+
+
 def is_atom(spc_dct_i):
     """ Determine if the species is an atom by using the information
         provided in its data dictionary of the overall species dictionary.
@@ -161,7 +182,7 @@ def is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
 
     if len(rxn_lst) == 1:
         chnl_idx, _ = rxn_lst[0]
-        tsname = 'ts_{:g}_{:g}_0'.format(pes_idx+1, chnl_idx+1)
+        tsname = f'ts_{pes_idx+1:g}_{chnl_idx+1:g}_0'
 
         rxn_class = spc_dct[tsname]['class']
         if (automol.par.typ(rxn_class) ==

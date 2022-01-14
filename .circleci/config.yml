@@ -3,6 +3,7 @@ jobs:
     test-mechdriver:
         docker:
             - image: continuumio/miniconda3
+        working_directory: ~/mechdriver
         steps:
             - checkout  # checkout the code
             - run: 
@@ -17,11 +18,27 @@ jobs:
                     source activate mechdriver-env
                     python setup.py install
             - run:
-                name: Test mechdriver pep8
+                name: Test mechdriver
+                no_output_timeout: 60m
+                command: |
+                    export PYTHONUNBUFFERED=1
+                    source activate mechdriver-env
+                    cd ..
+                    pytest -vv --disable-pytest-warnings --cov=mechlib --cov=mechroutines --cov=drivers --cov-report=html --full-trace
+                    coverage report
+            - run:
+                name: Assess PEP8
                 command: |
                     source activate mechdriver-env
-                    flake8 --exit-zero ../mechdriver
-                    pylint --rcfile=../../.pylintrc mechdriver
+                    flake8 --exit-zero mechlib
+                    pylint --rcfile=.pylintrc mechlib
+                    flake8 --exit-zero mechroutines
+                    pylint --rcfile=.pylintrc mechroutines
+                    flake8 --exit-zero drivers
+                    pylint --rcfile=.pylintrc drivers
+            - store_artifacts:
+                    path: ../htmlcov
+                    destination: /root/mechdriver
 workflows:
     version: 2
     build-all:

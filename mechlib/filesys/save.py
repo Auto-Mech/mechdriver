@@ -37,6 +37,27 @@ def atom(sp_ret, cnf_fs, thy_locs, zma,
     _save_energy(sp_ret, sp_fs, thy_locs)
 
 
+def _conformer_setup(cnf_fs, rng_locs, tors_locs, zma_locs):
+    """ sets up the save locs and fs for conformer
+    """
+    # Build filesystem locs and objects
+    cnf_locs, zma_locs = _generate_locs(
+        rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
+
+    zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
+    sp_fs = autofile.fs.single_point(cnf_fs[-1].path(cnf_locs))
+    return cnf_locs, zma_locs, zma_fs, sp_fs
+
+
+def _conformer_aux_info(zma_fs, zma_locs, zrxn=None):
+    """ Save rings, rotors, and reaction objects
+        into the ZMA fs
+    """
+    _save_rotors(zma_fs, zma_locs, zrxn=zrxn)
+    _save_rings(zma_fs, zma_locs, zrxn=zrxn)
+    _save_reaction(zma_fs, zma_locs, zrxn=zrxn)
+
+
 def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
               zrxn=None, init_zma=None,
               rng_locs=None, tors_locs=None, zma_locs=None):
@@ -44,13 +65,8 @@ def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
 
         thy_fs = (_fs, _locs)
     """
-
-    # Build filesystem locs and objects
-    cnf_locs, zma_locs = _generate_locs(
-        rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
-
-    zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
-    sp_fs = autofile.fs.single_point(cnf_fs[-1].path(cnf_locs))
+    cnf_locs, zma_locs, zma_fs, sp_fs = _conformer_setup(
+        cnf_fs, rng_locs, tors_locs, zma_locs)
 
     # Save data from optimization and hessian jobs
     _save_geom(opt_ret, cnf_fs, cnf_locs)
@@ -64,9 +80,30 @@ def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
     init_cnf_samp(cnf_fs, cnf_locs)
 
     # Save auxiliary information for the structure, if needed
-    _save_rotors(zma_fs, zma_locs, zrxn=zrxn)
-    _save_rings(zma_fs, zma_locs, zrxn=zrxn)
-    _save_reaction(zma_fs, zma_locs, zrxn=zrxn)
+    _conformer_aux_info(zma_fs, zma_locs, zrxn=zrxn)
+
+
+def parsed_conformer(
+        save_info, cnf_fs, thy_locs, rng_locs,
+        zma_locs=(0,), tors_locs=None, zrxn=None, hess_ret=None):
+    """ Save a conformer and relavent information without an output ret
+    """
+    cnf_locs, zma_locs, zma_fs, sp_fs = _conformer_setup(
+        cnf_fs, rng_locs, tors_locs, zma_locs)
+
+    # Save data from optimization and hessian jobs
+    geo, zma, ene, inf_obj, inp_str = save_info
+    _save_geom_parsed(geo, inf_obj, inp_str, cnf_fs, cnf_locs)
+    _save_zmatrix_parsed(zma, inf_obj, inp_str, zma_fs, zma_locs)
+    _save_energy_parsed(ene, inf_obj, inp_str, sp_fs, thy_locs)
+    if hess_ret is not None:
+        _save_hessian(hess_ret, cnf_fs, cnf_locs)
+
+    # Save ring and cnf samp files, if needed
+    init_cnf_samp(cnf_fs, cnf_locs)
+
+    # Save auxiliary information for the structure, if needed
+    _conformer_aux_info(zma_fs, zma_locs, zrxn=zrxn)
 
 
 def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs):
@@ -149,24 +186,17 @@ def instability(conn_zma, disconn_zmas, cnf_save_fs,
 
     # Set and print the save path information
     print(" - Saving...")
-    print(" - Save path: {}".format(cnf_save_path))
+    print(f" - Save path: {cnf_save_path}")
 
 
-def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
+def flux(flux_str, inp_strs, vrc_fs, vrc_locs=(0,)):
     """ Save the VaReCoF flux and input
     """
 
     # Unpack the ret
-    _, inp_strs, _ = vrc_ret
     tst_str, divsur_str, molpro_str, tml_str, struct_str, pot_str = inp_strs
 
-    # Get the flux string (somehow)
-    flux_str = ''
-
     # Save the files
-    ts_save_path = ts_save_fs[-1].path(ts_locs)
-
-    vrc_fs = autofile.fs.vrctst(ts_save_path)
     vrc_fs[-1].create(vrc_locs)
     vrc_fs[-1].file.vrctst_tst.write(tst_str, vrc_locs)
     vrc_fs[-1].file.vrctst_divsur.write(divsur_str, vrc_locs)
@@ -228,8 +258,7 @@ def energy_transfer(etrans_save_fs, etrans_locs,
     # Update the trajectory file
     traj = []
     for geo, eps, sig, ranseed in zip(geoms, epsilons, sigmas, ranseeds):
-        comment = 'Epsilon: {} cm-1   Sigma: {} Ang   RandSeed: {}'.format(
-            eps, sig, ranseed)
+        comment = f'Epsilon: {eps} cm-1  Sigma: {sig} Ang  RandSeed: {ranseed}'
         traj.append((comment, geo))
 
     # Write the info obj add ranseeds to this I think
@@ -238,7 +267,7 @@ def energy_transfer(etrans_save_fs, etrans_locs,
 
     # Write the params to the save file system
     etrans_save_fs[-1].file.lj_input.write(input_str, etrans_locs)
-    etrans_save_fs[-1].file.info.write(inf_obj, etrans_locs)
+    etrans_save_fs[-1].file.lennard_jones_info.write(inf_obj, etrans_locs)
     etrans_save_fs[-1].file.molpro_inp_file.write(els_str, etrans_locs)
     etrans_save_fs[-1].file.epsilon.write(avg_epsilon, etrans_locs)
     etrans_save_fs[-1].file.sigma.write(avg_sigma, etrans_locs)
@@ -246,6 +275,17 @@ def energy_transfer(etrans_save_fs, etrans_locs,
 
 # Job readers
 # Constituent functions for saving various bits of information
+def read_zma_from_geo(init_zma, geo):
+    """ trys to read a zma from a job and does processing on it as needed
+        (1) update init zma (in output) using opt geo (in outpt)
+    """
+    zma = None
+    if init_zma is not None:
+        print('Resetting ZMA coords using opt geoms...')
+        zma = rebuild_zma_from_opt_geo(init_zma, geo)
+    return zma
+
+
 def read_job_zma(ret, init_zma=None, rebuild=False):
     """ trys to read a zma from a job and does processing on it as needed
 
@@ -291,22 +331,27 @@ def rebuild_zma_from_opt_geo(init_zma, opt_geo):
     return zma
 
 
+def _save_geom_parsed(geo, inf_obj, inp_str, cnf_fs, cnf_locs):
+    """ Saving a Cartesian geometry. could be for cnf fs or scn fs
+    """
+
+    cnf_fs[-1].create(cnf_locs)
+    cnf_path = cnf_fs[-1].path(cnf_locs)
+    print(f" - Saving at {cnf_path}")
+
+    cnf_fs[-1].file.geometry_info.write(inf_obj, cnf_locs)
+    cnf_fs[-1].file.geometry_input.write(inp_str, cnf_locs)
+    cnf_fs[-1].file.geometry.write(geo, cnf_locs)
+
+
 def _save_geom(ret, cnf_fs, cnf_locs):
     """ Saving a Cartesian geometry. could be for cnf fs or scn fs
     """
 
     print(" - Reading geometry from output...")
     inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
-
     geo = elstruct.reader.opt_geometry(prog, out_str)
-
-    cnf_fs[-1].create(cnf_locs)
-    cnf_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_path))
-
-    cnf_fs[-1].file.geometry_info.write(inf_obj, cnf_locs)
-    cnf_fs[-1].file.geometry_input.write(inp_str, cnf_locs)
-    cnf_fs[-1].file.geometry.write(geo, cnf_locs)
+    _save_geom_parsed(geo, inf_obj, inp_str, cnf_fs, cnf_locs)
 
 
 def _save_grad(ret, cnf_fs, cnf_locs):
@@ -320,11 +365,23 @@ def _save_grad(ret, cnf_fs, cnf_locs):
 
     cnf_fs[-1].create(cnf_locs)
     cnf_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_path))
+    print(f" - Saving at {cnf_path}")
 
     cnf_fs[-1].file.gradient_info.write(inf_obj, cnf_locs)
     cnf_fs[-1].file.gradient_input.write(inp_str, cnf_locs)
     cnf_fs[-1].file.gradient.write(grad, cnf_locs)
+
+
+def _save_zmatrix_parsed(zma, inf_obj, inp_str, zma_fs, zma_locs):
+    """ save zmatrix from zmat object
+    """
+    zma_fs[-1].create(zma_locs)
+    zma_path = zma_fs[-1].path(zma_locs)
+    print(f" - Saving at {zma_path}")
+
+    zma_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
+    zma_fs[-1].file.geometry_input.write(inp_str, zma_locs)
+    zma_fs[-1].file.zmatrix.write(zma, zma_locs)
 
 
 def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
@@ -335,17 +392,27 @@ def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
     """
 
     print(" - Reading Z-Matrix from output...")
-    inf_obj, inp_str, _, _, _ = _unpack_ret(ret)
+    inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
+    zma = None
+    if init_zma is not None:
+        print('using opt geo fro zma')
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = read_zma_from_geo(init_zma, geo)
+    if zma is None:
+        zma = read_job_zma(ret, init_zma=init_zma)
+    _save_zmatrix_parsed(zma, inf_obj, inp_str, zma_fs, zma_locs)
 
-    zma = read_job_zma(ret, init_zma=init_zma, rebuild=False)
 
-    zma_fs[-1].create(zma_locs)
-    zma_path = zma_fs[-1].path(zma_locs)
-    print(" - Saving at {}".format(zma_path))
+def _save_energy_parsed(ene, inf_obj, inp_str, sp_fs, sp_locs):
+    """ Save an energy that has been parsed
+    """
+    sp_fs[-1].create(sp_locs)
+    sp_path = sp_fs[-1].path(sp_locs)
+    print(f" - Saving at {sp_path}")
 
-    zma_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
-    zma_fs[-1].file.geometry_input.write(inp_str, zma_locs)
-    zma_fs[-1].file.zmatrix.write(zma, zma_locs)
+    sp_fs[-1].file.input.write(inp_str, sp_locs)
+    sp_fs[-1].file.info.write(inf_obj, sp_locs)
+    sp_fs[-1].file.energy.write(ene, sp_locs)
 
 
 def _save_energy(ret, sp_fs, sp_locs):
@@ -356,14 +423,20 @@ def _save_energy(ret, sp_fs, sp_locs):
     inf_obj, inp_str, out_str, prog, method = _unpack_ret(ret)
 
     ene = elstruct.reader.energy(prog, method, out_str)
+    _save_energy_parsed(ene, inf_obj, inp_str, sp_fs, sp_locs)
 
-    sp_fs[-1].create(sp_locs)
-    sp_path = sp_fs[-1].path(sp_locs)
-    print(" - Saving at {}".format(sp_path))
 
-    sp_fs[-1].file.input.write(inp_str, sp_locs)
-    sp_fs[-1].file.info.write(inf_obj, sp_locs)
-    sp_fs[-1].file.energy.write(ene, sp_locs)
+def _save_hessian_parsed(hess, freqs, inf_obj, inp_str, cnf_fs, cnf_locs):
+    """ save a hessian that has been parsed
+    """
+    cnf_fs[-1].create(cnf_locs)
+    cnf_path = cnf_fs[-1].path(cnf_locs)
+    print(f" - Saving at {cnf_path}")
+
+    cnf_fs[-1].file.hessian_info.write(inf_obj, cnf_locs)
+    cnf_fs[-1].file.hessian_input.write(inp_str, cnf_locs)
+    cnf_fs[-1].file.hessian.write(hess, cnf_locs)
+    cnf_fs[-1].file.harmonic_frequencies.write(freqs, cnf_locs)
 
 
 def _save_hessian(ret, cnf_fs, cnf_locs):
@@ -375,15 +448,7 @@ def _save_hessian(ret, cnf_fs, cnf_locs):
 
     hess = elstruct.reader.hessian(prog, out_str)
     freqs = elstruct.reader.harmonic_frequencies(prog, out_str)
-
-    cnf_fs[-1].create(cnf_locs)
-    cnf_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_path))
-
-    cnf_fs[-1].file.hessian_info.write(inf_obj, cnf_locs)
-    cnf_fs[-1].file.hessian_input.write(inp_str, cnf_locs)
-    cnf_fs[-1].file.hessian.write(hess, cnf_locs)
-    cnf_fs[-1].file.harmonic_frequencies.write(freqs, cnf_locs)
+    _save_hessian_parsed(hess, freqs, inf_obj, inp_str, cnf_fs, cnf_locs)
 
 
 def _save_rotors(zma_fs, zma_locs, zrxn=None):
@@ -396,8 +461,8 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_path = zma_fs[-1].path(zma_locs)
-        print(" - Rotors identified from Z-Matrix at {}".format(zma_path))
-        print(" - Saving rotor information at same location")
+        print(f" - Rotors identified from Z-Matrix at {zma_path}")
+        print(" - Saving rotor information at same location.")
         zma_fs[-1].file.torsions.write(rotors, zma_locs)
 
 
@@ -409,6 +474,9 @@ def _save_rings(zma_fs, zma_locs, zrxn=None):
     rings_atoms = automol.zmat.all_rings_atoms(zma, zrxn=zrxn)
     ring_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
     if ring_dct:
+        zma_path = zma_fs[-1].path(zma_locs)
+        print(f" - Ring torsions identified from Z-Matrix at {zma_path}")
+        print(" - Saving ring torsions information at same location.")
         zma_fs[-1].file.ring_torsions.write(ring_dct, zma_locs)
 
 
@@ -417,7 +485,8 @@ def _save_reaction(zma_fs, zma_locs, zrxn=None):
     """
 
     if zrxn is not None:
-        print(" - Saving reaction")
+        zma_path = zma_fs[-1].path(zma_locs)
+        print(f" - Saving Reaction Class+Graph object at {zma_path}")
         zma_fs[-1].file.reaction.write(zrxn, zma_locs)
 
 
@@ -433,7 +502,7 @@ def _save_instab(ret, instab_fs):
     # Save the geometry information
     instab_fs[-1].create()
     instab_path = instab_fs[-1].path()
-    print(" - Saving at {}".format(instab_path))
+    print(f" - Saving at {instab_path}")
     instab_fs[-1].file.geometry_info.write(inf_obj)
     instab_fs[-1].file.geometry_input.write(inp_str)
     instab_fs[-1].file.geometry.write(geo)

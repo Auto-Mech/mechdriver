@@ -8,15 +8,19 @@ import automol
 from . import _seq as optseq
 
 
+BASE_ERRS = (elstruct.Error.SCF_NOCONV,
+             elstruct.Error.MCSCF_NOCONV,
+             elstruct.Error.CC_NOCONV,
+             elstruct.Error.LIN_DEP_BASIS)
 JOB_ERROR_DCT = {
-    elstruct.Job.ENERGY: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.GRADIENT: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.HESSIAN: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.VPT2: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.MOLPROP: elstruct.Error.SCF_NOCONV,
-    elstruct.Job.OPTIMIZATION: elstruct.Error.OPT_NOCONV,
-    elstruct.Job.IRCF: elstruct.Error.IRC_NOCONV,
-    elstruct.Job.IRCR: elstruct.Error.IRC_NOCONV,
+    elstruct.Job.ENERGY: BASE_ERRS,
+    elstruct.Job.GRADIENT: BASE_ERRS,
+    elstruct.Job.HESSIAN: BASE_ERRS,
+    elstruct.Job.VPT2: BASE_ERRS,
+    elstruct.Job.MOLPROP: BASE_ERRS,
+    elstruct.Job.OPTIMIZATION: BASE_ERRS+(elstruct.Error.OPT_NOCONV,),
+    elstruct.Job.IRCF: BASE_ERRS+(elstruct.Error.IRC_NOCONV,),
+    elstruct.Job.IRCR: BASE_ERRS+(elstruct.Error.IRC_NOCONV,)
 }
 
 JOB_SUCCESS_DCT = {
@@ -51,6 +55,7 @@ JOB_RUNNER_DCT = {
 
 def execute_job(job, script_str, run_fs,
                 geo, spc_info, thy_info,
+                zrxn=None,
                 errors=(), options_mat=(),
                 retryfail=True, feedback=False,
                 frozen_coordinates=(), freeze_dummy_atoms=True,
@@ -61,6 +66,7 @@ def execute_job(job, script_str, run_fs,
 
     run_job(job, script_str, run_fs,
             geo, spc_info, thy_info,
+            zrxn=zrxn,
             errors=errors,
             options_mat=options_mat,
             retryfail=retryfail,
@@ -77,6 +83,7 @@ def execute_job(job, script_str, run_fs,
 
 def run_job(job, script_str, run_fs,
             geo, spc_info, thy_info,
+            zrxn=None,
             errors=(), options_mat=(), retryfail=True, feedback=False,
             frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
             **kwargs):
@@ -104,7 +111,7 @@ def run_job(job, script_str, run_fs,
         :param overwrite: overwrite existing input file with new one and rerun
         :type overwrite: bool
         :param kwargs: additional options for electronic structure job
-        :type kwarfs: dict[str]
+        :type kwargs: dict[str]
     """
 
     assert job in JOB_RUNNER_DCT
@@ -116,15 +123,15 @@ def run_job(job, script_str, run_fs,
     run_path = run_fs[-1].path([job])
     if overwrite:
         do_run = True
-        print(" - Running {} job at {}".format(job, run_path))
+        print(f" - Running {job} job at {run_path}")
     else:
         if not run_fs[-1].file.info.exists([job]):
             do_run = True
-            print(" - Running {} job at {}".format(job, run_path))
+            print(f" - Running {job} job at {run_path}")
         else:
             inf_obj = run_fs[-1].file.info.read([job])
             if inf_obj.status == autofile.schema.RunStatus.FAILURE:
-                print(" - Found failed {} job at {}".format(job, run_path))
+                print(f" - Found failed {job} job at {run_path}")
                 if retryfail:
                     print(" - Retrying...")
                     do_run = True
@@ -134,11 +141,9 @@ def run_job(job, script_str, run_fs,
             else:
                 do_run = False
                 if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
-                    print(" - Found completed {} job at {}"
-                          .format(job, run_path))
+                    print(f" - Found completed {job} job at {run_path}")
                 else:
-                    print(" - Found running {} job at {}"
-                          .format(job, run_path))
+                    print(f" - Found running {job} job at {run_path}")
                     print(" - Skipping...")
 
     if do_run:
@@ -164,11 +169,10 @@ def run_job(job, script_str, run_fs,
                 runner, feedback=feedback,
                 frozen_coordinates=frozen_coordinates,
                 freeze_dummy_atoms=freeze_dummy_atoms)
-
         inp_str, out_str = runner(
             script_str, run_path, geo=geo, chg=spc_info[1],
             mul=spc_info[2], method=thy_info[1], basis=thy_info[2],
-            orb_type=thy_info[3], prog=thy_info[0],
+            orb_type=thy_info[3], prog=thy_info[0], zrxn=zrxn,
             errors=errors, options_mat=options_mat, **kwargs
         )
 
@@ -205,13 +209,11 @@ def read_job(job, run_fs):
         :rtype: (bool, (autofile.info_object object???, str, str))
     """
 
-    if not run_fs[-1].file.output.exists([job]):
-        print(" - No output file found. Skipping...")
-        success = False
-        ret = None
-    else:
-        assert run_fs[-1].file.info.exists([job])
-        assert run_fs[-1].file.input.exists([job])
+    inf_exists = run_fs[-1].file.info.exists([job])
+    inp_exists = run_fs[-1].file.input.exists([job])
+    out_exists = run_fs[-1].file.output.exists([job])
+
+    if inf_exists and inp_exists and out_exists:
         inf_obj = run_fs[-1].file.info.read([job])
         inp_str = run_fs[-1].file.input.read([job])
         out_str = run_fs[-1].file.output.read([job])
@@ -220,7 +222,17 @@ def read_job(job, run_fs):
 
         success = bool(is_successful_output(out_str, job, prog))
         if success:
-            print(" - Reading successful ouput...")
+            print(" - Reading successful output...")
+    else:
+        if not out_exists:
+            print(" - No output file found.")
+        if not inp_exists:
+            print(" - No input file found.")
+        if not inf_exists:
+            print(" - No info file found.")
+        print("Skipping...")
+        success = False
+        ret = None
 
     return success, ret
 
@@ -242,17 +254,20 @@ def is_successful_output(out_str, job, prog):
 
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT
-    error = JOB_ERROR_DCT[job]
+    errors = JOB_ERROR_DCT[job]
     success = JOB_SUCCESS_DCT[job]
 
     ret = False
     if elstruct.reader.has_normal_exit_message(prog, out_str):
-        conv = elstruct.reader.check_convergence_messages(
-            prog, error, success, out_str)
+        for error in errors:
+            conv = elstruct.reader.check_convergence_messages(
+                prog, error, success, out_str)
         if conv:
             ret = True
         else:
             print(" - Output has an error message. Skipping...")
+    else:
+        print(' - Output does not contain normal exit message. Skipping...')
 
     return ret
 

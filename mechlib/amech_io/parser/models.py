@@ -16,6 +16,8 @@ MODKIN_VAL_DCT = {
     'pressures': ((tuple,), (), None),
     'rate_temps': ((tuple,), (), None),
     'thermo_temps': ((tuple,), (), None),
+    'well_extension_pressure': ((int, float), (), 1.0),
+    'well_extension_temp': ((int, float), (), 600.0),
     'temp_unit': ((str,), (), 'K'),
     'pressure_unit': ((str,), (), 'atm'),
     'rate_fit': {
@@ -65,6 +67,7 @@ MODPF_VAL_DCT = {
             'rigid'),
         'enelvl': ((str,), (), None),
         'geolvl': ((str,), (), None),
+        'scale': ((str,), (), 'on'),
     },
     'symm': {
         'mod': ((str,), ('none', 'sampling', '1dhr'), 'none'),
@@ -92,7 +95,7 @@ def models_dictionary(mod_str, thy_dct):
 
         :param mod_str: models.dat input file string
         :type mod_str: str
-        :param thy_dct:
+        :param thy_dct: information
         :type: dict[str:dict[str:str/float]]
     """
 
@@ -102,19 +105,26 @@ def models_dictionary(mod_str, thy_dct):
     spc_blocks = ioformat.ptt.named_end_blocks(
         mod_str, 'spc', footer='spc')
 
-    kin_mod_dct = automol.util.dict_.merge_subdct(
-        ioformat.ptt.keyword_dcts_from_blocks(kin_blocks), keep_subdct=True)
-    spc_mod_dct = automol.util.dict_.merge_subdct(
-        ioformat.ptt.keyword_dcts_from_blocks(spc_blocks), keep_subdct=True)
-
     # Add defaults, check key-vals, and format each model dicts
-    for mod, dct in kin_mod_dct.items():
-        if dct:  # if statement for empty global dcts from above fxn
-            kin_mod_dct[mod] = _kin_model_build(dct)
+    if kin_blocks is not None:
+        kin_mod_dct = automol.util.dict_.merge_subdct(
+            ioformat.ptt.keyword_dcts_from_blocks(kin_blocks),
+            keep_subdct=True)
+        for mod, dct in kin_mod_dct.items():
+            if dct:  # if statement for empty global dcts from above fxn
+                kin_mod_dct[mod] = _kin_model_build(dct)
+    else:
+        kin_mod_dct = None
 
-    for mod, dct in spc_mod_dct.items():
-        if dct:  # if statement for empty global dcts from above fxn
-            spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
+    if spc_blocks is not None:
+        spc_mod_dct = automol.util.dict_.merge_subdct(
+            ioformat.ptt.keyword_dcts_from_blocks(spc_blocks),
+            keep_subdct=True)
+        for mod, dct in spc_mod_dct.items():
+            if dct:  # if statement for empty global dcts from above fxn
+                spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
+    else:
+        spc_mod_dct = None
 
     return kin_mod_dct, spc_mod_dct
 
@@ -127,6 +137,8 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
         {'vib': {'model': '', 'geolvl_info': (), ...}}
 
         Take all of the spc model dcts or just one?
+
+        Defaults does not work since it just replaces the dct entirely
     """
 
     # Expand the wells keyword if it has been set
@@ -149,7 +161,7 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
         if isinstance(lvl_val, str):
             val_inf = (1.00, tinfo.from_dct(thy_dct.get(lvl_val)))
         else:
-            val_inf = (lvl_val[0], tinfo.from_dct(thy_dct.get(lvl_val)))
+            val_inf = (lvl_val[0], tinfo.from_dct(thy_dct.get(lvl_val[1])))
 
         return val_inf
 
@@ -183,6 +195,10 @@ def _kin_model_build(kin_mod_dct_i):
     new_ratefit = {}
     for key, val in old_ratefit.items():
         if not any(x in key for x in ('pdep', 'arr', 'cheb', 'troe')):
+            if val == 'arrhenius':  # keeps legacy working with the new form
+                val = 'arr'
+            elif val == 'chebyshev':
+                val = 'cheb'
             new_ratefit[key] = val
 
     new_ratefit.update({
@@ -256,7 +272,7 @@ def split_model(mod):
 
     return (tuple(models), tuple(coeffs), tuple(operators))
 
-
+# Functions to simplify accessing the model dictionaries
 # def get_model(comp, spc_mod_dct_i):
 #     """ get model for spc dct compoenent
 #     """

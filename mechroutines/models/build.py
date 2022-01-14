@@ -11,6 +11,7 @@ import autofile
 import autorun
 from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models import ene
@@ -23,13 +24,14 @@ from mechroutines.models import _vib as vib
 from mechroutines.models import _flux as flux
 from mechroutines.models import _util as util
 from mechroutines.thermo import basis
+# import thermfit
 
 
 # General readers
 def read_spc_data(spc_dct, spc_name,
                   pes_mod_dct_i, spc_mod_dct_i,
                   run_prefix, save_prefix, chn_basis_ene_dct,
-                  calc_chn_ene=True):
+                  calc_chn_ene=True, spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a given species.
         Also sets the writer for appropriately formatting the data into
         an MESS input file string.
@@ -57,28 +59,30 @@ def read_spc_data(spc_dct, spc_name,
     """
 
     ioprinter.obj('line_plus')
-    ioprinter.reading(
-        'Reading filesystem info for {}'.format(spc_name), newline=1)
+    ioprinter.reading(f'filesystem info for {spc_name}', newline=1)
 
     vib_model = spc_mod_dct_i['vib']['mod']
     tors_model = spc_mod_dct_i['tors']['mod']
     spc_dct_i = spc_dct[spc_name]
     if typ.is_atom(spc_dct_i):
         inf_dct = atm_data(
-            spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
+            spc_dct, spc_name,
+            pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix)
         writer = 'atom_block'
     else:
-        if vib_model == 'tau' or tors_model == 'tau':
+        if vib_model == 'tau' or 'tau' in tors_model:
             inf_dct = tau_data(
-                spc_dct_i, spc_mod_dct_i,
+                spc_dct_i,
+                spc_mod_dct_i,
                 run_prefix, save_prefix, saddle=False)
             writer = 'tau_block'
         else:
             inf_dct, chn_basis_ene_dct = mol_data(
                 spc_name, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i, chn_basis_ene_dct,
-                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene, zrxn=None)
+                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene,
+                spc_locs=spc_locs, zrxn=None)
             writer = 'species_block'
 
     # Add writer to inf dct
@@ -89,7 +93,8 @@ def read_spc_data(spc_dct, spc_name,
 
 def read_ts_data(spc_dct, tsname, rcts, prds,
                  pes_mod_dct_i, spc_mod_dct_i,
-                 run_prefix, save_prefix, chn_basis_ene_dct):
+                 run_prefix, save_prefix, chn_basis_ene_dct,
+                 spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a transition state.
         Also sets the writer for appropriately formatting the data into
         an MESS input file string.
@@ -119,8 +124,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     """
 
     ioprinter.obj('line_plus')
-    ioprinter.reading(
-        'Reading filesystem info for {}'.format(tsname), newline=1)
+    ioprinter.reading(f'Reading filesystem info for {tsname}', newline=1)
 
     ts_dct = spc_dct[tsname]
     reac_dcts = [spc_dct[name] for name in rcts]
@@ -152,6 +156,9 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 run_prefix, save_prefix, sadpt=sadpt)
             writer = 'rpvtst_block'
         else:
+            print('Obtaining a ZRXN object from conformer any TS, '
+                  'shouldn matter')
+            print('-----')
             pf_filesystems = filesys.models.pf_filesys(
                 spc_dct[tsname], spc_mod_dct_i,
                 run_prefix, save_prefix, True, name=tsname)
@@ -159,12 +166,13 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             cnf_path = cnf_fs[-1].path(min_cnf_locs)
             zma_fs = autofile.fs.zmatrix(cnf_path)
             zrxn = zma_fs[-1].file.reaction.read((0,))
+            print('-----')
 
             inf_dct, chn_basis_ene_dct = mol_data(
                 tsname, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i,
                 chn_basis_ene_dct,
-                run_prefix, save_prefix, zrxn=zrxn)
+                run_prefix, save_prefix, zrxn=zrxn, spc_locs=spc_locs)
             writer = 'species_block'
     else:
 
@@ -199,7 +207,8 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
 
 
 # Data Readers
-def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
+def atm_data(spc_dct, spc_name,
+             pes_mod_dct_i, spc_mod_dct_i,
              run_prefix, save_prefix):
     """ Reads all required data from the SAVE filesystem for an atom.
         Stores data into an info dictionary.
@@ -240,8 +249,6 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
         {}, pes_mod_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
         pforktp='ktp', zrxn=None)
-    ene_chnlvl = hf0k * phycon.KCAL2EH
-    hf0k_trs *= phycon.KCAL2EH
 
     # Create info dictionary
     inf_dct = {
@@ -251,7 +258,7 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
         'mess_hr_str': '',
         'mass': util.atom_mass(spc_dct_i),
         'elec_levels': spc_dct_i['elec_levels'],
-        'ene_chnlvl': ene_chnlvl,
+        'ene_chnlvl': hf0k,
         'ene_reflvl': None,
         'ene_tsref': hf0k_trs,
         'zpe_chnlvl': None
@@ -263,7 +270,8 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
 def mol_data(spc_name, spc_dct,
              pes_mod_dct_i, spc_mod_dct_i,
              chn_basis_ene_dct,
-             run_prefix, save_prefix, calc_chn_ene=True, zrxn=None):
+             run_prefix, save_prefix, calc_chn_ene=True, zrxn=None,
+             spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a molecule.
         Stores data into an info dictionary.
 
@@ -287,7 +295,9 @@ def mol_data(spc_name, spc_dct,
     ene_chnlvl = None
     ene_reflvl = None
     zpe = None
+    hf0k = None
     hf0k_trs = None
+    hf0k = None
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
@@ -297,7 +307,7 @@ def mol_data(spc_name, spc_dct,
     # Set up all the filesystem objects using models and levels
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i, run_prefix, save_prefix,
-        zrxn is not None, name=spc_name)
+        zrxn is not None, name=spc_name, spc_locs=spc_locs)
 
     # Obtain rotation partition function information
     ioprinter.info_message(
@@ -315,7 +325,7 @@ def mol_data(spc_name, spc_dct,
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
-    freqs, imag, zpe, tors_strs = vib.vib_analysis(
+    freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
     allr_str = tors_strs[0]
@@ -357,8 +367,6 @@ def mol_data(spc_name, spc_dct,
             spc_dct, spc_name, ene_chnlvl,
             chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix, zrxn=zrxn)
-        ene_chnlvl = hf0k * phycon.KCAL2EH
-        hf0k_trs *= phycon.KCAL2EH
 
     ene_reflvl = None
 
@@ -386,7 +394,7 @@ def mol_data(spc_name, spc_dct,
     vals = [geom, sym_factor, freqs, imag, elec_levels,
             allr_str, mdhr_dat,
             xmat, rovib_coups, rot_dists,
-            ene_chnlvl, ene_reflvl, zpe, hf0k_trs,
+            hf0k, ene_reflvl, zpe, hf0k_trs,
             edown_str, collid_freq_str]
     inf_dct = dict(zip(keys, vals))
 
@@ -615,10 +623,10 @@ def pst_data(ts_dct, reac_dcts,
 
     ioprinter.info_message(
         'Determining parameters for Phase Space Theory (PST)',
-        'treatment that yields k({} K) = {}'.format(temp_pst, kt_pst),
+        f'treatment that yields k({temp_pst} K) = {kt_pst}',
         newline=1)
     ioprinter.info_message(
-        'Assuming PST model potential V = C0 / R^{}'.format(n_pst),
+        f'Assuming PST model potential V = C0 / R^{n_pst}',
         indent=1)
 
     # Obtain the reduced mass of the reactants
@@ -648,39 +656,50 @@ def tau_data(spc_dct_i,
     """ Read the filesystem to get information for TAU
     """
 
-    # Set up all the filesystem objects using models and levels
+    # Set up model and basic thy objects
+    spc_info = sinfo.from_dct(spc_dct_i)
+    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    mod_thy_info = tinfo.modify_orb_label(
+        thy_info, spc_info)
+
+    vib_model = spc_mod_dct_i['vib']['mod']
+
+    # Set up reference conformer filesys
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i, run_prefix, save_prefix, saddle)
-    [harm_cnf_fs, _,
-     harm_min_locs, harm_save, _] = pf_filesystems['harm']
-    # [tors_cnf_fs, _, tors_min_locs, _, _] = pf_filesystems['tors']
+    [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
 
-    # Get the conformer filesys for the reference geom and energy
-    if harm_min_locs:
-        geom = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
-        min_ene = harm_cnf_fs[-1].file.energy.read(harm_min_locs)
+    # Obtain all values from initial reference conformer
+    rotors = tors.build_rotors(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i, read_potentials=False)
+    vib_info = vib.full_vib_analysis(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i,
+        run_prefix, zrxn=None)
+    freqs, _, zpe, _, tors_strs, _, harm_freqs, _ = vib_info
+    harm_zpve = 0.5 * sum(harm_freqs) * phycon.WAVEN2EH
 
-    # Set the filesystem
-    tau_save_fs = autofile.fs.tau(harm_save)
+    ioprinter.info_message('Determining the symmetry factor...', newline=1)
+    sym_factor = symm.symmetry_factor(
+        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
+    )
 
-    # Get the rotor info
-    rotors = tors.build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i)
+    zpe_chnlvl = zpe * phycon.EH2KCAL
+    ref_ene = harm_zpve * phycon.EH2KCAL
 
-    run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
-    tors_strs = tors.make_hr_strings(
-        rotors, run_path, spc_mod_dct_i)
-    [_, hr_str, flux_str, prot_str, _] = tors_strs
+    ref_geom = [harm_save_fs[-1].file.geometry.read(harm_min_locs)]
+    ref_grad = [harm_save_fs[-1].file.gradient.read(harm_min_locs)]
+    ref_hessian = [harm_save_fs[-1].file.hessian.read(harm_min_locs)]
 
-    # Use model to determine whether to read grads and hessians
+    min_cnf_ene = filesys.read.energy(
+        harm_save_fs, harm_min_locs, mod_thy_info)
+
+    # Set up the TAU filesystem objects, get locs, and read info
+    _, tau_save_fs = filesys.build_fs(
+        run_prefix, save_prefix, 'TAU',
+        spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+
+    db_style = 'jsondb'
     vib_model = spc_mod_dct_i['vib']['mod']
-    freqs = ()
-    _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
-        pf_filesystems, hr_str, prot_str, run_prefix, zrxn=None)
-    zpe_chnlvl = proj_zpve * phycon.EH2KCAL
-
-    # Set reference energy to harmonic zpve
-    db_style = 'directory'
-    reference_energy = harm_zpve * phycon.EH2KCAL
     if vib_model == 'tau':
         if db_style == 'directory':
             tau_locs = [locs for locs in tau_save_fs[-1].existing()
@@ -694,79 +713,65 @@ def tau_data(spc_dct_i,
         elif db_style == 'jsondb':
             tau_locs = tau_save_fs[-1].json_existing()
 
-    # Read the geom, ene, grad, and hessian for each sample
+    ioprinter.info_message(
+        'Reading data for the Monte Carlo samples from db.json'
+        f'at path {tau_save_fs[0].path()}')
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
-    for locs in tau_locs:
-
-        # ioprinter.info_message('Reading tau info at path {}'.format(
-        #     tau_save_fs[-1].path(locs)))
+    tot_locs = len(tau_locs)
+    for idx, locs in enumerate(tau_locs):
 
         if db_style == 'directory':
             geo = tau_save_fs[-1].file.geometry.read(locs)
         elif db_style == 'jsondb':
             geo = tau_save_fs[-1].json.geometry.read(locs)
 
-        geo_str = autofile.data_types.swrite.geometry(geo)
-        samp_geoms.append(geo_str)
+        # geo_str = autofile.data_types.swrite.geometry(geo)
+        samp_geoms.append(geo)
 
         if db_style == 'directory':
             tau_ene = tau_save_fs[-1].file.energy.read(locs)
         elif db_style == 'jsondb':
             tau_ene = tau_save_fs[-1].json.energy.read(locs)
-        rel_ene = (tau_ene - min_ene) * phycon.EH2KCAL
-        ene_str = autofile.data_types.swrite.energy(rel_ene)
-        samp_enes.append(ene_str)
+        rel_ene = (tau_ene - min_cnf_ene) * phycon.EH2KCAL
+        # ene_str = autofile.data_types.swrite.energy(rel_ene)
+        samp_enes.append(rel_ene)
 
         if vib_model == 'tau':
             if db_style == 'directory':
                 grad = tau_save_fs[-1].file.gradient.read(locs)
             elif db_style == 'jsondb':
                 grad = tau_save_fs[-1].json.gradient.read(locs)
-            grad_str = autofile.data_types.swrite.gradient(grad)
-            samp_grads.append(grad_str)
+            # grad_str = autofile.data_types.swrite.gradient(grad)
+            samp_grads.append(grad)
 
             if db_style == 'directory':
                 hess = tau_save_fs[-1].file.hessian.read(locs)
             elif db_style == 'jsondb':
                 hess = tau_save_fs[-1].json.hessian.read(locs)
-            hess_str = autofile.data_types.swrite.hessian(hess)
-            samp_hessians.append(hess_str)
+            # hess_str = autofile.data_types.swrite.hessian(hess)
+            samp_hessians.append(hess)
+       
+        # Print progress message (every 150 geoms read)
+        if idx % 149 == 0:
+            print(f'Read {idx+1}/{tot_locs} samples...')
 
-    # Read a geometry, grad, and hessian for a reference geom if needed
-    ref_geom, ref_grad, ref_hessian = [], [], []
-    if vib_model != 'tau':
-
-        # Get harmonic filesystem information
-        [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
-
-        # Read the geometr, gradient, and Hessian
-        geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
-        geo_str = autofile.data_types.swrite.geometry(geo)
-        ref_geom.append(geo_str)
-
-        grad = harm_save_fs[-1].file.gradient.read(harm_min_locs)
-        grad_str = autofile.data_types.swrite.gradient(grad)
-        ref_grad.append(grad_str)
-
-        hess = harm_save_fs[-1].file.hessian.read(harm_min_locs)
-        hess_str = autofile.data_types.swrite.hessian(hess)
-        ref_hessian.append(hess_str)
-
-    # Obtain symmetry factor
-    ioprinter.info_message('Determining the symmetry factor...', newline=1)
-    sym_factor = symm.symmetry_factor(
-        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
-    )
+    # Determine the successful conformer ratio
+    inf_obj = tau_save_fs[0].file.info.read()
+    excluded_volume_factor = len(samp_geoms) / inf_obj.nsamp
+    print('excluded volume factor test:',
+          excluded_volume_factor, len(samp_geoms), inf_obj.nsamp)
 
     # Create info dictionary
-    keys = ['geom', 'sym_factor', 'elec_levels', 'freqs', 'flux_mode_str',
+    keys = ['geom', 'sym_factor', 'elec_levels',
+            'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'ref_geom', 'ref_grad', 'ref_hessian',
-            'zpe_chnlvl', 'reference_energy']
-    vals = [geom, sym_factor, spc_dct_i['elec_levels'], freqs, flux_str,
+            'zpe_chnlvl', 'ref_ene', 'excluded_volume_factor']
+    vals = [ref_geom[0], sym_factor, spc_dct_i['elec_levels'],
+            freqs, tors_strs[2],
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             ref_geom, ref_grad, ref_hessian,
-            zpe_chnlvl, reference_energy]
+            zpe_chnlvl, ref_ene, excluded_volume_factor]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct

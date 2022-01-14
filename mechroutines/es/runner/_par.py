@@ -29,7 +29,7 @@ def qchem_params(method_dct, job=None):
     prog = method_dct.get('program', None)
 
     # Build the defaul values
-    ret = INI_PARAM_BUILD_DCT[prog](method_dct, job=job)
+    ret = INI_PARAM_BUILD_DCT[prog](method_dct, prog, job=job)
 
     # Alter with the input method_dct (a massive pain...)
     # opt_kwargs.update(method_dct)
@@ -38,7 +38,7 @@ def qchem_params(method_dct, job=None):
     return ret
 
 
-def _gaussian(method_dct, job=None):
+def _gaussian(method_dct, prog, job=None):
     """ Build kwargs dictionary and BASH submission script for Gaussian jobs.
 
         :param method_dct:
@@ -49,29 +49,50 @@ def _gaussian(method_dct, job=None):
     """
 
     # Set the options
-    nprocs = method_dct.get('nprocs', 10)
-    memory = method_dct.get('memory', 20)
-    nprocs = nprocs if nprocs is not None else 10
+    nprocs = method_dct.get('nprocs', 9)
+    memory = method_dct.get('mem', 20)
+    nprocs = nprocs if nprocs is not None else 9
     memory = memory if memory is not None else 20
 
     method = method_dct.get('method')
 
     # Build the submission script string
-    script_str = SCRIPT_DCT['gaussian09']
+    script_str = SCRIPT_DCT[prog]
 
     # Build the options dictionary
-    machine_options = ['%NProcShared={}'.format(nprocs)]
+    machine_options = [f'%NProcShared={nprocs}']
 
     gen_lines = method_dct.get('gen_lines', {})
     if not gen_lines:
         if elstruct.par.Method.is_dft(method):
             gen_lines = {1: ['# int=ultrafine']}
 
+    if job == 'tightfreq':
+        gen_lines = {1: ['# int=superfine']}
+        job = elstruct.Job.HESSIAN
+
     kwargs = {
         'memory': memory,
         'machine_options': machine_options,
         'gen_lines': gen_lines,
     }
+    if job == 'tightopt':
+        kwargs.update({
+            'gen_lines': {1: ['# int=superfine']},
+            'job_options': ['Tight'],
+            'feedback': True,
+            'errors': [
+                elstruct.Error.OPT_NOCONV
+            ],
+            'options_mat': [
+                [{'job_options': ['Tight']},
+                 {'job_options': ['Tight']},
+                 {'job_options': ['Tight']},
+                 {'job_options': ['Tight', 'calcfc']},
+                 {'job_options': ['Tight', 'calcfc']},
+                 {'job_options': ['Tight', 'calcall']}],
+            ],
+        })
 
     if job == elstruct.Job.OPTIMIZATION:
         kwargs.update({
@@ -95,8 +116,8 @@ def _gaussian(method_dct, job=None):
         kwargs.update({
             'job_options': [
                 'calcfc',
-                'stepsize={}'.format(irc_step),
-                'maxpoints={}'.format(irc_pts),
+                f'stepsize={irc_step}',
+                f'maxpoints={irc_pts}',
                 irc_dir
             ]
         })
@@ -104,7 +125,7 @@ def _gaussian(method_dct, job=None):
     return script_str, kwargs
 
 
-def _molpro(method_dct, job=None):
+def _molpro(method_dct, prog, job=None):
     """ Build kwargs dictionary and BASH submission script for Molpro jobs
 
         :param method_dct:
@@ -118,29 +139,41 @@ def _molpro(method_dct, job=None):
     method = method_dct.get('method')
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         nprocs = method_dct.get('nprocs', 4)
-        memory = method_dct.get('memory', 10)
+        memory = method_dct.get('mem', 20)
+        econv = method_dct.get('econv', 1.0e-6)
+        gconv = method_dct.get('gconv', 3.0e-4)
         nprocs = nprocs if nprocs is not None else 4
         memory = memory if memory is not None else 10
+        econv = econv if econv is not None else 1.0e-6
+        gconv = gconv if gconv is not None else 3.0e-4
     else:
         nprocs = method_dct.get('nprocs', 4)
-        memory = method_dct.get('memory', 20)
+        memory = method_dct.get('mem', 20)
+        econv = method_dct.get('econv', 1.0e-6)
+        gconv = method_dct.get('gconv', 3.0e-4)
         nprocs = nprocs if nprocs is not None else 4
-        memory = memory if memory is not None else 10
+        memory = memory if memory is not None else 20
+        econv = econv if econv is not None else 1.0e-6
+        gconv = gconv if gconv is not None else 3.0e-4
+
+    scf_econv_line = f'energy={econv:.1E}'.replace('E', 'd')
+    corr_econv_line = f'energy={econv:.1E}'.replace('E', 'd')
+    gconv_line = f'gradient={gconv:.1E}'.replace('E', 'd')
 
     # Build the script string
-    if method in ('caspt2c', 'caspt2i'):
-        script_str = SCRIPT_DCT['molpro2015_mppx'].format(nprocs)
-    else:
-        script_str = SCRIPT_DCT['molpro2015'].format(nprocs)
+    prog = prog+'_mppx' if method_dct['mppx'] else prog
+    script_str = SCRIPT_DCT[prog].format(nprocs)
 
+    # Set threshholds
     # Build the kwargs
     kwargs = {
         'memory': memory,
         # 'mol_options': ['no_symmetry'],
         'mol_options': ['nosym'],
+        'scf_options': [scf_econv_line, 'maxit=300']
     }
 
-    corr_options = ['maxit=100']
+    corr_options = [corr_econv_line, 'maxit=100']
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         corr_options.append('shift=0.2')
         if method == 'caspt2i':
@@ -149,21 +182,28 @@ def _molpro(method_dct, job=None):
 
     if job == elstruct.Job.OPTIMIZATION:
         kwargs.update({
+            'job_options': [gconv_line],
             'feedback': True,
             'errors': [
                 elstruct.Error.OPT_NOCONV
             ],
             'options_mat': [
-                [{'job_options': ['numhess=0']},
-                 {'job_options': ['numhess=10']},
-                 {'job_options': ['numhess=1']}]
+                [{'job_options': [gconv_line, 'numhess=0']},
+                 {'job_options': [gconv_line, 'numhess=10']},
+                 {'job_options': [gconv_line, 'numhess=1']}]
             ],
         })
+
+    # Set glob thresholds
+    thrsh_line = f'gthresh,orbital={econv:.1E}'.replace('E', 'd')
+    if method_dct.get('tight_integral'):
+        thrsh_line += ',oneint=1.0d-16,twoint=1.0d-16,compress=1.0d-13'
+    kwargs.update({'gen_lines': {1: [thrsh_line]}})
 
     return script_str, kwargs
 
 
-def _psi4(method_dct, job=None):
+def _psi4(method_dct, prog, job=None):
     """ Build kwargs dictionary and BASH submission script for Psi4 jobs
 
         :param method_dct:
@@ -176,10 +216,10 @@ def _psi4(method_dct, job=None):
     # Job unneeded for now
     _, _ = method_dct, job
     method = method_dct.get('method')
-    memory = method_dct.get('memory', 20)
+    memory = method_dct.get('mem', 20)
 
     # Build the submission script string
-    script_str = SCRIPT_DCT['psi4']
+    script_str = SCRIPT_DCT[prog]
 
     # Build the options dictionary
     kwargs = {
@@ -216,6 +256,7 @@ def _psi4(method_dct, job=None):
 INI_PARAM_BUILD_DCT = {
     elstruct.par.Program.GAUSSIAN09: _gaussian,
     elstruct.par.Program.GAUSSIAN16: _gaussian,
+    elstruct.par.Program.MOLPRO2021: _molpro,
     elstruct.par.Program.MOLPRO2015: _molpro,
     elstruct.par.Program.PSI4: _psi4,
 }
@@ -245,12 +286,13 @@ def molpro_opts_mat(spc_info, geo):
 
     # Build the strings UHF and CASSCF wf card and set the errors and options
     uhf_str = (
-        "{{uhf,maxit=300;wf,{0},1,{1};orbprint,3}}"
-    ).format(elec_count, two_spin)
+        f"{{uhf,maxit=300;wf,{elec_count},1,{two_spin};orbprint,3}}"
+    )
     cas_str = (
         "{{casscf,maxit=40;"
-        "closed,{0};occ,{1};wf,{2},1,{3};canonical;orbprint,3}}"
-    ).format(closed_orb, occ_orb, elec_count, two_spin)
+        f"closed,{closed_orb};occ,{occ_orb};"
+        f"wf,{elec_count},1,{two_spin};canonical;orbprint,3}}"
+    )
 
     errors = [elstruct.Error.SCF_NOCONV]
     options_mat = [

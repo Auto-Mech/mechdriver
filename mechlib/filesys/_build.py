@@ -21,8 +21,10 @@ def root_locs(spc_dct_i, saddle=False, name=None):
     else:
         spc_info = None
         rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
-        ts_num = int(name.split('_')[-1])
-        ts_info = (ts_num,)
+        if name is not None:
+            ts_info = (int(name.split('_')[-1]),)
+        else:
+            ts_info = None
 
     return {'spc_locs': spc_info, 'rxn_locs': rxn_info, 'ts_locs': ts_info}
 
@@ -50,15 +52,18 @@ def build_fs(run_prefix, save_prefix, end,
 
     _fs = ()
     for prefix in (run_prefix, save_prefix):
-        _fs += (
-            _build_fs(
-                prefix, end,
-                rxn_locs=rxn_locs, spc_locs=spc_locs,
-                thy_locs=thy_locs, ts_locs=ts_locs,
-                cnf_locs=cnf_locs, tau_locs=tau_locs,
-                instab_locs=instab_locs, zma_locs=zma_locs,
-                scn_locs=scn_locs, cscn_locs=cscn_locs),
-        )
+        if prefix is not None:
+            _fs += (
+                _build_fs(
+                    prefix, end,
+                    rxn_locs=rxn_locs, spc_locs=spc_locs,
+                    thy_locs=thy_locs, ts_locs=ts_locs,
+                    cnf_locs=cnf_locs, tau_locs=tau_locs,
+                    instab_locs=instab_locs, zma_locs=zma_locs,
+                    scn_locs=scn_locs, cscn_locs=cscn_locs),
+            )
+        else:
+            _fs += (None,)
 
     return _fs[0], _fs[1]
 
@@ -114,9 +119,9 @@ def prefix_fs(run_prefix, save_prefix):
                 os.mkdir(prefix)
             except FileNotFoundError:
                 print('Cannot make directory at path specified in run.dat.')
-                print('Path: {}'.format(prefix))
+                print(f'Path: {prefix}')
                 sys.exit()
-            ioprinter.info_message('{}'.format(prefix), indent=1)
+        ioprinter.info_message(f'{prefix}', indent=1)
 
 
 def get_zma_locs(zma_fs, spc_dct_i, rxn_ichs=None, wanted_dirn=('forw',)):

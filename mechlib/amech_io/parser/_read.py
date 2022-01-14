@@ -6,18 +6,22 @@ import os
 import sys
 import ioformat
 import automol
-from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io.printer import info_message, warning_message
+from mechlib.amech_io.printer import error_message
 
 
-# Names of input file strings (relative to the submission directory)
-# INP_STR_DCT = {
-RUN_INP = 'inp/run.dat'
-CSV_INP = 'inp/species.csv'
-DAT_INP = 'inp/species.dat'
-MECH_INP = 'inp/mechanism.dat'
-SORT_INP = 'inp/sort.dat'
-MODEL_INP = 'inp/models.dat'
-THY_INP = 'inp/theory.dat'
+# (name, path relative to job_path, required boolean)
+INP_FILE = {
+    'run': ('run.dat', 'inp/run.dat', True),
+    'thy': ('theory.dat', 'inp/theory.dat', True),
+    'mod': ('models.dat', 'inp/models.dat', True),
+    'spc': ('species.csv', 'inp/species.csv', True),
+    'mech': ('mechanism.dat', 'inp/mechanism.dat', False),
+    'pesgrp': ('pes_groups.dat', 'inp/pes_groups.dat', False),
+    'dat': ('species.dat', 'inp/species.dat', False)
+}
+# AUX_FILES:
+#     'geo' : '.xyz files'
 
 
 def read_amech_input(job_path):
@@ -31,77 +35,128 @@ def read_amech_input(job_path):
 
     # Read required input strings
     run_str = ioformat.pathtools.read_file(
-        job_path, RUN_INP, remove_comments='#', remove_whitespace=True)
-    ioprinter.reading('run.dat...', newline=1)  # Add a Found <file> to msg
+        job_path, INP_FILE['run'][1],
+        remove_comments='#', remove_whitespace=True)
 
     thy_str = ioformat.pathtools.read_file(
-        job_path, THY_INP, remove_comments='#', remove_whitespace=True)
-    ioprinter.reading('theory.dat...', newline=1)
+        job_path, INP_FILE['thy'][1],
+        remove_comments='#', remove_whitespace=True)
 
     mod_str = ioformat.pathtools.read_file(
-        job_path, MODEL_INP, remove_comments='#', remove_whitespace=True)
-    ioprinter.reading('model.dat...', newline=1)
+        job_path, INP_FILE['mod'][1],
+        remove_comments='#', remove_whitespace=True)
 
-    spc_str = ioformat.pathtools.read_file(job_path, CSV_INP)
-    ioprinter.reading('species.csv...', newline=1)
+    spc_str = ioformat.pathtools.read_file(
+        job_path, INP_FILE['spc'][1])
 
     mech_str = ioformat.pathtools.read_file(
-        job_path, MECH_INP, remove_comments='!', remove_whitespace=True)
-    ioprinter.reading('mechanism.dat...', newline=1)
+        job_path, INP_FILE['mech'][1],
+        remove_comments='!', remove_whitespace=True)
+
+    pes_grp_str = ioformat.pathtools.read_file(
+        job_path, INP_FILE['pesgrp'][1],
+        remove_comments='#', remove_whitespace=True)
 
     # Read auxiliary input strings
     dat_str = ioformat.pathtools.read_file(
-        job_path, DAT_INP, remove_comments='#')
-    ioprinter.reading('species.dat...', newline=1)
+        job_path, INP_FILE['dat'][1],
+        remove_comments='#')
 
     # Read structural and template files
-    geo_dct = _geometry_dictionary(job_path)
-    ioprinter.reading('geom.xyzs...', newline=1)
+    geo_dct, gname_dct = _geometry_dictionary(job_path)
+    act_dct, aname_dct = _active_space_dictionary(job_path)
 
-    act_dct = _active_space_dictionary(job_path)
-    ioprinter.reading('active_space templates...', newline=1)
+    # Read the PES group dictionary
+    pes_grp_dct = _pes_grp_dct(pes_grp_str)
 
+    # Place all of the input into a dictionary to pass on
     inp_str_dct = {
-        # required
         'run': run_str,
         'thy': thy_str,
         'mod': mod_str,
         'spc': spc_str,
         'mech': mech_str,
-        # auxiliary
         'dat': dat_str,
-        # structural/template
+        'pesgrp': pes_grp_dct,
         'geo': geo_dct,
         'act': act_dct
     }
 
     # Assess if all required strings are present
-    _check_input_avail(inp_str_dct)
+    _check_input_avail(inp_str_dct, gname_dct, aname_dct)
 
     return inp_str_dct
 
 
-def _check_input_avail(inp_str_dct):
-    """ Checks if needed input files exist by seeing if inputs are
-        none.
+def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
+    """ Assess what input files have been supplied by the user
+        by seeing which files consist of strings read from a file.
+        Exit the program with error message if required input files
+        are found to be missing.
 
-        TODO: Right now it ignores mechanism.dat, need to fix that
+        :param inp_str_dct: strings of input files read by code
+        :type inp_str_dct: dict[str: str/dict[str:str]]
     """
 
-    keys = ('run', 'thy', 'mod', 'spc')
-    names = ('run.dat', 'theory.dat', 'models.dat', 'species.csv')
-
-    inp_missing = False
-    for key, name in zip(keys, names):
-        if inp_str_dct[key] is None:
-            print('No file {} found in inp directory'.format(name))
-            inp_missing = True
+    # Check all of the standard single-file inputs
+    inp_missing = []
+    for key, (name, _, req) in INP_FILE.items():
+        if inp_str_dct[key] is not None:
+            info_message(f'  FOUND {name}')
+        else:
+            info_message(f'  MISSING {name}')
+            if req:
+                inp_missing.append(name)
 
     if inp_missing:
+        error_message('\nMissing Required inputs files, quitting job...')
+        for name in inp_missing:
+            info_message(name)
         sys.exit()
 
+    # Check the auxiliary file dictionaries
+    inf = (
+        ('geo', '.xyz files for species/TSs', gname_dct),
+        ('act', 'active space templates for TSs', aname_dct)
+    )
+    for key, msg, name_dct in inf:
+        str_dct = inp_str_dct[key]
+        if str_dct:
+            info_message(f' Found {msg}:')
+            for name in str_dct:
+                info_message(f'-  {name}: {name_dct[name]}')
+        else:
+            info_message(f'  No {msg} were found.')
 
-# formatters, dont know where to build this
+
+# handle auxiliary data files
+def _pes_grp_dct(pes_grp_str):
+    """ Parse the auxiliary file to handleget the info from the file
+
+        out dict[(pes_grp_idx_lst] = pes_grp_params
+        where params read from input and
+        pes_grp_idx_lst = {{pes_idx1, subpes_idx1}, ...}
+    """
+
+    if pes_grp_str is not None:
+        grp_blocks = ioformat.ptt.named_end_blocks(
+            pes_grp_str, 'grp', footer='grp')
+        grp_dct = ioformat.ptt.keyword_dcts_from_blocks(grp_blocks)
+
+        # Need to convert idxs from 1-idx to 0-idx
+        ret_grp_dct = {}
+        for dct in grp_dct.values():
+            # idxs = frozenset({(int(x[0])-1, int(x[1])-1)
+            #                  for x in dct['idxs']})
+            idxs = tuple((int(x[0])-1, int(x[1])-1) for x in dct['idxs'])
+            ret_grp_dct[idxs] = {key: dct[key] for key in dct.keys()
+                                 if key != 'idxs'}
+    else:
+        ret_grp_dct = None
+
+    return ret_grp_dct
+
+
 def _geometry_dictionary(job_path):
     """ Reads any .xyz files provided by the user in the directory
         where other input files. The function extracts the mechanism name
@@ -113,7 +168,7 @@ def _geometry_dictionary(job_path):
         :rtype: dict[str: str]
     """
 
-    geo_dct = {}
+    geo_dct, path_dct = {}, {}
     _inp_paths = _inp_file_paths(job_path)
     if _inp_paths:
         for file_path, file_name in _inp_paths:
@@ -122,10 +177,11 @@ def _geometry_dictionary(job_path):
                 spc_name = automol.geom.comment_from_xyz_string(xyz_str)
                 geo = automol.geom.from_xyz_string(xyz_str)
                 if spc_name in geo_dct:
-                    print('Warning: Dupilicate xyz geometry for ', spc_name)
+                    warning_message(f'Dupilicate xyz geometry for {spc_name}')
                 geo_dct[spc_name] = geo
+                path_dct[spc_name] = file_name
 
-    return geo_dct
+    return geo_dct, path_dct
 
 
 def _active_space_dictionary(job_path):
@@ -149,7 +205,7 @@ def _active_space_dictionary(job_path):
         comm_line.replace('!', '').strip()
         return comm_line
 
-    aspace_dct = {}
+    aspace_dct, path_dct = {}, {}
     _inp_paths = _inp_file_paths(job_path)
     if _inp_paths:
         for file_path, file_name in _inp_paths:
@@ -157,11 +213,12 @@ def _active_space_dictionary(job_path):
                 aspace_str = ioformat.pathtools.read_file(file_path, file_name)
                 spc_name = _comment_name(aspace_str)
                 if spc_name in aspace_dct:
-                    print('Warning: Dupilicate active space geometry for ',
-                          spc_name)
+                    warning_message(
+                        f'Dupilicate active space geometry for {spc_name}')
                 aspace_dct[spc_name] = aspace_str
+                path_dct[spc_name] = file_name
 
-    return aspace_dct
+    return aspace_dct, path_dct
 
 
 def _inp_file_paths(job_path):

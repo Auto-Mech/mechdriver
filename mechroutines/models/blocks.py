@@ -107,6 +107,55 @@ def species_block(inf_dct):
     return spc_str, dat_dct
 
 
+def tau_block(inf_dct):
+    """ write  MESS string when using the Tau MonteCarlo
+    """
+
+    # Write the data string and set its name
+    dat_str = mess_io.writer.monte_carlo_data(
+        geos=inf_dct['samp_geoms'],
+        enes=inf_dct['samp_enes'],
+        grads=inf_dct['samp_grads'],
+        hessians=inf_dct['samp_hessians']
+    )
+
+    # Set the name of the tau dat file and add to dct
+    tau_dat_file_name = 'tau.dat'
+    dat_dct = {tau_dat_file_name: dat_str}
+
+    # Write additional reference configuration file if needed
+    if inf_dct['ref_geom'] and inf_dct['ref_grad'] and inf_dct['ref_hessian']:
+        ref_config_file_name = 'reftau.dat'
+        ref_dat_str = mess_io.writer.monte_carlo_data(
+            geos=inf_dct['ref_geom'],
+            enes=[0.00],
+            grads=inf_dct['ref_grad'],
+            hessians=inf_dct['ref_hessian']
+        )
+        ref_dat_str = "\n".join(ref_dat_str.splitlines()[1:])
+        dat_dct.update({ref_config_file_name: ref_dat_str})
+    else:
+        ref_config_file_name = ''
+
+    # Write the core string (seperate energies?)
+    spc_str = mess_io.writer.monte_carlo_species(
+        geo=inf_dct['geom'],
+        sym_factor=inf_dct['sym_factor'],
+        elec_levels=inf_dct['elec_levels'],
+        flux_mode_str=inf_dct['flux_mode_str'],
+        data_file_name=tau_dat_file_name,
+        reference_ene=inf_dct['ref_ene'],
+        ref_config_file_name=ref_config_file_name,
+        ground_ene=0.0,
+        freqs=inf_dct['freqs'],
+        excluded_volume_factor=inf_dct['excluded_volume_factor'],
+        use_cm_shift=True
+    )
+
+    return spc_str, dat_dct
+
+
+# FAKE SPC and WELL BLOCKS
 def fake_species_block(inf_dct_i, inf_dct_j):
     """ Takes data for two species (atom/molecule) that are being combined
         into a `fake` van der Waals well, which has been previously
@@ -159,6 +208,7 @@ def fake_species_block(inf_dct_i, inf_dct_j):
     return spc_str, dat_dct
 
 
+# Transition State Blocks
 def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     """ Takes data for two species (atom/molecule) that are being combined
         to describe a Phase-Space Theory transition state, which has been
@@ -214,51 +264,14 @@ def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     return spc_str, dat_dct
 
 
-def tau_block(inf_dct):
-    """ write  MESS string when using the Tau MonteCarlo
+def isc_block(inf_dct_ts, inf_dct_i, inf_dct_j):
+    """  Builds intersystem crossing TS block.
+         It is the same as a VRCTST since it requires a flux.
+
+         One different may just be whether vibs are needed or not.
+         Depends if the vib contributions is convoluted into the flux.
     """
-
-    # Write the data string and set its name
-    dat_str = mess_io.writer.monte_carlo.mc_data(
-        geos=inf_dct['samp_geoms'],
-        enes=inf_dct['samp_enes'],
-        grads=inf_dct['samp_grads'],
-        hessians=inf_dct['samp_hessians']
-    )
-
-    # Set the name of the tau dat file and add to dct
-    tau_dat_file_name = 'tau.dat'
-    dat_dct = {tau_dat_file_name: dat_str}
-
-    # Write additional reference configuration file if needed
-    if inf_dct['ref_geom'] and inf_dct['ref_grad'] and inf_dct['ref_hessian']:
-        ref_config_file_name = 'reftau.dat'
-        ref_dat_str = mess_io.writer.monte_carlo.mc_data(
-            geos=inf_dct['ref_geom'],
-            enes=['0.00'],
-            grads=inf_dct['ref_grad'],
-            hessians=inf_dct['ref_hessian']
-        )
-        ref_dat_str = "\n".join(ref_dat_str.splitlines()[1:])
-        dat_dct.update({ref_config_file_name: ref_dat_str})
-    else:
-        ref_config_file_name = ''
-
-    # Write the core string (seperate energies?)
-    spc_str = mess_io.writer.monte_carlo.mc_species(
-        geo=inf_dct['geom'],
-        sym_factor=inf_dct['sym_factor'],
-        elec_levels=inf_dct['elec_levels'],
-        flux_mode_str=inf_dct['flux_mode_str'],
-        data_file_name=tau_dat_file_name,
-        reference_energy=inf_dct['reference_energy'],
-        ref_config_file_name=ref_config_file_name,
-        ground_energy=0.0,
-        freqs=inf_dct['freqs'],
-        use_cm_shift=True
-    )
-
-    return spc_str, dat_dct
+    return vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j)
 
 
 def multiconfig_block(inf_dct_lst):
@@ -305,7 +318,7 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
         inf_dct_i['geom'], inf_dct_j['geom'])
 
     # Set the auxiliary flux file information
-    flux_file_name = '{}_flux.dat'.format('ts')
+    flux_file_name = f'{"ts"}_flux.dat'
     dat_dct[flux_file_name] = inf_dct_ts['flux_str']
 
     # Write the MESS string for the VRCTST TS (change rotd to file)
@@ -348,8 +361,8 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
 
         # Iniialize the header of the rxn path pt string
         rpath_str = '!-----------------------------------------------\n'
-        rpath_str += '! Rxn Path Pt {0}: '.format(str(idx+1))
-        rpath_str += 'R = {0:.2f} Ang'.format(dct['rval'] * phycon.BOHR2ANG)
+        rpath_str += f'! Rxn Path Pt {str(idx+1)}: '
+        rpath_str += f'R = {dct["rval"]*phycon.BOHR2ANG:.2f} Ang'
         rpath_str += '\n\n'
 
         # Write MESS string for the rxn path pt; add to rxn path pt string

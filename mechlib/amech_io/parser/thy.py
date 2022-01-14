@@ -21,11 +21,12 @@ THY_VAL_DCT = {
     'method': ((str,), (), None),
     'basis': ((str,), (), None),
     'orb_res': ((str,), ('RR', 'UU', 'RU'), None),
-    'ncycles': ((int,), (), None),
     'mem': ((float,), (), None),
     'nprocs': ((int,), (), None),
     'econv': ((float,), (), None),
-    'gconv': ((float,), (), None)
+    'gconv': ((float,), (), None),
+    'mppx': ((bool,), (), False),
+    'tight_integral': ((bool,), (), False),
 }
 
 
@@ -56,6 +57,6 @@ def theory_dictionary(thy_str):
 
     # Check each dictionary
     for lvl, dct in full_thy_dct.items():
-        check_dct1(dct, THY_VAL_DCT, THY_REQ, 'Thy-{}'.format(lvl))
+        check_dct1(dct, THY_VAL_DCT, THY_REQ, f'Thy-{lvl}')
 
     return full_thy_dct

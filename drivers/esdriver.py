@@ -20,7 +20,8 @@ from mechlib.amech_io import printer as ioprinter
 def run(pes_rlst, spc_rlst,
         es_tsk_lst,
         spc_dct, glob_dct, thy_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix,
+        print_debug=False):
     """ Executes all electronic structure tasks.
 
         :param pes_rlst: species from PESs to run
@@ -60,20 +61,23 @@ def run(pes_rlst, spc_rlst,
         # Print what is being run PESs that are being run
         ioprinter.runlst((fml, pes_idx, subpes_idx), run_lst)
 
-        # Build a TS dictionary and add it to the spc dct if needed
-        if (fml != 'SPC' and
-           any(tsk_lst[0] in ('ts', 'all') for tsk_lst in es_tsk_lst)):
-            ts_dct, ts_queue = parser.spc.ts_dct_from_estsks(
-                pes_idx, es_tsk_lst, run_lst,
-                thy_dct, spc_dct,
-                run_prefix, save_prefix)
-            spc_dct = parser.spc.combine_sadpt_spc_dcts(
-                ts_dct, spc_dct, glob_dct)
-        else:
-            ts_queue = ()
+        # Initialize an empty ts_dct for the PES
+        ts_dct = None
 
         # Loop over the tasks
         for tsk_lst in es_tsk_lst:
+
+            # Build a TS dictionary and add it to the spc dct if needed
+            # will only build a ts dct for 1st ts task on the PES
+            if (fml != 'SPC' and tsk_lst[0] in ('ts', 'all')):
+                if ts_dct is None:
+                    ts_dct = parser.spc.ts_dct_from_estsks(
+                        pes_idx, es_tsk_lst, run_lst,
+                        thy_dct, spc_dct,
+                        run_prefix, save_prefix)
+                    spc_dct = parser.spc.combine_sadpt_spc_dcts(
+                        ts_dct, spc_dct, glob_dct)
+            ts_queue = tuple(x for x in ts_dct) if ts_dct is not None else ()
 
             # Unpack the options
             [obj, tsk, es_keyword_dct] = tsk_lst
@@ -81,7 +85,7 @@ def run(pes_rlst, spc_rlst,
             # Build the queue of species based on user request
             if obj == 'all':
                 obj_queue = parser.rlst.spc_queue(run_lst, fml) + ts_queue
-            if obj == 'spc':
+            elif obj == 'spc':
                 obj_queue = parser.rlst.spc_queue(run_lst, fml)
             elif obj == 'ts':
                 obj_queue = ts_queue
@@ -92,4 +96,5 @@ def run(pes_rlst, spc_rlst,
             for spc_name in obj_queue:
                 run_tsk(tsk, spc_dct, spc_name,
                         thy_dct, es_keyword_dct,
-                        run_prefix, save_prefix)
+                        run_prefix, save_prefix,
+                        print_debug=print_debug)

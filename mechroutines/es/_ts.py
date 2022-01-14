@@ -12,15 +12,16 @@ import automol.par
 import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
-from mechlib.filesys import build_fs, rcts_cnf_fs
+from mechlib.filesys import build_fs
 from mechlib import filesys
 from mechroutines.es._routines import _sadpt as sadpt
 
 
-def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
+def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
     """ New run function
     """
+    _ = tsk
 
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
 
@@ -54,7 +55,7 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
     overwrite = es_keyword_dct['overwrite']
     if not cnf_save_locs[0]:
         print('No transition state found in filesys',
-              'at {} level...'.format(es_keyword_dct['runlvl']),
+              f'at {es_keyword_dct["runlvl"]} level...',
               'Proceeding to find it...')
         _run = True
     elif overwrite:
@@ -89,7 +90,7 @@ def run_pst(spc_dct, tsname, savefs_dct,
 
     zma_path = zma_save_fs[-1].path(zma_locs)
     print('Saving reaction class data for pst at')
-    print('  {}'.format(zma_path))
+    print(f'  {zma_path}')
 
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
@@ -107,8 +108,8 @@ def _ts_search_method(ts_dct):
     # Set search algorithm to one specified by the user, if specified
     if ts_dct.get('ts_search') is not None:
         _search_method = ts_dct['ts_search']
-        print('Running search algorithm according to {},'.format(
-            ts_dct['ts_search']),
+        print('Running search algorithm according to {},',
+              ts_dct['ts_search'],
               'as requested by the user')
     else:
         _search_method = None
@@ -117,7 +118,11 @@ def _ts_search_method(ts_dct):
 
     # ID search algorithm if user did not specify one (wrong)
     if _search_method is None:
-        if automol.par.has_nobarrier(ts_dct['class']):
+        if automol.par.isc(ts_dct['class']):
+            _search_method = 'isc'
+            print('Reactant and Product spins differ...')
+            print('Using intersystem crossing search sceme')
+        elif automol.par.has_nobarrier(ts_dct['class']):
             _search_method = 'pst'
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
@@ -139,7 +144,6 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
 
     rxn_info = ts_dct['rxn_info']
     ts_info = rinfo.ts_info(rxn_info)
-    rct_info = rinfo.rgt_info(rxn_info, 'reacs')
     rxn_info = rinfo.sort(rxn_info)
 
     ts_locs = (int(tsname.split('_')[-1]),)
@@ -274,8 +278,11 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 vsp2lvl_thy_info, hs_info)
 
     # Get the conformer filesys for the reactants
-    _rcts_cnf_fs = rcts_cnf_fs(
-        rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
+    # cnf_range = es_keyword_dct['cnf_range']
+    # hbond_cutoffs = ts_dct['hbond_cutoffs']
+    # _rcts_cnf_fs = rcts_cnf_fs(
+    #     rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
+    #     # cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
 
     thy_inf_dct = {
         'inplvl': ini_thy_info,
@@ -302,6 +309,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_scn_fs': vscnlvl_scn_run_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_run_fs,
         'vrctst_fs': vrctst_run_fs,
+        'prefix': run_prefix
     }
 
     savefs_dct = {
@@ -312,8 +320,9 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
-        'rcts_cnf_fs': _rcts_cnf_fs,
-        'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs
+        # 'rcts_cnf_fs': _rcts_cnf_fs,
+        'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs,
+        'prefix': save_prefix
     }
 
     return thy_inf_dct, runfs_dct, savefs_dct

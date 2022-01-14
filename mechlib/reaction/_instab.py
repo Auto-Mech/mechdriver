@@ -25,11 +25,14 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
                 _split_rxn_names += new_prds
 
     # Get split names from spc
-    _split_spc_names = split_unstable_spc(
-        spc_rlst, spc_dct, spc_model_dct_i, save_prefix)
+    _split_spc_names = ()
+    if spc_rlst is not None:
+        _split_spc_names = split_unstable_spc(
+             spc_rlst, spc_dct, spc_model_dct_i, save_prefix)
+        _split_spc_names = tuple(_split_spc_names.values())[0]
 
     # Combine both and remove duplicates
-    _split_names = _split_rxn_names + tuple(_split_spc_names.values())[0]
+    _split_names = _split_rxn_names + _split_spc_names
     split_names = tuple(i for n, i in enumerate(_split_names)
                         if i not in _split_names[:n])
 
@@ -192,7 +195,7 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
 
     if tra is not None:
         ioprinter.info_message('\nFound instability files at path:')
-        ioprinter.info_message('  {}'.format(path))
+        ioprinter.info_message(f'  {path}')
 
         zrxn, _ = tra
         prd_gras = automol.reac.product_graphs(zrxn)
@@ -202,13 +205,15 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
         _split_names = ()
         for ich in constituent_ichs:
             for name, spc_dct_i in spc_dct.items():
-                if ich == spc_dct_i.get('inchi'):
+                # if ich == spc_dct_i.get('inchi'):
+                ich_noste1 = automol.inchi.standard_form(ich, stereo=False)
+                ich_noste2 = automol.inchi.standard_form(spc_dct_i.get('inchi'), stereo=False)
+                if ich_noste1 == ich_noste2:
                     _split_names += (name,)
                     break
         split_names = tuple(i for n, i in enumerate(_split_names)
                             if i not in _split_names[:n])
 
-        print('- Splitting species...')
-        print('- New species: {}'.format(' '.join(split_names)))
+        ioprinter.info_message(f'- Splitting species {spc_name} into {split_names}')
 
     return split_names

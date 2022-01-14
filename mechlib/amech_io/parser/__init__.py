@@ -17,5 +17,5 @@ __all__ = [
     'spc',
     'thy',
     'models',
-    'rlst'
+    'rlst',
 ]

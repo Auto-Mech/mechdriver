@@ -1,6 +1,10 @@
 """ drivers for coordinate scans
 """
 
+import numpy
+from scipy.interpolate import CubicSpline
+from scipy.interpolate import Akima1DInterpolator
+
 import automol
 import autofile
 from phydat import phycon
@@ -19,9 +23,12 @@ def potential(names, grid_vals, cnf_save_path,
     """ Get the potential for a hindered rotor
     """
 
+    # print('potential test:', names)
     # Build initial lists for storing potential energies and Hessians
-    grid_points = automol.pot.points(grid_vals)
+    # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
+    back_coords = tuple(tuple(val + 4*numpy.pi for val in grid)
+                        for grid in grid_coords)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
@@ -31,51 +38,158 @@ def potential(names, grid_vals, cnf_save_path,
         scn_fs = autofile.fs.scan(zma_path)
     else:
         scn_fs = autofile.fs.cscan(zma_path)
+    # Read the filesystem
+    for idx, vals in enumerate(grid_coords):
 
-    # Read the energies and Hessians from the filesystem
-    for point, vals in zip(grid_points, grid_coords):
+        # Get angles in degrees for potential for now
+        vals_conv = tuple(val*phycon.RAD2DEG for val in vals)
 
+        # Get locs for reading filesysten
         locs = [names, vals]
+        back_locs = [names, back_coords[idx]]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
+            back_locs = [constraint_dct] + back_locs
 
+        # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
+        back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
+        step_ene = None
         if ene is not None:
-            pot[point] = (ene - ref_ene) * phycon.EH2KCAL
+            if back_ene is not None:
+                step_ene = min(ene, back_ene)
+            else:
+                step_ene = ene
+        elif back_ene is not None:
+            step_ene = back_ene
+
+        if step_ene is not None:
+            enediff = (step_ene - ref_ene) * phycon.EH2KCAL
+            if idx == 0:
+                if enediff > 0.05:
+                    print('Warning the first potential value does not match the reference energy {:.2f}',enediff)
+                ref_ene = step_ene
+                enediff = 0
+            pot[vals_conv] = enediff
         else:
-            pot[point] = -10.0
+            pot[vals_conv] = None
 
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
-                geoms[point] = scn_fs[-1].file.geometry.read(locs)
+                geoms[vals_conv] = scn_fs[-1].file.geometry.read(locs)
             else:
-                geoms[point] = None
+                geoms[vals_conv] = None
 
         if read_grad:
             if scn_fs[-1].file.gradient.exists(locs):
-                grads[point] = scn_fs[-1].file.gradient.read(locs)
+                grads[vals_conv] = scn_fs[-1].file.gradient.read(locs)
             else:
-                grads[point] = None
+                grads[vals_conv] = None
 
         if read_hess:
             if scn_fs[-1].file.hessian.exists(locs):
-                hessians[point] = scn_fs[-1].file.hessian.read(locs)
+                hessians[vals_conv] = scn_fs[-1].file.hessian.read(locs)
             else:
-                hessians[point] = None
+                hessians[vals_conv] = None
 
         if read_zma:
             if scn_fs[-1].file.zmatrix.exists(locs):
-                zmas[point] = scn_fs[-1].file.zmatrix.read(locs)
+                zmas[vals_conv] = scn_fs[-1].file.zmatrix.read(locs)
             else:
-                zmas[point] = None
+                zmas[vals_conv] = None
 
-        paths[point] = scn_fs[-1].path(locs)
+        paths[vals] = scn_fs[-1].path(locs)
+
+    # If potential has any terms that are not None, ID and remove bad points
+    if automol.pot.is_nonempty(pot):
+        pot = automol.pot.remove_empty_terms(pot)
+        bad_angle = identify_bad_point(pot)
+        if bad_angle is not None:
+            pot = remove_bad_point(pot, bad_angle)
+            pot = automol.pot.remove_empty_terms(pot)
+    else:
+        pot = {}
 
     return pot, geoms, grads, hessians, zmas, paths
 
 
+def identify_bad_point(pot, thresh=0.05):
+    """ Identifies a single bad point in a torsional potential based on a
+        comparison of Akima and cubic spline fits
+    """
+
+    vals_conv = pot.keys()
+    step_enes = pot.values()
+
+    # Get the sorted angles
+    shifted_angles = []
+    for idx, angle in enumerate(vals_conv):
+        if len(angle) == 1:  # if a tuple, just take the first value
+            angle = angle[0]
+        if idx == 0:
+            start_angle = angle
+        angle = angle - start_angle
+        if angle > 180:
+            angle = angle - 360
+        shifted_angles.append(angle)
+    shifted_angles = numpy.array(shifted_angles)
+
+    # For methyl rotors, double the threshold
+    if len(shifted_angles) == 4:
+        thresh *= 2
+
+    # Get the potentials and then sort them according to increasing angle
+    step_enes = numpy.array(list(step_enes))
+    sorted_idxs = numpy.argsort(shifted_angles)
+    sorted_angles = shifted_angles[sorted_idxs]
+    sorted_potentials = step_enes[sorted_idxs]
+
+    # Fit cubic and Akima splines
+    cub_spline = CubicSpline(sorted_angles, sorted_potentials)
+    akima_spline = Akima1DInterpolator(sorted_angles, sorted_potentials)
+
+    # Evaluate the splines on a fine grid to check for ringing
+    fine_grid = numpy.arange(min(sorted_angles), max(sorted_angles), 1)
+    diff = cub_spline(fine_grid) - akima_spline(fine_grid)
+    max_fine_angle = fine_grid[numpy.argmax(diff)]
+    max_norm_diff = max(diff) / max(step_enes)  # normalized by max potential
+
+    # Remove the bad point
+    bad_angle = None
+    print('max norm diff of splines ', max_norm_diff, thresh)
+    if max_norm_diff > thresh:
+        max_idxs = numpy.argsort(abs(shifted_angles - max_fine_angle))[:2]
+        suspect_enes = [step_enes[idx] for idx in max_idxs]
+        bad_angle = shifted_angles[max_idxs[numpy.argmax(suspect_enes)]]
+        if bad_angle < 0:
+            bad_angle += 360  # convert back to original angle
+        bad_angle += start_angle
+
+    return bad_angle
+
+
+def remove_bad_point(pot, bad_angle):
+    """ Remove a single bad angle from a potential
+    """
+
+    # Find angle in pot that is within 0.1 degrees of bad_angle
+    # to read the dictionary
+    # Only works for 1D
+    bad_tuple = None
+    for angle in pot.keys():
+        if numpy.isclose(angle, bad_angle, atol=0.1):
+            bad_tuple = (angle,)
+
+    assert bad_tuple is not None, (
+        f'Angle {bad_angle*phycon.DEG2RAD} does not exist in pot dictionary')
+
+    print(f'Removing bad angle at {bad_angle} degrees')
+
+    return pot
+
+
 # Single data point readers
-def geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
+def geometry(cnf_save_fs, mod_thy_info, conf='sphere', hbond_cutoffs=None):
     """ get the geometry
     """
 
@@ -83,19 +197,20 @@ def geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
 
     # Read the file system
     if conf == 'minimum':
-        geom = _min_energy_conformer(cnf_save_fs, mod_thy_info)
+        geom = _min_energy_conformer(
+            cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs)
     elif conf == 'sphere':
         geom = _spherical_conformer(cnf_save_fs)
 
     return geom
 
 
-def _min_energy_conformer(cnf_save_fs, mod_thy_info):
+def _min_energy_conformer(cnf_save_fs, mod_thy_info, hbond_cutoffs=None):
     """ Reads the minimum-energy conformer from the save FileSystem
     """
 
     ini_loc_info = min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info)
+        cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs)
     locs, path = ini_loc_info
     if path:
         min_conf = cnf_save_fs[-1].file.geometry.read(locs)
@@ -121,7 +236,7 @@ def _spherical_conformer(cnf_save_fs):
     return round_geom
 
 
-def energy(filesys, locs, mod_tors_ene_info):
+def energy(filesys, locs, mod_thy_info):
     """ Read the energy from an SP filesystem that is located in some
         root 'filesys object'
     """
@@ -129,17 +244,52 @@ def energy(filesys, locs, mod_tors_ene_info):
     if filesys[-1].exists(locs):
         path = filesys[-1].path(locs)
         sp_fs = autofile.fs.single_point(path)
-        if sp_fs[-1].file.energy.exists(mod_tors_ene_info[1:4]):
-            ene = sp_fs[-1].file.energy.read(mod_tors_ene_info[1:4])
+        if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+            # ioprinter.debug_message('sp_path', sp_fs[-1].path(thy_info))
         else:
             ene = None
+            # ioprinter.info_message('No scan energy')
     else:
         ene = None
+        # ioprinter.info_message('No scan energy')
 
     return ene
 
 
-def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
+def reactions(rxn_info, ini_thy_info, zma_locs, save_prefix):
+    """ Check if reaction exists in the filesystem and has been identified
+    """
+
+    zrxns, zmas = (), ()
+
+    sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
+    ts_info = rinfo.ts_info(rxn_info)
+    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, ts_info)
+
+    rxn_fs = autofile.fs.reaction(save_prefix)
+    if rxn_fs[-1].exists(sort_rxn_info):
+        _, ts_save_fs = build_fs(
+            save_prefix, save_prefix, 'TRANSITION STATE',
+            rxn_locs=sort_rxn_info,
+            thy_locs=mod_ini_thy_info[1:])
+        for ts_locs in ts_save_fs[-1].existing():
+            zrxn, zma = reaction(
+                rxn_info, ini_thy_info,
+                zma_locs, save_prefix, ts_locs=ts_locs)
+            if zrxn is not None:
+                zrxns += (zrxn,)
+                zmas += (zma,)
+
+    if not zrxns:
+        zrxns, zmas = None, None
+
+    return zrxns, zmas
+
+
+def reaction(
+        rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,),
+        hbond_cutoffs=None):
     """ Check if reaction exists in the filesystem and has been identified
     """
 
@@ -155,20 +305,20 @@ def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
             save_prefix, save_prefix, 'CONFORMER',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:],
-            # this needs to be fixed for any case with more than one TS
             ts_locs=ts_locs)
 
         _, ini_min_cnf_path = min_energy_conformer_locators(
-            cnf_save_fs, mod_ini_thy_info)
+            cnf_save_fs, mod_ini_thy_info, hbond_cutoffs=hbond_cutoffs)
         if ini_min_cnf_path:
             zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
             if zma_fs[-1].file.reaction.exists(zma_locs):
                 zrxn = zma_fs[-1].file.reaction.read(zma_locs)
                 zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
+        # For barrierless reactions with no conformer
         if zrxn is None:
             _, zma_fs = build_fs(
-                '', save_prefix, 'ZMATRIX',
+                save_prefix, save_prefix, 'ZMATRIX',
                 rxn_locs=sort_rxn_info, ts_locs=ts_locs,
                 thy_locs=mod_ini_thy_info[1:])
 
@@ -188,13 +338,14 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
     _, cnf_save_fs = build_fs(
-        '', save_prefix, 'CONFORMER',
+        save_prefix, save_prefix, 'CONFORMER',
         spc_locs=spc_info,
         thy_locs=mod_thy_info[1:])
 
     # Check if any locs exist first?
+    hbond_cutoffs=spc_dct[spc_name]['hbond_cutoffs']
     ini_loc_info = min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info)
+        cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs)
     _, min_cnf_path = ini_loc_info
 
     zma_save_fs = autofile.fs.zmatrix(min_cnf_path)
@@ -204,7 +355,7 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
         instab_trans = zma_save_fs[-1].file.instability.read(zma_locs)
         zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
         _instab = (instab_trans, zma)
-        path = zma_save_fs[-1].file.zmatrix.path(zma_locs)
+        path = zma_save_fs[-1].file.instability.path(zma_locs)
     else:
         _instab = None
         path = None

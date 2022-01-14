@@ -14,20 +14,16 @@ note: options (`opts_dct`) are a subset of keyword arguments (`kwargs_dct`)
 
 import itertools
 import warnings
-try:
-    from collections.abc import Sequence as _Sequence
-except ImportError:
-    from collections import Sequence as _Sequence
+from collections.abc import Sequence as _Sequence
 import automol
 import elstruct
 import autofile
-from autoparse import pattern as app
-from autoparse import find as apf
 
 
 # FUNCTIONS FOR HANDLING THE SEQUENCE OF OPTIONS
 def options_matrix_optimization(script_str, prefix,
                                 geo, chg, mul, method, basis, prog,
+                                zrxn=None,
                                 errors=(), options_mat=(), feedback=False,
                                 frozen_coordinates=(),
                                 freeze_dummy_atoms=True,
@@ -85,7 +81,6 @@ def options_matrix_optimization(script_str, prefix,
     while True:
         subrun_fs[-1].create([macro_idx, micro_idx])
         path = subrun_fs[-1].path([macro_idx, micro_idx])
-
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
@@ -94,41 +89,70 @@ def options_matrix_optimization(script_str, prefix,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
                 **kwargs_)
 
-        error_vals = [elstruct.reader.has_error_message(prog, error, out_str)
-                      for error in errors]
+        # List any errors found in the output
+        errs_found = [err for err in errors
+                      if elstruct.reader.has_error_message(prog, err, out_str)]
 
-        # Kill the while loop if we Molpro error signaling a hopeless point
-        # When an MCSCF WF calculation fails to converge at some step in opt
-        # it is not clear how to save the optimization, so we give up on opt
-        fail_pattern = app.one_of_these([
-            app.escape('The problem occurs in Multi'),
-            app.escape('The problem occurs in cipro')
-        ])
-        if apf.has_match(fail_pattern, out_str, case=False):
+        # Hacky nonsense, need new system for errors
+        # Failure: Break if MCSCF Failure found that cnnout be fixed
+        if elstruct.reader.has_error_message(
+             prog, elstruct.Error.MCSCF_NOCONV, out_str):
+            print("elstruct robust run failed; "
+                  "unfixable MCSCF convergence issues")
             break
 
-        if not any(error_vals):
+        if elstruct.reader.has_error_message(
+             prog, elstruct.Error.LIN_DEP_BASIS, out_str):
+            if automol.zmat.is_valid(step_geo):
+                step_geo = automol.zmat.geometry(step_geo)
+                frozen_coordinates = ()
+                print('fail for linear dependence, trying a geom')
+                continue
+            else:
+                print('linear dependence issue with geom, breaking')
+                break
+
+        # Break if successful
+        if not any(errs_found):
             # success
             break
+
         if not is_exhausted(options_mat):
             # try again
             micro_idx += 1
-            error_row_idx = error_vals.index(True)
+
+            # Set kwargs with current options row
             kwargs_ = updated_kwargs(kwargs, options_mat)
+
+            # Get current options to use, advance matrix
+            error_row_idx = errors.index(errs_found[0])
+            current_opts = options_mat[error_row_idx][0]
             options_mat = advance(error_row_idx, options_mat)
+            n_remain_opts = len(options_mat[error_row_idx])
+
+            print(f'  - Failure: Now trying with options {current_opts}  '
+                  f'({n_remain_opts} attempts in sequence remaining)')
             if feedback:
+                print('  - Using optimized geometry from previous job')
                 # Try and get ZMA, then geo
                 # if neither present use geo from prev. step (for weird errs)
-                geo = (elstruct.reader.opt_zmatrix(prog, out_str)
-                       if automol.zmat.is_valid(geo) else
-                       elstruct.reader.opt_geometry(prog, out_str))
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+                if automol.zmat.is_valid(step_geo):
+                    if zrxn is not None:
+                        grxn = automol.reac.relabel_for_geometry(zrxn)
+                        gra = grxn.forward_ts_graph
+                    else:
+                        gra = None
+                    dum_key_dct = automol.zmat.dummy_key_dictionary(step_geo)
+                    geo_wdum = automol.geom.insert_dummies(
+                        geo, dum_key_dct,
+                        gra=gra)
+                    geo = automol.zmat.from_geometry(step_geo, geo_wdum)
                 if geo is not None:
                     step_geo = geo
         else:
             # failure
-            warnings.resetwarnings()
-            warnings.warn("elstruct robust run failed; "
-                          "last run was in, {}".format(path))
+            print("\n - Robust run sequence has failed ")
             break
 
     return inp_str, out_str
@@ -136,6 +160,7 @@ def options_matrix_optimization(script_str, prefix,
 
 def options_matrix_run(input_writer, script_str, prefix,
                        geo, chg, mul, method, basis, prog,
+                       zrxn=None,
                        errors=(), options_mat=(),
                        **kwargs):
     """ try several sets of options to generate an output file
@@ -178,7 +203,6 @@ def options_matrix_run(input_writer, script_str, prefix,
     while True:
         subrun_fs[-1].create([macro_idx, micro_idx])
         path = subrun_fs[-1].path([macro_idx, micro_idx])
-
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
@@ -186,23 +210,24 @@ def options_matrix_run(input_writer, script_str, prefix,
                 geo=geo, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, **kwargs_)
 
-        error_vals = [elstruct.reader.has_error_message(prog, error, out_str)
-                      for error in errors]
+        # List any errors found in the output
+        errs_found = [err for err in errors
+                      if elstruct.reader.has_error_message(prog, err, out_str)]
 
-        if not any(error_vals):
+        # Break if successful
+        if not any(errs_found):
             # success
             break
+
         if not is_exhausted(options_mat):
             # try again
             micro_idx += 1
-            error_row_idx = error_vals.index(True)
+            error_row_idx = errors.index(errs_found[0])
             kwargs_ = updated_kwargs(kwargs, options_mat)
             options_mat = advance(error_row_idx, options_mat)
         else:
             # failure
-            warnings.resetwarnings()
-            warnings.warn("elstruct robust run failed; "
-                          "last run was in, {}".format(path))
+            print("\n - Robust run sequence has failed ")
             break
 
     return inp_str, out_str

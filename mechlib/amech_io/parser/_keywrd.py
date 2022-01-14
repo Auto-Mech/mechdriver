@@ -128,9 +128,9 @@ def _check_supported_keys(inp_dct, val_dct, section):
     unsupported_keys = inp_keys - chk_keys
 
     if unsupported_keys:
-        print('User defined unsupported keywords in {}'.format(section))
-        print('Unsupported keywords: {}'.format(','.join(unsupported_keys)))
-        print('Accepted keywords: {}'.format(','.join(chk_keys)))
+        print(f'User defined unsupported keywords in {section}')
+        print(f'Unsupported keywords: {(",".join(unsupported_keys))}')
+        print(f'Accepted keywords: {(",".join(chk_keys))}')
         sys.exit()
 
 
@@ -148,21 +148,21 @@ def _check_supported_vals(inp_dct, val_dct, req_lst, section):
         if val is not None:
             # Check val if one is given
             if type(val) not in allowed_typs:
-                print('bad {}'.format(section))
-                print('{}'.format(key))
-                print('val {} must be type {}'.format(val, allowed_typs))
+                print(f'bad {section}'.format(section))
+                print(f'{key}'.format(key))
+                print(f'val {val} must be type {allowed_typs}')
                 sys.exit()
             if allowed_vals:
                 if val not in allowed_vals:
-                    print('bad {}'.format(section))
-                    print('{}'.format(key))
-                    print('val is {}, must be {}'.format(val, allowed_vals))
+                    print(f'bad {section}'.format(section))
+                    print(f'{key}'.format(key))
+                    print(f'val is {val}, must be {allowed_vals}')
                     sys.exit()
         else:
             # If val is None, check if it is required
             if key in req_lst:
-                print('bad {}'.format(section))
-                print('key {} has no value defined even '.format(key),
+                print(f'bad {section}'.format(section))
+                print(f'key {key} has no value defined even '
                       'though it is required')
                 sys.exit()
 
@@ -176,7 +176,7 @@ def _check_required_keys(inp_dct, req_lst, section):
     undefined_required_keys = req_keys - inp_keys
 
     if undefined_required_keys:
-        print('Required keywords have not been defined in {}'.format(section))
+        print(f'Required keywords have not been defined in {section}')
         for key in undefined_required_keys:
             print(key)
         sys.exit()
@@ -198,7 +198,7 @@ def check_thy_lvls(key_dct, method_dct, section=''):
         val = key_dct.get(key)
         if val is not None:
             if val not in thy_defined_methods:
-                print('User has not defined val in {}'.format(section))
+                print(f'User has not defined val in {section}')
                 print(key, val)
                 sys.exit()
 
@@ -209,6 +209,6 @@ def check_model_combinations(pf_dct):
     if pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == '1dhr':
         print('*ERROR: VPT2 and 1DHR combination is not yet implemented')
         sys.exit()
-    elif pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == 'tau':
+    elif pf_dct['vib'] == 'vpt2' and 'tau' in pf_dct['tors']:
         print('*ERROR: VPT2 and TAU combination is not yet implemented')
         sys.exit()

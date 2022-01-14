@@ -9,6 +9,7 @@ from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io import job_path
 from mechlib import filesys
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
@@ -54,10 +55,12 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     # cid = [autofile.schema.generate_new_conformer_id()]
     # run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cid))
 
+    run_prefix = runfs_dct['prefix']
     runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
     rid = autofile.schema.generate_new_ring_id()
     cid = autofile.schema.generate_new_conformer_id()
     locs = (rid, cid)
+    runlvl_cnf_run_fs[-1].create(locs)
     run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(locs))
 
     # Optimize the saddle point
@@ -73,9 +76,12 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
         # (maybe just have remove imag do this?)
         hess_ret, _, imags = saddle_point_hessian(
             opt_ret, ts_info, method_dct,
-            run_fs, overwrite)
+            run_fs, run_prefix, overwrite)
 
         sadpt_status = saddle_point_checker(imags)
+        # ted_status = ted_coordinate_check(opt_ret, hess_ret, ts_dct, run_fs)
+        # remove ted_status check for now since it was crashing
+        # ted_status = True
 
         # Assess saddle point, save it if viable
         # if sadpt_status == 'kickoff':
@@ -96,7 +102,6 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
             filesys.save.conformer(
                 opt_ret, hess_ret, runlvl_cnf_save_fs, mod_thy_info[1:],
                 zrxn=zrxn, rng_locs=(rid,), tors_locs=(cid,), zma_locs=None)
-
     else:
         ioprinter.warning_message(
             '\n TS optimization failed. No geom to check and save.')
@@ -107,9 +112,10 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
         level of theory
     """
 
+    lvl = es_keyword_dct['inplvl']
     ioprinter.info_message(
         '\nSearching save filesys for guess Z-Matrix calculated',
-        'at {} level...'.format(es_keyword_dct['inplvl']))
+        f'at {lvl} level...')
 
     ini_zma_fs = savefs_dct['inilvl_zma_fs']
 
@@ -119,7 +125,7 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
             ioprinter.info_message(' - Z-Matrix found.')
             ioprinter.info_message(
-                ' - Reading Z-Matrix from path {}'.format(geo_path))
+                f' - Reading Z-Matrix from path {geo_path}')
             guess_zmas.append(
                 ini_zma_fs[-1].file.zmatrix.read(zma_locs))
 
@@ -136,6 +142,7 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
 
     # Get es keyword info
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
 
     # Get info from the dct
     ts_zma = ts_dct['zma']
@@ -172,16 +179,17 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
         scn_typ='relaxed',
         script_str=script_str,
         overwrite=overwrite,
+        zrxn=zrxn,
         update_guess=update_guess,
         reverse_sweep=False,
         saddle=False,
         constraint_dct=constraint_dct,
-        retryfail=False,
+        retryfail=retryfail,
         **kwargs,
         )
 
-    guess_zmas = rxngrid.find_max_1d(
-        zrxn.class_, coord_grids[0], ts_zma, coord_names[0], scn_save_fs,
+    guess_zmas = rxngrid.grid_maximum_zmatrices(
+        zrxn.class_, ts_zma, coord_grids, coord_names, scn_save_fs,
         mod_thy_info, constraint_dct)
 
     return guess_zmas
@@ -203,14 +211,14 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
             newline=1)
     else:
         ioprinter.info_message(
-            'There are {} guess Z-Matrices'.format(len(guess_zmas)),
+            f'There are {len(guess_zmas)} guess Z-Matrices',
             'to attempt to find saddle point.', newline=1)
 
     # Loop over all the guess zmas to find a TS
     opt_ret = None
     for idx, zma in enumerate(guess_zmas):
         ioprinter.info_message(
-            '\nOptimizing guess Z-Matrix {}...'.format(idx+1))
+            f'\nOptimizing guess Z-Matrix {idx+1}...')
 
         # Run the transition state optimization
         opt_success, opt_ret = es_runner.execute_job(
@@ -229,7 +237,7 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
         if opt_success:
             break
 
-        # frozen_coords_lst = ((), tors_names)
+        # frozen_coords_lst = (tors_names, ())
         # success, opt_ret = es_runner.multi_stage_optimization(
         #     script_str=opt_script_str,
         #     run_fs=run_fs,
@@ -247,7 +255,7 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
 
 
 def saddle_point_hessian(opt_ret, ts_info, method_dct,
-                         run_fs, overwrite):
+                         run_fs, run_prefix, overwrite):
     """ run things for checking Hessian
     """
 
@@ -276,11 +284,14 @@ def saddle_point_hessian(opt_ret, ts_info, method_dct,
     if hess_success:
         hess_inf_obj, _, hess_out_str = hess_ret
         hess = elstruct.reader.hessian(hess_inf_obj.prog, hess_out_str)
-        freq_run_path = run_fs[-1].path(['hessian'])
+
+        fml_str = automol.geom.formula_string(geo)
+        vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
+
         run_fs[-1].create(['hessian'])
         script_str = autorun.SCRIPT_DCT['projrot']
         freqs, _, imags, _ = autorun.projrot.frequencies(
-            script_str, freq_run_path, [geo], [[]], [hess])
+            script_str, vib_path, [geo], [[]], [hess])
     else:
         freqs, imags = [], []
 
@@ -301,18 +312,24 @@ def saddle_point_checker(imags):
         if len(imags) > 1:
             ioprinter.warning_message(
                 'More than one imaginary mode for geometry')
+            status = 'fail'
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
                 ioprinter.warning_message(
-                    'Mode {} {} cm-1 is low,'.format(str(idx+1), imag))
+                    f'Mode {str(idx+1)} {imag} cm-1 is low,')
             elif 50.0 < imag <= 200.0:
-                lowstr = 'Mode {} {} cm-1 is low,'.format(str(idx+1), imag)
-                ioprinter.warning_message(
-                    lowstr + 'need a kickoff procedure to remove')
-                kick_imag += 1
+                lowstr = f'Mode {str(idx+1)} {imag} cm-1 is low,'
+                ioprinter.debug_message(
+                    lowstr + ' check mode and see if it should be corrected')
+                big_imag += 1
+                # Adding to the kick counter kills code for good TSs
+                # Some addditions of big species have low mode of this
+                # ioprinter.warning_message(
+                #     lowstr + 'need a kickoff procedure to remove')
+                # kick_imag += 1
             else:
                 ioprinter.debug_message(
-                    'Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
+                    f'Mode {str(idx+1)} {imag} cm-1 likely fine')
                 big_imag += 1
 
         if big_imag > 1:
@@ -321,7 +338,12 @@ def saddle_point_checker(imags):
             if kick_imag >= 1:
                 ioprinter.debug_message('Will kickoff to get saddle point')
                 status = 'kickoff'
+            else:
+                status = 'failure'
         elif big_imag == 1:
             status = 'success'
+        elif big_imag == 0:
+            status = 'failure'
+            ioprinter.warning_message('Did not find any appropriate modes')
 
     return status

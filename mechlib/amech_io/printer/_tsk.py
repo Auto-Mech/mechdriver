@@ -23,6 +23,16 @@ def task_header(tsk, spc_name):
     message('Task:', tsk, spc_name, newline=1)
 
 
+def task_footer():
+    """ a
+    """
+    message(
+        '\n'+
+        '--- END TASK ----------------------------------------' +
+        '--------------------------------------'
+    )
+
+
 def keyword_list(es_keyword_dct, thy_dct=None):
     """ a
     """
@@ -31,9 +41,8 @@ def keyword_list(es_keyword_dct, thy_dct=None):
         method_str = ''
         if key in ('inplvl', 'runlvl'):
             method_dct = thy_dct.get(es_keyword_dct[key])
-            method_str = '({}/{})'.format(
-                method_dct['method'], method_dct['basis'])
-        message('{}: {}    '.format(key, val) + method_str)
+            method_str = f'({method_dct["method"]}/{method_dct["basis"]})'
+        message(f'{key}: {val}    ' + method_str)
     obj('vspace')
 
 
@@ -53,9 +62,8 @@ def output_keyword_list(es_keyword_dct, thy_dct=None):
         method_str = ''
         if key in ('inplvl', 'runlvl'):
             method_dct = thy_dct.get(es_keyword_dct[key])
-            method_str = '({}/{})'.format(
-                method_dct['method'], method_dct['basis'])
-        message('{}: {}    '.format(key, val) + method_str)
+            method_str = f'({method_dct["method"]}/{method_dct["basis"]})'
+        message(f'{key}: {val}    ' + method_str)
     obj('vspace')
 
 
@@ -75,13 +83,13 @@ def messpf(statement, path=None):
         message('Running MESSPF calculations for all species', newline=1)
     elif statement == 'write_file':
         message('Writing MESS input file...')
-        message(' - Path: {}'.format(path))
+        message(f' - Path: {path}')
     elif statement == 'write_output':
         message('Writing MESS Output file...')
-        message(' - Path: {}'.format(path))
+        message(f' - Path: {path}')
     elif statement == 'run_file':
         message('Running MESS input file...')
-        message(' - Path: {}'.format(path))
+        message(f' - Path: {path}')
     elif statement == 'global_header':
         message('Preparing global keywords section for MESS input...')
         message(' - Using temperatures and pressures defined by user')
@@ -106,9 +114,9 @@ def nasa(statement, spc_name=None, path=None):
             'Running Thermochemistry calculations for all species', newline=1)
     elif statement == 'calculate':
         message(
-            'Starting NASA polynomials calculation for {}'.format(spc_name))
+            f'Starting NASA polynomials calculation for {spc_name}')
     elif statement == 'fit':
         message(
             'Attempting to fit NASA polynomials from',
             '200-1000 and 1000-3000 K ranges using\n',
-            'temps from MESSPF file:\n {}.'.format(path))
+            f'temps from MESSPF file:\n {path}.')

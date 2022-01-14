@@ -3,25 +3,17 @@
     format
 """
 
-import os
-import autofile
-import automol
-from phydat import phycon
-from mechanalyzer.inf import spc as sinfo
-from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
-from mechlib.amech_io import parser
-from mechlib import filesys
-from mechroutines.models import _vib as vib
-from mechroutines.models import ene
-from mechroutines.thermo import basis
+from mechroutines.models import typ
 from mechroutines.proc import _util as util
+from mechroutines.proc import _collect as collect
 
 
-def run_tsk(tsk, spc_dct, spc_name,
-            thy_dct, proc_keyword_dct,
-            pes_mod_dct_i, spc_mod_dct_i,
-            run_prefix, save_prefix):
+def run_tsk(tsk, obj_queue,
+            proc_keyword_dct,
+            spc_dct, thy_dct,
+            spc_mod_dct_i, pes_mod_dct_i,
+            run_prefix, save_prefix, mdriver_path):
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
     """
@@ -33,210 +25,176 @@ def run_tsk(tsk, spc_dct, spc_name,
 
     # Setup csv data dictionary for specific task
     csv_data = util.set_csv_data(tsk)
+    filelabel, thylabel = util.get_file_label(
+        tsk, pes_mod_dct_i, proc_keyword_dct, spc_mod_dct_i)
     chn_basis_ene_dct = {}
+    col_array = []
     spc_array = []
 
-    # print species
-    ioprinter.obj('line_dash')
-    ioprinter.info_message("Species: ", spc_name)
+    # Exclude unstable species
+    # These species break certain checks (e.g. no ene exists for geo collect)
+    obj_queue = util.remove_unstable(
+        obj_queue, spc_dct, thy_dct, spc_mod_dct_i,
+        proc_keyword_dct, save_prefix)
+    obj_queue, ts_miss_data = util.remove_ts_missing(
+        obj_queue, spc_dct)
+    obj_queue = util.remove_radrad_ts(
+        obj_queue, spc_dct)
 
-    # Heat of formation basis molecules and coefficients
-    # is not conformer specific
-    if 'coeffs' in tsk:
-        thy_info = spc_mod_dct_i['geo'][1]
-        filelabel = 'coeffs'
-        filelabel += '_{}'.format(pes_mod_dct_i['thermfit']['ref_scheme'])
-        filelabel += '.csv'
-        label = spc_name
-        basis_dct, _ = basis.prepare_refs(
-            pes_mod_dct_i['thermfit']['ref_scheme'],
-            spc_dct, (spc_name,))
-        # Get the basis info for the spc of interest
-        spc_basis, coeff_basis = basis_dct[spc_name]
-        coeff_array = []
-        for spc_i in spc_basis:
-            if spc_i not in spc_array:
-                spc_array.append(spc_i)
-        for spc_i in spc_array:
-            if spc_i in spc_basis:
-                coeff_array.append(coeff_basis[spc_basis.index(spc_i)])
-            else:
-                coeff_array.append(0)
-        csv_data[label] = [*coeff_array]
+    # Set up lists for reporting missing data
+    miss_data = ()
 
-    else:
-        # unpack spc and level info
-        spc_dct_i = spc_dct[spc_name]
-        if proc_keyword_dct['geolvl']:
-            thy_info = tinfo.from_dct(thy_dct.get(
-                proc_keyword_dct['geolvl']))
+    # Initialize dictionaries to carry strings for writing
+    disp_dct = {}
+
+    # Begin the loop over the species
+    for spc_name in obj_queue:
+
+        # info printed to output file
+        ioprinter.obj('line_dash')
+        ioprinter.info_message("Species: ", spc_name)
+
+        # Heat of formation basis molecules and coefficients
+        # does not require filesystem information
+        if 'coeffs' in tsk:
+            label = spc_name
+            csv_data_i, spc_array = collect.coeffs(
+                spc_name, spc_dct, pes_mod_dct_i, spc_array)
+            csv_data[label] = csv_data_i
+            col_array = spc_array
+        # All other tasks require filesystem information
         else:
-            thy_info = spc_mod_dct_i['geo'][1]
+            # unpack spc and level info for conformers
+            spc_dct_i = spc_dct[spc_name]
+            spc_mod_dct_i = util.choose_theory(
+                proc_keyword_dct, spc_mod_dct_i)
+            ret = util.choose_conformers(
+                spc_name, proc_keyword_dct, spc_mod_dct_i,
+                save_prefix, run_prefix, spc_dct_i, thy_dct)
+            cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
+
+            # Add geo to missing data task if locs absent
+            if not rng_cnf_locs_lst:
+                miss_data += ((spc_name, mod_thy_info, 'geometry'),)
 
             # Loop over conformers
-        if proc_keyword_dct['geolvl']:
-            _, rng_cnf_locs_lst, rng_cnf_locs_path = util.conformer_list(
-                proc_keyword_dct, save_prefix, run_prefix,
-                spc_dct_i, thy_dct)
-            spc_mod_dct_i, pf_models = None, None
-        else:
-            ret = util.conformer_list_from_models(
-                proc_keyword_dct, save_prefix, run_prefix,
-                spc_dct_i, thy_dct, spc_mod_dct_i, pf_models)
-            _, rng_cnf_locs_lst, rng_cnf_locs_path = ret
-        for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
+            for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
 
-            label = spc_name + '_' + '_'.join(locs)
-            _, cnf_fs = filesys.build_fs(
-                run_prefix, save_prefix, 'CONFORMER')
-            if 'freq' in tsk:
+                miss_data_i = None
+                label = spc_name + ':' + '_'.join(locs)
+                print(label)
 
-                filelabel = 'freq'
-                if spc_mod_dct_i:
-                    filelabel += '_m{}'.format(spc_mod_dct_i['harm'][0])
-                else:
-                    filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
-                filelabel += '.csv'
+                if 'freq' in tsk and not _skip_freqs(spc_name, spc_dct_i):
+                    _dat, miss_data_i = collect.frequencies(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        proc_keyword_dct, thy_dct,
+                        cnf_fs, locs, locs_path, run_prefix, save_prefix)
+                    if _dat is not None:
+                        csv_data_i, csv_data_j, disp_str = _dat
+                        csv_data['freq'][label] = csv_data_i
+                        tors_freqs, all_freqs, sfactor = csv_data_j
+                        if tors_freqs is not None:
+                            csv_data['tfreq'][label] = tors_freqs
+                            csv_data['allfreq'][label] = all_freqs
+                            csv_data['scalefactor'][label] = [sfactor]
+                        if disp_str is not None:
+                            disp_dct.update({spc_name: disp_str})
 
-                if pf_models:
-                    pf_filesystems = filesys.models.pf_filesys(
-                        spc_dct_i, spc_mod_dct_i,
-                        run_prefix, save_prefix, saddle=False)
-                    ret = vib.full_vib_analysis(
-                        spc_dct_i, pf_filesystems, spc_mod_dct_i,
-                        run_prefix, zrxn=None)
-                    freqs, _, tors_zpe, sfactor, torsfreqs, all_freqs = ret
-                    csv_data['tfreq'][label] = torsfreqs
-                    csv_data['allfreq'][label] = all_freqs
-                    csv_data['scalefactor'][label] = [sfactor]
-                else:
-                    es_model = util.freq_es_levels(proc_keyword_dct)
-                    spc_mod_dct_i = parser.model.pf_level_info(
-                        es_model, thy_dct)
-                    try:
-                        freqs, _, zpe = vib.read_locs_harmonic_freqs(
-                            cnf_fs, locs, run_prefix, zrxn=None)
-                    except:
-                        freqs = []
-                        zpe = 0
+                elif 'geo' in tsk:
+                    csv_data_i, miss_data_i = collect.geometry(
+                        spc_name, locs, locs_path, cnf_fs, mod_thy_info)
+                    print(csv_data_i)
+                    csv_data[label] = csv_data_i
 
-                tors_zpe = 0.0
-                spc_data = []
-                zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-                if freqs and proc_keyword_dct['scale'] is not None:
-                    freqs, zpe = vib.scale_frequencies(
-                        freqs, tors_zpe, spc_mod_dct_i, scale_method='3c')
-                spc_data = [locs_path, zpe, *freqs]
-                csv_data['freq'][label] = spc_data
-            elif 'geo' in tsk:
+                elif 'molden' in tsk:
+                    csv_data_i, miss_data_i = collect.molden(
+                        spc_name, locs, locs_path, cnf_fs, mod_thy_info)
+                    print(csv_data_i)
+                    csv_data[label] = csv_data_i
 
-                filelabel = 'geo'
-                if spc_mod_dct_i:
-                    filelabel += '_{}'.format(spc_mod_dct_i['harm'])
-                else:
-                    filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
-                filelabel += '.txt'
+                elif 'zma' in tsk:
+                    csv_data_i, miss_data_i = collect.zmatrix(
+                        spc_name, locs, locs_path, cnf_fs, mod_thy_info)
+                    csv_data[label] = csv_data_i
 
-                if cnf_fs[-1].file.geometry.exists(locs):
-                    geo = cnf_fs[-1].file.geometry.read(locs)
-                    energy = cnf_fs[-1].file.energy.read(locs)
-                    comment = 'energy: {0:>15.10f}'.format(energy)
-                    xyz_str = automol.geom.xyz_string(geo, comment=comment)
-                else:
-                    xyz_str = '\t -- Missing --'
-                spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
-                    spc_name, locs, locs_path) + xyz_str
+                elif 'torsion' in tsk:
+                    csv_data_i, miss_data_i = collect.torsions(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        run_prefix, save_prefix)
 
-                csv_data[label] = spc_data
+                elif 'ene' in tsk:
+                    csv_data_i, miss_data_i = collect.energy(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        proc_keyword_dct, thy_dct, locs, locs_path,
+                        cnf_fs, run_prefix, save_prefix)
+                    csv_data[label] = csv_data_i
 
-            elif 'zma' in tsk:
+                elif 'enthalpy' in tsk:
+                    ret = collect.enthalpy(
+                        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
+                        pes_mod_dct_i, chn_basis_ene_dct, spc_array,
+                        locs, locs_path, cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, chn_basis_ene_dct, spc_array = ret
+                    csv_data[label] = csv_data_i
+                    col_array = spc_array
 
-                filelabel = 'zmat'
-                if spc_mod_dct_i:
-                    filelabel += '_{}'.format(spc_mod_dct_i['harm'])
-                else:
-                    filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
-                filelabel += '.txt'
+                elif 'entropy' in tsk:
+                    ret = collect.enthalpy(
+                        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
+                        pes_mod_dct_i, chn_basis_ene_dct, spc_array,
+                        locs, locs_path, cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, chn_basis_ene_dct, spc_array = ret
+                    csv_data[label] = csv_data_i
 
-                geo = cnf_fs[-1].file.geometry.read(locs)
-                zma = automol.geom.zmatrix(geo)
-                energy = cnf_fs[-1].file.energy.read(locs)
-                comment = 'energy: {0:>15.10f}\n'.format(energy)
-                zma_str = automol.zmat.string(zma)
-                spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
-                    spc_name, locs, locs_path) + comment + zma_str
-                csv_data[label] = spc_data
+                elif 'heat' in tsk:
+                    ret = collect.enthalpy(
+                        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
+                        pes_mod_dct_i, chn_basis_ene_dct, spc_array,
+                        locs, locs_path, cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, chn_basis_ene_dct, spc_array = ret
+                    csv_data[label] = csv_data_i
 
-            elif 'ene' in tsk:
+                elif 'messpf_inp' in tsk:
+                    ret = collect.messpf_input(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        pes_mod_dct_i, locs, locs_path,
+                        cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, _, miss_data_i = ret
+                    print(csv_data_i)
+                    csv_data[label] = csv_data_i
 
-                filelabel = 'ene'
-                if spc_mod_dct_i:
-                    filelabel += '_{}'.format(spc_mod_dct_i['harm'])
-                    filelabel += '_{}'.format(spc_mod_dct_i['ene'])
-                else:
-                    filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
-                    filelabel += '_{}'.format(proc_keyword_dct['proplvl'])
-                filelabel += '.csv'
+                elif 'pf' in tsk:
+                    ret = collect.partition_function(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        pes_mod_dct_i, locs, locs_path,
+                        cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, miss_data_i = ret
+                    csv_data[label] = csv_data_i[1]
+                    col_array = csv_data_i[0]
 
-                energy = None
-                if spc_mod_dct_i:
-                    pf_filesystems = filesys.models.pf_filesys(
-                        spc_dct_i, spc_mod_dct_i,
-                        run_prefix, save_prefix, saddle=False)
-                    energy = ene.electronic_energy(
-                        spc_dct_i, pf_filesystems, spc_mod_dct_i,
-                        conf=(locs, locs_path, cnf_fs))
-                else:
-                    spc_info = sinfo.from_dct(spc_dct_i)
-                    thy_info = tinfo.from_dct(thy_dct.get(
-                        proc_keyword_dct['proplvl']))
-                    mod_thy_info = tinfo.modify_orb_label(
-                        thy_info, spc_info)
-                    sp_save_fs = autofile.fs.single_point(locs_path)
-                    sp_save_fs[-1].create(mod_thy_info[1:4])
-                    # Read the energy
-                    sp_path = sp_save_fs[-1].path(mod_thy_info[1:4])
-                    if os.path.exists(sp_path):
-                        if sp_save_fs[-1].file.energy.exists(
-                                mod_thy_info[1:4]):
-                            ioprinter.reading('Energy', sp_path)
-                            energy = sp_save_fs[-1].file.energy.read(
-                                mod_thy_info[1:4])
-                csv_data[label] = [locs_path, energy]
+                if miss_data_i is not None:
+                    miss_data += (miss_data_i,)
 
-            elif 'enthalpy' in tsk:
-                filelabel = 'enthalpy'
-                if spc_mod_dct_i:
-                    filelabel += '_{}'.format(spc_mod_dct_i['harm'])
-                    filelabel += '_{}'.format(spc_mod_dct_i['ene'])
-                else:
-                    filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
-                    filelabel += '_{}'.format(proc_keyword_dct['proplvl'])
-                filelabel = '.csv'
 
-                energy = None
-                pf_filesystems = filesys.models.pf_filesys(
-                    spc_dct_i, spc_mod_dct_i,
-                    run_prefix, save_prefix, saddle=False)
-                ene_abs = ene.read_energy(
-                    spc_dct_i, pf_filesystems, spc_mod_dct_i,
-                    run_prefix, conf=(locs, locs_path, cnf_fs),
-                    read_ene=True, read_zpe=True, saddle=False)
-                hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
-                    spc_dct, spc_name, ene_abs,
-                    chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
-                    run_prefix, save_prefix, pforktp='pf', zrxn=None)
-                spc_basis, coeff_basis = hbasis[spc_name]
-                coeff_array = []
-                for spc_i in spc_basis:
-                    if spc_i not in spc_array:
-                        spc_array.append(spc_i)
-                for spc_i in spc_array:
-                    if spc_i in spc_basis:
-                        coeff_array.append(
-                            coeff_basis[spc_basis.index(spc_i)])
-                    else:
-                        coeff_array.append(0)
-                csv_data[label] = [locs_path, ene_abs, hf0k, *coeff_array]
+    # Write a report that details what data is missing
+    missing_data = miss_data + ts_miss_data
 
-    util.write_csv_data(tsk, csv_data, filelabel, spc_array)
+    # Write the csv data into the appropriate file
+    util.write_csv_data(tsk, csv_data, filelabel, col_array, mdriver_path)
+
+    # Gather data that is provided for each species in files in a dir
+    data_dirs = (('displacements_'+thylabel, disp_dct),)
+    util.write_data_dirs(data_dirs, mdriver_path)
+
+    return missing_data
+
+
+# Task manager/skipper functions
+def _skip_freqs(spc_name, spc_dct_i):
+    """ check if frequencies should be skipped
+    """
+    skip = False
+    if 'ts' not in spc_name:
+        if typ.is_atom(spc_dct_i):
+            skip = True
+    return skip

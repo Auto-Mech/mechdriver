@@ -41,7 +41,7 @@ def obj(key, prechar=None):
     """
 
     assert key in LIB_DCT, (
-        'Object {} not in library'.format(key)
+        f'Object {key} not in library'
     )
 
     obj_str = LIB_DCT[key]

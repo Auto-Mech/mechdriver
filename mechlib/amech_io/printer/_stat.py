@@ -60,5 +60,5 @@ def status_message(print_str, label=None, path=None,
     if label:
         print_str += label
     if path:
-        print_str += ' at {}'.format(path)
+        print_str += f' at {path}'
     message(print_str, newline=newline, indent=indent)

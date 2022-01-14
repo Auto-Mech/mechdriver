@@ -12,6 +12,7 @@ def hindered_rotor_scans(
         scn_run_fs, scn_save_fs,
         rotors, tors_model, method_dct,
         overwrite,
+        zrxn=None,
         saddle=False,
         increment=0.5235987756,
         retryfail=True):
@@ -23,12 +24,17 @@ def hindered_rotor_scans(
             method_dct, job=elstruct.Job.OPTIMIZATION)
         scn_typ = 'relaxed'
         update_guess = True
+        backstep = True
+        reverse_sweep = True
     else:
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.ENERGY)
         scn_typ = 'rigid'
         update_guess = False
+        backstep = False
+        reverse_sweep = False
 
+    # backstep = False
     run_tors_names = automol.rotor.names(rotors)
     run_tors_grids = automol.rotor.grids(rotors, increment=increment)
 
@@ -40,8 +46,7 @@ def hindered_rotor_scans(
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
 
         ioprinter.info_message(
-            'Running Rotor: {}...'.format(tors_names),
-            newline=1)
+            f'Running Rotor: {"-".join(tors_names)}', newline=1)
 
         # Setting the constraints
         constraint_dct = automol.zmat.constraint_dct(
@@ -58,13 +63,32 @@ def hindered_rotor_scans(
             scn_typ=scn_typ,
             script_str=script_str,
             overwrite=overwrite,
+            zrxn=zrxn,
             update_guess=update_guess,
-            reverse_sweep=True,
+            reverse_sweep=reverse_sweep,
             saddle=saddle,
             constraint_dct=constraint_dct,
             retryfail=retryfail,
             **kwargs,
         )
+        if backstep:
+            ioprinter.info_message('Attempting backstep routine')
+            scan.run_backsteps(
+                zma=zma,
+                spc_info=spc_info,
+                mod_thy_info=mod_thy_info,
+                coord_names=tors_names,
+                coord_grids=tors_grids,
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                scn_typ=scn_typ,
+                script_str=script_str,
+                overwrite=overwrite,
+                saddle=saddle,
+                constraint_dct=constraint_dct,
+                retryfail=retryfail,
+                **kwargs,
+            )
 
 
 def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
@@ -72,21 +96,26 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
     """
 
     new_min_zma = None
+    new_emin = emax
+    new_path = None
 
     print('\nAssessing the HR potential...')
     for name in tors_pots:
 
-        print('- Rotor {}'.format(name))
+        print(f'- Rotor {name}')
         pots = tors_pots[name].values()
         zmas = tors_zmas[name].values()
         paths = tors_paths[name].values()
         for pot, zma, path in zip(pots, zmas, paths):
             if emin < pot < emax:
-                new_min_zma = zma
-                emin = pot
-                print(' - New minimmum energy ZMA found for torsion')
-                print(' - Ene = {}'.format(pot))
-                print(' - Found at path: {}'.format(path))
-                print(automol.zmat.string(zma))
+                if pot < new_emin:
+                    new_min_zma = zma
+                    new_path = path
+                    new_emin = pot
+    if new_min_zma is not None:
+        print(' - New minimmum energy ZMA found for torsion')
+        print(f' - Ene = {new_emin}')
+        print(f' - Found at path: {new_path}')
+        print(automol.zmat.string(new_min_zma))
 
     return new_min_zma

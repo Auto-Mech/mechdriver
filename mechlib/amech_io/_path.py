@@ -10,25 +10,77 @@ from mechanalyzer.inf import spc as sinfo
 
 
 # Set paths to MESS jobs
-def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
+def rate_paths(pes_dct, run_prefix):
+    """ Set up the path for saveing the input and output of
+        MESSRATE calculations
+
+        Run different types of directories (1 PES)
+            - fml-base: Standard base rate calculations (use idx)
+            - fml-wext: Well-Extended base calculations (use 10*idx)
+    """
+
+    rate_path_dct = {}
+    for pes_inf in pes_dct:
+        pes_fml, pes_idx, subpes_idx = pes_inf
+
+        _pes_str = f'{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
+        # idx1 = f'{pes_idx}-{subpes_idx}-BASE'
+        # idx2 = f'{pes_idx}-{subpes_idx}-WEXT'
+        idx1 = int(f'{pes_idx}{subpes_idx}0')
+        idx2 = int(f'{pes_idx}{subpes_idx}1')
+        rate_path_dct[pes_inf] = {
+            'base': job_path(
+                run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx1),
+            'wext': job_path(
+                run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx2)
+        }
+
+    return rate_path_dct
+
+
+def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
 
-    thm_paths = []
-    for spc_name in spc_queue:
-        thm_path = {}
-        for idx, mod in enumerate(spc_mods):
-            spc_info = sinfo.from_dct(spc_dct[spc_name])
-            spc_formula = automol.inchi.formula_string(spc_info[0])
-            thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
-            thm_path[mod] = (
-                job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=idx),
-                job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=idx)
+    thm_path_dct = {}
+    for spc_name in spc_locs_dct:
+        spc_thm_path_dct = {}
+        spc_info = sinfo.from_dct(spc_dct[spc_name])
+        spc_formula = automol.inchi.formula_string(spc_info[0])
+        thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
+        spc_locs_lst = spc_locs_dct[spc_name]
+        for sidx, spc_locs in enumerate(spc_locs_lst, start=1):
+            spc_mod_thm_path_dct = {}
+            for midx, mod in enumerate(spc_mods):
+                idx = sidx * 10 + midx
+                spc_mod_thm_path_dct[mod] = (
+                    job_path(
+                        run_prefix, 'MESS', 'PF',
+                        thm_prefix, locs_idx=idx),
+                    job_path(
+                        run_prefix, 'THERM', 'NASA',
+                        thm_prefix, locs_idx=idx)
+                )
+            spc_mod_thm_path_dct['mod_total'] = (
+                job_path(
+                    run_prefix, 'MESS', 'PF',
+                    thm_prefix, locs_idx=sidx),
+                job_path(
+                    run_prefix, 'THERM', 'NASA',
+                    thm_prefix, locs_idx=sidx)
             )
-        thm_paths.append(thm_path)
-
-    return thm_paths
+            spc_thm_path_dct[tuple(spc_locs)] = spc_mod_thm_path_dct
+        spc_thm_path_dct['spc_total'] = (
+            job_path(
+                run_prefix, 'MESS', 'PF',
+                thm_prefix, locs_idx=0),
+            job_path(
+                run_prefix, 'THERM', 'NASA',
+                thm_prefix, locs_idx=0)
+        )
+        thm_path_dct[spc_name] = spc_thm_path_dct
+    return thm_path_dct
 
 
 def output_path(dat, make_path=True, print_path=False, prefix=None):
@@ -54,7 +106,7 @@ def output_path(dat, make_path=True, print_path=False, prefix=None):
         if not os.path.exists(path):
             os.makedirs(path)
     if print_path:
-        print('output path for {}: {}'.format(dat, path))
+        print(f'output path for {dat}: {path}')
 
     return path
 
@@ -86,7 +138,7 @@ def job_path(prefix, prog, job, fml,
     # Determine the index for the locs if not provided
     if locs_idx is not None:
         assert isinstance(locs_idx, int), (
-            'locs idx {} is not an integer'.format(locs_idx)
+            f'locs idx {locs_idx} is not an integer'
         )
     else:
         locs_idx = random.randint(0, 9999999)
@@ -102,7 +154,7 @@ def job_path(prefix, prog, job, fml,
     if make_path:
         bld_fs[-1].create([job, fml, locs_idx])
     if print_path:
-        print('Path for {}/{} Job:'.format(prog, job))
+        print(f'Path for {prog}/{job} Job:')
         print(bld_path)
 
     return bld_path

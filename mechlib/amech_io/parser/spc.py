@@ -1,6 +1,7 @@
 """ Build species dictionary for all spc and ts
 """
 
+import copy
 import automol
 import ioformat
 import mechanalyzer
@@ -22,7 +23,7 @@ SPC_VAL_DCT = {
     'inchi': ((str,), (), None),
     'inchikey': ((str,), (), None),
     'smiles': ((str,), (), None),
-    'sens': ((float,), (), None),  # auto from CSV reader, not used
+    'sens': ((int, float), (), None),  # auto from CSV reader, not used
     'fml': ((dict,), (), None),  # auto from CSV reader, not used
     'pst_params': ((tuple,), (), (1.0, 6)),
     # ^^ shouldn't be in spc, but auto dat glob prob for all TS keys)
@@ -30,18 +31,20 @@ SPC_VAL_DCT = {
     'elec_levels': ((tuple,), (), None),
     'geo': ((tuple,), (), None),
     'sym_factor': ((float,), (), None),
-    'kickoff': ((tuple,), (), (True, (0.1, False))),
-    'hind_inc': ((float,), (), 30.0),
+    'kickoff': ((tuple,), (), (0.1, False)),
+    'hind_inc': ((int, float,), (), 30.0),
+    'hbond_cutoffs': ((tuple,), (), (4.55, 1.92)),
     'mc_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
     'tau_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
-    'smin': ((float,), (), None),
-    'smax': ((float,), (), None),
+    'smin': ((int, float), (), None),
+    'smax': ((int, float), (), None),
     'etrans_nsamp': ((int,), (), None),
     'bath': ((str,), (), None),
     'lj': ((str,), (), None),
     'edown': ((str,), (), None),
     'active': ((tuple,), (), None),
-    'zma_idx': ((int,), (), 0)
+    'zma_idx': ((int,), (), 0),
+    'conf_id': ((tuple, list), (), None)
 }
 TS_VAL_DCT = {
     'rxndirn': ((str,), (), 'forw'),
@@ -51,6 +54,8 @@ TS_VAL_DCT = {
     'active': ((str,), (), None),
     'ts_search': ((str,), (), None),
     'ts_idx': ((int,), (), 0)
+    # vrc_dct = autorun.varecof.VRC_DCT
+    # machine_dct = {}
 }
 TS_VAL_DCT.update(SPC_VAL_DCT)
 
@@ -85,7 +90,7 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
         # req_lst = SPC_REQ if 'ts' not in name else SPC_REQ+TS_REQ
         req_lst = SPC_REQ if 'ts' not in name else ()
         val_dct = SPC_VAL_DCT if 'ts' not in name else TS_VAL_DCT
-        check_dct1(dct, val_dct, req_lst, 'Spc-{}'.format(name))
+        check_dct1(dct, val_dct, req_lst, f'Spc-{name}')
 
     return mod_spc_dct, glob_dct
 
@@ -145,6 +150,10 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
         spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
         spc_dct[spc]['geo'] = geo_dct.get(spc, None)
 
+    # Perform similar conversions where needed for glob dct
+    if 'hind_inc' in glob_dct:
+        glob_dct['hind_inc'] *= phycon.DEG2RAD
+
     return spc_dct, glob_dct
 
 
@@ -152,12 +161,14 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct, glob_dct):
     """ Create a new dictionary that combines init spc_dct and sadpt dct
     """
 
-    combined_dct = {}
+    # combined_dct = {}
+    #
+    # OLD? Put all elements of spc_dct in combined dct that are NOT TSs
+    # for spc in spc_dct:
+    #     if 'ts' not in spc:
+    #         combined_dct[spc] = spc_dct[spc]
 
-    # Put all elements of spc_dct in combined dct that are NOT TSs
-    for spc in spc_dct:
-        if 'ts' not in spc:
-            combined_dct[spc] = spc_dct[spc]
+    combined_dct = copy.deepcopy(spc_dct)
 
     # Now put in the TSs pulling info from everywhere
     for sadpt in sadpt_dct:
@@ -173,9 +184,14 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct, glob_dct):
             combined_dct[sadpt].update(spc_dct[sadpt])
 
         # Put in stuff from the sadpt_dct build
+        # Assume user has not supplied value if key is
+        # missing, or if value is None
         for key, val in sadpt_dct[sadpt].items():
             if key not in combined_dct[sadpt]:
                 combined_dct[sadpt][key] = val
+            else:
+                if combined_dct[sadpt][key] is None:
+                    combined_dct[sadpt][key] = val
 
         # Put in defaults if they were not defined
         # hindered rotor being set incorrectly here
@@ -197,13 +213,21 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     # Build the ts_dct
     ts_dct = {}
     for tsk_lst in es_tsk_lst:
-        obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
-        if 'ts' in obj:
+        obj, es_keyword_dct = tsk_lst[0], tsk_lst[-1]
+        if obj in ('ts', 'all'):
+            # want print for task list
             method_dct = thy_dct.get(es_keyword_dct['runlvl'])
             ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
             thy_info = tinfo.from_dct(method_dct)
             ini_thy_info = tinfo.from_dct(ini_method_dct)
             break
+
+    # Discern if TS should be reidentified
+    re_id = False
+    for tsk_lst in es_tsk_lst:
+        obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
+        if 'find_ts' in obj:
+            re_id = es_keyword_dct.get('re_id', False)
 
     ts_dct = {}
     for rxn in rxn_lst:
@@ -211,13 +235,14 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
             ts_dct_sing_chnl(
                 pes_idx, rxn,
                 spc_dct, run_prefix, save_prefix,
-                thy_info=thy_info, ini_thy_info=ini_thy_info)
+                thy_info=thy_info, ini_thy_info=ini_thy_info, re_id=re_id)
         )
 
     # Build the queue
-    ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
+    # ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
 
-    return ts_dct, ts_queue
+    return ts_dct
+    # return ts_dct, ts_queue
 
 
 def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
@@ -246,9 +271,50 @@ def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
     return ts_dct
 
 
+def ts_dct_from_proctsks(pes_idx, proc_tsk_lst, rxn_lst, spc_mod_dct_i,
+                         thy_dct, spc_dct, run_prefix, save_prefix):
+    """ build a ts queue
+    """
+
+    print('\nTasks for transition states requested...')
+    print('Identifying reaction classes for transition states...')
+
+    # Build the ts_dct
+    ts_dct = {}
+    for tsk_lst in proc_tsk_lst:
+        obj, proc_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
+        if 'ts' in obj or 'all' in obj:
+            # want print for task list
+            if spc_mod_dct_i is not None:
+                ini_thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+                thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+            else:
+                ini_thy_info = tinfo.from_dct(thy_dct.get(
+                    proc_keyword_dct['proplvl']))
+                thy_info = tinfo.from_dct(thy_dct.get(
+                    proc_keyword_dct['proplvl']))
+            break
+
+    ts_dct = {}
+    for rxn in rxn_lst:
+        ts_dct.update(
+            ts_dct_sing_chnl(
+                pes_idx, rxn,
+                spc_dct, run_prefix, save_prefix,
+                thy_info=thy_info, ini_thy_info=ini_thy_info,
+                id_missing=False)
+        )
+
+    # Build the queue
+    ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
+
+    return ts_dct, ts_queue
+
+
 def ts_dct_sing_chnl(pes_idx, reaction,
                      spc_dct, run_prefix, save_prefix,
-                     thy_info=None, ini_thy_info=None):
+                     thy_info=None, ini_thy_info=None,
+                     id_missing=True, re_id=False):
     """ build dct for single reaction
     """
 
@@ -256,8 +322,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     chnl_idx, (reacs, prods) = reaction
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
-    print('  Preparing for reaction {} = {}'.format(
-        '+'.join(reacs), '+'.join(prods)))
+    rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
+    print(f'\n  Preparing for reaction {rct_str} = {prd_str}')
 
     # Set the reacs and prods for the desired direction
     reacs, prods = rxnid.set_reaction_direction(
@@ -266,15 +332,20 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
-    zrxns, zmas, rclasses = rxnid.build_reaction(
-        rxn_info, ini_thy_info, zma_locs, save_prefix)
+    # is there a better way to get this hbond param out of spc_dct and does
+    # it matter in getting the mincofs to build the reaction if we bother
+    # to include it?
+    # hbond_cutoffs = spc_dct[reacs[0]]['hbond_cutoffs']
+    zrxns, zmas, rclasses, status = rxnid.build_reaction(
+        rxn_info, ini_thy_info, zma_locs, save_prefix,
+        id_missing=id_missing, re_id=re_id)
+    # , hbond_cutoffs=hbond_cutoffs)
 
     # Could reverse the spc dct
-    if zrxns is not None:
+    if status not in ('MISSING-SKIP', 'MISSING-ADD'):
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
-            tsname = 'ts_{:g}_{:g}_{:g}'.format(
-                pes_idx+1, chnl_idx+1, idx)
+            tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
             ts_dct[tsname] = {
                 'zrxn': zrxn,
                 'zma': zma,
@@ -282,17 +353,40 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'prods': prods,
                 'rxn_info': rxn_info,
                 'inchi': '',
-                'charge': rinfo.value(rxn_info, 'charge'),
+                'charge': rinfo.ts_chg(rxn_info),
                 'mult': rinfo.value(rxn_info, 'tsmult'),
                 'elec_levels': ((0.0, rinfo.value(rxn_info, 'tsmult')),),
                 'hind_inc': 30.0*phycon.DEG2RAD,
+                'hbond_cutoffs': (4.55, 1.92),
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }
-    else:
+    elif status == 'MISSING-ADD':
+        tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_0'
+        ts_dct = {}
+        ts_dct[tsname] = {'missdata': ini_thy_info}
+    elif status == 'MISSING-SKIP':
         ts_dct = {}
         print('Skipping reaction as class not given/identified')
 
-    # Add the ts dct to the spc dct here?
-
     return ts_dct
+
+
+def base_tsname(pes_idx, chnl_idx):
+    """ get tsname that precludes the confiuraton number
+    """
+    return f'ts_{pes_idx+1:d}_{chnl_idx+1:d}'
+
+
+def tsnames_in_dct(pes_idx, chnl_idx, spc_dct, config_idxs=None):
+    """ Get the names of all configuratons of a transition state
+         for the channel of a PES.
+    """
+    _tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}'
+    _tsname = _tsname + '_'
+    if config_idxs is None:
+        _tsnames = tuple(name for name in spc_dct.keys()
+                         if _tsname in name)
+    else:
+        _tsnames = tuple(f'{_tsname}{idx}' for idx in config_idxs)
+    return _tsnames

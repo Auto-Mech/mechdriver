@@ -9,9 +9,9 @@ def hrpotentials(tors_pots):
     print('\nHR potentials...')
     for name in tors_pots:
 
-        print('- Rotor {}'.format(name))
+        print(f'- Rotor {name}')
         pot_str = ''
         for pot in tors_pots[name].values():
-            pot_str += ' {0:.2f}'.format(pot)
+            pot_str += f' {pot:.2f}'
 
-        print('- Pot:{}'.format(pot_str))
+        print(f'- Pot:{pot_str}')

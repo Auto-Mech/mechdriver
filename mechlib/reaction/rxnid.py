@@ -10,10 +10,8 @@ from phydat import phycon
 from mechlib import filesys
 
 
-CLA_INP = 'inp/class.csv'
-
-
-def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
+def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
+                   id_missing=True, re_id=False):
     """ For a given reaction, attempt to identify its reaction class obtain
         the corresponding Z-Matrix reaction object.
 
@@ -34,27 +32,42 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
         :type save_prefix: str
     """
 
-    zrxn, zma = filesys.read.reaction(
-        rxn_info, ini_thy_info, zma_locs, save_prefix)
-    if zrxn is None:
-        print('    Identifying class...')
-        zrxns, zmas = _id_reaction(rxn_info)
-    else:
-        zrxns = (zrxn,)
-        zmas = (zma,)
+    zrxns, zmas, rclasses = None, (), ()
+    status = 'MISSING'
+
+    # Try and read the reaction from filesys if requested
+    if not re_id:
+        zrxns, zmas = filesys.read.reactions(
+            rxn_info, ini_thy_info, zma_locs, save_prefix)
+        status = 'FOUND' if zrxns is not None else 'MISSING'
         print('    Reading from fileysystem...')
+    else:
+        # unsafe without checking if zrxn id matches what is in save...
+        print('    Requested Reidentification regardless of what is in SAVE')
 
-    rclasses = ()
-    for zrxn in zrxns:
-        rclasses += (_mod_class(zrxn.class_, rxn_info),)
+    # Try and identify reaction if not rxn obj found
+    if status == 'MISSING':
+        if id_missing:
+            print('    Identifying class...')
+            zrxns, zmas = _id_reaction(rxn_info, ini_thy_info, save_prefix)
+            status = 'FOUND' if zrxns is not None else 'MISSING-SKIP'
+        else:
+            status = 'MISSING-ADD'
 
-    print('    Reaction class identified as: {}'.format(
-        automol.par.string(rclasses[0])))
+    # Build a tuple with the full description of the reaction class, if ID'd
+    if status not in ('MISSING-SKIP', 'MISSING-ADD'):
+        for zrxn in zrxns:
+            rclasses += (_mod_class(zrxn.class_, rxn_info),)
 
-    return zrxns, zmas, rclasses
+        print('    Reaction class identified as: '
+              f'{automol.par.string(rclasses[0])}')
+        print(f'    There are {len(zrxns)} '
+              'configuration(s) of transition state')
+
+    return zrxns, zmas, rclasses, status
 
 
-def _id_reaction(rxn_info):
+def _id_reaction(rxn_info, thy_info, save_prefix):
     """ Identify the reaction and build the object
 
         :param rxn_info: reaction info object
@@ -62,23 +75,37 @@ def _id_reaction(rxn_info):
         :rtype: (tuple(automol.Reaction object), tuple(automol.zmat object))
     """
 
-    rxn_ichs = rinfo.value(rxn_info, 'inchi')
-    rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
+    # Check the save filesystem for the reactant and product geometries
+    rct_geos, prd_geos, rct_paths, prd_paths = reagent_geometries(
+        rxn_info, thy_info, save_prefix)
 
-    zrxn_objs = automol.reac.rxn_objs_from_inchi(
-        rct_ichs, prd_ichs, indexing='zma')
-    # zrxns = tuple(obj[0] for obj in zrxn_objs)
-    # zmas = tuple(obj[1] for obj in zrxn_objs)
-    zrxns, zmas = [], []
-    # for objs in zrxn_objs:
-    #     zrxn, zma, _, _ = objs
-    #     zrxns.append(zrxn)
-    #     zmas.append(zma)
-    #     print('zrxn, zma in id:', zrxn, automol.zmat.string(zma))
-    # for now just use first zma until we are properly producing extra zmas
-    if zrxn_objs:
-        zrxns.append(zrxn_objs[0][0])
-        zmas.append(zrxn_objs[0][1])
+    # Identify reactants and products from geoms or InChIs, depending
+    # We automatically assess and add stereo to the reaction object, as needed
+    if any(rct_geos) and any(prd_geos):
+        print('    Reaction ID from geometries from SAVE filesys')
+        for i, path in enumerate(rct_paths):
+            print(f'     - reactant {i+1}: {path}')
+        for i, path in enumerate(prd_paths):
+            print(f'     - product {i+1}: {path}')
+        zrxn_objs = automol.reac.rxn_objs_from_geometry(
+            rct_geos, prd_geos, indexing='zma', stereo=True)
+    else:
+        print('    Reaction ID from geometries from input InChIs')
+        rxn_ichs = rinfo.value(rxn_info, 'inchi')
+        rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
+
+        zrxn_objs = automol.reac.rxn_objs_from_inchi(
+            rct_ichs, prd_ichs, indexing='zma', stereo=True)
+
+    # Loop over the found reaction objects
+    if zrxn_objs is not None:
+        zrxns, zmas = (), ()
+        for obj_set in zrxn_objs:
+            zrxn, zma, _, _ = obj_set
+            zrxns += (zrxn,)
+            zmas += (zma,)
+    else:
+        zrxns, zmas = None, None
 
     return zrxns, zmas
 
@@ -95,15 +122,20 @@ def _mod_class(class_typ, rxn_info):
     """
 
     # Set the spin of the reaction to high/low
-    if automol.par.need_spin_designation(class_typ):
+    _fake_class = (class_typ, '', '', False)
+    if automol.par.need_spin_designation(_fake_class):
         ts_mul = rinfo.value(rxn_info, 'tsmult')
         high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
         _spin = 'high-spin' if ts_mul == high_mul else 'low-spin'
     else:
         _spin = ''
 
+    # Determine if it iss intersystem crossing
+    # rxn_muls = rinfo.value(rxn_info, 'mult')
+    # is_isc = automol.reac.intersystem_crossing(rxn_muls)
+
     return automol.par.reaction_class_from_data(
-        class_typ, _spin, rinfo.radrad(rxn_info))
+        class_typ, _spin, rinfo.radrad(rxn_info), False)
 
 
 # from direction (loop over the reactions around split)
@@ -143,13 +175,47 @@ def set_reaction_direction(reacs, prods, rxn_info,
     else:
         raise NotImplementedError
 
-    print('    Running reaction as: {} = {}'.format(
-        '+'.join(reacs), '+'.join(prods)))
+    rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
+    print(f'    Running reaction as: {rct_str} = {prd_str}')
 
     return reacs, prods
 
 
 # Functions for the exothermicity check
+def reagent_geometries(rxn_info, thy_info, save_prefix):
+    """ Identify the reaction and build the object
+
+        :param rxn_info: reaction info object
+        :type rxn_info: mechanalyzer.inf.rxn object
+        :rtype: (tuple(automol.Reaction object), tuple(automol.zmat object))
+    """
+
+    # Check the save filesystem for the reactant and product geometries
+    rct_info = rinfo.rgt_info(rxn_info, 'reacs')
+    prd_info = rinfo.rgt_info(rxn_info, 'prods')
+    _rcts_cnf_fs = filesys.rcts_cnf_fs(rct_info, thy_info, None, save_prefix)
+    _prds_cnf_fs = filesys.rcts_cnf_fs(prd_info, thy_info, None, save_prefix)
+
+    # If min cnfs found for all rcts and prds, read the geometries
+    rct_geos, prd_geos = (), ()
+    rct_paths, prd_paths = (), ()
+    if (
+        _rcts_cnf_fs.count(None) == 0 and _prds_cnf_fs.count(None) == 0
+    ):
+        for (_, cnf_save_fs, min_locs, _) in _rcts_cnf_fs:
+            geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            path = cnf_save_fs[-1].file.geometry.path(min_locs)
+            rct_geos += (geo,)
+            rct_paths += (path,)
+        for (_, cnf_save_fs, min_locs, _) in _prds_cnf_fs:
+            geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            path = cnf_save_fs[-1].file.geometry.path(min_locs)
+            prd_geos += (geo,)
+            prd_paths += (path,)
+
+    return rct_geos, prd_geos, rct_paths, prd_paths
+
+
 def assess_rxn_ene(reacs, prods, rxn_info,
                    thy_info, ini_thy_info, save_prefix):
     """ Check the directionality of the reaction
@@ -162,8 +228,8 @@ def assess_rxn_ene(reacs, prods, rxn_info,
             rxn_info, ini_thy_info, ini_thy_info, save_prefix)
         method1, method2 = ini_thy_info, ini_thy_info
 
-    print('    Reaction energy is {:.2f} at {}//{} level'.format(
-        rxn_ene*phycon.EH2KCAL, method1[1], method2[1]))
+    print(f'    Reaction energy is {rxn_ene*phycon.EH2KCAL:.2f} '
+          f'at {method1[1]}//{method2[1]} level')
 
     if rxn_ene > 0:
         reacs, prods = prods, reacs
@@ -189,7 +255,8 @@ def reaction_energy(rxn_info, sp_thy_info, geo_thy_info, save_prefix):
     return rxn_ene
 
 
-def reagent_energies(rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
+def reagent_energies(
+        rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
     """ reagent energies """
 
     assert rgt in ('reacs', 'prods')

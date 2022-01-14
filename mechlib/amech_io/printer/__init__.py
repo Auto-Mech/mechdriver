@@ -52,6 +52,7 @@ from mechlib.amech_io.printer._stat import checking
 from mechlib.amech_io.printer._stat import generating
 
 from mechlib.amech_io.printer._tsk import task_header
+from mechlib.amech_io.printer._tsk import task_footer
 from mechlib.amech_io.printer._tsk import keyword_list
 from mechlib.amech_io.printer._tsk import output_task_header
 from mechlib.amech_io.printer._tsk import output_keyword_list
@@ -64,6 +65,10 @@ from mechlib.amech_io.printer._pes import channel
 from mechlib.amech_io.printer._pot import hrpotentials
 
 from mechlib.amech_io.printer._lj import lennard_jones_params
+
+from mechlib.amech_io.printer._thermo import therm_paths_messpf_write_locations
+from mechlib.amech_io.printer._thermo import therm_paths_messpf_run_locations
+from mechlib.amech_io.printer._thermo import print_thermo
 
 from mechlib.amech_io.printer._errors import missing_input
 
@@ -121,6 +126,7 @@ __all__ = [
     'generating',
 
     'task_header',
+    'task_footer',
     'keyword_list',
     'output_task_header',
     'output_keyword_list',
@@ -133,6 +139,10 @@ __all__ = [
     'hrpotentials',
 
     'lennard_jones_params',
+
+    'therm_paths_messpf_write_locations',
+    'therm_paths_messpf_run_locations',
+    'print_thermo',
 
     'missing_input'
 ]

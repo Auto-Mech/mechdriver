@@ -16,7 +16,8 @@ from mechlib import filesys
 
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
-def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
+def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                 read_potentials=True):
     """ Add more rotor info
     """
 
@@ -32,33 +33,31 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
     tors_ene_info = spc_mod_dct_i['tors']['enelvl'][1][1]
     mod_tors_ene_info = tinfo.modify_orb_label(
         tors_ene_info, sinfo.from_dct(spc_dct_i))
-    tors_filesys = pf_filesystems['tors']
-    if tors_filesys is not None:
-        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
-    else:
-        cnf_save_path = ''
 
-    # Build the rotors
-    rotors = ()
-    if cnf_save_path:
-        ref_ene = filesys.read.energy(
-            cnf_fs, min_cnf_locs, mod_tors_ene_info)
+    rotors = None
+    if pf_filesystems['tors'] is not None:
+        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+
+        # Build the rotors
+        ref_ene = filesys.read.energy(cnf_fs, min_cnf_locs, mod_tors_ene_info)
         zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
-        zma = zma_fs[-1].file.zmatrix.read([0])
-        if zma_fs[-1].file.torsions.exists([0]) and tors_model != 'rigid':
-            tors_dct = zma_fs[-1].file.torsions.read([0])
-            tors_names = spc_dct_i.get('tors_names', None)
+        if (
+            zma_fs[-1].file.torsions.exists([0]) and
+            zma_fs[-1].file.zmatrix.exists([0]) and
+            tors_model != 'rigid'
+        ):
             rotors = automol.rotor.from_data(
-                zma, tors_dct,
-                tors_names=tors_names,
+                zma=zma_fs[-1].file.zmatrix.read([0]),
+                tors_inf_dct=zma_fs[-1].file.torsions.read([0]),
+                tors_names=spc_dct_i.get('tors_names', None),
                 multi=bool('1d' in tors_model))
 
-    # Read the potential grids
-    if any(rotors):
-        rotors = _read_potentials(
-            rotors, spc_dct_i, run_path, cnf_save_path,
-            ref_ene, mod_tors_ene_info,
-            tors_model)
+        # Read the potential grids
+        if read_potentials and rotors is not None:
+            rotors = _read_potentials(
+                rotors, spc_dct_i, run_path, cnf_save_path,
+                ref_ene, mod_tors_ene_info,
+                tors_model)
 
     return rotors
 
@@ -75,29 +74,43 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
     rotor_zma = automol.rotor.zmatrix(rotors)
 
-    for _, rotor in enumerate(rotors):
+    # Determine base-line rotor non-specific info for constraints
+    all_tors_names = automol.rotor.names(rotors)
+    const_names = automol.zmat.set_constraint_names(
+        rotor_zma, all_tors_names, tors_model)
+
+    # Recalculate the rotor potential grids using desired increment
+    rotor_grids = automol.rotor.grids(rotors, increment=increment)
+
+    for ridx, rotor in enumerate(rotors):
         # multi_idx = ridx
-        tors_names = automol.rotor.names((rotor,), flat=True)
-        tors_grids = automol.rotor.grids(
-            (rotor,), increment=increment, flat=True)
 
         for tidx, torsion in enumerate(rotor):
-
             # Read and spline-fit potential
-            const_names = automol.zmat.set_constraint_names(
-                rotor_zma, torsion.name, tors_model)
+            tors_grid = rotor_grids[ridx][tidx]
             constraint_dct = automol.zmat.constraint_dct(
-                rotor_zma, const_names, torsion.name)
+                rotor_zma, const_names, (torsion.name,))
             pot, _, _, _, _, _ = filesys.read.potential(
-                (tors_names[tidx],), (tors_grids[tidx],),
+                (torsion.name,), (tors_grid,),
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct)
-            pot = automol.pot.fit_1d_potential(
-                pot, min_thresh=-0.0001, max_thresh=50.0)
-            # Add potential to potential
-            torsion.pot = pot
-
+            if pot:
+                # fit_pot = automol.pot.setup_1d_potential(
+                fit_pot = automol.pot.fit_1d_potential(
+                    pot, min_thresh=-0.0001, max_thresh=50.0)
+                # Scale pot relative to first time
+                # Code here dies if pot is empty
+                final_pot = {}
+                gridvals = tuple(pot.keys())
+                ref_val = gridvals[0][0]
+                for i, val in enumerate(gridvals):
+                    final_pot[(val[0] - ref_val,)] = fit_pot[(i,)]
+                # for idx, val in fit_pot.items():
+                #     final_pot[(gridvals[idx[0]][0] - ref_val,)] = val
+                torsion.pot = final_pot
+            else:
+                torsion.pot = pot
     # if multi_idx is not None:
     #     mdhr_name = automol.rotor.names(rotors)[multi_idx]
     #   mdhr_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]
@@ -138,13 +151,16 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
         ioprinter.debug_message(
             'scale_coeff test:', factor, nscale, sfactor)
 
-        for rotor in rotors:
-            for tidx, torsion in enumerate(rotor):
+        # test
+        # sfactor = 1
+        # test
+        for tidx, rotor in enumerate(rotors):
+            for torsion in rotor:
                 if tidx not in scale_indcs and factor is not None:
                     torsion.pot = automol.pot.scale(torsion.pot, sfactor)
                     # following is being used in a test to see how effective
                     # a scaling of fixed scan torsional pots can be
-                    torsion.pot = automol.pot.relax_scale(torsion.pot)
+                    # torsion.pot = automol.pot.relax_scale(torsion.pot)
 
     return rotors
 

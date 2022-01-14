@@ -2,14 +2,15 @@
 """
 
 from phydat import phycon
-import thermfit
+from mechroutines.models import build
 from mechlib.amech_io import printer as ioprinter
-from mechroutines import thermo as thmroutines
+from mechlib import filesys
 
 
 # Functions to handle energies for a channel
-def set_reference_ene(rxn_lst, spc_dct,
-                      pes_model_dct_i, spc_model_dct_i,
+def set_reference_ene(rxn_lst, spc_dct, tsk_key_dct,
+                      model_basis_energy_dct,
+                      thy_dct, pes_model_dct_i, spc_model_dct_i,
                       run_prefix, save_prefix, ref_idx=0):
     """ Sets the reference species for the PES for which all energies
         are scaled relative to.
@@ -17,43 +18,37 @@ def set_reference_ene(rxn_lst, spc_dct,
 
     # Set the index for the reference species, right now defualt to 1st spc
     ref_rxn = rxn_lst[ref_idx]
-
     _, (ref_rgts, _) = ref_rxn
 
     ioprinter.info_message(
         'Determining the reference energy for PES...', newline=1)
     ioprinter.info_message(
         ' - Reference species assumed to be the',
-        ' first set of reactants on PES: {}'.format('+'.join(ref_rgts)))
+        f' first set of reactants on PES: {"+".join(ref_rgts)}')
 
     # Get the model for the first reference species
-    ref_scheme = pes_model_dct_i['therm_fit']['ref_scheme']
-    ref_enes = pes_model_dct_i['therm_fit']['ref_enes']
-
-    ref_ene_level = spc_model_dct_i['ene']['lvl1'][0]
-    ioprinter.info_message(
-        ' - Energy Level for Reference Species: {}'.format(ref_ene_level))
+    cnf_range = tsk_key_dct['cnf_range']
+    sort_info_lst = filesys.mincnf.sort_info_lst(tsk_key_dct['sort'], thy_dct)
 
     # Get the elec+zpe energy for the reference species
     ioprinter.info_message('')
     hf0k = 0.0
     for rgt in ref_rgts:
+        spc_locs_lst = filesys.models.get_spc_locs_lst(
+            spc_dct[rgt], spc_model_dct_i,
+            run_prefix, save_prefix, saddle=False,
+            cnf_range=cnf_range, sort_info_lst=sort_info_lst,
+            name=rgt)
+        chnl_infs_i, model_basis_energy_dct = build.read_spc_data(
+            spc_dct, rgt,
+            pes_model_dct_i, spc_model_dct_i,
+            run_prefix, save_prefix, model_basis_energy_dct,
+            spc_locs=spc_locs_lst[0])
 
-        ioprinter.info_message(' - Calculating energy for {}...'.format(rgt))
-        basis_dct, uniref_dct = thermfit.prepare_refs(
-            ref_scheme, spc_dct, (rgt,))
-        spc_basis, coeff_basis = basis_dct[rgt]
+        hf0k += chnl_infs_i['ene_chnlvl']
+        # hf0k += chnl_infs_i['ene_tsref']
 
-        # Build filesystem
-        ene_spc, ene_basis = thmroutines.basis.basis_energy(
-            rgt, spc_basis, uniref_dct, spc_dct,
-            spc_model_dct_i, run_prefix, save_prefix)
-
-        # Calcualte the total energy
-        hf0k += thermfit.heatform.calc_hform_0k(
-            ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
-
-    return hf0k
+    return hf0k, model_basis_energy_dct
 
 
 def calc_channel_enes(chnl_infs, ref_ene,
@@ -77,6 +72,8 @@ def calc_channel_enes(chnl_infs, ref_ene,
 def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     """ sum the energies
     """
+
+    print('\n\nGetting energies for the reaction channel...')
 
     # Initialize sum ene dct
     sum_ene = {}

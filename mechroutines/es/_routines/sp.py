@@ -3,25 +3,33 @@
     electronic structure method.A
 
     * Maybe put long description from run_energy here
+
+    ** no reason to pass the geo and zma since the functions have the fs
+       and locs and can therefore read them. the geo and zma are unneeded
 """
 
+import copy
+import shutil
 import automol
 import elstruct
 import autofile
 import autorun
 from phydat import phycon, symm
 from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io import job_path
 from mechroutines.es import runner as es_runner
+from mechroutines.es.runner._par import qchem_params
+from mechroutines.es._routines.conformer import save_conformer
 
 
-# _JSON_SAVE = ['TAU']
-_JSON_SAVE = []
+_JSON_SAVE = ('/TAU',)
 
 
 def run_energy(zma, geo, spc_info, thy_info,
-               geo_run_fs, geo_save_fs, locs,
-               script_str, overwrite,
-               retryfail=True, highspin=False, **kwargs):
+               geo_run_fs, geo_save_fs, locs, run_prefix,
+               script_str, overwrite, zrxn=None,
+               retryfail=True, method_dct=None, highspin=False,
+               ref_val=None, **kwargs):
     """ Assesses if an electronic energy exists in the CONFS/SP/THY layer
         of the save filesys for a species at the specified level of theory.
         If an energy does not exist, or if a user requests overwrite,
@@ -46,6 +54,9 @@ def run_energy(zma, geo, spc_info, thy_info,
         :param overwrite:
     """
 
+    # Set unneeded vals to
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
+
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
 
@@ -57,11 +68,8 @@ def run_energy(zma, geo, spc_info, thy_info,
         sp_run_fs = autofile.fs.high_spin(geo_run_path)
         sp_save_fs = autofile.fs.high_spin(geo_save_path)
 
-    sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
-    sp_save_fs[-1].create(thy_info[1:4])
     sp_save_path = sp_save_fs[-1].path(thy_info[1:4])
-    run_fs = autofile.fs.run(sp_run_path)
 
     # Set input geom
     if geo is not None:
@@ -70,7 +78,6 @@ def run_energy(zma, geo, spc_info, thy_info,
         job_geo = zma
 
     exists = sp_save_fs[-1].file.energy.exists(thy_info[1:4])
-    # _run = need_job((exists, 'energy'), overwrite)
     if not exists:
         ioprinter.info_message(
             'No energy found in save filesys. Running energy...')
@@ -85,11 +92,13 @@ def run_energy(zma, geo, spc_info, thy_info,
     if _run:
 
         # Add options matrix for energy runs for molpro
+        _kwargs = copy.deepcopy(kwargs)
         if thy_info[0] == 'molpro2015':
             errs, optmat = es_runner.molpro_opts_mat(spc_info, geo)
-        else:
-            errs = ()
-            optmat = ()
+            _kwargs.update({'errors': errs, 'options_mat': optmat})
+
+        sp_run_fs[-1].create(thy_info[1:4])
+        run_fs = autofile.fs.run(sp_run_path)
 
         success, ret = es_runner.execute_job(
             job=elstruct.Job.ENERGY,
@@ -98,11 +107,10 @@ def run_energy(zma, geo, spc_info, thy_info,
             geo=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
-            errors=errs,
-            options_mat=optmat,
+            zrxn=zrxn,
             overwrite=overwrite,
             retryfail=retryfail,
-            **kwargs,
+            **_kwargs,
         )
 
         if success:
@@ -112,6 +120,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
             ioprinter.energy(ene)
+            sp_save_fs[-1].create(thy_info[1:4])
             sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
             sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
             sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
@@ -124,11 +133,15 @@ def run_energy(zma, geo, spc_info, thy_info,
 
 
 def run_gradient(zma, geo, spc_info, thy_info,
-                 geo_run_fs, geo_save_fs, locs,
-                 script_str, overwrite,
-                 retryfail=True, **kwargs):
+                 geo_run_fs, geo_save_fs, locs, run_prefix,
+                 script_str, overwrite, zrxn=None,
+                 retryfail=True, method_dct=None,
+                 ref_val=None, **kwargs):
     """ Determine the gradient for the geometry in the given location
     """
+
+    # Set unneeded vals
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
 
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
@@ -168,6 +181,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
                 geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
+                zrxn=zrxn,
                 overwrite=overwrite,
                 retryfail=retryfail,
                 **kwargs,
@@ -203,10 +217,72 @@ def run_gradient(zma, geo, spc_info, thy_info,
         ioprinter.info_message('Species is an atom. Skipping gradient task.')
 
 
+def rerun_hessian_and_opt(
+        zma, spc_info, thy_info,
+        geo_run_fs, geo_save_fs, locs, run_prefix,
+        script_str, zrxn=None,
+        retryfail=True, method_dct=None,
+        ref_val=None, attempt=0,
+        hess_script_str=None, **hess_kwargs):
+
+    """ Perform a tight opt of a geometry and run the hessian.
+        Resave all of its info.
+    """
+    # Set the run filesystem information
+    if attempt < 2:
+        geo_run_path = geo_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(geo_run_path)
+
+        script_str, kwargs = qchem_params(
+            method_dct, job='tightopt')
+
+        success, ret = es_runner.execute_job(
+            job=elstruct.Job.OPTIMIZATION,
+            script_str=script_str,
+            run_fs=run_fs,
+            geo=zma,
+            spc_info=spc_info,
+            thy_info=thy_info,
+            zrxn=zrxn,
+            overwrite=True,
+            saddle=zrxn is not None,
+            retryfail=retryfail,
+            **kwargs,
+        )
+
+        if success:
+            inf_obj, _, out_str = ret
+            tight_geo = elstruct.reader.opt_geometry(inf_obj.prog, out_str)
+            save_conformer(
+                ret, geo_run_fs, geo_save_fs, locs,
+                thy_info,  orig_ich=spc_info[0],
+                init_zma=zma, zrxn=zrxn)
+            if geo_save_fs[-1].exists(locs):
+                ioprinter.info_message(
+                    'TightOpt complete. Rerunning Hessian Job')
+                ioprinter.info_message(automol.geom.string(tight_geo))
+                run_hessian(
+                    zma, tight_geo, spc_info, thy_info,
+                    geo_run_fs, geo_save_fs, locs, run_prefix,
+                    hess_script_str, True, zrxn=zrxn,
+                    retryfail=retryfail, method_dct=method_dct,
+                    ref_val=ref_val,
+                    correct_vals=True, attempt=attempt+1, **hess_kwargs)
+    else:
+        ioprinter.error_message(
+            "Could not get rid of negative frequencies after two attempts")
+
+
 def run_hessian(zma, geo, spc_info, thy_info,
-                geo_run_fs, geo_save_fs, locs,
+                geo_run_fs, geo_save_fs, locs, run_prefix,
                 script_str, overwrite,
-                retryfail=True, **kwargs):
+                zrxn=None,
+                retryfail=True,
+                method_dct=None,
+                ref_val=None,
+                correct_vals=True,
+                attempt=0,
+                **kwargs):
     """ Determine the hessian for the geometry in the given location
     """
 
@@ -227,6 +303,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
     if not is_atom:
 
         if _json_database(geo_save_path):
+            print('geo_save_path test:',geo_save_path)
             exists = geo_save_fs[-1].json.hessian.exists(locs)
         else:
             exists = geo_save_fs[-1].file.hessian.exists(locs)
@@ -243,6 +320,9 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
         if _run:
 
+            if attempt > 0:
+                script_str, kwargs = qchem_params(method_dct, job='tightfreq')
+
             run_fs = autofile.fs.run(geo_run_path)
 
             success, ret = es_runner.execute_job(
@@ -252,6 +332,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
+                zrxn=zrxn,
                 overwrite=overwrite,
                 retryfail=retryfail,
                 **kwargs,
@@ -261,42 +342,100 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 inf_obj, inp_str, out_str = ret
 
                 ioprinter.info_message(" - Reading hessian from output...")
-                hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
-                ioprinter.info_message(" - Saving Hessian...")
-                if _json_database(geo_save_path):
-                    geo_save_fs[-1].json.hessian_info.write(inf_obj, locs)
-                    geo_save_fs[-1].json.hessian_input.write(inp_str, locs)
-                    geo_save_fs[-1].json.hessian.write(hess, locs)
+                # If requested, determine if there are too many frequencies
+                if correct_vals:
+                    hfrqs = elstruct.reader.harmonic_frequencies(
+                        inf_obj.prog, out_str)
+                    imags = tuple(x for x in hfrqs if x < 0.0)
+                    nimags = len(imags)
+                    too_many_imags = (
+                        (zrxn is not None and nimags > 1) or
+                        (zrxn is None and nimags > 0))
                 else:
-                    geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-                    geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-                    geo_save_fs[-1].file.hessian.write(hess, locs)
-                ioprinter.info_message(
-                    " - Save path: {}".format(geo_save_path))
+                    too_many_imags = False
 
-                if thy_info[0] == 'gaussian09':
-                    _hess_grad(inf_obj.prog, out_str, geo_save_fs,
-                               geo_save_path, locs, overwrite)
-                _hess_freqs(geo, geo_save_fs,
-                            geo_run_path, geo_save_path, locs, overwrite)
+                if too_many_imags:
+                    ioprinter.info_message('Too many negative freqs', hfrqs)
+                    rinf_obj = run_fs[-1].file.info.read(
+                        [elstruct.Job.HESSIAN])
+                    rinf_obj.status = autofile.schema.RunStatus.FAILURE
+                    run_fs[-1].file.info.write(
+                        rinf_obj, [elstruct.Job.HESSIAN])
+                    ioprinter.info_message(
+                        'Performing a tightopt, superfine to fix it')
+                    rerun_hessian_and_opt(
+                        zma, spc_info, thy_info,
+                        geo_run_fs, geo_save_fs, locs, run_prefix,
+                        script_str, zrxn=zrxn,
+                        retryfail=retryfail,
+                        method_dct=method_dct,
+                        attempt=attempt,
+                        hess_script_str=script_str,
+                        **kwargs)
+                else:
+                    # After determining number of imags is correct,
+                    # perform an additional frequency check for TS
+                    # assume lowest frequency is the imaginary mode
+                    if zrxn is not None:
+                        if ref_val is None:
+                            print('No reference frequencies available to '
+                                  'perform check')
+                            imag_success = True
+                        else:
+                            imag_success = _assess_imags(
+                                hfrqs, ref_val,
+                                geo_run_fs, geo_save_fs, locs)
+                    else:
+                        imag_success = True
+
+                    if imag_success:
+                        hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+
+                        ioprinter.info_message(" - Saving Hessian...")
+                        if _json_database(geo_save_path):
+                            geo_save_fs[-1].json.hessian_info.write(
+                                inf_obj, locs)
+                            geo_save_fs[-1].json.hessian_input.write(
+                                inp_str, locs)
+                            geo_save_fs[-1].json.hessian.write(
+                                hess, locs)
+                        else:
+                            geo_save_fs[-1].file.hessian_info.write(
+                                inf_obj, locs)
+                            geo_save_fs[-1].file.hessian_input.write(
+                                inp_str, locs)
+                            geo_save_fs[-1].file.hessian.write(
+                                hess, locs)
+                        ioprinter.info_message(
+                            f" - Save path: {geo_save_path}")
+
+                        if thy_info[0] == 'gaussian09':
+                            _hess_grad(inf_obj.prog, out_str, geo_save_fs,
+                                       geo_save_path, locs, overwrite)
+                        _hess_freqs(geo, geo_save_fs, geo_save_path,
+                                    locs, run_prefix, overwrite)
 
         else:
             ioprinter.existing_path('Hessian', geo_save_path)
 
-            _hess_freqs(geo, geo_save_fs,
-                        geo_run_path, geo_save_path, locs, overwrite)
+            _hess_freqs(geo, geo_save_fs, geo_save_path,
+                        locs, run_prefix, overwrite)
 
     else:
         ioprinter.info_message('Species is an atom. Skipping Hessian task.')
 
 
 def run_vpt2(zma, geo, spc_info, thy_info,
-             geo_run_fs, geo_save_fs, locs,
-             script_str, overwrite,
-             retryfail=True, **kwargs):
+             geo_run_fs, geo_save_fs, locs, run_prefix,
+             script_str, overwrite, zrxn=None,
+             retryfail=True, method_dct=None,
+             ref_val=None, **kwargs):
     """ Perform vpt2 analysis for the geometry in the given location
     """
+
+    # Set unneeded vals
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
 
     # Set the run filesystem information
     geo_run_path = geo_run_fs[-1].path(locs)
@@ -315,7 +454,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 automol.zmat.geometry(job_geo))
         else:
             ioprinter.warning_message(
-                'Need a zma for high-symmetry of {}.'.format(spc_info[0]),
+                f'Need a zma for high-symmetry of {spc_info[0]}.',
                 'Skipping task')
             job_geo = None
             is_atom = False
@@ -353,6 +492,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
+                zrxn=zrxn,
                 overwrite=overwrite,
                 retryfail=retryfail,
                 **kwargs,
@@ -387,11 +527,15 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
 
 def run_prop(zma, geo, spc_info, thy_info,
-             geo_run_fs, geo_save_fs, locs,
-             script_str, overwrite,
-             retryfail=True, **kwargs):
+             geo_run_fs, geo_save_fs, locs, run_prefix,
+             script_str, overwrite, zrxn=None,
+             retryfail=True, method_dct=None,
+             ref_val=None, **kwargs):
     """ Determine the properties in the given location
     """
+
+    # Set unneeded vals
+    _, _, _, _ = zrxn, method_dct, ref_val, run_prefix
 
     # Set input geom
     geo_run_path = geo_run_fs[-1].path(locs)
@@ -430,6 +574,7 @@ def run_prop(zma, geo, spc_info, thy_info,
             geo=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
+            zrxn=zrxn,
             overwrite=overwrite,
             retryfail=retryfail,
             **kwargs,
@@ -467,7 +612,7 @@ def run_prop(zma, geo, spc_info, thy_info,
             geo_save_path)
 
 
-def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
+def _hess_freqs(geo, geo_save_fs, save_path, locs, run_prefix, overwrite):
     """ Calculate harmonic frequencies using Hessian
     """
     if _json_database(save_path):
@@ -497,8 +642,11 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         ioprinter.info_message(
                 " - Calculating harmonic frequencies from Hessian...")
         script_str = autorun.SCRIPT_DCT['projrot']
+        fml_str = automol.geom.formula_string(geo)
+        vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
         rt_freqs, _, rt_imags, _ = autorun.projrot.frequencies(
-            script_str, run_path, [geo], [[]], [hess])
+            script_str, vib_path, [geo], [[]], [hess])
+        rt_imags = tuple(-1 * imag_freq for imag_freq in rt_imags)
         freqs = sorted(rt_imags + rt_freqs)
         ioprinter.frequencies(freqs)
         ioprinter.geometry(geo)
@@ -556,6 +704,51 @@ def _hess_grad(prog, out_str, geo_save_fs,
 
     else:
         ioprinter.existing_path('Gradient', save_path)
+
+
+def _assess_imags(freqs, ref_freqs,
+                  cnf_run_fs, cnf_save_fs, locs):
+    """ Check if the frequencies signal a bad transition state
+    """
+
+    # Initialize success variable to be changed if needed
+    success = True
+
+    # Assume first (lowest) frequency is the imaginary mode
+    imags = tuple(x for x in freqs if x < 0.0)
+    imag_freq, ref_imag_freq = abs(imags[0]), abs(ref_freqs[0])
+
+    print('\nChecking imaginary mode of potential saddle-point conformer '
+          '(frequencies below)\n'
+          f'versus reference imaginary mode {ref_imag_freq:.1f} cm-1.')
+    ioprinter.frequencies(freqs)
+
+    print('Checking if deviation from reference mode less than 100.0 cm-1')
+    imag_diff = abs(imag_freq - ref_imag_freq)
+    if imag_diff <= 100.0:
+        print(f'  - Deviation = {imag_diff:.1f} cm-1. Small, likely fine.')
+    else:
+        print(f'  - Deviation = {imag_diff:1f} cm-1. Large, could be bad')
+        print('  - Checking if value of mode greater than 150.0 cm-1')
+        if imag_freq >= 150.0:
+            print(f'    - Mode = {imag_freq:.1f} cm-1. Large, likely fine\n')
+        else:
+            print(f'    - Mode = {imag_freq:.1f} cm-1. Small, likely bad\n')
+            success = False
+
+    if success:
+        print('Frequencies appear fine. Proceeding to save Hessian info.')
+    else:
+        cnf_run_path = cnf_run_fs[-1].path(locs)
+        cnf_save_path = cnf_save_fs[-1].path(locs)
+        shutil.rmtree(cnf_run_path)
+        shutil.rmtree(cnf_save_path)
+        print('Based on checks, saddle-point conformer likely bad. '
+              'Removing conformer from both RUN and SAVE filesystem at\n'
+              f'{cnf_run_path}\n'
+              f'{cnf_save_path}\n')
+
+    return success
 
 
 def _json_database(save_path):

@@ -1,7 +1,6 @@
 """ eletronic structure routines modules
 """
 
-import sys
 import importlib
 import autofile
 import automol
@@ -14,11 +13,12 @@ from mechlib import filesys
 from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.es._ts import findts
 from mechroutines.es._routines import conformer
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
-# from mechroutines.es._routines import rpath
+from mechroutines.es._ts import findts
+# from mechroutines.es.newts import findts
+
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 
@@ -36,10 +36,11 @@ ES_TSKS = {
 
 def run_tsk(tsk, spc_dct, spc_name,
             thy_dct, es_keyword_dct,
-            run_prefix, save_prefix):
+            run_prefix, save_prefix,
+            print_debug=False):
     """ Execute the specified electronic structure task.
 
-        :param tsk: name of electronic structure task
+        :param tsk: name of task
         :type tsk: str
         :param spc_dct:
         :type spc_dct:
@@ -47,12 +48,14 @@ def run_tsk(tsk, spc_dct, spc_name,
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-value pairs for task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
+        :param print_debug: option to print extra debug information
+        :type print_debug: bool
     """
 
     ioprinter.task_header(tsk, spc_name)
@@ -72,7 +75,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         elif 'conf' in tsk:
             conformer_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix)
+                run_prefix, save_prefix, print_debug=print_debug)
         elif 'tau' in tsk:
             tau_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
@@ -81,14 +84,12 @@ def run_tsk(tsk, spc_dct, spc_name,
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'rpath' in tsk:
-            rpath_tsk(
-                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix)
-        elif 'find' in tsk:
+        elif 'find' in tsk or 'rpath' in tsk:
             findts(
-                spc_dct, spc_name, thy_dct, es_keyword_dct,
+                tsk, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
+
+    ioprinter.task_footer()
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -103,7 +104,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-val pairs for electronic structure task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -142,7 +143,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
 
 def conformer_tsk(job, spc_dct, spc_name,
                   thy_dct, es_keyword_dct,
-                  run_prefix, save_prefix):
+                  run_prefix, save_prefix, print_debug=False):
     """ Prepares and executes all electronic structure tasks that
         generate information for species and transition state conformers.
         This includes sampling and optimization procedures to generate
@@ -202,60 +203,71 @@ def conformer_tsk(job, spc_dct, spc_name,
     if job == 'samp':
 
         # Build the ini zma filesys
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_locs, ini_min_cnf_path = ini_loc_info
-
-        ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
-
-        # Set up the run scripts
-        script_str, kwargs = qchem_params(
-            method_dct, elstruct.Job.OPTIMIZATION)
-
-        # Set variables if it is a saddle
-        two_stage = saddle
-        mc_nsamp = spc_dct_i['mc_nsamp']
-        resave = es_keyword_dct['resave']
-
-        # Read the geometry and zma from the ini file system
-        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-        zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
-
-        # Read the torsions from the ini file sys
-        if ini_zma_save_fs[-1].file.torsions.exists([0]):
-            tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-            rotors = automol.rotor.from_data(zma, tors_dct)
-            tors_names = automol.rotor.names(rotors, flat=True)
+        user_conf_ids = spc_dct_i.get('conf_id')
+        if user_conf_ids is None:
+            ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+                ini_cnf_save_fs, mod_ini_thy_info)
+            ini_locs, ini_min_cnf_path = ini_loc_info
         else:
-            tors_names = ()
+            print(f'Using user specified conformer IDs: {user_conf_ids}')
+            ini_locs = user_conf_ids
 
-        geo_path = ini_cnf_save_fs[-1].path(ini_locs)
-        ioprinter.initial_geom_path('Sampling started', geo_path)
+        if any(ini_locs):
+            ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
-        # Check runsystem for equal ring CONF make conf_fs
-        # Else make new ring conf directory
-        rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+            # Set up the run scripts
+            script_str, kwargs = qchem_params(
+                method_dct, elstruct.Job.OPTIMIZATION)
 
-        if rid is None:
-            conformer.single_conformer(
+            # Set variables if it is a saddle
+            two_stage = saddle
+            mc_nsamp = spc_dct_i['mc_nsamp']
+            resave = es_keyword_dct['resave']
+
+            # Read the geometry and zma from the ini file system
+            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+            zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
+
+            # Read the torsions from the ini file sys
+            if ini_zma_save_fs[-1].file.torsions.exists([0]):
+                tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+                rotors = automol.rotor.from_data(zma, tors_dct)
+                tors_names = automol.rotor.names(rotors, flat=True)
+            else:
+                tors_names = ()
+
+            geo_path = ini_cnf_save_fs[-1].path(ini_locs)
+            ioprinter.initial_geom_path('Sampling started', geo_path)
+
+            # Check runsystem for equal ring CONF make conf_fs
+            # Else make new ring conf directory
+            rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+
+            if rid is None:
+                conformer.single_conformer(
+                    zma, spc_info, mod_thy_info,
+                    cnf_run_fs, cnf_save_fs,
+                    script_str, overwrite,
+                    retryfail=retryfail, zrxn=zrxn,
+                    **kwargs)
+
+                rid = conformer.rng_loc_for_geo(
+                    geo, cnf_save_fs)
+
+            # Run the sampling
+            conformer.conformer_sampling(
                 zma, spc_info, mod_thy_info,
-                cnf_run_fs, cnf_save_fs,
+                cnf_run_fs, cnf_save_fs, rid,
                 script_str, overwrite,
-                retryfail=retryfail, zrxn=zrxn,
+                nsamp_par=mc_nsamp,
+                tors_names=tors_names,
+                zrxn=zrxn, two_stage=two_stage,
+                retryfail=retryfail, resave=resave,
+                repulsion_thresh=40.0, print_debug=print_debug,
                 **kwargs)
-
-            rid = conformer.rng_loc_for_geo(
-                geo, cnf_run_fs, cnf_save_fs)
-
-        # Run the sampling
-        conformer.conformer_sampling(
-            zma, spc_info, mod_thy_info,
-            cnf_run_fs, cnf_save_fs, rid,
-            script_str, overwrite,
-            nsamp_par=mc_nsamp,
-            tors_names=tors_names, zrxn=zrxn,
-            two_stage=two_stage, retryfail=retryfail, resave=resave,
-            **kwargs)
+        else:
+            ioprinter.info_message(
+                'Missing conformers. Skipping task...')
 
     elif job == 'pucker':
 
@@ -299,30 +311,32 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job == 'opt':
 
         cnf_range = es_keyword_dct['cnf_range']
-        ioprinter.debug_message('range', cnf_range)
+        hbond_cutoffs = spc_dct_i['hbond_cutoffs']
+        cnf_sort_info_lst = _sort_info_lst(
+            es_keyword_dct['sort'], thy_dct, spc_info)
 
         # Set up the run scripts
         script_str, kwargs = qchem_params(
             method_dct, elstruct.Job.OPTIMIZATION)
 
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_locs, ini_min_cnf_path = ini_loc_info
-
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            cnf_save_fs, mod_thy_info, cnf_range='all')
+            cnf_save_fs, mod_thy_info,
+            cnf_range='all')
 
         ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
+            ini_cnf_save_fs, mod_ini_thy_info,
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=hbond_cutoffs,
+            print_enes=True)
 
         # Truncate the list of the ini confs
         uni_rng_locs_lst, uni_cnf_locs_lst = conformer.unique_fs_ring_confs(
             cnf_save_fs, rng_cnf_locs_lst,
             ini_cnf_save_fs, ini_rng_cnf_locs_lst)
-        ioprinter.debug_message(
-            'uni lst that has no similar ring', uni_rng_locs_lst)
-        ioprinter.debug_message(
-            'uni lst that has similar ring', uni_cnf_locs_lst)
+        # ioprinter.debug_message(
+        #    'uni lst that has no similar ring', uni_rng_locs_lst)
+        # ioprinter.debug_message(
+        #    'uni lst that has similar ring', uni_cnf_locs_lst)
 
         for locs in uni_rng_locs_lst:
             rid, cid = locs
@@ -356,8 +370,11 @@ def conformer_tsk(job, spc_dct, spc_name,
                 use_locs=(rid, cid),
                 **kwargs)
 
+        # print all geometres within cnfrange
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
+            cnf_save_fs, mod_thy_info,
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=hbond_cutoffs)
         for locs in rng_cnf_locs_lst:
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             ioprinter.geometry(geo)
@@ -365,33 +382,66 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
         cnf_range = es_keyword_dct['cnf_range']
+        hbond_cutoffs = spc_dct_i['hbond_cutoffs']
+        cnf_sort_info_lst = _sort_info_lst(
+            es_keyword_dct['sort'], thy_dct, spc_info)
 
-        ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
+        user_conf_ids = spc_dct_i.get('conf_id')
+        if user_conf_ids is None:
+            ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+                ini_cnf_save_fs, mod_ini_thy_info,
+                cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+                hbond_cutoffs=hbond_cutoffs,
+                print_enes=True)
+        else:
+            print(f'Using user specified conformer IDs: {user_conf_ids}')
+            ini_rng_cnf_locs_lst = (user_conf_ids,)
 
         # Check if locs exist, kill if it doesn't
         if not ini_rng_cnf_locs_lst:
             ioprinter.error_message(
                 'No min-energy conformer found for level:')
-            sys.exit()
 
-        # Set up the run scripts
-        script_str, kwargs = qchem_params(
-            method_dct)
+        else:
 
-        # Run the job over all the conformers requested by the user
-        for ini_locs in ini_rng_cnf_locs_lst:
-            ini_cnf_run_fs[-1].create(ini_locs)
-            geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
-            ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
-            print('Running task for geometry at {}', geo_save_path)
-            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-            zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-            ES_TSKS[job](
-                zma, geo, spc_info, mod_thy_info,
-                ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
-                script_str, overwrite,
-                retryfail=retryfail, **kwargs)
+            # Set up the run scripts
+            script_str, kwargs = qchem_params(
+                method_dct)
+
+            # Grab frequencies for the reference, print ref freqs
+            if job == 'hess':
+                if ini_cnf_save_fs[-1].file.harmonic_frequencies.exists(
+                    ini_rng_cnf_locs_lst[0]):
+                    frq = ini_cnf_save_fs[-1].file.harmonic_frequencies.read(
+                        ini_rng_cnf_locs_lst[0])
+                    ref_val = frq
+                else:
+                    ref_val = None
+                if ref_val is not None and zrxn is not None:
+                    ref_path = cnf_save_fs[-1].path(ini_rng_cnf_locs_lst[0])
+                    print('Found reference frequencies for saddle-point '
+                          f'checks for conformer at\n {ref_path}')
+                    ioprinter.frequencies(ref_val)
+            else:
+                ref_val = None
+
+            # Run the job over all the conformers requested by the user
+            print('Going over all requested conformers for task...\n')
+            for ini_locs in ini_rng_cnf_locs_lst:
+                ini_cnf_run_fs[-1].create(ini_locs)
+                geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
+                ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
+                print('Running task for geometry at ', geo_save_path)
+                geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+                zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+                ES_TSKS[job](
+                    zma, geo, spc_info, mod_thy_info,
+                    ini_cnf_run_fs, ini_cnf_save_fs, ini_locs, run_prefix,
+                    script_str, overwrite, zrxn=zrxn,
+                    retryfail=retryfail, method_dct=method_dct,
+                    ref_val=ref_val,
+                    **kwargs)
+                print('\n === FINISHED CONF ===\n')
 
 
 def tau_tsk(job, spc_dct, spc_name,
@@ -426,6 +476,7 @@ def tau_tsk(job, spc_dct, spc_name,
     retryfail = es_keyword_dct['retryfail']
     # scan_increment = spc_dct_i['hind_inc']
     nsamp_par = spc_dct_i['tau_nsamp']
+    zrxn = spc_dct_i.get('zrxn', None)
 
     # Modify the theory
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
@@ -466,6 +517,10 @@ def tau_tsk(job, spc_dct, spc_name,
 
     saddle = bool('ts_' in spc_name)
 
+    # Set the database style
+    db_style = 'jsondb'
+    # db_style = 'directory'
+
     # Run the task if any torsions exist
     if torsions and not saddle:
 
@@ -473,8 +528,7 @@ def tau_tsk(job, spc_dct, spc_name,
         tau_run_fs, tau_save_fs = build_fs(
             run_prefix, save_prefix, 'TAU',
             spc_locs=spc_info, thy_locs=mod_thy_info[1:])
-        # db_style = 'jsondb'
-        db_style = 'directory'
+
         if db_style == 'jsondb':
             tau_save_fs[-1].root.create()
             tau_save_fs[-1].json_create()
@@ -541,14 +595,19 @@ def tau_tsk(job, spc_dct, spc_name,
                 method_dct, elstruct.Job.OPTIMIZATION)
 
             tors_names = automol.rotor.names(torsions, flat=True)
-            # Run sampling
+            resave = es_keyword_dct['resave']
+
             tau.tau_sampling(
-                zma, ref_ene,
-                spc_info, tors_names, nsamp_par,
+                zma, ref_ene, spc_info,
                 mod_ini_thy_info,
                 tau_run_fs, tau_save_fs,
                 script_str, overwrite,
-                saddle=saddle, **kwargs)
+                db_style=db_style,
+                nsamp_par=nsamp_par,
+                tors_names=tors_names,
+                repulsion_thresh=40.0,
+                zrxn=zrxn, resave=resave,
+                **kwargs)
 
         elif job in ('energy', 'grad'):
 
@@ -557,7 +616,11 @@ def tau_tsk(job, spc_dct, spc_name,
                 method_dct)
 
             # Run the job over all the conformers requested by the user
-            for locs in tau_save_fs[-1].existing():
+            if db_style == 'directory':
+                tau_locs = tau_save_fs[-1].existing()
+            elif db_style == 'jsondb':
+                tau_locs = tau_save_fs[-1].json_existing()
+            for locs in tau_locs:
                 if db_style == 'jsondb':
                     geo_save_path = tau_save_fs[-1].root.path()
                     geo = tau_save_fs[-1].json.geometry.read(locs)
@@ -568,9 +631,10 @@ def tau_tsk(job, spc_dct, spc_name,
                 zma = None
                 ES_TSKS[job](
                     zma, geo, spc_info, mod_thy_info,
-                    tau_save_fs, locs,
+                    tau_save_fs, locs, run_prefix,
                     script_str, overwrite,
-                    retryfail=retryfail, **kwargs)
+                    retryfail=retryfail,
+                    **kwargs)
                 ioprinter.obj('vspace')
 
         elif job == 'hess':
@@ -584,9 +648,13 @@ def tau_tsk(job, spc_dct, spc_name,
 
             # Run the job over all the conformers requested by the user
             hess_cnt = 0
-            for locs in tau_save_fs.existing():
+            if db_style == 'directory':
+                tau_locs = tau_save_fs[-1].existing()
+            elif db_style == 'jsondb':
+                tau_locs = tau_save_fs[-1].json_existing()
+            for locs in tau_locs:
                 ioprinter.info_message(
-                    'HESS Number {}'.format(hess_cnt+1), newline=1)
+                    f'HESS Number {hess_cnt+1}', newline=1)
                 if db_style == 'directory':
                     geo_save_path = tau_save_fs[-1].path(locs)
                     if tau_save_fs[-1].file.hessian.exists(locs):
@@ -604,9 +672,11 @@ def tau_tsk(job, spc_dct, spc_name,
                 tau_run_fs[-1].create(locs)
                 ES_TSKS[job](
                     None, geo, spc_info, mod_thy_info,
-                    tau_run_fs, tau_save_fs, locs,
+                    tau_run_fs, tau_save_fs, locs, run_prefix,
                     script_str, overwrite,
-                    retryfail=retryfail, **kwargs)
+                    retryfail=retryfail, method_dct=method_dct,
+                    correct_vals=False,
+                    **kwargs)
                 hess_cnt += 1
                 if hess_cnt == hessmax:
                     break
@@ -637,7 +707,7 @@ def hr_tsk(job, spc_dct, spc_name,
         :type spc_name:
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-val pairs for electronic structure task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -653,175 +723,10 @@ def hr_tsk(job, spc_dct, spc_name,
     else:
         spc_info = rinfo.ts_info(spc_dct_i['rxn_info'])
 
-    # Modify the theory
-    method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-    thy_info = tinfo.from_dct(method_dct)
-    ini_thy_info = tinfo.from_dct(ini_method_dct)
-    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, spc_info)
-
-    # Set the filesystem objects
-    _root = root_locs(spc_dct_i, saddle=saddle, name=spc_name)
-    ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-        run_prefix, save_prefix, 'CONFORMER',
-        thy_locs=mod_ini_thy_info[1:],
-        **_root)
-
-    ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-        ini_cnf_save_fs, mod_ini_thy_info)
-    ini_min_locs, ini_cnf_save_path = ini_loc_info
-
-    # Create run fs if that directory has been deleted to run the jobs
-    ini_cnf_run_fs[-1].create(ini_min_locs)
-    ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
-
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
     tors_model = es_keyword_dct['tors_model']
-
-    # Read zma, geo, and torsions
-    ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-    geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
-    zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-    if ini_zma_save_fs[-1].file.torsions.exists([0]):
-        tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-        torsions = automol.rotor.from_data(zma, tors_dct,)
-    else:
-        torsions = ()
-
-    # Run the task if any torsions exist
-    if any(torsions):
-        if 'fa' in tors_model:
-            scn = 'CSCAN'
-        elif 'f' in tors_model:
-            if len(torsions) > 1:
-                scn = 'CSCAN'
-            else:
-                scn = 'SCAN'
-        else:
-            scn = 'SCAN'
-        ini_scn_run_fs, ini_scn_save_fs = build_fs(
-            ini_cnf_run_path, ini_cnf_save_path, scn,
-            zma_locs=(0,))
-
-        if job == 'scan':
-
-            increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
-            hr.hindered_rotor_scans(
-                zma, spc_info, mod_thy_info,
-                ini_scn_run_fs, ini_scn_save_fs,
-                torsions, tors_model, method_dct,
-                overwrite,
-                saddle=saddle,
-                increment=increment,
-                retryfail=retryfail)
-
-        # elif job == 'reopt':
-
-        #     # pull stuff from dcts
-        #     two_stage = saddle
-        #     rxn_class = spc_dct_i['class'] if saddle else ''
-        #     mc_nsamp = spc_dct_i['mc_nsamp']
-        #     ethresh = es_keyword_dct['hrthresh']
-
-        #     # Read and print the potential
-        #     sp_fs = autofile.fs.single_point(ini_cnf_save_path)
-        #     ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
-        #     tors_pots, tors_zmas, tors_paths = {}, {}, {}
-        #     for tors_names, tors_grids in ___
-        #     __zip(run_tors_names, run_tors_grids):
-        #         constraint_dct = automol.zmat.build_constraint_dct(
-        #             zma, const_names, tors_names)
-        #         pot, _, _, _, zmas, paths = filesys.read.potential(
-        #             tors_names, tors_grids,
-        #             ini_cnf_save_path,
-        #             mod_ini_thy_info, ref_ene,
-        #             constraint_dct,
-        #             read_zma=True)
-        #         tors_pots[tors_names] = pot
-        #         tors_zmas[tors_names] = zmas
-        #         tors_paths[tors_names] = paths
-
-        #     # Check for new minimum conformer
-        #     new_min_zma = __.check_hr_pot(
-        #         tors_pots, tors_zmas, tors_paths, emax=ethresh)
-
-        #     if new_min_zma is not None:
-        #         ioprinter.info_message(
-        #             'Finding new low energy conformer...', newline=1)
-        #         conformer.single_conformer(
-        #             zma, spc_info, mod_thy_info,
-        #             ini_cnf_run_fs, ini_cnf_save_fs,
-        #             script_str, overwrite,
-        #             retryfail=retryfail, rxn=rxn, **kwargs)
-
-        elif job in ('energy', 'grad', 'hess', 'vpt2'):
-
-            # Script (add energy script call)
-            script_str, kwargs = qchem_params(
-                method_dct)
-
-            run_tors_names = automol.rotor.names(torsions, flat=True)
-            for tors_names in run_tors_names:
-
-                # Set the constraint dct and filesys for the scan
-                const_names = automol.zmat.set_constraint_names(
-                    zma, run_tors_names, tors_model)
-                constraint_dct = automol.zmat.constraint_dct(
-                    zma, const_names, tors_names)
-
-                # get the scn_locs, maybe get a function?
-                _, scn_locs = scan.scan_locs(
-                    ini_scn_save_fs, tors_names, constraint_dct=constraint_dct)
-                for locs in scn_locs:
-                    geo = ini_scn_save_fs[-1].file.geometry.read(locs)
-                    zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
-                    ini_scn_run_fs[-1].create(locs)
-                    ES_TSKS[job](
-                        zma, geo, spc_info, mod_thy_info,
-                        ini_scn_run_fs, ini_scn_save_fs, locs,
-                        script_str, overwrite,
-                        retryfail=retryfail, **kwargs)
-                    ioprinter.obj('vspace')
-    else:
-        ioprinter.info_message('No torsional modes in the species')
-
-
-def rpath_tsk(job, spc_dct, spc_name,
-              thy_dct, es_keyword_dct,
-              run_prefix, save_prefix):
-    """ run a scan over the specified torsional coordinates
-
-        :param job:
-        :type job:
-        :param spc_dct:
-        :type spc_dct:
-        :param spc_name:
-        :type spc_name:
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
-        :type es_keyword_dct: dict[str:str]
-        :param run_prefix: root-path to the run-filesystem
-        :type run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type save_prefix: str
-    """
-
-    # Get dct for specific species task is run for
-    spc_dct_i = spc_dct[spc_name]
-
-    # Set up coordinate name
-    rxn_coord = es_keyword_dct.get('rxn_coord')
-    if rxn_coord == 'auto':
-        coord_name = ['Rn']  # grab from zrxn object
-    else:
-        coord_name = ['IRC']
-
-    # Set the spc_info
-    spc_info = sinfo.from_dct(spc_dct_i)
 
     # Modify the theory
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
@@ -832,82 +737,232 @@ def rpath_tsk(job, spc_dct, spc_name,
     mod_ini_thy_info = tinfo.modify_orb_label(
         ini_thy_info, spc_info)
 
-    # Get options from the dct or es options lst
-    overwrite = es_keyword_dct['overwrite']
-
-    # Set up the script
-    script_str, kwargs = qchem_params(
-        method_dct, elstruct.Job.OPTIMIZATION)
-
     # Set the filesystem objects
-    # rxn_info = spc_dct_i['rxn_info']
-    # fs_rxn_info = rinfo.sort(rxn_info)
+    _root = root_locs(spc_dct_i, saddle=saddle, name=spc_name)
+    _, ini_cnf_save_fs = build_fs(
+        run_prefix, save_prefix, 'CONFORMER',
+        thy_locs=mod_ini_thy_info[1:],
+        **_root)
+    cnf_run_fs, cnf_save_fs = build_fs(
+        run_prefix, save_prefix, 'CONFORMER',
+        thy_locs=mod_thy_info[1:],
+        **_root)
 
-    # New filesystem objects
-    if coord_name == 'irc':
-        _root = root_locs(spc_dct_i, saddle=True)
-        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-            run_prefix, save_prefix, 'CONFORMER',
-            thy_locs=mod_ini_thy_info[1:],
-            **_root)
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_locs, ini_pfx_save_path = ini_loc_info
-        ini_cnf_run_fs[-1].create(ini_min_locs)
-        ini_pfx_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+    cnf_range = es_keyword_dct['cnf_range']
+    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
 
+    user_conf_ids = spc_dct_i.get('conf_id')
+    if user_conf_ids is None:
+        cnf_sort_info_lst = _sort_info_lst(
+            es_keyword_dct['sort'], thy_dct, spc_info)
+        ini_min_locs_lst, ini_path_lst = filesys.mincnf.conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info,
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=hbond_cutoffs,
+            print_enes=True)
     else:
-        # ts_info = (ts_num,)
-        ts_info = (0,)
-        ini_ts_run_fs, ini_ts_save_fs = build_fs(
-            run_prefix, save_prefix, 'TS',
-            thy_locs=mod_ini_thy_info[1:],
-            **_root)
-        ini_pfx_run_path = ini_ts_run_fs.path(ts_info)
-        ini_pfx_save_path = ini_ts_save_fs.path(ts_info)
+        ini_min_locs_lst = (user_conf_ids,)
+        ini_path_lst = (ini_cnf_save_fs[-1].path(user_conf_ids),)
 
-    # Get options from the dct or es options lst
-    overwrite = es_keyword_dct['overwrite']
+    all_run_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+        cnf_save_fs, mod_thy_info,
+        cnf_range='all')
+    ini_to_run_locs_dct = filesys.mincnf.fs_confs_dict(
+        cnf_save_fs, all_run_cnf_locs_lst,
+        ini_cnf_save_fs, ini_min_locs_lst)
 
-    ini_scn_run_fs, ini_scn_save_fs = build_fs(
-        ini_pfx_run_path, ini_pfx_save_path, 'SCAN',
-        zma_locs=(0,))
+    for ini_min_locs, ini_cnf_save_path in zip(ini_min_locs_lst, ini_path_lst):
 
-    # ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-    geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
-    # zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+        # Read zma, geo, and torsions
+        ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
+        zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+        if ini_zma_save_fs[-1].file.torsions.exists([0]):
+            tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+            torsions = automol.rotor.from_data(zma, tors_dct,)
+        else:
+            torsions = ()
 
-    # Run job
-    if job == 'scan':
-        pass
-        # if rxn_coord == 'auto':
-        #     pass
-        # elif rxn_coord == 'irc':
-        #     rpath.irc_scan(
-        #         geo, spc_info, coord_name,
-        #         mod_ini_thy_info, ini_method_dct,
-        #         ini_scn_save_fs, ini_cnf_run_path,
-        #         overwrite)
+        zrxn = spc_dct_i.get('zrxn', None)
+        # Run the task if any torsions exist
+        if any(torsions):
+            # Find equivalent conformer in the run filesys, if it doesn't exist
+            # run a single conformer to generate it
+            min_locs = ini_to_run_locs_dct[tuple(ini_min_locs)]
+            if min_locs is None:
+                script_str, kwargs = qchem_params(
+                    method_dct, elstruct.Job.OPTIMIZATION)
+                rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+                if rid is None:
+                    new_rid = autofile.schema.generate_new_ring_id()
+                    new_cid = autofile.schema.generate_new_conformer_id()
+                    conformer.single_conformer(
+                        zma, spc_info, mod_thy_info,
+                        cnf_run_fs, cnf_save_fs,
+                        script_str, overwrite,
+                        retryfail=retryfail, zrxn=zrxn,
+                        use_locs=(new_rid, new_cid),
+                        **kwargs)
+                    min_locs = (new_rid, new_cid)
+                else:
+                    new_cid = autofile.schema.generate_new_conformer_id()
+                    conformer.single_conformer(
+                        zma, spc_info, mod_thy_info,
+                        cnf_run_fs, cnf_save_fs,
+                        script_str, overwrite,
+                        retryfail=retryfail, zrxn=zrxn,
+                        use_locs=(rid, new_cid),
+                        **kwargs)
+                    min_locs = (rid, new_cid)
+                    save_locs = cnf_save_fs[-1].existing()
+                    if min_locs not in save_locs:
+                        locinf = filesys.mincnf.this_conformer_was_run_in_run(
+                            zma, cnf_run_fs)
+                        _, sym_locs_lst = locinf
+                        for sym_locs in sym_locs_lst:
+                            if sym_locs in save_locs:
+                                min_locs = sym_locs
+            cnf_save_path = cnf_save_fs[-1].path(min_locs)
+            ioprinter.info_message(
+                f'Same conformer saved at {ini_cnf_save_path} '
+                f'and {cnf_save_path}')
 
-    elif job in ('energy', 'grad', 'hess'):
+            # Create run fs if that directory has been deleted to run the jobs
+            # ini_cnf_run_fs[-1].create(ini_min_locs)
+            # ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+            cnf_run_fs[-1].create(min_locs)
+            cnf_run_path = cnf_run_fs[-1].path(min_locs)
 
-        # Script
-        script_str, kwargs = qchem_params(
-            method_dct)
+            # Get the runlvl zma and torsion info
+            zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
+            geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            zma = zma_save_fs[-1].file.zmatrix.read((0,))
+            if zma_save_fs[-1].file.torsions.exists([0]):
+                tors_dct = zma_save_fs[-1].file.torsions.read([0])
+                torsions = automol.rotor.from_data(zma, tors_dct,)
+            else:
+                torsions = ()
 
-        # Need to put in something with the IRC idxs
-        for locs in ini_scn_save_fs[-1].existing():
-            geo = ini_scn_save_fs[-1].file.geometry.read(locs)
-            ini_scn_run_fs[-1].create(locs)
-            ES_TSKS[job](
-                None, geo, spc_info, mod_thy_info,
-                ini_scn_run_fs, ini_scn_save_fs, locs,
-                script_str, overwrite, **kwargs)
-            ioprinter.obj('vspace')
+            if 'fa' in tors_model:
+                scn = 'CSCAN'
+            elif 'f' in tors_model:
+                if len(torsions) > 1:
+                    scn = 'CSCAN'
+                else:
+                    scn = 'SCAN'
+            else:
+                scn = 'SCAN'
+            # ini_scn_run_fs, ini_scn_save_fs = build_fs(
+            #     ini_cnf_run_path, ini_cnf_save_path, scn,
+            #     zma_locs=(0,))
+            scn_run_fs, scn_save_fs = build_fs(
+                cnf_run_path, cnf_save_path, scn,
+                zma_locs=(0,))
 
-    elif job == 'infene':
-        pass
-        # inf_sep_ene()
+            if job == 'scan':
+
+                increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
+                hr.hindered_rotor_scans(
+                    zma, spc_info, mod_thy_info,
+                    scn_run_fs, scn_save_fs,
+                    torsions, tors_model, method_dct,
+                    overwrite,
+                    zrxn=zrxn,
+                    saddle=saddle,
+                    increment=increment,
+                    retryfail=retryfail)
+
+            elif job == 'reopt':
+
+                script_str, kwargs = qchem_params(
+                    method_dct, elstruct.Job.OPTIMIZATION)
+
+                # pull stuff from dcts
+                ethresh = es_keyword_dct['hrthresh']
+                increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
+
+                zrxn = spc_dct_i.get('zrxn', None)
+
+                run_tors_names = automol.rotor.names(torsions)
+                run_tors_grids = automol.rotor.grids(
+                    torsions, increment=increment)
+
+                # Set constraints
+                const_names = automol.zmat.set_constraint_names(
+                    zma, run_tors_names, tors_model)
+
+                # Read and print the potential
+                sp_fs = autofile.fs.single_point(cnf_save_path)
+                ref_ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+                tors_pots, tors_zmas, tors_paths = {}, {}, {}
+                for tors_names, tors_grids in zip(
+                        run_tors_names, run_tors_grids):
+                    constraint_dct = automol.zmat.constraint_dct(
+                        zma, const_names, tors_names)
+                    pot, _, _, _, zmas, paths = filesys.read.potential(
+                        tors_names, tors_grids,
+                        cnf_save_path,
+                        mod_thy_info, ref_ene,
+                        constraint_dct,
+                        read_zma=True)
+                    tors_pots[tors_names] = pot
+                    tors_zmas[tors_names] = zmas
+                    tors_paths[tors_names] = paths
+
+                # Check for new minimum conformer
+                new_min_zma = hr.check_hr_pot(
+                    tors_pots, tors_zmas, tors_paths, emax=ethresh)
+
+                if new_min_zma is not None:
+                    ioprinter.info_message(
+                        'Finding new low energy conformer...', newline=1)
+                    new_min_geo = automol.zmat.geometry(new_min_zma)
+                    rid = conformer.rng_loc_for_geo(
+                        new_min_geo, cnf_save_fs)
+                    if rid is None:
+                        new_locs = None
+                    else:
+                        cid = autofile.schema.generate_new_conformer_id()
+                        new_locs = (rid, cid)
+                    conformer.single_conformer(
+                        new_min_zma, spc_info, mod_thy_info,
+                        cnf_run_fs, cnf_save_fs,
+                        script_str, overwrite,
+                        retryfail=retryfail, zrxn=zrxn,
+                        use_locs=new_locs, **kwargs)
+
+            elif job in ('energy', 'grad', 'hess', 'vpt2'):
+
+                # Script (add energy script call)
+                script_str, kwargs = qchem_params(
+                    method_dct)
+
+                run_tors_names = automol.rotor.names(torsions, flat=True)
+                for tors_names in run_tors_names:
+
+                    # Set the constraint dct and filesys for the scan
+                    const_names = automol.zmat.set_constraint_names(
+                        zma, run_tors_names, tors_model)
+                    constraint_dct = automol.zmat.constraint_dct(
+                        zma, const_names, tors_names)
+
+                    # get the scn_locs, maybe get a function?
+                    _, scn_locs = scan.scan_locs(
+                        scn_save_fs, tors_names,
+                        constraint_dct=constraint_dct)
+                    for locs in scn_locs:
+                        geo = scn_save_fs[-1].file.geometry.read(locs)
+                        zma = scn_save_fs[-1].file.zmatrix.read(locs)
+                        scn_run_fs[-1].create(locs)
+                        ES_TSKS[job](
+                            zma, geo, spc_info, mod_thy_info,
+                            scn_run_fs, scn_save_fs, locs, run_prefix,
+                            script_str, overwrite,
+                            zrxn=zrxn,
+                            retryfail=retryfail, **kwargs)
+                        ioprinter.obj('vspace')
+        else:
+            ioprinter.info_message('No torsional modes in the species')
 
 
 def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
@@ -932,14 +987,14 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
     if 'ts' in spc_name:
         # Skip all tasks except find_ts
         # if rad-rad TS
-        if tsk != 'find_ts':
+        if tsk not in ('find_ts', 'rpath_scan'):  # generalize to other rpath
             rxn_info = spc_dct[spc_name]['rxn_info']
             ts_mul = rinfo.value(rxn_info, 'tsmult')
             high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
             if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
                 skip = True
                 ioprinter.info_message(
-                    'Skipping task because {}'.format(spc_name),
+                    f'Skipping task because {spc_name}',
                     'is a low-spin radical radical reaction')
     else:
         spc_natoms = len(automol.inchi.geometry(spc_dct[spc_name]['inchi']))
@@ -960,9 +1015,41 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
                 skip = (instab is not None)
                 if skip:
                     ioprinter.info_message(
-                        'Found instability files at path {}'.format(path),
-                        newline=1)
+                        f'Found instability file at path {path}', newline=1)
                     ioprinter.info_message(
                         'Skipping task for unstable species...', newline=1)
 
     return skip
+
+
+def _sort_info_lst(sort_str, thy_dct, spc_info):
+    """ Return the levels to sort conformers by if zpve or sp
+        levels were assigned in input
+
+        if we ask for zpe(lvl_wbs),sp(lvl_b2t),gibbs(700)
+        out sort_info_lst will be [('gaussian', 'wb97xd', '6-31*', 'RU'),
+        ('gaussian', 'b2plypd3', 'cc-pvtz', 'RU'), None, None, 700.]
+    """
+    sort_lvls = [None, None, None, None, None]
+    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy', 'gibbs']
+    if sort_str is not None:
+        for sort_param in sort_str.split(','):
+            idx = None
+            for typ_idx, typ_str in enumerate(sort_typ_lst):
+                if typ_str in sort_param:
+                    lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
+                    idx = typ_idx
+            if idx is not None:
+                if idx < 2:
+                    method_dct = thy_dct.get(lvl_key)
+                    if method_dct is None:
+                        ioprinter.warning_message(
+                            f'no {lvl_key} in theory.dat, '
+                            f'not using {sort_typ_lst[idx]} in sorting')
+                        continue
+                    thy_info = tinfo.from_dct(method_dct)
+                    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+                    sort_lvls[idx] = mod_thy_info
+                else:
+                    sort_lvls[idx] = float(lvl_key)
+    return sort_lvls
