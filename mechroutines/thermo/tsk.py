@@ -129,42 +129,23 @@ def _weigh_heat_of_formation(hf_array, weights):
 
 def _get_heat_of_formation(
         spc_name, spc_dct, spc_mod, spc_locs,
-        spc_mod_dct_i, ref_scheme, ref_enes,
+        spc_mod_dct_i, basis_dct, ref_enes,
         chn_basis_ene_dct, run_prefix, save_prefix):
     """ get the heat of formation at  0 K
     """
 
-    # Determine info about the basis species used in thermochem calcs
-    basis_dct = thermfit.prepare_basis(
-        ref_scheme, spc_dct, (spc_name,))
-    uniref_dct = thermfit.unique_basis_species(basis_dct, spc_dct)
-
-    # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
-
     # Get the energies for the spc and its basis
     energy_missing, ene_basis = _check_for_reference_energies(
         spc_basis, chn_basis_ene_dct, spc_mod)
-
-    # if the energies aren't missing we only read the energy
-    # of the target species, otherwise we run a function
-    # from thermroutines that gathers it for the references
-    # as well
+    if energy_missing:
+        print('uh oh i messed things up')
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct[spc_name], spc_mod_dct_i,
         run_prefix, save_prefix, saddle=False, spc_locs=spc_locs)
     ene_spc = ene.read_energy(
         spc_dct[spc_name], pf_filesystems, spc_mod_dct_i,
         run_prefix, read_ene=True, read_zpe=True, saddle=False)
-    if energy_missing:
-        _, ene_basis = thmbasis.basis_energy(
-            spc_name, spc_basis, uniref_dct, spc_dct,
-            spc_mod_dct_i,
-            run_prefix, save_prefix, read_species=False)
-        for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
-            chn_basis_ene_dct[spc_mod][spc_basis_i] = ene_basis_i
-
-    # Calculate and store the 0 K Enthalpy
     hf0k = thermfit.heatform.calc_hform_0k(
         ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
     return hf0k, chn_basis_ene_dct
@@ -178,6 +159,7 @@ def _check_for_reference_energies(spc_basis, chn_basis_ene_dct, spc_mod):
     """
     ene_basis = []
     energy_missing = False
+    print('chn_basis_ene_dct', chn_basis_ene_dct)
     for spc_basis_i in spc_basis:
         if spc_basis_i in chn_basis_ene_dct[spc_mod]:
             ioprinter.message(
@@ -209,6 +191,28 @@ def get_heats_of_formation(
     """ gather the hof
     """
     chn_basis_ene_dct = {}
+    # Determine info about the basis species used in thermochem calcs
+    for spc_mod in spc_mods:
+        spc_mod = spc_mods[0]
+        spc_mod_dct_i = spc_mod_dct[spc_mod]
+        chn_basis_ene_dct[spc_mod] = {}
+        basis_dct = thermfit.prepare_basis(
+            ref_scheme, spc_dct, (*spc_locs_dct.keys(),))
+        uniref_dct = thermfit.unique_basis_species(basis_dct, spc_dct)
+        # uniich_lst = [uniref_dct[key]['inchi'] for key in uniref_dct]
+        basis_ichs = []
+        for parent_spc_name in basis_dct:
+            for basis_spc_name in basis_dct[parent_spc_name][0]:
+                if basis_spc_name not in basis_ichs:
+                    basis_ichs.append(basis_spc_name)
+        _, ene_basis = thmbasis.basis_energy(
+            None, basis_ichs,
+            uniref_dct, spc_dct,
+            spc_mod_dct_i,
+            run_prefix, save_prefix, read_species=False)
+        for spc_basis_i, ene_basis_i in zip(basis_ichs, ene_basis):
+            chn_basis_ene_dct[spc_mod][spc_basis_i] = ene_basis_i
+                
     for spc_name in spc_locs_dct:
         for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
             spc_locs = tuple(spc_locs)
@@ -216,11 +220,9 @@ def get_heats_of_formation(
                 # Take species model and add it to the chn_basis_ene dct
                 spc_mod = spc_mods[0]
                 spc_mod_dct_i = spc_mod_dct[spc_mod]
-                if spc_mod not in chn_basis_ene_dct:
-                    chn_basis_ene_dct[spc_mod] = {}
                 hf0k, chn_basis_ene_dct = _get_heat_of_formation(
                     spc_name, spc_dct, spc_mod, spc_locs,
-                    spc_mod_dct_i, ref_scheme, ref_enes,
+                    spc_mod_dct_i, basis_dct, ref_enes,
                     chn_basis_ene_dct, run_prefix, save_prefix)
                 spc_dct = _add_hf_to_spc_dct(
                     hf0k, spc_dct, spc_name, idx, spc_mod)

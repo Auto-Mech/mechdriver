@@ -2,7 +2,9 @@
   Functions to read the filesystem and pull objects from it
 """
 
+import os
 import time
+import numpy
 import autofile
 import elstruct
 import thermfit
@@ -11,6 +13,7 @@ import automol.zmat
 import automol.geom
 from automol.reac import relabel_for_geometry
 from automol.geom import hydrogen_bonded_structure
+from autorun import execute_function_in_parallel
 from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
 
@@ -133,8 +136,8 @@ def conformer_locators(
         else:
             print(f'No conformers located in {cnf_save_fs[0].path()}')
 
-
         return fin_locs_lst, fin_paths_lst
+
     cnf_range_nohb, cnf_range_hb, cnf_range_any = _process_cnf_range(
         cnf_range)
     freq_info, sp_info, sort_prop_dct = _process_sort_info(sort_info_lst)
@@ -195,21 +198,53 @@ def _sorted_cnf_lsts(
         :rtype (tuple(tuple(tuple(str),tuple(str))), tuple(float))
     """
 
+    def _parallel_get_sort_energy_parameters(
+            cnf_save_fs, mod_thy_info, freq_info,
+            sp_info, sort_prop_dct, cnf_locs_lst,
+            output_queue=None):
+        locs_enes_dct = {}
+        first_enes = None
+        for locs in cnf_locs_lst:
+            sort_ene, first_enes = _sort_energy_parameter(
+                locs, cnf_save_fs, mod_thy_info, freq_info,
+                sp_info, sort_prop_dct, first_enes=first_enes)
+            if first_enes is not None:
+                locs_enes_dct[tuple(locs)] = (sort_ene, sum(first_enes))
+            else:
+                locs_enes_dct[tuple(locs)] = (sort_ene, first_enes)
+        output_queue.put((locs_enes_dct,))
+
     fnd_cnf_enes_lst = []
     fnd_cnf_locs_lst = []
     if len(cnf_locs_lst) == 1:
         fnd_cnf_enes_lst = [10]
         fnd_cnf_locs_lst = cnf_locs_lst
     else:
-        first_enes = None
-        for idx, locs in enumerate(cnf_locs_lst):
-            sort_ene, first_enes = _sort_energy_parameter(
-                locs, cnf_save_fs, mod_thy_info, freq_info,
-                sp_info, sort_prop_dct, first_enes=first_enes)
-
-            if sort_ene is not None:
-                fnd_cnf_enes_lst.append(sort_ene)
-                fnd_cnf_locs_lst.append(cnf_locs_lst[idx])
+        args = (
+                cnf_save_fs, mod_thy_info, freq_info,
+                sp_info, sort_prop_dct
+                )
+        locs_enes_dct_lst = execute_function_in_parallel(
+            _parallel_get_sort_energy_parameters, cnf_locs_lst,
+            args, nprocs=4)
+        first_ene = None
+        for locs_enes_dct in locs_enes_dct_lst:
+            for locs in locs_enes_dct:
+                _, locs_first_ene = locs_enes_dct[locs]
+                if locs_first_ene is not None:
+                    first_ene = locs_first_ene
+                break
+ 
+        for locs in cnf_locs_lst:
+            for locs_enes_dct in locs_enes_dct_lst:
+                if tuple(locs) in locs_enes_dct:
+                    sort_ene, tmp_first_ene = locs_enes_dct[tuple(locs)]
+                    if sort_ene is not None:
+                        if first_ene is not None:
+                            sort_ene = sort_ene + (
+                                (tmp_first_ene - first_ene) / phycon.EH2KCAL)
+                        fnd_cnf_enes_lst.append(sort_ene)
+                        fnd_cnf_locs_lst.append(locs)
             # commenting out from merge conflict
             # elif cnf_save_fs[-1].file.geometry_info.exists(locs):
             #     ioprinter.info_message(
@@ -233,6 +268,7 @@ def _sorted_cnf_lsts(
             #             ioprinter.info_message('the energy is now found')
             #         else:
             #             ioprinter.info_message('waiting helped nothing')
+        print('found', fnd_cnf_enes_lst, fnd_cnf_locs_lst)
 
     # Sort the cnf locs and cnf enes
     if fnd_cnf_locs_lst:
@@ -674,7 +710,8 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
     return sym_idx
 
 
-def collect_rrho_params(cnf_save_fs, locs, sp_info, freq_info, mod_thy_info):
+def collect_rrho_params(
+        cnf_save_fs, locs, sp_info, freq_info, mod_thy_info):
     """ get geo, freqs, and elec. ene from filesystem
     """
     geo = None
