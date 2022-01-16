@@ -78,12 +78,17 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
         at infinite separation.
     """
 
+    ioprinter.info_message('Calculating the Infinite Separation Energy...')
+    ioprinter.info_message('')
+
     # Get info from the reactants
     rct_info = thy_inf_dct['rct_info']
     overwrite = es_keyword_dct['overwrite']
 
     # Get thy_inf_dct stuff
-    var_sp1_thy_info = thy_inf_dct['var_splvl2']
+    thy_info = thy_inf_dct['runlvl']
+    var_scn_thy_info = thy_inf_dct['var_scnlvl']
+    var_sp1_thy_info = thy_inf_dct['var_splvl1']
     var_sp2_thy_info = thy_inf_dct['var_splvl2']
     hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
@@ -112,13 +117,15 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
         # Build grid and names appropriate for reaction type
         names, _, grids, _ = automol.reac.build_scan_info(
             zrxn, ts_zma, var=var)
-        inf_locs = (names, (grids[0][0],))
+        inf_locs = (names, (grids[1][-1],))
 
         cas_kwargs = mref_params['var_scnlvl']
 
         _inf_sep_ene = _multiref_inf_sep_ene(
             hs_ts_info, ts_zma,
             rct_info, rcts_cnf_fs, run_prefix,
+            thy_info,
+            var_scn_thy_info,
             var_sp1_thy_info, var_sp2_thy_info,
             hs_var_sp1_thy_info, hs_var_sp2_thy_info,
             var_sp1_method_dct, var_sp2_method_dct,
@@ -128,7 +135,7 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
     else:
         vscn_thy_info = thy_inf_dct['var_scnlvl']
         _inf_sep_ene = _singleref_inf_sep_ene(
-            rct_info, vscn_thy_info,
+            rct_info, thy_info, vscn_thy_info,
             rcts_cnf_fs, run_prefix,
             vscn_method_dct, overwrite)
 
@@ -142,6 +149,8 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
 
 def _multiref_inf_sep_ene(hs_info, ref_zma,
                           rct_info, rcts_cnf_fs, run_prefix,
+                          thy_info,
+                          var_scn_thy_info,
                           var_sp1_thy_info, var_sp2_thy_info,
                           hs_var_sp1_thy_info, hs_var_sp2_thy_info,
                           var_sp1_method_dct, var_sp2_method_dct,
@@ -184,15 +193,17 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
             ioprinter.info_message(
                 " - Running high-spin multi reference energy ...")
 
+        ioprinter.info_message(' - Method:', tinfo.string(var_scn_thy_info, thy_inf))
+
         # Calculate the single point energy
         script_str, kwargs = qchem_params(meth_dct)
         cas_kwargs.update(kwargs)
 
-        print('cas kwargs test')
-        print(cas_kwargs)
-    
-        geo = automol.zmat.geometry(ref_zma)
-        sp.run_energy(ref_zma, geo, hs_info, thy_inf,
+        geo = scn_save_fs[-1].file.geometry.read(inf_locs)
+        zma = scn_save_fs[-1].file.zmatrix.read(inf_locs)
+
+        # geo = automol.zmat.geometry(ref_zma)
+        sp.run_energy(zma, geo, hs_info, thy_inf,
                       scn_run_fs, scn_save_fs, inf_locs, run_prefix,
                       script_str, overwrite, highspin=True, **cas_kwargs)
 
@@ -205,8 +216,6 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
                 'energy is needed to evaluate infinite separation energy')
             ene = None
         else:
-            ioprinter.info_message(
-                " - Reading high-spin energy from filesystem...")
             ene = hs_save_fs[-1].file.energy.read(thy_inf[1:4])
 
         if idx == 0:
@@ -215,24 +224,33 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
             hs_mr_ene = ene
 
     # Get the single reference energy for each of the reactant configurations
-    for method_dct, thy_inf in zip(method_dcts, thy_infs):
-        sp_script_str, kwargs = qchem_params(method_dct)
-        reac_ene = _reac_sep_ene(
-            rct_info, thy_inf,
-            rcts_cnf_fs, run_prefix,
-            overwrite, sp_script_str, **kwargs)
+    ioprinter.info_message('')
+    ioprinter.info_message('Running single-point calculations for reactants (need DFT)...')
+    ioprinter.info_message('Method:', tinfo.string(thy_info, var_sp2_thy_info))
+    sp_script_str, kwargs = qchem_params(var_sp2_method_dct)
+    reac_ene = _reac_sep_ene(
+        rct_info, var_sp2_thy_info,
+        rcts_cnf_fs, run_prefix,
+        overwrite, sp_script_str, **kwargs)
 
     # Calculate the infinite seperation energy
     all_enes = (reac_ene, hs_sr_ene, hs_mr_ene)
     if all(ene is not None for ene in all_enes):
         _inf_sep_ene = reac_ene - hs_sr_ene + hs_mr_ene
+        ioprinter.info_message('Infinite Separation Energy [au]: '
+                               f'{_inf_sep_ene}')
     else:
         _inf_sep_ene = None
+
+    print('inf ene components')
+    print('reac', reac_ene)
+    print('hs sr', hs_sr_ene)
+    print('hs mr', hs_mr_ene)
 
     return _inf_sep_ene
 
 
-def _singleref_inf_sep_ene(rct_info, thy_info,
+def _singleref_inf_sep_ene(rct_info, sp_thy_info,
                            rcts_cnf_fs, run_prefix,
                            method_dct, overwrite):
     """ Obtain the electronic energy for a set of reactants at infinite
@@ -247,12 +265,12 @@ def _singleref_inf_sep_ene(rct_info, thy_info,
     """
     script_str, kwargs = qchem_params(method_dct)
     return _reac_sep_ene(
-        rct_info, thy_info,
+        rct_info, sp_thy_info,
         rcts_cnf_fs, run_prefix,
         overwrite, script_str, **kwargs)
 
 
-def _reac_sep_ene(rct_info, thy_info, rcts_cnf_fs, run_prefix,
+def _reac_sep_ene(rct_info, sp_thy_info, rcts_cnf_fs, run_prefix,
                   overwrite, sp_script_str, **kwargs):
     """ Determine the sum of electronic energies of two reactants specified
         at the level of theory described in the theory info object. Will
@@ -264,7 +282,7 @@ def _reac_sep_ene(rct_info, thy_info, rcts_cnf_fs, run_prefix,
     for (run_fs, save_fs, mlocs, mpath), inf in zip(rcts_cnf_fs, rct_info):
 
         # Set the modified thy info
-        mod_thy_info = tinfo.modify_orb_label(thy_info, inf)
+        mod_sp_thy_info = tinfo.modify_orb_label(sp_thy_info, inf)
 
         # Build filesys
         zma_fs = autofile.fs.zmatrix(mpath)
@@ -277,17 +295,16 @@ def _reac_sep_ene(rct_info, thy_info, rcts_cnf_fs, run_prefix,
         sp_save_fs = autofile.fs.single_point(mpath)
 
         # Calculate the save single point energy
-        sp.run_energy(zma, geo, inf, mod_thy_info,
+        sp.run_energy(zma, geo, inf, mod_sp_thy_info,
                       run_fs, save_fs, mlocs, run_prefix,
                       sp_script_str, overwrite,
                       **kwargs)
-        exists = sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4])
+        exists = sp_save_fs[-1].file.energy.exists(mod_sp_thy_info[1:4])
         if not exists:
             ioprinter.warning_message('No ene found')
             ene = None
         else:
-            ioprinter.info_message('Reading energy')
-            ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+            ene = sp_save_fs[-1].file.energy.read(mod_sp_thy_info[1:4])
 
         # Append ene to list
         spc_enes.append(ene)
@@ -303,5 +320,8 @@ def _reac_sep_ene(rct_info, thy_info, rcts_cnf_fs, run_prefix,
                 f'for {inf}: ',
                 'Energy needed to evaluate infinite separation energy')
             inf_ene = None
+
+    if inf_ene is not None:
+        ioprinter.info_message(f'Reactant Energy [au]: {inf_ene}')
 
     return inf_ene
