@@ -60,7 +60,8 @@ def constraint_dictionary(dct):
 def existing_path(label, path):
     """ a
     """
-    info_message(label, 'found and saved previously in', path)
+    # info_message(label, 'found and saved previously in', path)
+    info_message('  -', label, 'found and saved previously in', path)
 
 
 def initial_geom_path(label, path):
