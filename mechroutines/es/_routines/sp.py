@@ -130,6 +130,7 @@ def run_energy(zma, geo, spc_info, thy_info,
         ioprinter.existing_path('Energy', sp_save_path)
         ene = sp_save_fs[-1].file.energy.read(thy_info[1:4])
         ioprinter.energy(ene)
+        ioprinter.info_message('')
 
 
 def run_gradient(zma, geo, spc_info, thy_info,

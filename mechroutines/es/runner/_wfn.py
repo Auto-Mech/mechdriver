@@ -58,7 +58,6 @@ def multireference_calculation_parameters(zma, spc_info, hs_spc_info,
     else:
         _inf = rxn_info if rxn_info is not None else spc_info
         typ = 'ts' if rxn_info is not None else 'spc'
-        print('inf test', _inf, typ)
         num_act_orb, num_act_elc, num_states = active_space(
             _inf, typ=typ)
 
@@ -112,10 +111,6 @@ def active_space(info_obj, typ='ts'):
             num_act_elc = (mul - 1)
             num_states = 1
 
-        print('active test')
-        print(ich, mul)
-        print(num_act_orb, num_act_elc, num_states)
-
         return num_act_orb, num_act_elc, num_states
 
     if typ == 'spc':
@@ -126,16 +121,12 @@ def active_space(info_obj, typ='ts'):
         rct_ichs = rinfo.value(info_obj, 'inchi')[0]
         rct_muls = rinfo.value(info_obj, 'mult')[0]
 
-        print('rct test', rct_ichs, rct_muls)
-
         num_act_orb, num_act_elec, num_states = 0, 0, 1
         for ich, mul in zip(rct_ichs, rct_muls):
             norb, nelec, nstat = _active_space(ich, mul)
             num_act_orb += norb
             num_act_elec += nelec
             num_states *= nstat
-    print('active test2')
-    print(num_act_orb, num_act_elec, num_states)
 
     return num_act_orb, num_act_elec, num_states
 
@@ -148,8 +139,6 @@ def cas_options(zma, spc_info, num_act_elc, num_act_orb, num_states,
     # Set the number of closed and occupied orbitals
     fml = automol.zmat.formula(zma)
     elec_cnt = automol.formula.electron_count(fml)
-
-    print('count test', elec_cnt)
 
     closed_orb = (elec_cnt - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb

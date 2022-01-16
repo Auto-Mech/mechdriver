@@ -75,7 +75,6 @@ def _findts(spc_dct, tsname,
 
     # Determine the TS finding algorithm to use
     search_method = _ts_search_method(spc_dct[tsname])
-    print('search method test', search_method)
 
     # Calculate all required transition state information
     if search_method == 'sadpt':
