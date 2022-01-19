@@ -139,6 +139,11 @@ def frequencies(
                 print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
             miss_data = None
+
+        # Do a TED check
+        if zrxn is not None:
+            vib.ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                    run_prefix, zrxn=zrxn)
     else:
         es_levels = util.freq_es_levels(proc_keyword_dct)
         spc_mod_dct_i = util.generate_spc_model_dct(es_levels, thy_dct)
@@ -154,6 +159,16 @@ def frequencies(
                 print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
             miss_data = None
+
+        pf_filesystems = filesys.models.pf_filesys(
+            spc_dct_i, spc_mod_dct_i,
+            run_prefix, save_prefix,
+            name=spc_name, saddle=saddle)
+
+        # Do a TED check
+        if zrxn is not None:
+            vib.ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                    run_prefix, zrxn=zrxn)
 
     # Package up the frequencies data
     if freqs is not None:
