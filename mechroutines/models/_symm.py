@@ -75,7 +75,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             else:
                 [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
                 geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-            ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo)
+            ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo, grxn)
             int_symm, ext_symm = ret
 
         else:
