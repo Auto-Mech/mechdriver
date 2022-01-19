@@ -268,7 +268,7 @@ def _sorted_cnf_lsts(
             #             ioprinter.info_message('the energy is now found')
             #         else:
             #             ioprinter.info_message('waiting helped nothing')
-        print('found', fnd_cnf_enes_lst, fnd_cnf_locs_lst)
+        # print('found', fnd_cnf_enes_lst, fnd_cnf_locs_lst)
 
     # Sort the cnf locs and cnf enes
     if fnd_cnf_locs_lst:
