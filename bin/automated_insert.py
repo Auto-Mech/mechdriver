@@ -348,6 +348,65 @@ def read_user_filesystem(dct):
     return dct['save_filesystem']
 
 
+def choose_beta_qh_cutoff_distance(geo):
+    rqhs = [x * 0.1 for x in range(24, 38, 2)]
+    double_bnd_atms = []
+    h_atm = None
+    conn_ts_gras = None
+    good_ts_gra = None
+    for rqh in rqhs:
+        if len(double_bnd_atms) == 2:
+            good_ts_gra = conn_ts_gras
+            break
+        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
+        conn_ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
+        ts_gras = automol.graph.connected_components(conn_ts_gras)
+        if len(ts_gras) != 2:
+            continue
+        unconn_bnds = []
+        for ts_gra_i in ts_gras:
+            vals = automol.graph.atom_unsaturated_valences(ts_gra_i)
+            double_bnd_atms_i = [atm for atm in vals if vals[atm] == 1]
+            if len(double_bnd_atms_i) == 2:
+                double_bnd_atms = double_bnd_atms_i
+            if len(double_bnd_atms_i) == 1:
+                h_atm = double_bnd_atms_i[0]
+            unconn_bnds.extend(list(automol.graph.bond_keys(ts_gra_i)))
+    chosen_ts_gra = []
+    chosen_oversaturated_atom = None
+    rqhs = [x * 0.1 for x in range(26, 42, 2)]
+    for rqh in rqhs:
+        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
+        ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
+        ts_gras = automol.graph.connected_components(ts_gras)
+        if len(ts_gras) != 1:
+            continue
+        breaking_bond = None
+        forming_bond = None
+        for ts_gra_i in ts_gras:
+            oversaturated_atoms = []
+            conn_bnds = automol.graph.bond_keys(ts_gra_i)
+            breaking_bond_lst = set(conn_bnds) - set(unconn_bnds)
+            for bnd in breaking_bond_lst:
+                if h_atm in bnd and any(atmi in double_bnd_atms for atmi in bnd):
+                    breaking_bond = bnd
+                    forming_bond = frozenset(double_bnd_atms)
+            if breaking_bond is not None:
+                chosen_ts_gra = automol.graph.set_bond_orders(
+                    good_ts_gra, {forming_bond: 2})
+                chosen_ts_gra = automol.graph.add_bonds(
+                    chosen_ts_gra, [breaking_bond])
+                vals = automol.graph.atom_unsaturated_valences(chosen_ts_gra, bond_order=True)
+                oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
+                if len(oversaturated_atoms) == 1:
+                    chosen_oversaturated_atom = oversaturated_atoms[0]
+                    break
+    if chosen_oversaturated_atom is None:
+        print('could not figure out which atom is being transfered')
+        sys.exit()
+    return chosen_ts_gra, breaking_bond, forming_bond
+
+
 def choose_beta_cutoff_distance(geo):
     rqqs = [x * 0.1 for x in range(28, 48, 2)]
     double_bnd_atms = []
@@ -364,7 +423,6 @@ def choose_beta_cutoff_distance(geo):
             vals = automol.graph.atom_unsaturated_valences(ts_gra_i)
             double_bnd_atms = [atm for atm in vals if vals[atm] == 1]
             unconn_bnds.extend(list(automol.graph.bond_keys(ts_gra_i)))
-            print('bond keys', unconn_bnds)
     chosen_ts_gra = []
     chosen_oversaturated_atom = None
     rqqs = [x * 0.1 for x in range(32, 48, 2)]
@@ -390,10 +448,11 @@ def choose_beta_cutoff_distance(geo):
                 chosen_oversaturated_atom = oversaturated_atoms[0]
                 break
     if chosen_oversaturated_atom is None:
-        print('could not figure out which atom is being transfered')
-        sys.exit()
+        chosen_ts_gra, breaking_bond, forming_bond = choose_beta_qh_cutoff_distance(geo)
+        if breaking_bond is None:
+            print('could not figure out which atom is being transfered')
+            sys.exit()
     return chosen_ts_gra, breaking_bond, forming_bond
-
 
 
 def choose_heavy_cutoff_distance(geo):
@@ -566,8 +625,8 @@ def all_reaction_graphs(
             forw_bnd_ord_dct = {breaking_bond: 0.9, breaking_bond2: 0.9, forming_bond: 0.1}
             back_bnd_ord_dct = {breaking_bond: 0.1, breaking_bond2: 0.1, forming_bond: 0.9}
     else:
-        forw_bnd_ord_dct = {breaking_bond: 0.9}
-        back_bnd_ord_dct = {breaking_bond: 0.1}
+        forw_bnd_ord_dct = {breaking_bond: 0.9, forming_bond: 1}
+        back_bnd_ord_dct = {breaking_bond: 0.1, forming_bond: 1}
     print(forw_bnd_ord_dct)
     print(back_bnd_ord_dct)
     forward_gra = automol.graph.set_bond_orders(ts_gra, forw_bnd_ord_dct)
@@ -577,6 +636,8 @@ def all_reaction_graphs(
     reactant_gras = automol.graph.connected_components(reactant_gras)
     product_gras = automol.graph.without_dummy_bonds(
         automol.graph.without_fractional_bonds(backward_gra))
+    print(automol.graph.string(forward_gra))
+    print(automol.graph.string(backward_gra))
     product_gras = automol.graph.connected_components(product_gras)
     ts_gras = [forward_gra, backward_gra]
     rxn_gras = [reactant_gras, product_gras]
