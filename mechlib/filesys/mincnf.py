@@ -226,7 +226,8 @@ def _sorted_cnf_lsts(
                 )
         locs_enes_dct_lst = execute_function_in_parallel(
             _parallel_get_sort_energy_parameters, cnf_locs_lst,
-            args, nprocs=4)
+            args, nprocs=1)
+            # args, nprocs=4)
         first_ene = None
         for locs_enes_dct in locs_enes_dct_lst:
             for locs in locs_enes_dct:
@@ -268,7 +269,7 @@ def _sorted_cnf_lsts(
             #             ioprinter.info_message('the energy is now found')
             #         else:
             #             ioprinter.info_message('waiting helped nothing')
-        # print('found', fnd_cnf_enes_lst, fnd_cnf_locs_lst)
+            # print('found', fnd_cnf_enes_lst, fnd_cnf_locs_lst)
 
     # Sort the cnf locs and cnf enes
     if fnd_cnf_locs_lst:
@@ -290,6 +291,7 @@ def _wait_for_energy_to_be_saved(cnf_save_fs, locs, sp_fs, sp_info):
         #     f'No energy saved in single point directory for {cnf_path}')
         geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
             locs)
+        geo_path = cnf_save_fs[-1].file.geometry_info.path(locs)
         geo_end_time = geo_inf_obj.utc_end_time
         current_time = autofile.schema.utc_time()
         _time = (current_time - geo_end_time).total_seconds()

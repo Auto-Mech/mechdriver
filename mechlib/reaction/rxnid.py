@@ -88,14 +88,16 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
         for i, path in enumerate(prd_paths):
             print(f'     - product {i+1}: {path}')
         zrxn_objs = automol.reac.rxn_objs_from_geometry(
-            rct_geos, prd_geos, indexing='zma', stereo=True)
+            rct_geos, prd_geos, indexing='zma', stereo=False)
+            # rct_geos, prd_geos, indexing='zma', stereo=True)
     else:
         print('    Reaction ID from geometries from input InChIs')
         rxn_ichs = rinfo.value(rxn_info, 'inchi')
         rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
         zrxn_objs = automol.reac.rxn_objs_from_inchi(
-            rct_ichs, prd_ichs, indexing='zma', stereo=True)
+            rct_ichs, prd_ichs, indexing='zma', stereo=False)
+            # rct_ichs, prd_ichs, indexing='zma', stereo=True)
 
     # Loop over the found reaction objects
     if zrxn_objs is not None:
