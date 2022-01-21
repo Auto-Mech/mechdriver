@@ -151,7 +151,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         chnl_idx, (reacs, prods) = rxn
 
         ioprinter.obj('vspace')
-        ioprinter.reading('PES electrion structure data')
+        ioprinter.reading('PES electronic structure data')
         ioprinter.channel(chnl_idx+1, reacs, prods)
 
         # Get the names for all of the configurations of the TS
