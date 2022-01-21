@@ -57,7 +57,12 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
     """ Create various filesystems needed
     """
 
-    pf_filesystems = {}
+    pf_filesystems = {
+        'harm': None,
+        'symm': None,
+        'tors': None,
+        'vpt2': None,
+    }
     cnf_range = 'min'
     if spc_locs is not None:
         cnf_range = 'specified'
@@ -65,30 +70,28 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
         spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
         run_prefix, save_prefix, saddle, name=name,
         cnf_range=cnf_range, spc_locs=spc_locs)
-    if 'mod' in spc_model_dct_i['symm']:
-        pf_filesystems['symm'] = set_model_filesys(
-            spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name,
-            cnf_range=cnf_range, spc_locs=spc_locs)
-    else:
-        pf_filesystems['symm'] = None
-    if spc_model_dct_i['tors']['mod'] != 'rigid':
-        scan_locs = get_matching_tors_locs(
-            spc_model_dct_i, spc_dct_i, pf_filesystems['harm'],
-            run_prefix, save_prefix, saddle=False)
-        pf_filesystems['tors'] = set_model_filesys(
-            spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name,
-            cnf_range='specified', spc_locs=scan_locs)
-    else:
-        pf_filesystems['tors'] = None
-    if spc_model_dct_i['vib']['mod'] == 'vpt2':
-        pf_filesystems['vpt2'] = set_model_filesys(
-            spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name,
-            cnf_range=cnf_range, spc_locs=spc_locs)
-    else:
-        pf_filesystems['vpt2'] = None
+    if 'symm' in spc_model_dct_i:
+        if 'mod' in spc_model_dct_i['symm']:
+            pf_filesystems['symm'] = set_model_filesys(
+                spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
+                run_prefix, save_prefix, saddle, name=name,
+                cnf_range=cnf_range, spc_locs=spc_locs)
+    if 'tors' in spc_model_dct_i:
+        if 'mod' in spc_model_dct_i['tors']:
+            if spc_model_dct_i['tors']['mod'] != 'rigid':
+                scan_locs = get_matching_tors_locs(
+                    spc_model_dct_i, spc_dct_i, pf_filesystems['harm'],
+                    run_prefix, save_prefix, saddle=False)
+                pf_filesystems['tors'] = set_model_filesys(
+                    spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
+                    run_prefix, save_prefix, saddle, name=name,
+                    cnf_range='specified', spc_locs=scan_locs)
+    if 'vib' in spc_model_dct_i:
+        if spc_model_dct_i['vib']['mod'] == 'vpt2':
+            pf_filesystems['vpt2'] = set_model_filesys(
+                spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
+                run_prefix, save_prefix, saddle, name=name,
+                cnf_range=cnf_range, spc_locs=spc_locs)
 
     # Add the prefixes for now
     pf_filesystems['run_prefix'] = run_prefix
