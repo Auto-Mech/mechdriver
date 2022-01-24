@@ -45,6 +45,8 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
         # unsafe without checking if zrxn id matches what is in save...
         print('    Requested Reidentification regardless of what is in SAVE')
 
+    print('status test', status)
+
     # Try and identify reaction if not rxn obj found
     if status == 'MISSING':
         if id_missing:

@@ -186,6 +186,7 @@ def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
         currently just checks if there any non-empty potentials
     """
 
+    print(spc_mod_dct_i)
     mod_thy_info = spc_mod_dct_i['tors']['geolvl'][1][1]
 
     saddle = 'ts_' in spc_name
