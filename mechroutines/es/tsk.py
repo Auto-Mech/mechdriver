@@ -179,7 +179,7 @@ def conformer_tsk(job, spc_dct, spc_name,
 
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
-
+    nprocs = 1
     # Modify the theory
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
@@ -206,7 +206,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         user_conf_ids = spc_dct_i.get('conf_id')
         if user_conf_ids is None:
             ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-                ini_cnf_save_fs, mod_ini_thy_info)
+                ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
             ini_locs, ini_min_cnf_path = ini_loc_info
         else:
             print(f'Using user specified conformer IDs: {user_conf_ids}')
@@ -273,7 +273,7 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Build the ini zma filesys
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
+            ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
         ini_min_locs, ini_min_cnf_path = ini_loc_info
         ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
@@ -321,13 +321,13 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info,
-            cnf_range='all')
+            cnf_range='all', nprocs=nprocs)
 
         ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info,
             cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
             hbond_cutoffs=hbond_cutoffs,
-            print_enes=True)
+            print_enes=True, nprocs=nprocs)
 
         # Truncate the list of the ini confs
         uni_rng_locs_lst, uni_cnf_locs_lst = conformer.unique_fs_ring_confs(
@@ -374,7 +374,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info,
             cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
-            hbond_cutoffs=hbond_cutoffs)
+            hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
         for locs in rng_cnf_locs_lst:
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             ioprinter.geometry(geo)
@@ -392,7 +392,7 @@ def conformer_tsk(job, spc_dct, spc_name,
                 ini_cnf_save_fs, mod_ini_thy_info,
                 cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
                 hbond_cutoffs=hbond_cutoffs,
-                print_enes=True)
+                print_enes=True, nprocs=nprocs)
         else:
             print(f'Using user specified conformer IDs: {user_conf_ids}')
             ini_rng_cnf_locs_lst = (user_conf_ids,)
@@ -727,7 +727,8 @@ def hr_tsk(job, spc_dct, spc_name,
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
     tors_model = es_keyword_dct['tors_model']
-
+    # nprocs = es_keyword_dct['nprocs']
+    nprocs = 1
     # Modify the theory
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
@@ -759,14 +760,14 @@ def hr_tsk(job, spc_dct, spc_name,
             ini_cnf_save_fs, mod_ini_thy_info,
             cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
             hbond_cutoffs=hbond_cutoffs,
-            print_enes=True)
+            print_enes=True, nprocs=nprocs)
     else:
         ini_min_locs_lst = (user_conf_ids,)
         ini_path_lst = (ini_cnf_save_fs[-1].path(user_conf_ids),)
 
     all_run_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
-        cnf_range='all')
+        cnf_range='all', nprocs=nprocs)
     ini_to_run_locs_dct = filesys.mincnf.fs_confs_dict(
         cnf_save_fs, all_run_cnf_locs_lst,
         ini_cnf_save_fs, ini_min_locs_lst)

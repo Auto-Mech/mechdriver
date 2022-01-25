@@ -74,13 +74,11 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
 
     # Parse out the dcts from the strings
     spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
-
     dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 
     # Merge all of the species inputs into a dictionary
     mod_spc_dct, glob_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct)
-
     # Assess if the species.dat information is valid
     for name, dct in mod_spc_dct.items():
         # last comment breaks since TS only partially built at this stage
