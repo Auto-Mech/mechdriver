@@ -20,7 +20,6 @@ def run_tsk(tsk, obj_queue,
 
     # Print the head of the task
     ioprinter.output_task_header(tsk)
-    ioprinter.obj('line_dash')
     ioprinter.output_keyword_list(proc_keyword_dct, thy_dct)
 
     # Setup csv data dictionary for specific task
@@ -36,17 +35,16 @@ def run_tsk(tsk, obj_queue,
     obj_queue = util.remove_unstable(
         obj_queue, spc_dct, thy_dct, spc_mod_dct_i,
         proc_keyword_dct, save_prefix)
-    obj_queue, ts_miss_data = util.remove_ts_missing(
-        obj_queue, spc_dct)
-    obj_queue = util.remove_radrad_ts(
-        obj_queue, spc_dct)
+    # obj_queue, ts_miss_data = util.remove_ts_missing(
+    #     obj_queue, spc_dct)
+    # obj_queue = util.remove_radrad_ts(
+    #     obj_queue, spc_dct)
 
     # Set up lists for reporting missing data
     miss_data = ()
-
+    ts_miss_data = ()
     # Initialize dictionaries to carry strings for writing
     disp_dct = {}
-
     # Begin the loop over the species
     for spc_name in obj_queue:
 

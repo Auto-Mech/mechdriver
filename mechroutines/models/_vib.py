@@ -30,7 +30,6 @@ def full_vib_analysis(
 
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
-
     # Squash the rotor potentials as necessary
     if rotors is not None:
         if typ.squash_tors_pot(spc_mod_dct_i):

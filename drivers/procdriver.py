@@ -29,7 +29,6 @@ def run(pes_rlst, spc_rlst,
     # Build the spc and ts queues
     spc_queue, ts_queue = (), ()
     run_rlst = parser.rlst.combine(pes_rlst, spc_rlst)
-
     ts_queue = ()
     for (fml, pes_idx, subpes_idx), run_lst_i in run_rlst.items():
         ioprinter.runlst((fml, pes_idx, subpes_idx), run_lst_i)
@@ -53,7 +52,6 @@ def run(pes_rlst, spc_rlst,
     # Remove species from queue
     spc_queue = tuple(i for n, i in enumerate(spc_queue)
                       if i not in spc_queue[:n])
-
     # Set master missing data list to write out at the end of run
     missing_data = ()
 

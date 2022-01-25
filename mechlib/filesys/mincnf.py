@@ -46,7 +46,7 @@ def min_energy_conformer_locators(
 def conformer_locators(
         cnf_save_fs, mod_thy_info,
         cnf_range='min', sort_info_lst=None, print_enes=False,
-        hbond_cutoffs=None):
+        hbond_cutoffs=None, nprocs=1):
     """ Obtain the (ring-id, tors-id) filesystem locator pair and
         path for all conformers meeting
 
@@ -76,7 +76,8 @@ def conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range='min',
             only_hbnds=True, only_nonhbnds=True,
             freq_info=None, sp_info=None, sort_prop_dct=None,
-            print_enes=False, already_counted_locs_lst=(), hbond_cutoffs=None):
+            print_enes=False, already_counted_locs_lst=(), hbond_cutoffs=None,
+            nprocs=1):
 
         fin_locs_lst, fin_paths_lst = (), ()
 
@@ -85,7 +86,7 @@ def conformer_locators(
             cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
                 cnf_locs_lst, cnf_save_fs, mod_thy_info,
                 freq_info=freq_info, sp_info=sp_info,
-                sort_prop_dct=sort_prop_dct)
+                sort_prop_dct=sort_prop_dct, nprocs=nprocs)
             if only_hbnds:
                 cnf_locs_lst, cnf_enes_lst = _remove_nonhbonded_structures(
                     cnf_save_fs, cnf_locs_lst, cnf_enes_lst,
@@ -151,7 +152,8 @@ def conformer_locators(
             sort_prop_dct=sort_prop_dct,
             print_enes=print_enes,
             already_counted_locs_lst=union_locs_lst,
-            hbond_cutoffs=hbond_cutoffs)
+            hbond_cutoffs=hbond_cutoffs,
+            nprocs=nprocs)
         union_locs_lst += tmp_locs_lst
         union_paths_lst += tmp_paths_lst
     if cnf_range_nohb is not None:
@@ -162,7 +164,8 @@ def conformer_locators(
             sort_prop_dct=sort_prop_dct,
             print_enes=print_enes,
             already_counted_locs_lst=union_locs_lst,
-            hbond_cutoffs=hbond_cutoffs)
+            hbond_cutoffs=hbond_cutoffs,
+            nprocs=nprocs)
         union_locs_lst += tmp_locs_lst
         union_paths_lst += tmp_paths_lst
 
@@ -174,7 +177,8 @@ def conformer_locators(
             sort_prop_dct=sort_prop_dct,
             print_enes=print_enes,
             already_counted_locs_lst=union_locs_lst,
-            hbond_cutoffs=hbond_cutoffs)
+            hbond_cutoffs=hbond_cutoffs,
+            nprocs=nprocs)
         union_locs_lst += tmp_locs_lst
         union_paths_lst += tmp_paths_lst
 
@@ -183,7 +187,7 @@ def conformer_locators(
 
 def _sorted_cnf_lsts(
         cnf_locs_lst, cnf_save_fs, mod_thy_info,
-        freq_info=None, sp_info=None, sort_prop_dct=None):
+        freq_info=None, sp_info=None, sort_prop_dct=None, nprocs=1):
     """ Sort the list of conformer locators in the save filesystem
         using the energies from the specified electronic structure method.
         The conformers are sorted such that the energies are sorted
@@ -226,9 +230,9 @@ def _sorted_cnf_lsts(
                 )
         locs_enes_dct_lst = execute_function_in_parallel(
             _parallel_get_sort_energy_parameters, cnf_locs_lst,
-            args, nprocs=1)
-            # args, nprocs=4)
+            args, nprocs=nprocs)
         first_ene = None
+        print('locs enes dct', locs_enes_dct_lst)
         for locs_enes_dct in locs_enes_dct_lst:
             for locs in locs_enes_dct:
                 _, locs_first_ene = locs_enes_dct[locs]
@@ -763,10 +767,31 @@ def get_freq_location(cnf_fs, geo, freq_thy_locs, cnf_locs):
     match_dct = fs_confs_dict(
         freq_cnf_fs, freq_locs, cnf_fs, [cnf_locs])
     if match_dct[tuple(cnf_locs)] is None:
+
         match_freqs_locs = None
-        print(
-            'No freqs found that match ', cnf_fs[-1].path(cnf_locs),
-            'in the freq location', freq_cnf_fs[0].path())
+        # Check TS filesystem
+        ts_path_prefix = autofile.fs.path_prefix(
+            cnf_fs[-1].path(cnf_locs), [
+                'THEORY', 'TRANSITION STATE', 'CONFORMER'])
+        ts_cnf_fs = autofile.fs.manager(
+            ts_path_prefix, [['THEORY', freq_thy_locs]], 'TRANSITION STATE')
+        for ts_locs in ts_cnf_fs[-1].existing():
+            ts_path = ts_cnf_fs[-1].path(ts_locs)
+            ts_freq_cnf_fs = autofile.fs.conformer(ts_path)
+            freq_locs = []
+            for freq_cnf_locs in ts_freq_cnf_fs[-1].existing():
+                if ts_freq_cnf_fs[-1].file.hessian.exists(freq_cnf_locs):
+                    freq_locs.append(freq_cnf_locs)
+            match_dct = fs_confs_dict(
+                ts_freq_cnf_fs, freq_locs, cnf_fs, [cnf_locs])
+            if match_dct[tuple(cnf_locs)] is not None:
+                match_freqs_locs = tuple(match_dct[tuple(cnf_locs)])
+                freq_cnf_fs = ts_freq_cnf_fs
+                break
+        if match_freqs_locs is None:
+            print(
+                'No freqs found that match ', cnf_fs[-1].path(cnf_locs),
+                'in the freq location', freq_cnf_fs[0].path())
     else:
         match_freqs_locs = tuple(match_dct[tuple(cnf_locs)])
     return freq_cnf_fs, match_freqs_locs
