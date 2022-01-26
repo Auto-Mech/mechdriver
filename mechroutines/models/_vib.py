@@ -154,7 +154,7 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
             script_str, vib_path, [geo], [[]], [hess])
 
         # Obtain the displacements
-        harm_disps = autorun.projrot.displacements(
+        norm_coord_str, _ = autorun.projrot.displacements(
             script_str, vib_path, [geo], [[]], [hess])
 
         # Calculate the zpve
@@ -171,7 +171,7 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
         else:
             imag = None
 
-        ret = (freqs, imag, zpe, harm_disps)
+        ret = (freqs, imag, zpe, norm_coord_str)
     else:
         ret = None
 

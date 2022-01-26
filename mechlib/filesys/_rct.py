@@ -27,7 +27,7 @@ def rcts_cnf_fs(
 
         loc_info = min_energy_conformer_locators(
             cnf_save_fs, mod_thy_info,
-            hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
+            hbond_cutoffs=hbond_cutoffs)
         min_cnf_locs, min_cnf_path = loc_info
         # Create run fs if that directory has been deleted to run the jobs
         if any(min_cnf_locs):

@@ -106,10 +106,10 @@ def _check_imaginary(geo, hess, hess_ret, run_fs):
     # Mode for now set the imaginary frequency check to -100:
     # Should decrease once freq projector functions properly
     if imag_freq:
-        ioprinter.warning_message(f'Imaginary mode found: {imag_freq}')
-        inf_obj, _, out_str = hess_ret
-        prog = inf_obj.prog
-        norm_coords = elstruct.reader.normal_coordinates(prog, out_str)
+        _, norm_coords = autorun.projrot.displacements(
+           autorun.SCRIPT_DCT['projrot'],
+           run_fs[-1].path([elstruct.Job.HESSIAN]),
+           [geo], [[]], [hess])
     else:
         norm_coords = None
 

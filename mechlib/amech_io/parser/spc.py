@@ -288,7 +288,7 @@ def ts_dct_from_proctsks(pes_idx, proc_tsk_lst, rxn_lst, spc_mod_dct_i,
                 thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
             else:
                 ini_thy_info = tinfo.from_dct(thy_dct.get(
-                    proc_keyword_dct['proplvl']))
+                    proc_keyword_dct['geolvl']))
                 thy_info = tinfo.from_dct(thy_dct.get(
                     proc_keyword_dct['proplvl']))
             break

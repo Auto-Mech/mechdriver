@@ -181,12 +181,13 @@ def frequencies(
 
 
 def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
-             run_prefix, save_prefix):
+             mod_thy_info, run_prefix, save_prefix):
     """ get the torsion potentials
         currently just checks if there any non-empty potentials
     """
 
-    mod_thy_info = spc_mod_dct_i['tors']['geolvl'][1][1]
+    if spc_mod_dct_i is not None:
+        mod_thy_info = spc_mod_dct_i['tors']['geolvl'][1][1]
 
     saddle = 'ts_' in spc_name
     pf_filesystems = filesys.models.pf_filesys(
@@ -214,7 +215,7 @@ def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
     else:
         miss_data = None
 
-    return miss_data
+    return None, miss_data
 
 
 def coeffs(spc_name, spc_dct, model_dct, spc_array):

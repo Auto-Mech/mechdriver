@@ -82,7 +82,7 @@ def run_tsk(tsk, obj_queue,
                 label = spc_name + ':' + '_'.join(locs)
                 print(label)
 
-                if 'freq' in tsk and not _skip_freqs(spc_name, spc_dct_i):
+                if 'freq' in tsk and not _skip(spc_name, spc_dct_i):
                     _dat, miss_data_i = collect.frequencies(
                         spc_name, spc_dct_i, spc_mod_dct_i,
                         proc_keyword_dct, thy_dct,
@@ -115,10 +115,10 @@ def run_tsk(tsk, obj_queue,
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
 
-                elif 'torsion' in tsk:
+                elif 'torsion' in tsk and not _skip(spc_name, spc_dct_i):
                     csv_data_i, miss_data_i = collect.torsions(
                         spc_name, spc_dct_i, spc_mod_dct_i,
-                        run_prefix, save_prefix)
+                        mod_thy_info, run_prefix, save_prefix)
 
                 elif 'ene' in tsk:
                     csv_data_i, miss_data_i = collect.energy(
@@ -188,7 +188,7 @@ def run_tsk(tsk, obj_queue,
 
 
 # Task manager/skipper functions
-def _skip_freqs(spc_name, spc_dct_i):
+def _skip(spc_name, spc_dct_i):
     """ check if frequencies should be skipped
     """
     skip = False
