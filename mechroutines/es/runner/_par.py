@@ -214,9 +214,11 @@ def _psi4(method_dct, prog, job=None):
     """
 
     # Job unneeded for now
-    _, _ = method_dct, job
     method = method_dct.get('method')
-    memory = method_dct.get('mem', 20)
+    nprocs = method_dct.get('nprocs', 8)
+    memory = method_dct.get('mem', 10)
+    nprocs = nprocs if nprocs is not None else 8
+    memory = memory if memory is not None else 10
 
     # Build the submission script string
     script_str = SCRIPT_DCT[prog]

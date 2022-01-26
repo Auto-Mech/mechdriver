@@ -74,13 +74,11 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
 
     # Parse out the dcts from the strings
     spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
-
     dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 
     # Merge all of the species inputs into a dictionary
     mod_spc_dct, glob_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct)
-
     # Assess if the species.dat information is valid
     for name, dct in mod_spc_dct.items():
         # last comment breaks since TS only partially built at this stage
@@ -290,7 +288,7 @@ def ts_dct_from_proctsks(pes_idx, proc_tsk_lst, rxn_lst, spc_mod_dct_i,
                 thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
             else:
                 ini_thy_info = tinfo.from_dct(thy_dct.get(
-                    proc_keyword_dct['proplvl']))
+                    proc_keyword_dct['geolvl']))
                 thy_info = tinfo.from_dct(thy_dct.get(
                     proc_keyword_dct['proplvl']))
             break

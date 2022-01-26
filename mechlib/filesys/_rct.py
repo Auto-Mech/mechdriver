@@ -9,7 +9,7 @@ from mechlib.filesys.mincnf import min_energy_conformer_locators
 
 def rcts_cnf_fs(
         rct_infos, thy_info, run_prefix, save_prefix,
-        hbond_cutoffs=None):
+        hbond_cutoffs=None, nprocs=1):
     """ set reactant filesystem stuff
     """
 

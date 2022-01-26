@@ -179,13 +179,12 @@ def make_hr_strings(rotors):
 
     # Convert the rotor objects indexing to be in geoms
     geo, rotors = automol.rotor.relabel_for_geometry(rotors)
-    # numrotors = len(rotors)
 
     for _, rotor in enumerate(rotors):
         # multirotor = bool(len(rotor) > 1)
         # mdhr_idx = ridx if multirotor else None
         for _, torsion in enumerate(rotor):
-
+            
             # Write the rotor strings
             hr_str, _, flux_str, prot_str = _tors_strs(torsion, geo)
             mess_allr_str += hr_str

@@ -6,6 +6,7 @@ import os
 import autorun
 import automol.pot
 import automol.geom
+import autofile.fs
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io._path import job_path
@@ -29,7 +30,6 @@ def full_vib_analysis(
 
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
-
     # Squash the rotor potentials as necessary
     if rotors is not None:
         if typ.squash_tors_pot(spc_mod_dct_i):
@@ -154,7 +154,7 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
             script_str, vib_path, [geo], [[]], [hess])
 
         # Obtain the displacements
-        harm_disps = autorun.projrot.displacements(
+        norm_coord_str, _ = autorun.projrot.displacements(
             script_str, vib_path, [geo], [[]], [hess])
 
         # Calculate the zpve
@@ -171,7 +171,7 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
         else:
             imag = None
 
-        ret = (freqs, imag, zpe, harm_disps)
+        ret = (freqs, imag, zpe, norm_coord_str)
     else:
         ret = None
 
@@ -297,3 +297,43 @@ def scale_frequencies(freqs, tors_zpe,
         tot_zpe = scaled_zpe + tors_zpe
 
     return scaled_freqs, tot_zpe
+
+
+def ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+        run_prefix, zrxn=None):
+    """ process to get freq
+    """
+    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
+
+    if min_cnf_locs is not None:
+        geo_exists = cnf_fs[-1].file.geometry.exists(min_cnf_locs)
+        hess_exists = cnf_fs[-1].file.hessian.exists(min_cnf_locs)
+
+        if not geo_exists:
+            ioprinter.error_message(
+                'No Reference geometry for harmonic frequencies at path',
+                cnf_fs[-1].file.hessian.path(min_cnf_locs))
+        if not hess_exists:
+            ioprinter.error_message(
+                'No Hessian available for harmonic frequencies at path',
+                cnf_fs[-1].file.hessian.path(min_cnf_locs))
+    else:
+        geo_exists, hess_exists = False, False
+
+    if geo_exists and hess_exists:
+
+        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+        hess = cnf_fs[-1].file.hessian.read(min_cnf_locs)
+
+        geo_path = cnf_fs[-1].path(min_cnf_locs)
+        zma_fs = autofile.fs.zmatrix(geo_path)
+        zma = zma_fs[-1].file.zmatrix.read((0,))
+
+        fml_str = automol.geom.formula_string(geo)
+        ted_path = job_path(run_prefix, 'INTDER', 'TED', fml_str)
+
+        ioprinter.running(
+            f'Reaction Coordinate Check with INTDER at {ted_path}')
+        script_str = autorun.SCRIPT_DCT['intder']
+        _ = autorun.intder.reaction_coordinate_check_idxs(
+            script_str, ted_path, geo, zma, hess, zrxn)

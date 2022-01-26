@@ -130,6 +130,7 @@ def run_energy(zma, geo, spc_info, thy_info,
         ioprinter.existing_path('Energy', sp_save_path)
         ene = sp_save_fs[-1].file.energy.read(thy_info[1:4])
         ioprinter.energy(ene)
+        ioprinter.info_message('')
 
 
 def run_gradient(zma, geo, spc_info, thy_info,
@@ -355,8 +356,19 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 else:
                     too_many_imags = False
 
-                if too_many_imags:
-                    ioprinter.info_message('Too many negative freqs', hfrqs)
+                # If requested, determine if there are frequencies below thrsh
+                correct_low_vals = False
+                if correct_low_vals:
+                    hfrqs = elstruct.reader.harmonic_frequencies(
+                        inf_obj.prog, out_str)
+                    reals = tuple(x for x in hfrqs if x > 0.0)
+                    has_low_freqs = any(x for x in reals if x < 30.0)
+                else:
+                    has_low_freqs = False
+
+                if too_many_imags or has_low_freqs:
+                    ioprinter.info_message(
+                        'Too many negative freqs or low freqs', hfrqs)
                     rinf_obj = run_fs[-1].file.info.read(
                         [elstruct.Job.HESSIAN])
                     rinf_obj.status = autofile.schema.RunStatus.FAILURE

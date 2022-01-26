@@ -18,30 +18,35 @@ from mechlib.amech_io import printer as ioprinter
 
 
 def pf_rngs_filesys(spc_dct_i, spc_model_dct_i,
-                    run_prefix, save_prefix, saddle, name=None):
+                    run_prefix, save_prefix, saddle, name=None,
+                    nprocs=1):
     """ Create various filesystems needed
     """
 
     pf_filesystems = {}
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
-        run_prefix, save_prefix, saddle, name=name, cnf_range='r100')
+        run_prefix, save_prefix, saddle, name=name, cnf_range='r100',
+        nprocs=nprocs)
     if 'mod' in spc_model_dct_i['symm']:
         pf_filesystems['symm'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name, cnf_range='r100')
+            run_prefix, save_prefix, saddle, name=name, cnf_range='r100',
+            nprocs=nprocs)
     else:
         pf_filesystems['symm'] = None
     if spc_model_dct_i['tors']['mod'] != 'rigid':
         pf_filesystems['tors'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name, cnf_range='r100')
+            run_prefix, save_prefix, saddle, name=name, cnf_range='r100',
+            nprocs=nprocs)
     else:
         pf_filesystems['tors'] = None
     if spc_model_dct_i['vib']['mod'] == 'vpt2':
         pf_filesystems['vpt2'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name, cnf_range='r100')
+            run_prefix, save_prefix, saddle, name=name, cnf_range='r100',
+            nprocs=nprocs)
     else:
         pf_filesystems['vpt2'] = None
 
@@ -53,40 +58,47 @@ def pf_rngs_filesys(spc_dct_i, spc_model_dct_i,
 
 
 def pf_filesys(spc_dct_i, spc_model_dct_i,
-               run_prefix, save_prefix, saddle, name=None, spc_locs=None):
+               run_prefix, save_prefix, saddle, name=None, spc_locs=None,
+               nprocs=1):
     """ Create various filesystems needed
     """
 
-    pf_filesystems = {}
+    pf_filesystems = {
+        'harm': None,
+        'symm': None,
+        'tors': None,
+        'vpt2': None,
+    }
     cnf_range = 'min'
     if spc_locs is not None:
         cnf_range = 'specified'
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
         run_prefix, save_prefix, saddle, name=name,
-        cnf_range=cnf_range, spc_locs=spc_locs)
-    if 'mod' in spc_model_dct_i['symm']:
-        pf_filesystems['symm'] = set_model_filesys(
-            spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name,
-            cnf_range=cnf_range, spc_locs=spc_locs)
-    else:
-        pf_filesystems['symm'] = None
-    if spc_model_dct_i['tors']['mod'] != 'rigid':
-        scan_locs = get_matching_tors_locs(
-            spc_model_dct_i, spc_dct_i, pf_filesystems['harm'],
-            run_prefix, save_prefix, saddle=False)
-        pf_filesystems['tors'] = set_model_filesys(
-            spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name,
-            cnf_range='specified', spc_locs=scan_locs)
-    else:
-        pf_filesystems['tors'] = None
-    if spc_model_dct_i['vib']['mod'] == 'vpt2':
-        pf_filesystems['vpt2'] = set_model_filesys(
-            spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name,
-            cnf_range=cnf_range, spc_locs=spc_locs)
+        cnf_range=cnf_range, spc_locs=spc_locs,
+        nprocs=nprocs)
+    if 'symm' in spc_model_dct_i:
+        if 'mod' in spc_model_dct_i['symm']:
+            pf_filesystems['symm'] = set_model_filesys(
+                spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
+                run_prefix, save_prefix, saddle, name=name,
+                cnf_range=cnf_range, spc_locs=spc_locs)
+    if 'tors' in spc_model_dct_i:
+        if 'mod' in spc_model_dct_i['tors']:
+            if spc_model_dct_i['tors']['mod'] != 'rigid':
+                scan_locs = get_matching_tors_locs(
+                    spc_model_dct_i, spc_dct_i, pf_filesystems['harm'],
+                    run_prefix, save_prefix, saddle=False)
+                pf_filesystems['tors'] = set_model_filesys(
+                    spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
+                    run_prefix, save_prefix, saddle, name=name,
+                    cnf_range='specified', spc_locs=scan_locs)
+    if 'vib' in spc_model_dct_i:
+        if spc_model_dct_i['vib']['mod'] == 'vpt2':
+            pf_filesystems['vpt2'] = set_model_filesys(
+                spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
+                run_prefix, save_prefix, saddle, name=name,
+                cnf_range=cnf_range, spc_locs=spc_locs)
     else:
         pf_filesystems['vpt2'] = None
 
@@ -99,7 +111,7 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
 
 def set_model_filesys(spc_dct_i, level,
                       run_prefix, save_prefix, saddle, name=None,
-                      cnf_range='min', spc_locs=None):
+                      cnf_range='min', spc_locs=None, nprocs=1):
     """ Gets filesystem objects for reading many calculations
     """
 
@@ -130,7 +142,8 @@ def set_model_filesys(spc_dct_i, level,
     else:
         min_rngs_locs_lst, min_rngs_path_lst = conformer_locators(
             cnf_save_fs, levelp,
-            cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
+            cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs,
+            nprocs=nprocs)
         for min_locs in min_rngs_locs_lst:
             cnf_run_fs[-1].create(min_locs)
         min_rngs_locs = min_rngs_locs_lst[0]
@@ -209,7 +222,8 @@ def make_run_path(pf_filesystems, choice):
 def get_spc_locs_lst(
         spc_dct_i, spc_model_dct_i,
         run_prefix, save_prefix, saddle,
-        cnf_range='min', sort_info_lst=None, name=None):
+        cnf_range='min', sort_info_lst=None, name=None,
+        nprocs=1):
     """ return the locations for a pf level
     """
 
@@ -225,7 +239,7 @@ def get_spc_locs_lst(
         min_locs_lst, _ = conformer_locators(
             cnf_save_fs, levelp, cnf_range=cnf_range,
             sort_info_lst=mod_info_lst, print_enes=True,
-            hbond_cutoffs=hbond_cutoffs)
+            hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
         for min_locs in min_locs_lst:
             cnf_run_fs[-1].create(min_locs)
     else:
@@ -269,7 +283,7 @@ def _get_prop_fs(
 
 def get_all_tors_locs_lst(
         spc_dct_i, spc_model_dct_i,
-        run_prefix, save_prefix, saddle):
+        run_prefix, save_prefix, saddle, nprocs=1):
     """get all conformer locations for the torsion method
     """
     tors_run_fs, tors_save_fs, levelp, _ = _get_prop_fs(
@@ -278,14 +292,15 @@ def get_all_tors_locs_lst(
     hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     tors_locs_lst, _ = conformer_locators(
         tors_save_fs, levelp, cnf_range='all',
-        hbond_cutoffs=hbond_cutoffs)
+        hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
 
     return tors_run_fs, tors_save_fs, tors_locs_lst
 
 
 def get_matching_tors_locs(
         spc_model_dct_i, spc_dct_i, harm_filesys,
-        run_prefix, save_prefix, saddle=False):
+        run_prefix, save_prefix, saddle=False,
+        nprocs=1):
     """get a list of locations in at the scan level filesystem
          that match the conformer
        locations at the vib level filesystem
@@ -293,7 +308,8 @@ def get_matching_tors_locs(
     cnf_save_fs, cnf_path, cnf_locs, _, _ = harm_filesys
     if spc_model_dct_i['tors']['geolvl'] != spc_model_dct_i['vib']['geolvl']:
         tors_run_fs, tors_save_fs, tors_locs_lst = get_all_tors_locs_lst(
-            spc_dct_i, spc_model_dct_i, run_prefix, save_prefix, saddle)
+            spc_dct_i, spc_model_dct_i, run_prefix, save_prefix, saddle,
+            nprocs=nprocs)
         match_dct = fs_confs_dict(
             tors_save_fs, tors_locs_lst, cnf_save_fs, [cnf_locs])
         if match_dct[tuple(cnf_locs)] is not None:

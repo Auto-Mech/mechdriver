@@ -180,7 +180,7 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
     rxn_block_cmt = writer.ckin.model_header(
         (spc_mod,), spc_mod_dct,
         sort_info_lst=sort_info_lst,
-        refscheme=pes_mod_dct['ref_scheme'])
+        refscheme=pes_mod_dct[pes_mod]['therm_fit']['ref_scheme'])
 
     # Get the comments dct and write the Chemkin string
     rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(

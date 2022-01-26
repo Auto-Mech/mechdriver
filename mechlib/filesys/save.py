@@ -189,13 +189,17 @@ def instability(conn_zma, disconn_zmas, cnf_save_fs,
     print(f" - Save path: {cnf_save_path}")
 
 
-def flux(flux_str, inp_strs, vrc_fs, vrc_locs=(0,)):
+def flux(flux_str, corr_pot_str, inp_strs, vrc_fs, vrc_locs=(0,)):
     """ Save the VaReCoF flux and input
     """
 
     # Unpack the ret
-    tst_str, divsur_str, molpro_str, tml_str, struct_str, pot_str = inp_strs
-
+    divsur_str = inp_strs['divsur.inp']
+    tst_str = inp_strs['tst.inp']
+    molpro_str = inp_strs['molpro.inp']
+    struct_str = inp_strs['structure.inp']
+    tml_str = inp_strs['run.tml']
+    
     # Save the files
     vrc_fs[-1].create(vrc_locs)
     vrc_fs[-1].file.vrctst_tst.write(tst_str, vrc_locs)
@@ -203,8 +207,13 @@ def flux(flux_str, inp_strs, vrc_fs, vrc_locs=(0,)):
     vrc_fs[-1].file.vrctst_molpro.write(molpro_str, vrc_locs)
     vrc_fs[-1].file.vrctst_tml.write(tml_str, vrc_locs)
     vrc_fs[-1].file.vrctst_struct.write(struct_str, vrc_locs)
-    vrc_fs[-1].file.vrctst_pot.write(pot_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_pot.write(corr_pot_str, vrc_locs)
     vrc_fs[-1].file.vrctst_flux.write(flux_str, vrc_locs)
+
+    # Set and print the save path information
+    vrc_path = vrc_fs[-1].path(vrc_locs)
+    print(" - Saving VRCTST input files and final flux file...")
+    print(f" - Save path: {vrc_path}")
 
 
 def energy_transfer(etrans_save_fs, etrans_locs,

@@ -43,10 +43,8 @@ SPC_DCT, GLOB_DCT = ioparser.spc.species_dictionary(
     INPUT['spc'], INPUT['dat'], INPUT['geo'], 'csv')
 PES_DCT = ioparser.mech.pes_dictionary(
     INPUT['mech'], 'chemkin', SPC_DCT)
-
 PES_RLST, SPC_RLST = ioparser.rlst.run_lst(
     PES_DCT, SPC_DCT, PES_IDX_DCT, SPC_IDX_DCT)
-
 # Do a check
 ioprinter.info_message('\nFinal check if all required input provided...')
 ioparser.run.check_inputs(

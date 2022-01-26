@@ -139,6 +139,11 @@ def frequencies(
                 print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
             miss_data = None
+
+        # Do a TED check
+        if zrxn is not None:
+            vib.ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                    run_prefix, zrxn=zrxn)
     else:
         es_levels = util.freq_es_levels(proc_keyword_dct)
         spc_mod_dct_i = util.generate_spc_model_dct(es_levels, thy_dct)
@@ -155,6 +160,16 @@ def frequencies(
                 freqs = (-1*imag,) + freqs
             miss_data = None
 
+        pf_filesystems = filesys.models.pf_filesys(
+            spc_dct_i, spc_mod_dct_i,
+            run_prefix, save_prefix,
+            name=spc_name, saddle=saddle)
+
+        # Do a TED check
+        if zrxn is not None:
+            vib.ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                    run_prefix, zrxn=zrxn)
+
     # Package up the frequencies data
     if freqs is not None:
         spc_data = [locs_path, zpe, *freqs]
@@ -166,12 +181,13 @@ def frequencies(
 
 
 def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
-             run_prefix, save_prefix):
+             mod_thy_info, run_prefix, save_prefix):
     """ get the torsion potentials
         currently just checks if there any non-empty potentials
     """
 
-    mod_thy_info = spc_mod_dct_i['tors']['geolvl'][1][1]
+    if spc_mod_dct_i is not None:
+        mod_thy_info = spc_mod_dct_i['tors']['geolvl'][1][1]
 
     saddle = 'ts_' in spc_name
     pf_filesystems = filesys.models.pf_filesys(
@@ -199,7 +215,7 @@ def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
     else:
         miss_data = None
 
-    return miss_data
+    return None, miss_data
 
 
 def coeffs(spc_name, spc_dct, model_dct, spc_array):
