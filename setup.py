@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name='mechdriver',
-    version='0.3.0',
+    version='0.4.0',
     packages=[
         'drivers',
         'mechroutines',
