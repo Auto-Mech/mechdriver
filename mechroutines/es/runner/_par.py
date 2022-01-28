@@ -15,7 +15,7 @@ import automol
 from autorun import SCRIPT_DCT
 
 
-def qchem_params(method_dct, job=None):
+def qchem_params(method_dct, job=None, geo=None, spc_info=None):
     """ Build the kwargs dictionary and BASH submission script string to
         be used to write and run the electronic structure job.
 
@@ -29,7 +29,9 @@ def qchem_params(method_dct, job=None):
     prog = method_dct.get('program', None)
 
     # Build the defaul values
-    ret = INI_PARAM_BUILD_DCT[prog](method_dct, prog, job=job)
+    ret = INI_PARAM_BUILD_DCT[prog](
+        method_dct, prog,
+        job=job, geo=geo, spc_info=spc_info)
 
     # Alter with the input method_dct (a massive pain...)
     # opt_kwargs.update(method_dct)
@@ -38,7 +40,7 @@ def qchem_params(method_dct, job=None):
     return ret
 
 
-def _gaussian(method_dct, prog, job=None):
+def _gaussian(method_dct, prog, job=None, geo=None, spc_info=None):
     """ Build kwargs dictionary and BASH submission script for Gaussian jobs.
 
         :param method_dct:
@@ -47,6 +49,8 @@ def _gaussian(method_dct, prog, job=None):
         :type job: str
         :rtype: (dict[str:tuple(str)], str)
     """
+
+    _, _ = geo, spc_info
 
     # Set the options
     nprocs = method_dct.get('nprocs', 9)
@@ -125,7 +129,7 @@ def _gaussian(method_dct, prog, job=None):
     return script_str, kwargs
 
 
-def _molpro(method_dct, prog, job=None):
+def _molpro(method_dct, prog, job=None, geo=None, spc_info=None):
     """ Build kwargs dictionary and BASH submission script for Molpro jobs
 
         :param method_dct:
@@ -164,13 +168,17 @@ def _molpro(method_dct, prog, job=None):
     prog = prog+'_mppx' if method_dct['mppx'] else prog
     script_str = SCRIPT_DCT[prog].format(nprocs)
 
-    # Set threshholds
+    # Set glob thresholds line
+    thrsh_line = f'gthresh,orbital={econv:.1E}'.replace('E', 'd')
+    if method_dct.get('tight_integral'):
+        thrsh_line += ',oneint=1.0d-16,twoint=1.0d-16,compress=1.0d-13'
+
     # Build the kwargs
     kwargs = {
         'memory': memory,
-        # 'mol_options': ['no_symmetry'],
         'mol_options': ['nosym'],
-        'scf_options': [scf_econv_line, 'maxit=300']
+        'scf_options': [scf_econv_line, 'maxit=150']
+        # 'scf_options': [scf_econv_line, 'maxit=5']
     }
 
     corr_options = [corr_econv_line, 'maxit=100']
@@ -182,6 +190,7 @@ def _molpro(method_dct, prog, job=None):
 
     if job == elstruct.Job.OPTIMIZATION:
         kwargs.update({
+            'gen_lines': {1: [thrsh_line]},
             'job_options': [gconv_line],
             'feedback': True,
             'errors': [
@@ -193,17 +202,43 @@ def _molpro(method_dct, prog, job=None):
                  {'job_options': [gconv_line, 'numhess=1']}]
             ],
         })
+    else:
+        # Get the nelectrons, spins, and orbitals for the wf card
+        formula = automol.geom.formula(geo)
+        elec_count = automol.formula.electron_count(formula)
+        two_spin = spc_info[2] - 1
+        num_act_elc = two_spin
+        num_act_orb = num_act_elc
+        closed_orb = (elec_count - num_act_elc) // 2
+        occ_orb = closed_orb + num_act_orb
 
-    # Set glob thresholds
-    thrsh_line = f'gthresh,orbital={econv:.1E}'.replace('E', 'd')
-    if method_dct.get('tight_integral'):
-        thrsh_line += ',oneint=1.0d-16,twoint=1.0d-16,compress=1.0d-13'
-    kwargs.update({'gen_lines': {1: [thrsh_line]}})
+        # Build strings UHF and CASSCF wf card and set the errors and options
+        uhf_str = (
+            f"{{uhf,maxit=150;wf,{elec_count},1,{two_spin};orbprint,3}}"
+        )
+        cas_str = (
+            "{casscf,maxit=40;"
+            f"closed,{closed_orb};occ,{occ_orb};"
+            f"wf,{elec_count},1,{two_spin};canonical;orbprint,3}}"
+        )
+
+        kwargs.update({
+            'gen_lines': {1: [thrsh_line]},
+            'feedback': True,
+            'errors': [
+                elstruct.Error.SCF_NOCONV
+            ],
+            'options_mat': [
+                [{'gen_lines': {1: [thrsh_line], 2: [uhf_str]}},
+                 {'gen_lines': {1: [thrsh_line], 2: [cas_str]}},
+                 {'gen_lines': {1: [thrsh_line], 2: [cas_str]}}]
+             ],
+        })
 
     return script_str, kwargs
 
 
-def _psi4(method_dct, prog, job=None):
+def _psi4(method_dct, prog, job=None, geo=None, spc_info=None):
     """ Build kwargs dictionary and BASH submission script for Psi4 jobs
 
         :param method_dct:
@@ -212,6 +247,8 @@ def _psi4(method_dct, prog, job=None):
         :type job: str
         :rtype: (dict[str:tuple(str)], str)
     """
+
+    _, _ = geo, spc_info
 
     # Job unneeded for now
     method = method_dct.get('method')
@@ -262,46 +299,3 @@ INI_PARAM_BUILD_DCT = {
     elstruct.par.Program.MOLPRO2015: _molpro,
     elstruct.par.Program.PSI4: _psi4,
 }
-
-
-# Unique constructors for programs
-def molpro_opts_mat(spc_info, geo):
-    """ prepare the errors and options mat to perform successive
-        single-point energy calculations in Molpro when the RHF fails to
-        converge. This currently only works for doublets.
-
-        :param spc_info:
-        :type spc_info:
-        :param geo: input molecular geometry object
-        :type geo: automol.geom object
-        :rtype: (tuple(str), tuple(dict[str: str]))
-    """
-
-    # Get the nelectrons, spins, and orbitals for the wf card
-    formula = automol.geom.formula(geo)
-    elec_count = automol.formula.electron_count(formula)
-    two_spin = spc_info[2] - 1
-    num_act_elc = two_spin
-    num_act_orb = num_act_elc
-    closed_orb = (elec_count - num_act_elc) // 2
-    occ_orb = closed_orb + num_act_orb
-
-    # Build the strings UHF and CASSCF wf card and set the errors and options
-    uhf_str = (
-        f"{{uhf,maxit=300;wf,{elec_count},1,{two_spin};orbprint,3}}"
-    )
-    cas_str = (
-        "{{casscf,maxit=40;"
-        f"closed,{closed_orb};occ,{occ_orb};"
-        f"wf,{elec_count},1,{two_spin};canonical;orbprint,3}}"
-    )
-
-    errors = [elstruct.Error.SCF_NOCONV]
-    options_mat = [
-        [{'gen_lines': {2: [uhf_str]}},
-         {'gen_lines': {2: [cas_str]}},
-         {'gen_lines': {2: [cas_str]}}
-         ]
-    ]
-
-    return errors, options_mat
