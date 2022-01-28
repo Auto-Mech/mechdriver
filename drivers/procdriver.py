@@ -81,4 +81,4 @@ def run(pes_rlst, spc_rlst,
             run_prefix, save_prefix, mdriver_path)
 
     # Write a report that details what data is missing
-    write_missing_data_report(missing_data)
+    write_missing_data_report(missing_data, spc_dct)
