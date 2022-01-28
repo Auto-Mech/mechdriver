@@ -885,9 +885,11 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
         ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
         inizmas = [ini_zma_save_fs[-1].file.zmatrix.read((0,))]
         ini_sym_fs = autofile.fs.symmetry(ini_cnf_save_path)
+        dummy_key_dct = automol.zmat.dummy_key_dictionary(inizmas[0])
         for sym_locs in ini_sym_fs[-1].existing():
             geo = ini_sym_fs[-1].file.geometry.read(sym_locs)
-            inizmas.append(automol.geom.zmatrix(geo))
+            geo_wdummy = automol.geom.insert_dummies(geo, dummy_key_dct)
+            inizmas.append(automol.zmat.from_geometry(inizmas[0], geo_wdummy))
         for inizma in inizmas:
             for locs in cnf_save_locs_lst:
                 # geo = cnf_save_fs[-1].file.geometry.read(locs)
@@ -903,9 +905,12 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                     break
                 else:
                     sym_fs = autofile.fs.symmetry(cnf_save_fs[-1].path(locs))
+                    dummy_key_dct = automol.zmat.dummy_key_dictionary(zma)
                     for sym_locs in sym_fs[-1].existing():
                         geo = sym_fs[-1].file.geometry.read(sym_locs)
-                        sym_zma = automol.geom.zmatrix(geo)
+                        geo_wdummy = automol.geom.insert_dummies(
+                            geo, dummy_key_dct)
+                        sym_zma = automol.zmat.from_geometry(zma, geo_wdummy)
                         if automol.zmat.almost_equal(
                                 inizma, sym_zma, dist_rtol=0.1, ang_atol=.4):
                             match_dct[tuple(ini_locs)] = tuple(locs)
