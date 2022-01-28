@@ -104,6 +104,10 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 final_pot = {}
                 gridvals = tuple(pot.keys())
                 ref_val = gridvals[0][0]
+                # print(f'pot test: {torsion.name}')
+                # print('gridvals', gridvals)
+                # print('ref_val', ref_val)
+                # print('fit_pot', fit_pot)
                 for i, val in enumerate(gridvals):
                     final_pot[(val[0] - ref_val,)] = fit_pot[(i,)]
                 # for idx, val in fit_pot.items():

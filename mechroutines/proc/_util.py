@@ -263,9 +263,12 @@ def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
         dframe.to_csv(filelabel, float_format='%.2f')
 
 
-def write_missing_data_report(miss_data):
+def write_missing_data_report(miss_data, spc_dct):
     """ Write all of the data collating the missing data
     """
+
+    # Get the indices of the species
+    idx_dct = {name: str(idx+1) for idx, name in enumerate(spc_dct)}
 
     miss_data = automol.util.remove_duplicates_with_order(miss_data)
 
@@ -273,8 +276,12 @@ def write_missing_data_report(miss_data):
     print(f'{"Name":<20s}{"Method":<12s}{"Basis":<12s}{"Data":<12s}')
     for data in miss_data:
         name, thy_info, dat = data
+        if 'ts_' not in name:
+            _name = idx_dct[name] + ' ' + name
+        else:
+            _name = name
         method, basis = thy_info[1:3]
-        print(f'{name:<20s}{method:<12s}{basis:<12s}{dat:<12s}')
+        print(f'{_name:<30s}{method:<12s}{basis:<12s}{dat:<12s}')
 
 
 def write_data_dirs(data_dirs, prefix):

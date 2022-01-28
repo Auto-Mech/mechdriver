@@ -35,8 +35,8 @@ def run_tsk(tsk, obj_queue,
     obj_queue = util.remove_unstable(
         obj_queue, spc_dct, thy_dct, spc_mod_dct_i,
         proc_keyword_dct, save_prefix)
-    # obj_queue, ts_miss_data = util.remove_ts_missing(
-    #     obj_queue, spc_dct)
+    obj_queue, ts_miss_data = util.remove_ts_missing(
+        obj_queue, spc_dct)
     # obj_queue = util.remove_radrad_ts(
     #     obj_queue, spc_dct)
 
@@ -117,7 +117,7 @@ def run_tsk(tsk, obj_queue,
 
                 elif 'torsion' in tsk and not _skip(spc_name, spc_dct_i):
                     csv_data_i, miss_data_i = collect.torsions(
-                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
                         mod_thy_info, run_prefix, save_prefix)
 
                 elif 'ene' in tsk:
