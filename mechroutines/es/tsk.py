@@ -206,7 +206,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         user_conf_ids = spc_dct_i.get('conf_id')
         if user_conf_ids is None:
             ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-                ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
+                ini_cnf_save_fs, mod_ini_thy_info)
             ini_locs, ini_min_cnf_path = ini_loc_info
         else:
             print(f'Using user specified conformer IDs: {user_conf_ids}')
