@@ -215,5 +215,11 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
                             if i not in _split_names[:n])
 
         ioprinter.info_message(f'- Splitting species {spc_name} into {split_names}')
+        if len(split_names) < 2:
+            ioprinter.warning_message(
+                'Could not match all InChI strings of the instability products to\n'
+                'to ones currently defined in the species.csv file:')
+            for ich in constituent_ichs:
+                ioprinter.info_message(f'  - {ich}')
 
     return split_names
