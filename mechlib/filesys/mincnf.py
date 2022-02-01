@@ -630,6 +630,8 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
     job = elstruct.Job.OPTIMIZATION
     sym_locs = []
     run_locs_lst = cnf_fs[-1].existing(ignore_bad_formats=True)
+    # This is to check if it was not found because the geometry 
+    # changed so much during the optimization
     for idx, locs in enumerate(run_locs_lst):
         cnf_path = cnf_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_path)
@@ -872,7 +874,6 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
         within the ini_cnf_save_fs. Generate a dictionary to connect
         the two
     """
-
     match_dct = {}
     for ini_locs in ini_cnf_save_locs_lst:
 
@@ -898,7 +899,8 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                 zma_save_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
                 zma = zma_save_fs[-1].file.zmatrix.read((0,))
                 if automol.zmat.almost_equal(
-                        inizma, zma, dist_rtol=0.1, ang_atol=.4):
+                        inizma, zma,
+                        dist_rtol=0.1, ang_atol=.4):
                     # cnf_save_path = cnf_save_fs[-1].path(locs)
                     # ioprinter.info_message(
                     #     f'- Similar structure found at {cnf_save_path}')

@@ -5,6 +5,7 @@
 import automol
 import autofile
 import chemkin_io.writer
+from mechroutines.models import etrans
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 
@@ -17,21 +18,11 @@ def build_transport_file(tgt_queue,
 
     bath_name = etrans_keyword_dct['bath']
 
-    # Get the base theory info obj
-    thy_info = filesys.inf.get_es_info(
-        etrans_keyword_dct['runlvl'], thy_dct)
-
     # Read the epsilon and sigma params for the BATH+BATH interaction
-    cnf_save_fs, min_cnf_locs, etrans_fs, etrans_locs = _etrans_fs(
-        spc_dct, bath_name, bath_name, thy_info, save_prefix)
-    if etrans_fs[-1].file.epsilon.exists(etrans_locs):
-        bb_eps = etrans_fs[-1].file.epsilon.read(etrans_locs)
-    else:
-        bb_eps = None
-    if etrans_fs[-1].file.sigma.exists(etrans_locs):
-        bb_sig = etrans_fs[-1].file.sigma.read(etrans_locs)
-    else:
-        bb_sig = None
+    _, _, bb_etrans_fs, bb_etrans_locs = _etrans_fs(
+        spc_dct, bath_name, bath_name,
+        thy_dct, etrans_keyword_dct,
+        save_prefix)
 
     # Now obtain all the properties for the TGT+TGT interaction for CKIN
     # Uses simple combining rules for the LJ params
@@ -39,8 +30,10 @@ def build_transport_file(tgt_queue,
     for tgt_name, _ in tgt_queue:
 
         # Build the filesystem objects needed for the TGT+BATH interaction
-        cnf_save_fs, min_cnf_locs, etrans_fs, etrans_locs = _etrans_fs(
-            spc_dct, tgt_name, bath_name, thy_info, save_prefix)
+        cnf_save_fs, min_cnf_locs, tt_etrans_fs, tt_etrans_locs = _etrans_fs(
+            spc_dct, tgt_name, bath_name,
+            thy_dct, etrans_keyword_dct,
+            save_prefix)
 
         # Read the conformer filesystems
         if cnf_save_fs[-1].file.geometry.exists(min_cnf_locs):
@@ -58,19 +51,17 @@ def build_transport_file(tgt_queue,
         else:
             polar = None
 
-        # Read the energy transfer filesystems
-        if etrans_fs[-1].file.epsilon.exists(etrans_locs):
-            tb_eps = etrans_fs[-1].file.epsilon.read(etrans_locs)
-        else:
-            tb_eps = None
-        if etrans_fs[-1].file.sigma.exists(etrans_locs):
-            tb_sig = etrans_fs[-1].file.sigma.read(etrans_locs)
-        else:
-            tb_sig = None
+        # Obtain LJ sigma, epsilon from filesystem or estimation
+        bb_sig, bb_eps, tb_sig, tb_eps = _lj_params(
+            bb_etrans_fs, tt_etrans_fs, bb_etrans_locs, tt_etrans_locs,
+            tgt_info, bath_info)
 
-        # Use combine rules for the sigma and epsilon
+        # Use the combining rules for sigma and epsilon
         tt_eps = automol.etrans.combine.epsilon(tb_eps, bb_eps)
         tt_sig = automol.etrans.combine.sigma(tb_sig, bb_sig)
+
+        # Get the Z_ROT number
+        zrot = automol.etrans.rotational_relaxation_number(tgt_info)
 
         # Build dct and append it ot overall dictionary Append info to list
         dct = {
@@ -78,7 +69,8 @@ def build_transport_file(tgt_queue,
             'dipole_moment': dip_mom,
             'polarizability': polar,
             'epsilon': tt_eps,
-            'sigma': tt_sig
+            'sigma': tt_sig,
+            'zrot': zrot
         }
         trans_dct.update({tgt_name: dct})
 
@@ -92,32 +84,78 @@ def build_transport_file(tgt_queue,
     return transport_str
 
 
-def _etrans_fs(spc_dct, tgt_name, bath_name, thy_info, save_prefix):
+def _lj_params(bb_etrans_fs, tb_etrans_fs, bb_etrans_locs, tb_etrans_locs,
+               tgt_info, bath_info,
+               pes_model_dct_i):
+    """ Obtain the energy transfer parameters by reading the filesystem
+        or estimating it with the Jasper formulae.
+    """
+
+    etransfer = pes_model_dct_i['glob_etransfer']
+
+    if (
+        bb_etrans_fs[-1].file.epsilon.exists(bb_etrans_locs) and
+        tb_etrans_fs[-1].file.epsilon.exists(tb_etrans_locs) and
+        bb_etrans_fs[-1].file.sigma.exists(bb_etrans_locs) and
+        tb_etrans_fs[-1].file.sigma.exists(tb_etrans_locs)
+    ):
+        bb_eps = bb_etrans_fs[-1].file.epsilon.read(bb_etrans_locs)
+        tb_eps = tb_etrans_fs[-1].file.epsilon.read(tb_etrans_locs)
+        bb_sig = bb_etrans_fs[-1].file.sigma.read(bb_etrans_locs)
+        tb_sig = tb_etrans_fs[-1].file.sigma.read(tb_etrans_locs)
+    else:
+        etrans_dct = pes_model_dct_i['glob_etransfer']
+        tb_sig, tb_eps, _, _ = etrans.lj_params(
+            tgt_info, bath_info, etrans_dct)
+        bb_sig, bb_eps, _, _ = etrans.lj_params(
+            tgt_info, bath_info, etrans_dct)
+
+    return bb_sig, bb_eps, tb_sig, tb_eps
+
+
+def _etrans_fs(spc_dct, tgt_name, bath_name,
+               thy_dct, etrans_keyword_dct,
+               save_prefix):
     """ Build the energy transfer filesys
     """
 
-    # Get the info for the target combined spc info objects
-    tgt_dct = spc_dct[tgt_name]
-    bath_dct = spc_dct[bath_name]
-    tgt_info = filesys.inf.get_spc_info(tgt_dct)
-    bath_info = filesys.inf.get_spc_info(bath_dct)
-    lj_info = filesys.inf.combine_spc_info(tgt_info, bath_info)
+    # Get the base theory info obj
+    thy_info = filesys.inf.get_es_info(
+        etrans_keyword_dct['runlvl'], thy_dct)
 
-    # Build the modified thy objs
-    mod_tgt_thy_info = filesys.inf.modify_orb_restrict(tgt_info, thy_info)
-    mod_lj_thy_info = filesys.inf.modify_orb_restrict(lj_info, thy_info)
+    min_locs = ()
+    spc_infos = ()
+    for name in (tgt_name, bath_name):
+        spc_dct_i = spc_dct[name]
+        spc_info = filesys.inf.get_spc_info(spc_dct_i)
+        mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
 
-    # Build the conformer filesystem objects
-    _, thy_save_path = filesys.build.spc_thy_fs_from_root(
-        save_prefix, tgt_info, mod_tgt_thy_info)
+        # Build the conformer filesystem objects
+        cnf_range = etrans_keyword_dct['cnf_range']
+        hbond_cutoffs = spc_dct_i['hbond_cutoffs']
+        cnf_sort_info_lst = _sort_info_lst(
+            etrans_keyword_dct['sort'], thy_dct, spc_info)
 
-    cnf_save_fs = autofile.fs.conformer(thy_save_path)
-    cnf_rng_info = filesys.mincnf.min_energy_conformer_locators(
-        cnf_save_fs, mod_tgt_thy_info)
-    min_cnf_locs, min_cnf_path = cnf_rng_info
+        _, cnf_save_fs = filesys.build_fs(
+            run_prefix, save_prefix, 'CONFORMER',
+            spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+
+        cnf_rng_info = filesys.mincnf.conformer_locators(
+            cnf_save_fs, mod_thy_info,
+            cnf_range=etrans_keyword_dct['cnf_range'],
+            sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=spc_dct_i['hbond_cutoffs'],
+            print_enes=True,
+            nprocs=1)
+        min_cnf_locs, min_cnf_path = cnf_rng_info
 
     # Build the energy transfer filesystem objects
-    etrans_fs, etrans_locs = filesys.build.etrans_fs_from_prefix(
-        min_cnf_path, bath_info, mod_lj_thy_info)
+    lj_info = filesys.inf.combine_spc_info(*spc_infos)
+    mod_lj_thy_info = filesys.inf.modify_orb_restrict(lj_info, thy_info)
+    _, etrans_save_fs = filesys.build_fs(
+        run_prefix, save_prefix, 'ENERGY TRANSFER',
+        spc_locs=spc_info,
+        thy_locs=mod_lj_thy_info[1:],
+        cnf_locs=min_cnf_locs)
 
     return cnf_save_fs, min_cnf_locs, etrans_fs, etrans_locs

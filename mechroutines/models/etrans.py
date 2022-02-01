@@ -74,7 +74,6 @@ def mass_params(well_info, bath_info, etrans_dct):
         ioprinter.info_message('  - Obtaining masses from geometries...')
         geo = automol.inchi.geometry(well_info[0])
         mass1 = sum(automol.geom.masses(geo))
-
         geo = automol.inchi.geometry(bath_info[0])
         mass2 = sum(automol.geom.masses(geo))
 
@@ -103,33 +102,19 @@ def lj_params(well_info, bath_info, etrans_dct):
         elif ljpar == 'estimate':
 
             ioprinter.info_message('- Estimating the parameters...')
-            well_ich = well_info[0]
-            well_geo = automol.inchi.geometry(well_ich)
-            params = automol.etrans.effective_model(
-                well_ich, bath_info[0])
-            if params is not None:
-                bath_model, tgt_model = params
-                ioprinter.info_message(
-                    '    - Series to use for estimation for estimation...')
-                ioprinter.info_message(
-                    f'      Bath: {bath_model}, Target: {tgt_model} ')
+            well_ich, bath_ich = well_info[0], bath_info[0]
+            model = automol.etrans.estimate.determine_collision_model_series(
+                well_ich, bath_ich)
+            n_heavy = automol.geom.atom_count(
+                automol.inchi.geometry(well_ich[0]), 'H', match=False)
+            ioprinter.info_message(
+                '    - Series to use for estimation for estimation:'
+                f'      {model[1]} '
+                f'    - Heavy atom count: {n_heavy}...')
 
-                ioprinter.info_message(
-                    '    - Effective atom numbers for estimation...')
-                n_heavy = automol.geom.atom_count(well_geo, 'H', match=False)
-                ioprinter.info_message(
-                    '      N_heavy: ', n_heavy)
-                sig, eps = automol.etrans.eff.lennard_jones_params(
-                    n_heavy, bath_model, tgt_model)
-                sig1, eps1, sig2, eps2 = sig, eps, sig, eps
-
-        # elif ljpar == 'read':
-        #     ioprinter.info_message('- Reading the filesystem...')
-        #     ljs_lvl = etrans_dct.get('ljlvl', None)
-        #     if ljs_lvl is not None:
-        #         # Get the levels into theory objects
-        #         pf_filesystems = 0
-        #         sig1, eps1, sig2, eps2 = _read_lj(pf_filesystems)
+            sig, eps = automol.etrans.estimate.lennard_jones_params(
+                n_heavy, model[0], model[1])
+            sig1, eps1, sig2, eps2 = sig, eps, sig, eps
 
     else:
         sig1, eps1, sig2, eps2 = None, None, None, None
@@ -159,34 +144,21 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
             ioprinter.info_message('  - Estimating the parameters...')
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
-            params = automol.etrans.effective_model(
+            model = automol.etrans.estimate.determine_collision_model_series(
                 well_ich, bath_info[0])
-            if params is not None:
-                bath_model, tgt_model = params
-                ioprinter.info_message(
-                    '    - Series to use for estimation for estimation...')
-                ioprinter.info_message(
-                    f'      Bath: {bath_model}, Target: {tgt_model} ')
-
-                ioprinter.info_message(
-                    '    - Calculating the LJ collisional frequencies...')
-                ioprinter.info_message(
-                    '    - Effective atom numbers for estimation...')
-                sig, eps, mass1, mass2 = ljpar
-                n_eff = automol.etrans.eff.effective_rotor_count(well_geo)
-                ioprinter.info_message(
-                    '      N_eff: ', n_eff)
-                efactor, epower = automol.etrans.eff.alpha(
-                    n_eff, eps, sig, mass1, mass2, bath_model, tgt_model)
-                ecutoff = 15.0
-
-        # elif edown == 'read':
-        #     ioprinter.info_message('  - Reading the filesystem...')
-        #     edownlvl = etrans_dct.get('edownlvl', None)
-        #     if edownlvl is not None:
-        #         # NEED: Get the levels into theory objects
-        #         pf_filesystems = 0
-        #         efactor = _read_alpha(pf_filesystems)
+            sig, eps, mass1, mass2 = ljpar
+            n_eff = automol.etrans.estimate.effective_rotor_count(well_geo)
+            ioprinter.info_message(
+                '    - Series to use for estimation for estimation:'
+                f' {model[1]}\n'
+                f'    - Found effective rotor count: {n_eff}'
+                '    - Using following LJ parameters for '
+                'collisional frequency and alpha calculation: '
+                f'eps={eps} cm-1, sigma={sig} Ang, '
+                f'mass1={mass1} kg, mass2={mass2} kg')
+            efactor, epower = automol.etrans.eff.alpha(
+                n_eff, eps, sig, mass1, mass2, model[1])
+            ecutoff = 15.0
 
     return efactor, epower, ecutoff
 
