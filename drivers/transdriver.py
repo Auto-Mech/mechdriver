@@ -20,7 +20,7 @@ from mechlib.reaction import split_unstable_full
 
 def run(pes_rlst, spc_rlst,
         trans_tsk_lst,
-        spc_mod_dct,
+        pes_mod_dct, spc_mod_dct,
         spc_dct, thy_dct,
         run_prefix, save_prefix):
     """ main driver for etransfer run
@@ -28,7 +28,9 @@ def run(pes_rlst, spc_rlst,
 
     # Print Header
     ioprinter.info_message('Calculating Transport:')
-    ioprinter.runlst(('SPC', 0, 0), spc_rlst)
+    ioprinter.runlst(
+        list(spc_rlst.keys())[0],
+        list(spc_rlst.values())[0])
 
     # ---------------------------------------------------- #
     # PREPARE INFORMATION TO PASS TO TRANSPORTDRIVER TASKS #
@@ -48,6 +50,6 @@ def run(pes_rlst, spc_rlst,
     for tsk_lst in trans_tsk_lst:
         [_, tsk, etrans_keyword_dct] = tsk_lst
         run_tsk(tsk, spc_queue,
-                spc_dct,
-                thy_dct, etrans_keyword_dct,
+                spc_dct, thy_dct, pes_mod_dct,
+                etrans_keyword_dct,
                 run_prefix, save_prefix)
