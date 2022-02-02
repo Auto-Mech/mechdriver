@@ -8,8 +8,8 @@ from mechroutines.trans._routines import build_transport_file
 
 
 def run_tsk(tsk, spc_queue,
-            spc_dct,
-            thy_dct, etrans_keyword_dct,
+            spc_dct, thy_dct, pes_model_dct,
+            etrans_keyword_dct,
             run_prefix, save_prefix):
     """ Run the task
     """
@@ -38,5 +38,6 @@ def run_tsk(tsk, spc_queue,
         ioprinter.info_message(
             'Writing the CHEMKIN transport file', newline=1)
         build_transport_file(spc_queue,
-                             spc_dct, thy_dct, etrans_keyword_dct,
-                             save_prefix)
+                             spc_dct, thy_dct, pes_model_dct,
+                             etrans_keyword_dct,
+                             run_prefix, save_prefix)

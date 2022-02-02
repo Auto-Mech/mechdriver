@@ -85,7 +85,7 @@ if TRANS_TSKS is not None:
         transdriver.run(
             PES_RLST, SPC_RLST,
             TRANS_TSKS,
-            SMOD_DCT,
+            KMOD_DCT, SMOD_DCT,
             SPC_DCT, THY_DCT,
             INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
         )
