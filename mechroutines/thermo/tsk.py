@@ -43,6 +43,9 @@ def write_messpf_task(
                     messpf_inp_str,
                     aux_dct=dat_dct,
                     input_name='pf.inp')
+    
+    ioprinter.info_message('\n\n')
+    ioprinter.obj('line_dash')
 
 
 def run_messpf_task(
@@ -81,6 +84,9 @@ def run_messpf_task(
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0],
                 filename='pf.dat')
             _locs_pfs.append(final_pf)
+    
+    ioprinter.info_message('\n\n')
+    ioprinter.obj('line_dash')
 
 
 def produce_boltzmann_weighted_conformers_pf(
@@ -159,7 +165,6 @@ def _check_for_reference_energies(spc_basis, chn_basis_ene_dct, spc_mod):
     """
     ene_basis = []
     energy_missing = False
-    print('chn_basis_ene_dct', chn_basis_ene_dct)
     for spc_basis_i in spc_basis:
         if spc_basis_i in chn_basis_ene_dct[spc_mod]:
             ioprinter.message(
@@ -217,6 +222,8 @@ def get_heats_of_formation(
         for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
             spc_locs = tuple(spc_locs)
             for spc_mod in spc_mods:
+                print(f"\n+++++++++++++++++++++++++++++++++++++++++++++\n")
+                print(f"\n Calculating 0 K Heat-of-Formation for {spc_name} {spc_mod}\n")
                 # Take species model and add it to the chn_basis_ene dct
                 spc_mod = spc_mods[0]
                 spc_mod_dct_i = spc_mod_dct[spc_mod]
