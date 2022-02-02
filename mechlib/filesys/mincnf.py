@@ -232,7 +232,6 @@ def _sorted_cnf_lsts(
             _parallel_get_sort_energy_parameters, cnf_locs_lst,
             args, nprocs=nprocs)
         first_ene = None
-        print('locs enes dct', locs_enes_dct_lst)
         for locs_enes_dct in locs_enes_dct_lst:
             for locs in locs_enes_dct:
                 _, locs_first_ene = locs_enes_dct[locs]
@@ -674,13 +673,13 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                     idx_ene = elstruct.reader.energy(prog, method, out_str)
                     idx_geo = elstruct.reader.opt_geometry(prog, out_str)
                     if idx == locs_idx:
-                        out_enes.append(10000)
-                        out_geos.append(None)
+                        # out_enes.append(10000)
+                        # out_geos.append(None)
                         ran_ene = idx_ene
                         ran_geo = idx_geo
-                    else:
-                        out_enes.append(idx_ene)
-                        out_geos.append(idx_geo)
+                    # else:
+                    out_enes.append(idx_ene)
+                    out_geos.append(idx_geo)
             else:
                 out_enes.append(10000)
                 out_geos.append(None)
