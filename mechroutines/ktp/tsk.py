@@ -63,11 +63,10 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
         tsk_key_dct['float_precision'])
 
     # Write the energy transfer section strings for MESS file
-    etransfer = pes_model_dct_i['glob_etransfer']
     energy_trans_str = make_global_etrans_str(
-        rxn_lst, spc_dct, etransfer)
+        rxn_lst, spc_dct, pes_model_dct_i['energy_transfer'])
 
-    # Write base MESS input string into the RUN filesystem
+        # Write base MESS input string into the RUN filesystem
     mess_inp_str = mess_io.writer.messrates_inp_str(
         globkey_str, rxn_chan_str,
         energy_trans_str=energy_trans_str, well_lump_str=None)

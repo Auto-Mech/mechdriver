@@ -5,6 +5,7 @@
 import automol
 import autofile
 import chemkin_io.writer
+from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.models import etrans
 from mechlib import filesys
@@ -18,43 +19,48 @@ def build_transport_file(tgt_queue,
     """ Write the chemkin string
     """
 
-    # Get generally useful info from keyword dictionary
-    bath_name = etrans_keyword_dct['bath']
-
+    # Get info from pes mod dct
     pes_mod = etrans_keyword_dct['kin_model']
     pes_model_dct_i = pes_model_dct[pes_mod]
+    bath_name = pes_model_dct_i['energy_transfer']['bath']
 
     # Now obtain all the properties for the TGT+TGT interaction for CKIN
     # Uses simple combining rules for the LJ params
     trans_dct = {}
-    for tgt_name, _ in tgt_queue:
+    for tgt_name in tgt_queue:
 
-        tgt_info = filesys.inf.get_spc_info(spc_dct[tgt_name])
-        bath_info = filesys.inf.get_spc_info(spc_dct[bath_name])
+        tgt_dct = spc_dct[tgt_name]
+        bath_dct = spc_dct[bath_name]
+        tgt_info = sinfo.from_dct(tgt_dct)
 
         # Build the filesystem objects needed for the TGT+BATH interaction
-        spc_infs, tgt_cnf_inf, tb_etrans_inf, bb_etrans_inf = _etrans_fs(
+        tgt_cnf_inf, tb_etrans_inf, bb_etrans_inf = _etrans_fs(
             spc_dct, tgt_name, bath_name,
             thy_dct, etrans_keyword_dct,
             run_prefix, save_prefix)
-        tgt_info, bath_info = spc_infs[0], spc_infs[1]
-        t_cnf_save_fs, t_min_cnf_locs, tgt_info = tgt_cnf_inf
+        t_cnf_save_fs, t_min_cnf_locs = tgt_cnf_inf
         tb_etrans_fs, tb_etrans_locs = tb_etrans_inf
         bb_etrans_fs, bb_etrans_locs = bb_etrans_inf
 
         # Read the conformer filesystems
         if t_cnf_save_fs[-1].file.geometry.exists(t_min_cnf_locs):
             geo = t_cnf_save_fs[-1].file.geometry.read(t_min_cnf_locs)
+            _path = t_cnf_save_fs[-1].file.geometry.path(t_min_cnf_locs)
+            print(f'Reading geometty from path: {_path}')
         else:
             geo = None
         if t_cnf_save_fs[-1].file.dipole_moment.exists(t_min_cnf_locs):
             vec = t_cnf_save_fs[-1].file.dipole_moment.read(t_min_cnf_locs)
             dip_mom = automol.prop.total_dipole_moment(vec)
+            _path = t_cnf_save_fs[-1].file.dipole_moment.path(t_min_cnf_locs)
+            print(f'Reading dipole moment from path: {_path}')
         else:
             dip_mom = None
         if t_cnf_save_fs[-1].file.polarizability.exists(t_min_cnf_locs):
             tensor = t_cnf_save_fs[-1].file.polarizability.read(t_min_cnf_locs)
             polar = automol.prop.total_polarizability(tensor)
+            _path = t_cnf_save_fs[-1].file.polarizability.path(t_min_cnf_locs)
+            print(f'Reading polarizability from path: {_path}')
         else:
             polar = None
 
@@ -62,15 +68,17 @@ def build_transport_file(tgt_queue,
         tb_sig, tb_eps, bb_sig, bb_eps = _lj_params(
             tb_etrans_fs, tb_etrans_locs,
             bb_etrans_fs, bb_etrans_locs,
-            tgt_info, bath_info,
+            tgt_dct, bath_dct,
             pes_model_dct_i)
 
         # Use the combining rules for sigma and epsilon
+        print('Determining A+A LJ parameters from combining rules...')
         tt_eps = automol.etrans.combine.epsilon(tb_eps, bb_eps)
         tt_sig = automol.etrans.combine.sigma(tb_sig, bb_sig)
 
         # Get the Z_ROT number
-        zrot = automol.etrans.rotational_relaxation_number(tgt_info)
+        print('Determining Z ROT at 298 K...')
+        zrot = automol.etrans.estimate.rotational_relaxation_number(tgt_info[0])
 
         # Build dct and append it ot overall dictionary Append info to list
         dct = {
@@ -95,28 +103,35 @@ def build_transport_file(tgt_queue,
 
 def _lj_params(tb_etrans_fs, tb_etrans_locs,
                bb_etrans_fs, bb_etrans_locs,
-               tgt_info, bath_info,
-               pes_model_dct_i):
+               tgt_dct, bath_dct,
+               pes_mod_dct_i):
     """ Obtain the energy transfer parameters by reading the filesystem
         or estimating it with the Jasper formulae.
     """
 
+    print('locs test')
+    print(tb_etrans_locs)
+    print(bb_etrans_locs)
+
     if (
-        tb_etrans_fs[-1].file.epsilon.exists(tb_etrans_locs) and
-        bb_etrans_fs[-1].file.epsilon.exists(bb_etrans_locs) and
-        tb_etrans_fs[-1].file.sigma.exists(tb_etrans_locs) and
-        bb_etrans_fs[-1].file.sigma.exists(bb_etrans_locs)
+        tb_etrans_fs[-1].file.lennard_jones_epsilon.exists(tb_etrans_locs) and
+        bb_etrans_fs[-1].file.lennard_jones_epsilon.exists(bb_etrans_locs) and
+        tb_etrans_fs[-1].file.lennard_jones_sigma.exists(tb_etrans_locs) and
+        bb_etrans_fs[-1].file.lennard_jones_sigma.exists(bb_etrans_locs)
     ):
-        tb_eps = tb_etrans_fs[-1].file.epsilon.read(tb_etrans_locs)
-        bb_eps = bb_etrans_fs[-1].file.epsilon.read(bb_etrans_locs)
-        tb_sig = tb_etrans_fs[-1].file.sigma.read(tb_etrans_locs)
-        bb_sig = bb_etrans_fs[-1].file.sigma.read(bb_etrans_locs)
+        print('Reading lennard_jones_sigma, lennard_jones_epsilon from filesystem')
+        tb_eps = tb_etrans_fs[-1].file.lennard_jones_epsilon.read(tb_etrans_locs)
+        bb_eps = bb_etrans_fs[-1].file.lennard_jones_epsilon.read(bb_etrans_locs)
+        tb_sig = tb_etrans_fs[-1].file.lennard_jones_sigma.read(tb_etrans_locs)
+        bb_sig = bb_etrans_fs[-1].file.lennard_jones_sigma.read(bb_etrans_locs)
     else:
-        etrans_dct = pes_model_dct_i['glob_etransfer']
-        tb_sig, tb_eps, _, _ = etrans.lj_params(
-            tgt_info, bath_info, etrans_dct)
-        bb_sig, bb_eps, _, _ = etrans.lj_params(
-            bath_info, bath_info, etrans_dct)
+        print('Generating Etrans Reading sigma, epsilon from filesystem')
+        t_etrans_dct = etrans.etrans_dct_for_species(tgt_dct, pes_mod_dct_i)
+        b_etrans_dct = etrans.etrans_dct_for_species(bath_dct, pes_mod_dct_i)
+        tgt_info = sinfo.from_dct(tgt_dct)
+        bath_info = sinfo.from_dct(bath_dct)
+        tb_sig, tb_eps = etrans.lj_params(tgt_info, bath_info, t_etrans_dct)
+        bb_sig, bb_eps = etrans.lj_params(bath_info, bath_info, b_etrans_dct)
 
     return bb_sig, bb_eps, tb_sig, tb_eps
 
@@ -130,17 +145,16 @@ def _etrans_fs(spc_dct, tgt_name, bath_name,
         and the etrans_fs for the target-bath, bath-bath
     """
 
-    thy_info = filesys.inf.get_es_info(
-        etrans_keyword_dct['runlvl'], thy_dct)
-    bath_info = filesys.inf.get_spc_info(spc_dct[bath_name])
+    method_dct = thy_dct.get(etrans_keyword_dct['inplvl'])
+    thy_info = tinfo.from_dct(method_dct)
+    bath_info = sinfo.from_dct(spc_dct[bath_name])
 
-    spc_infos = []
     cnf_fs_lst, cnf_locs_lst = [], []
     etrans_fs_lst, etrans_locs_lst = [], []
     for name in (tgt_name, bath_name):
         spc_dct_i = spc_dct[name]
-        spc_info = filesys.inf.get_spc_info(spc_dct_i)
-        mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+        spc_info = sinfo.from_dct(spc_dct_i)
+        mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
         # Build the conformer filesystem objects
         cnf_sort_info_lst = _sort_info_lst(
@@ -158,28 +172,27 @@ def _etrans_fs(spc_dct, tgt_name, bath_name,
             hbond_cutoffs=spc_dct_i['hbond_cutoffs'],
             print_enes=True,
             nprocs=1)
-        min_cnf_locs, _ = cnf_rng_info
+        print('cnf loc info', cnf_rng_info)
+        min_cnf_locs = cnf_rng_info[0][0]
 
         # Build the energy transfer filesystem objects
         cnf_path = cnf_save_fs[-1].path(min_cnf_locs)
         etrans_fs = autofile.fs.energy_transfer(cnf_path)
 
         # Build the energy transfer locs
-        lj_info = filesys.inf.combine_spc_info(spc_info, bath_info)
-        mod_lj_thy_info = filesys.inf.modify_orb_restrict(lj_info, thy_info)
+        lj_info = sinfo.combine(spc_info, bath_info)
+        mod_lj_thy_info = tinfo.modify_orb_label(thy_info, lj_info)
 
-        etrans_locs = bath_info + mod_lj_thy_info
+        etrans_locs = bath_info + mod_lj_thy_info[1:]
 
         # Add to the lists
-        spc_infos.append(spc_info)
         cnf_fs_lst.append(cnf_save_fs)
         cnf_locs_lst.append(min_cnf_locs)
         etrans_fs_lst.append(etrans_fs)
         etrans_locs_lst.append(etrans_locs)
 
     return (
-        tuple(spc_infos),                                # target, bath infos
-        (cnf_fs_lst[0], cnf_locs_lst[0], spc_infos[0]),  # target
+        (cnf_fs_lst[0], cnf_locs_lst[0]),                # target
         (etrans_fs_lst[0], etrans_locs_lst[0]),          # target-bath
         (etrans_fs_lst[1], etrans_locs_lst[1]),          # bath-bath
     )

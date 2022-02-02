@@ -39,7 +39,6 @@ SPC_VAL_DCT = {
     'smin': ((int, float), (), None),
     'smax': ((int, float), (), None),
     'etrans_nsamp': ((int,), (), None),
-    'bath': ((str,), (), None),
     'lj': ((str,), (), None),
     'edown': ((str,), (), None),
     'active': ((tuple,), (), None),

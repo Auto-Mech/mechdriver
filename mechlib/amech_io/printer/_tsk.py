@@ -94,6 +94,8 @@ def messpf(statement, path=None):
         message('Preparing global keywords section for MESS input...')
         message(' - Using temperatures and pressures defined by user')
         message(' - Using internal AutoMech defaults for other MESS keywords:')
+    elif statement == 'global_transfer_section':
+        message('Preparing global energy transfer section for MESS input...')
     elif statement == 'transfer_section':
         message('Preparing energy transfer section for MESS input...')
     elif statement == 'well_section':
