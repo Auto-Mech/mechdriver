@@ -13,6 +13,7 @@ setup(
         'mechroutines.es',
         'mechroutines.es._routines',
         'mechroutines.es.runner',
+        'mechroutines.es.newts',
         'mechroutines.ktp',
         'mechroutines.models',
         'mechroutines.thermo',
