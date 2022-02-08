@@ -39,8 +39,9 @@ SPC_VAL_DCT = {
     'smin': ((int, float), (), None),
     'smax': ((int, float), (), None),
     'etrans_nsamp': ((int,), (), None),
-    'lj': ((str,), (), None),
-    'edown': ((str,), (), None),
+    'mass': ((float,), (), None),
+    'lj': ((tuple, str), (), 'estimate'),
+    'edown': ((tuple, str), (), 'estimate'),
     'active': ((tuple,), (), None),
     'zma_idx': ((int,), (), 0),
     'conf_id': ((tuple, list), (), None)

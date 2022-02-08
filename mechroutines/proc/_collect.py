@@ -283,11 +283,14 @@ def energy(spc_name, spc_dct_i,
                 ioprinter.reading('Energy', sp_path)
                 _ene = sp_save_fs[-1].file.energy.read(
                     mod_thy_info[1:4])
+        else:
+            ioprinter.warning_message(f'No Energy found at {sp_path}')
 
     if _ene is not None:
         miss_data = None
     else:
-        miss_data = (spc_name + '_'.join(locs), mod_thy_info, 'energy')
+        # miss_data = (spc_name + '_'.join(locs), mod_thy_info, 'energy')
+        miss_data = (spc_name, mod_thy_info, 'energy')
 
     return [locs_path, _ene], miss_data
 

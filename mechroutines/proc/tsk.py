@@ -32,13 +32,20 @@ def run_tsk(tsk, obj_queue,
 
     # Exclude unstable species
     # These species break certain checks (e.g. no ene exists for geo collect)
+    print(1)
+    print(obj_queue)
     obj_queue = util.remove_unstable(
         obj_queue, spc_dct, thy_dct, spc_mod_dct_i,
         proc_keyword_dct, save_prefix)
+    print(2)
+    print(obj_queue)
     obj_queue, ts_miss_data = util.remove_ts_missing(
         obj_queue, spc_dct)
     # obj_queue = util.remove_radrad_ts(
     #     obj_queue, spc_dct)
+    print(3)
+    print(obj_queue)
+
 
     # Set up lists for reporting missing data
     miss_data = ()
