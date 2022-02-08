@@ -222,8 +222,9 @@ def get_heats_of_formation(
         for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
             spc_locs = tuple(spc_locs)
             for spc_mod in spc_mods:
-                print(f"\n+++++++++++++++++++++++++++++++++++++++++++++\n")
-                print(f"\n Calculating 0 K Heat-of-Formation for {spc_name} {spc_mod}\n")
+                print("\n+++++++++++++++++++++++++++++++++++++++++++++\n")
+                print(" Calculating 0 K Heat-of-Formation for "
+                      f"{spc_name} {spc_mod}\n")
                 # Take species model and add it to the chn_basis_ene dct
                 spc_mod = spc_mods[0]
                 spc_mod_dct_i = spc_mod_dct[spc_mod]
