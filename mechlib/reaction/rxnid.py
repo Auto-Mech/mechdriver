@@ -37,10 +37,12 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
 
     # Try and read the reaction from filesys if requested
     if not re_id:
+        print('    Trying to find class info from fileysystem...')
         zrxns, zmas = filesys.read.reactions(
             rxn_info, ini_thy_info, zma_locs, save_prefix)
         status = 'FOUND' if zrxns is not None else 'MISSING'
-        print('    Reading from fileysystem...')
+        if status == 'FOUND':
+            print('    Info found. Reading from fileysystem...')
     else:
         # unsafe without checking if zrxn id matches what is in save...
         print('    Requested Reidentification regardless of what is in SAVE')
@@ -48,7 +50,7 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
     # Try and identify reaction if not rxn obj found
     if status == 'MISSING':
         if id_missing:
-            print('    Identifying class...')
+            print('    No info found. Identifying class...')
             zrxns, zmas = _id_reaction(rxn_info, ini_thy_info, save_prefix)
             status = 'FOUND' if zrxns is not None else 'MISSING-SKIP'
         else:

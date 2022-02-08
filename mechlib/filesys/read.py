@@ -269,17 +269,24 @@ def reactions(rxn_info, ini_thy_info, zma_locs, save_prefix):
 
     rxn_fs = autofile.fs.reaction(save_prefix)
     if rxn_fs[-1].exists(sort_rxn_info):
+        rxn_path = rxn_fs[-1].path(sort_rxn_info)
         _, ts_save_fs = build_fs(
             save_prefix, save_prefix, 'TRANSITION STATE',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:])
-        for ts_locs in ts_save_fs[-1].existing():
-            zrxn, zma = reaction(
-                rxn_info, ini_thy_info,
-                zma_locs, save_prefix, ts_locs=ts_locs)
-            if zrxn is not None:
-                zrxns += (zrxn,)
-                zmas += (zma,)
+        ts_locs = ts_save_fs[-1].existing()
+        if ts_locs:
+            for locs in ts_save_fs[-1].existing():
+                ts_path = ts_save_fs[-1].path(locs)
+                print(f'    - Checking for TS info in CONFS/Z in {ts_path}')
+                zrxn, zma = reaction(
+                    rxn_info, ini_thy_info,
+                    zma_locs, save_prefix, ts_locs=locs)
+                if zrxn is not None:
+                    zrxns += (zrxn,)
+                    zmas += (zma,)
+        else:
+            print(f'No info at {rxn_path}')
 
     if not zrxns:
         zrxns, zmas = None, None
