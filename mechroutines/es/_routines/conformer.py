@@ -382,6 +382,14 @@ def single_conformer(zma, spc_info, mod_thy_info,
                         cnf_save_fs, mod_thy_info)
                     filesys.mincnf.traj_sort(
                         cnf_save_fs, mod_thy_info, locs[0])
+                else:
+                    sym_locs = saved_locs[sym_id]
+                    filesys.save.sym_indistinct_conformer(
+                        geo, cnf_save_fs, locs, sym_locs)
+                    if cnf_save_fs[-1].exists(locs):
+                        cnf_save_path = cnf_save_fs[-1].path(locs)
+                    if cnf_run_fs[-1].exists(locs):
+                        cnf_run_path = cnf_run_fs[-1].path(locs)
 
 
 def conformer_sampling(zma, spc_info, thy_info,
