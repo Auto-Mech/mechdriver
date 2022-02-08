@@ -86,7 +86,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
                 e_elec += (coeff * ene)
                 ioprinter.info_message(f'  - Ene = {coeff:>.3f} x {ene} Eh')
             else:
-                ioprinter.warning_message('No energy at path')
+                ioprinter.warning_message(f'No energy at path {sp_path}')
                 e_elec = None
                 break
     else:

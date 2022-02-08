@@ -73,14 +73,14 @@ def messpf(statement, path=None):
     # obj('vspace')
     if statement == 'write_header':
         obj('line_dash')
-        message('Preparing MESSPF input files for all species', newline=1)
+        message('TASK: Preparing MESSPF input files for all species', newline=3)
     elif statement == 'input_string':
         message('MESSPF Input String:')
         obj('vspace')
         obj('vspace')
     elif statement == 'run_header':
         obj('line_dash')
-        message('Running MESSPF calculations for all species', newline=1)
+        message('TASK: Running MESSPF calculations for all species', newline=1)
     elif statement == 'write_file':
         message('Writing MESS input file...')
         message(f' - Path: {path}')
@@ -94,6 +94,8 @@ def messpf(statement, path=None):
         message('Preparing global keywords section for MESS input...')
         message(' - Using temperatures and pressures defined by user')
         message(' - Using internal AutoMech defaults for other MESS keywords:')
+    elif statement == 'global_transfer_section':
+        message('Preparing global energy transfer section for MESS input...')
     elif statement == 'transfer_section':
         message('Preparing energy transfer section for MESS input...')
     elif statement == 'well_section':

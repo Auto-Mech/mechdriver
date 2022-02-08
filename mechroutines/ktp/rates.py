@@ -94,13 +94,11 @@ def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
         that appears on the PES.
     """
 
-    ioprinter.messpf('transfer_section')
+    ioprinter.messpf('global_transfer_section')
 
-    # Determine the species for which you
+    # Determine the representative well and bath for global keys
     ioprinter.messpf('well_section')
     well_info = etrans.set_etrans_well(rxn_lst, spc_dct)
-
-    # Determine the bath
     ioprinter.messpf('bath_section')
     bath_info = etrans.set_bath(spc_dct, etrans_dct)
 

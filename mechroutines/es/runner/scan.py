@@ -259,18 +259,23 @@ def run_backsteps(
             sp_save_fs = autofile.fs.single_point(path)
             orig_sp_save_fs = autofile.fs.single_point(path_orig)
             ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
-            ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
-            ene = ene * phycon.EH2KCAL
-            ene_orig = ene_orig * phycon.EH2KCAL
-            pot = ene - ene_orig
-            pot_thresh = -0.1
 
-            # Print status message about backstop
-            no_backstep_required = (pot > pot_thresh and passed_bad_point)
+            no_backstep_required = False
+            if orig_sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+                ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+                ene = ene * phycon.EH2KCAL
+                ene_orig = ene_orig * phycon.EH2KCAL
+                pot = ene - ene_orig
+                pot_thresh = -0.1
+
+                # Print status message about backstop
+                no_backstep_required = (pot > pot_thresh and passed_bad_point)
+
             if no_backstep_required:
                 ioprinter.info_message("Reverse Sweep finds a potential "
                                        f"{pot:5.2f} from the forward sweep")
                 ioprinter.info_message("...no more backsteps required")
+                break
             else:
                 ioprinter.warning_message("Backstep finds a potential less "
                                           "than forward sweep of "
@@ -279,8 +284,8 @@ def run_backsteps(
                 ioprinter.info_message("...more backsteps required")
 
             # Break loop if no backstep is required
-            if no_backstep_required:
-                break
+            # if no_backstep_required:
+            #     break
 
 
 def _scan_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):

@@ -38,10 +38,11 @@ MODKIN_VAL_DCT = {
         'ref_scheme': ((str,), ('basic', 'cbh0'), 'basic'),
         'ref_enes': ((str,), ('ANL0',), 'ANL0')
     },
-    'glob_etransfer': {
-        'lj': (None, (), 'estimate'),
-        'edown': (None, (), 'estimate'),
-        'mass': ((tuple,), (), None)
+    'energy_transfer': {
+        'bath': ((str,), (), 'Ar'),
+        'global_lj': (None, (), 'estimate'),
+        'global_edown': (None, (), 'estimate'),
+        'global_mass': ((tuple,), (), None)
     }
 }
 

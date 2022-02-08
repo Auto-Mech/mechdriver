@@ -39,9 +39,9 @@ SPC_VAL_DCT = {
     'smin': ((int, float), (), None),
     'smax': ((int, float), (), None),
     'etrans_nsamp': ((int,), (), None),
-    'bath': ((str,), (), None),
-    'lj': ((str,), (), None),
-    'edown': ((str,), (), None),
+    'mass': ((float,), (), None),
+    'lj': ((tuple, str), (), 'estimate'),
+    'edown': ((tuple, str), (), 'estimate'),
     'active': ((tuple,), (), None),
     'zma_idx': ((int,), (), 0),
     'conf_id': ((tuple, list), (), None)
@@ -321,7 +321,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
-    print(f'\n  Preparing for reaction {rct_str} = {prd_str}')
+    print(f'\n  Preparing TS for PES-Channel {pes_idx+1}-{chnl_idx+1} : '
+          f'{rct_str} = {prd_str}')
 
     # Set the reacs and prods for the desired direction
     reacs, prods = rxnid.set_reaction_direction(

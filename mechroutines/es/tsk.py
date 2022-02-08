@@ -404,10 +404,6 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         else:
 
-            # Set up the run scripts
-            script_str, kwargs = qchem_params(
-                method_dct)
-
             # Grab frequencies for the reference, print ref freqs
             if job == 'hess':
                 if ini_cnf_save_fs[-1].file.harmonic_frequencies.exists(
@@ -434,6 +430,10 @@ def conformer_tsk(job, spc_dct, spc_name,
                 print('Running task for geometry at ', geo_save_path)
                 geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
                 zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+
+                script_str, kwargs = qchem_params(
+                    method_dct, geo=geo, spc_info=spc_info)
+
                 ES_TSKS[job](
                     zma, geo, spc_info, mod_thy_info,
                     ini_cnf_run_fs, ini_cnf_save_fs, ini_locs, run_prefix,
@@ -1018,7 +1018,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
         if spc_natoms == 1:
             # Skip all tasks except init_geom and conf_energy
             # if species is an atom
-            if tsk not in ('init_geom', 'conf_energy'):
+            if tsk not in ('init_geom', 'conf_energy', 'conf_prop'):
                 skip = True
                 ioprinter.info_message(
                     'Skipping task for an atom...', newline=1)
