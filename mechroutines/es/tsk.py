@@ -1018,7 +1018,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
         if spc_natoms == 1:
             # Skip all tasks except init_geom and conf_energy
             # if species is an atom
-            if tsk not in ('init_geom', 'conf_energy'):
+            if tsk not in ('init_geom', 'conf_energy', 'conf_prop'):
                 skip = True
                 ioprinter.info_message(
                     'Skipping task for an atom...', newline=1)
