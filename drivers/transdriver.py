@@ -22,7 +22,7 @@ def run(pes_rlst, spc_rlst,
         trans_tsk_lst,
         pes_mod_dct, spc_mod_dct,
         spc_dct, thy_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix, mdriver_path):
     """ main driver for etransfer run
     """
 
@@ -52,4 +52,4 @@ def run(pes_rlst, spc_rlst,
         run_tsk(tsk, spc_queue,
                 spc_dct, thy_dct, pes_mod_dct,
                 etrans_keyword_dct,
-                run_prefix, save_prefix)
+                run_prefix, save_prefix, mdriver_path)

@@ -374,9 +374,9 @@ def mol_data(spc_name, spc_dct,
     if zrxn is None:
         ioprinter.info_message(
             'Determining energy transfer parameters...', newline=1)
-        etrans_dct = etrans.build_etrans_dct_for_species(
+        etrans_dct = etrans.etrans_dct_for_species(
             spc_dct_i, pes_mod_dct_i)
-        well_info = sinfo.from_dct(spc_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i)
         bath_info = etrans.set_bath(spc_dct, etrans_dct)
 
         edown_str, collid_freq_str = etrans.make_energy_transfer_strs(

@@ -29,6 +29,9 @@ def build_transport_file(tgt_queue,
     trans_dct = {}
     for tgt_name in tgt_queue:
 
+        print("\n+++++++++++++++++++++++++++++++++++++++++++++\n")
+        print(f' Generating transport parameters for {tgt_name}')
+
         tgt_dct = spc_dct[tgt_name]
         bath_dct = spc_dct[bath_name]
         tgt_info = sinfo.from_dct(tgt_dct)
@@ -46,7 +49,7 @@ def build_transport_file(tgt_queue,
         if t_cnf_save_fs[-1].file.geometry.exists(t_min_cnf_locs):
             geo = t_cnf_save_fs[-1].file.geometry.read(t_min_cnf_locs)
             _path = t_cnf_save_fs[-1].file.geometry.path(t_min_cnf_locs)
-            print(f'Reading geometty from path: {_path}')
+            print(f'Reading geometry from path: {_path}')
         else:
             geo = None
         if t_cnf_save_fs[-1].file.dipole_moment.exists(t_min_cnf_locs):
@@ -65,6 +68,7 @@ def build_transport_file(tgt_queue,
             polar = None
 
         # Obtain LJ sigma, epsilon from filesystem or estimation
+        print('Determining Target+Bath and Bath+Bath LJ parameters...')
         tb_sig, tb_eps, bb_sig, bb_eps = _lj_params(
             tb_etrans_fs, tb_etrans_locs,
             bb_etrans_fs, bb_etrans_locs,
@@ -72,13 +76,15 @@ def build_transport_file(tgt_queue,
             pes_model_dct_i)
 
         # Use the combining rules for sigma and epsilon
-        print('Determining A+A LJ parameters from combining rules...')
+        print('Determining Target+Target LJ parameters '
+              'from combining rules...')
         tt_eps = automol.etrans.combine.epsilon(tb_eps, bb_eps)
         tt_sig = automol.etrans.combine.sigma(tb_sig, bb_sig)
 
         # Get the Z_ROT number
         print('Determining Z ROT at 298 K...')
-        zrot = automol.etrans.estimate.rotational_relaxation_number(tgt_info[0])
+        zrot = automol.etrans.estimate.rotational_relaxation_number(
+            tgt_info[0])
 
         # Build dct and append it ot overall dictionary Append info to list
         dct = {
@@ -92,11 +98,12 @@ def build_transport_file(tgt_queue,
         trans_dct.update({tgt_name: dct})
 
     # Write the string with all of the transport properties
+    ioprinter.info_message(
+        'Collating data into CHEMKIN transport file string:', newline=1)
     transport_str = chemkin_io.writer.transport.properties(trans_dct)
-    ioprinter.debug_message('transport_str\n', transport_str, newline=1)
+    ioprinter.debug_message(transport_str)
     ioprinter.obj('vspace')
     ioprinter.obj('line_dash')
-    ioprinter.info_message('Writing the CHEMKIN transport file', newline=1)
 
     return transport_str
 
@@ -108,10 +115,6 @@ def _lj_params(tb_etrans_fs, tb_etrans_locs,
     """ Obtain the energy transfer parameters by reading the filesystem
         or estimating it with the Jasper formulae.
     """
-
-    print('locs test')
-    print(tb_etrans_locs)
-    print(bb_etrans_locs)
 
     if (
         tb_etrans_fs[-1].file.lennard_jones_epsilon.exists(tb_etrans_locs) and
@@ -125,7 +128,6 @@ def _lj_params(tb_etrans_fs, tb_etrans_locs,
         tb_sig = tb_etrans_fs[-1].file.lennard_jones_sigma.read(tb_etrans_locs)
         bb_sig = bb_etrans_fs[-1].file.lennard_jones_sigma.read(bb_etrans_locs)
     else:
-        print('Generating Etrans Reading sigma, epsilon from filesystem')
         t_etrans_dct = etrans.etrans_dct_for_species(tgt_dct, pes_mod_dct_i)
         b_etrans_dct = etrans.etrans_dct_for_species(bath_dct, pes_mod_dct_i)
         tgt_info = sinfo.from_dct(tgt_dct)
@@ -172,7 +174,6 @@ def _etrans_fs(spc_dct, tgt_name, bath_name,
             hbond_cutoffs=spc_dct_i['hbond_cutoffs'],
             print_enes=True,
             nprocs=1)
-        print('cnf loc info', cnf_rng_info)
         min_cnf_locs = cnf_rng_info[0][0]
 
         # Build the energy transfer filesystem objects

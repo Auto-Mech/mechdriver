@@ -2,6 +2,7 @@
   Handle building the energy transfer section
 """
 
+from phydat import phycon
 import automol
 import mess_io
 from mechanalyzer.inf import spc as sinfo
@@ -79,7 +80,7 @@ def mass_params(tgt_info, bath_info, etrans_dct):
     mass = etrans_dct.get('mass', None)
     if mass is None:
         mass = etrans_dct.get('global_mass', None)
-    
+
     # Now set the values
     if mass is not None:
         ioprinter.info_message('  - Using the user input values...')
@@ -113,10 +114,10 @@ def lj_params(tgt_info, bath_info, etrans_dct):
     sig, eps = None, None
 
     # First try and get the ljpar for spc or PES (global_ljpar)
-    ljpar = etrans_dct.get('lj', None)
-    if ljpar is None:
-        ljpar = etrans_dct.get('global_lj', None)
-    
+    ljpar = etrans_dct.get('lj', 'estimate')
+    if ljpar == 'estimate':
+        ljpar = etrans_dct.get('global_lj', 'estimate')
+
     # Now set the values
     if ljpar is not None:
 
@@ -130,16 +131,16 @@ def lj_params(tgt_info, bath_info, etrans_dct):
             ioprinter.info_message('- Estimating the parameters...')
             tgt_ich, bath_ich = tgt_info[0], bath_info[0]
             model = automol.etrans.estimate.determine_collision_model_series(
-                tgt_ich, bath_ich)
+                tgt_ich, bath_ich, 'lj')
             n_heavy = automol.geom.atom_count(
-                automol.inchi.geometry(tgt_ich[0]), 'H', match=False)
+                automol.inchi.geometry(tgt_ich), 'H', match=False)
             ioprinter.info_message(
-                '    - Series to use for estimation for estimation:'
-                f'      {model[1]} '
-                f'    - Heavy atom count: {n_heavy}...')
+                '    - Series to use for estimation for estimation: '
+                f' {model}\n'
+                f'    - Heavy atom count: {n_heavy}')
 
             sig, eps = automol.etrans.estimate.lennard_jones_params(
-                n_heavy, model[0], model[1])
+                n_heavy, model)
     else:
         sig, eps = None, None
 
@@ -168,9 +169,9 @@ def edown_params(tgt_info, bath_info, etrans_dct, ljpar=None):
     efactor, epower, ecutoff = None, None, None
 
     # First try and get the edown for spc or PES (global_edown)
-    edown = etrans_dct.get('edown', None)
-    if edown is None:
-        edown = etrans_dct.get('global_edown', None)
+    edown = etrans_dct.get('edown', 'estimate')
+    if edown == 'estimate':
+        edown = etrans_dct.get('global_edown', 'estimate')
 
     # Now get the values
     if edown is not None:
@@ -185,23 +186,30 @@ def edown_params(tgt_info, bath_info, etrans_dct, ljpar=None):
             assert ljpar is not None
 
             ioprinter.info_message('  - Estimating the parameters...')
-            tgt_ich = tgt_info[0]
-            tgt_geo = automol.inchi.geometry(tgt_ich)
+
+            tgt_geo = automol.inchi.geometry(tgt_info[0])
             model = automol.etrans.estimate.determine_collision_model_series(
-                tgt_ich, bath_info[0])
-            sig, eps, mass1, mass2 = ljpar
-            n_eff = automol.etrans.estimate.effective_rotor_count(tgt_geo)
-            ioprinter.info_message(
-                '    - Series to use for estimation for estimation:'
-                f' {model[1]}\n'
-                f'    - Found effective rotor count: {n_eff}'
-                '    - Using following LJ parameters for '
-                'collisional frequency and alpha calculation: '
-                f'eps={eps} cm-1, sigma={sig} Ang, '
-                f'mass1={mass1} kg, mass2={mass2} kg')
-            efactor, epower = automol.etrans.eff.alpha(
-                n_eff, eps, sig, mass1, mass2, model[1])
-            ecutoff = 15.0
+                tgt_info[0], bath_info[0], 'alpha')
+            if model is not None:
+                sig, eps, mass1, mass2 = ljpar
+                n_eff = automol.etrans.estimate.effective_rotor_count(tgt_geo)
+                ioprinter.info_message(
+                    '    - Series to use for estimation for estimation:'
+                    f' {model}\n'
+                    f'    - Found effective rotor count: {n_eff}\n'
+                    '    - Using following LJ parameters for '
+                    'collisional frequency and alpha calculation:\n'
+                    f'       eps={eps*phycon.EH2WAVEN:.2f} cm-1, '
+                    f'sigma={sig*phycon.BOHR2ANG:.2f} Ang,\n'
+                    f'       mass1={mass1:.2f} amu, mass2={mass2:.2f} amu')
+                efactor, epower = automol.etrans.estimate.alpha(
+                    n_eff, eps, sig, mass1, mass2, model,
+                    empirical_factor=2.0)
+                ecutoff = 15.0
+            else:
+                efactor, epower, ecutoff = None, None, None
+                ioprinter.warning_message(
+                    f'Cannot calculate Zalpha for {model}')
 
     return efactor, epower, ecutoff
 
@@ -211,10 +219,10 @@ def etrans_dct_for_species(spc_dct_i, pes_mod_dct_i):
     """  Build an energy transfer dictionary for species from a spc dct
     """
     return {
-        'bath': pes_mod_dct_i['bath'],
+        'bath': pes_mod_dct_i['energy_transfer']['bath'],
         'mass': spc_dct_i.get('mass', None),
-        'lj': spc_dct_i.get('lj', None),
-        'edown': spc_dct_i.get('edown', None)
+        'lj': spc_dct_i.get('lj', 'estimate'),
+        'edown': spc_dct_i.get('edown', 'estimate')
     }
 
 

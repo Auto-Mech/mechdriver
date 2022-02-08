@@ -87,7 +87,7 @@ if TRANS_TSKS is not None:
             TRANS_TSKS,
             KMOD_DCT, SMOD_DCT,
             SPC_DCT, THY_DCT,
-            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
+            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH,
         )
     ioprinter.program_exit('trans')
 
