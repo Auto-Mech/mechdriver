@@ -274,6 +274,7 @@ def reactions(rxn_info, ini_thy_info, zma_locs, save_prefix):
             save_prefix, save_prefix, 'TRANSITION STATE',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:])
+        print('rxn_path test', rxn_path)
         ts_locs = ts_save_fs[-1].existing()
         if ts_locs:
             for locs in ts_save_fs[-1].existing():

@@ -467,6 +467,10 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     """
 
     zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+    print('zma')
+    print(automol.zmat.string(zma))
+    print('\nzrxn')
+    print(zrxn)
     rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_path = zma_fs[-1].path(zma_locs)
