@@ -206,16 +206,17 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
         for ich in constituent_ichs:
             for name, spc_dct_i in spc_dct.items():
                 # Try to match inchis with stereo included in checks
-                if ich == spc_dct_i.get('inchi'):
-                    _split_names += (name,)
-                    break
-                # Remove stereo since we used to not store this data
-                # ich_noste1 = automol.inchi.standard_form(ich, stereo=False)
-                # ich_noste2 = automol.inchi.standard_form(
-                #     spc_dct_i.get('inchi'), stereo=False)
-                # if ich_noste1 == ich_noste2:
+                # if ich == spc_dct_i.get('inchi'):
                 #     _split_names += (name,)
                 #     break
+                # Remove stereo since we used to not store this data
+                print('name test', name)
+                ich_noste1 = automol.inchi.standard_form(ich, stereo=False)
+                ich_noste2 = automol.inchi.standard_form(
+                    spc_dct_i.get('inchi'), stereo=False)
+                if ich_noste1 == ich_noste2:
+                    _split_names += (name,)
+                    break
         split_names = tuple(i for n, i in enumerate(_split_names)
                             if i not in _split_names[:n])
 
