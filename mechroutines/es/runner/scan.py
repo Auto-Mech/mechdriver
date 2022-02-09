@@ -487,7 +487,7 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
         :param constraint_dct: values of coordinates to constrain during scan
         :type constraint_dct: dict[str: float]
     """
-    coord_locs = [coord_names]
+    coord_locs = list(coord_names)
     if constraint_dct is not None:
         coord_locs = [constraint_dct] + [coord_locs]
         tmp_locs = scn_save_fs[3].existing()

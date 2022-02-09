@@ -967,7 +967,7 @@ def hr_tsk(job, spc_dct, spc_name,
 
                 # get the scn_locs, maybe get a function?
                 _, scn_locs = scan.scan_locs(
-                    ini_scn_save_fs, tors_names,
+                    ini_scn_save_fs, (tors_names,),
                     constraint_dct=constraint_dct)
                 for locs in scn_locs:
                     geo = ini_scn_save_fs[-1].file.geometry.read(locs)
