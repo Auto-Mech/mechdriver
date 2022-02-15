@@ -75,7 +75,6 @@ def run_scan(zma, spc_info, mod_thy_info,
         coord_locs = coord_names
     else:
         coord_locs = constraint_dct
-
     scn_save_fs[1].create([coord_locs])
     inf_obj = autofile.schema.info_objects.scan_branch(
         dict(zip(coord_names, coord_grids)))
@@ -157,7 +156,6 @@ def run_backsteps(
 
     pot = {}
     for idx, grid_vals in enumerate(mixed_grid_vals_lst):
-
         locs = [coord_names, grid_vals]
         back_locs = [coord_names, rev_grid_vals_lst[idx]]
         if constraint_dct is not None:
@@ -444,8 +442,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
     # Set locs for scan
     coord_locs, save_locs = scan_locs(
         scn_run_fs, coord_names, constraint_dct=constraint_dct)
-
-    if not scn_run_fs[1].exists([coord_locs]):
+    if not scn_run_fs[1].exists(coord_locs):
         ioprinter.info_message("No scan to save. Skipping...")
     else:
         locs_lst = []
@@ -458,6 +455,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
             # Save the structure
             success, ret = read_job(job, run_fs)
+            print(success)
             if success:
                 # Need to get the init zma structure in here
                 # could write init zma to run filesys; wont work retro
@@ -471,9 +469,12 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
                     init_zma=init_zma, init_geo=None)
                 locs_lst.append(locs)
 
+        print(locs_lst)
         # Build the trajectory file
         if locs_lst:
-            write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
+            print(locs_lst)
+            print(coord_locs)
+            write_traj(constraint_dct, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
@@ -489,9 +490,13 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     """
     coord_locs = list(coord_names)
     if constraint_dct is not None:
-        coord_locs = [constraint_dct] + [coord_locs]
+        coord_locs = [constraint_dct]
+        print(list(coord_names))
+        ext_coord_locs = coord_locs + [list(coord_names)]
         tmp_locs = scn_save_fs[3].existing()
-        scn_locs = [locs for locs in tmp_locs if locs[:2] == coord_locs]
+        for locs in tmp_locs:
+            print(ext_coord_locs, locs[:2], ext_coord_locs == locs[:2])
+        scn_locs = [locs for locs in tmp_locs if locs[:2] == ext_coord_locs]
     else:
         scn_locs = scn_save_fs[2].existing([coord_locs])
     return coord_locs, scn_locs
@@ -595,6 +600,7 @@ def write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
 
     traj_path = scn_save_fs[1].file.trajectory.path([ini_locs])
     print(f"Updating scan trajectory file at {traj_path}")
+    print(traj, ini_locs)
     scn_save_fs[1].file.trajectory.write(traj, [ini_locs])
 
 

@@ -906,7 +906,8 @@ def hr_tsk(job, spc_dct, spc_name,
                 zma, run_tors_names, tors_model)
 
             # Read and print the potential
-            sp_fs = autofile.fs.single_point(cnf_save_path)
+            ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_min_locs)
+            sp_fs = autofile.fs.single_point(ini_cnf_save_path)
             ref_ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
             tors_pots, tors_zmas, tors_paths = {}, {}, {}
             for tors_names, tors_grids in zip(
@@ -915,7 +916,7 @@ def hr_tsk(job, spc_dct, spc_name,
                     zma, const_names, tors_names)
                 pot, _, _, _, zmas, paths = filesys.read.potential(
                     tors_names, tors_grids,
-                    cnf_save_path,
+                    ini_cnf_save_path,
                     mod_thy_info, ref_ene,
                     constraint_dct,
                     read_zma=True)

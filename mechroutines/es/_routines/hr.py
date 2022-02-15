@@ -51,7 +51,7 @@ def hindered_rotor_scans(
         # Setting the constraints
         constraint_dct = automol.zmat.constraint_dct(
             zma, const_names, tors_names)
-
+        print('in hr', tors_names)
         scan.execute_scan(
             zma=zma,
             spc_info=spc_info,
