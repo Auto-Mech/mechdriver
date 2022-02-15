@@ -222,9 +222,10 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
                         break
         split_names = tuple(i for n, i in enumerate(_split_names)
                             if i not in _split_names[:n])
-
-        ioprinter.info_message(f'- Splitting species {spc_name}'
-                               f'into {split_names}')
+        split_name_str = ' and '.join(split_names)
+        
+        ioprinter.info_message(f'- Splitting species {spc_name} '
+                               f'into {split_name_str}')
         if len(split_names) < 2:
             ioprinter.warning_message(
                 'Could not match all following InChI strings '
