@@ -442,6 +442,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
     # Set locs for scan
     coord_locs, save_locs = scan_locs(
         scn_run_fs, coord_names, constraint_dct=constraint_dct)
+
     if not scn_run_fs[1].exists(coord_locs):
         ioprinter.info_message("No scan to save. Skipping...")
     else:
@@ -455,7 +456,6 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
             # Save the structure
             success, ret = read_job(job, run_fs)
-            print(success)
             if success:
                 # Need to get the init zma structure in here
                 # could write init zma to run filesys; wont work retro
@@ -469,12 +469,12 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
                     init_zma=init_zma, init_geo=None)
                 locs_lst.append(locs)
 
-        print(locs_lst)
         # Build the trajectory file
         if locs_lst:
-            print(locs_lst)
-            print(coord_locs)
-            write_traj(constraint_dct, scn_save_fs, mod_thy_info, locs_lst)
+            if constraint_dct is not None:
+                write_traj(constraint_dct, scn_save_fs, mod_thy_info, locs_lst)
+            else:
+                write_traj(coord_names, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
@@ -491,14 +491,12 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     coord_locs = list(coord_names)
     if constraint_dct is not None:
         coord_locs = [constraint_dct]
-        print(list(coord_names))
         ext_coord_locs = coord_locs + [list(coord_names)]
         tmp_locs = scn_save_fs[3].existing()
-        for locs in tmp_locs:
-            print(ext_coord_locs, locs[:2], ext_coord_locs == locs[:2])
         scn_locs = [locs for locs in tmp_locs if locs[:2] == ext_coord_locs]
     else:
-        scn_locs = scn_save_fs[2].existing([coord_locs])
+        coord_locs = [coord_locs]
+        scn_locs = scn_save_fs[2].existing(coord_locs)
     return coord_locs, scn_locs
 
 
