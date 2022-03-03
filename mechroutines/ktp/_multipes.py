@@ -115,7 +115,8 @@ def set_hot_enes(pesgrp_num, reacs, prods,
     return hot_enes_dct
 
 
-def obtain_multipes_rxn_ktp_dct(rate_paths_dct, pes_param_dct,
+def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
+                                rate_paths_dct, pes_param_dct,
                                 label_dct, pes_mod_dct, pes_mod):
     """ Obtain the rate constants for all of the PESs in the group.
         Call additional
@@ -125,27 +126,42 @@ def obtain_multipes_rxn_ktp_dct(rate_paths_dct, pes_param_dct,
     rate_strs_dct, mess_paths_dct = reader.mess.rate_strings(rate_paths_dct)
 
     # Get an inverted label dct mess->mech
-    inv_label_dct = automol.util.dict_.invert(label_dct)
+    # inv_label_dct = automol.util.dict_.invert(label_dct)
 
     # Read MESS file and get rate constants
-    if len(rate_strs_dct) == 1:
-        mess_path = tuple(mess_paths_dct.values())[0]
+    if len(pes_grp_rlst) == 1:
+
+        pes_inf = tuple(pes_grp_rlst.keys())[0]
+
+        rate_str_dct = rate_strs_dct[pes_inf]
+        if rate_str_dct['wext']:
+            mess_path = mess_paths_dct[pes_inf]['wext']
+            mess_str = rate_str_dct['wext']['ktp_out']
+        elif rate_str_dct['base']:
+            mess_path = mess_paths_dct[pes_inf]['base']
+            mess_str = rate_str_dct['base']['ktp_out']
+        else:
+            print('No Rates to fit')
 
         print('Fitting rates for single PES...')
         print(f'Fitting rates from {mess_path}')
-        mess_str = tuple(rate_strs_dct.values())[0]['ktp_out']
-        rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
+
+        # rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
+        rxn_ktp_dct = mess_io.reader.new_rates.get_rxn_ktp_dct(
             mess_str,
             filter_kts=True,
+            read_fake=False,
+            read_self=False,
             read_rev=False,
             tmin=min(pes_mod_dct[pes_mod]['rate_temps']),
             tmax=max(pes_mod_dct[pes_mod]['rate_temps']),
             pmin=min(pes_mod_dct[pes_mod]['pressures']),
             pmax=max(pes_mod_dct[pes_mod]['pressures'])
         )
-        rxn_ktp_dct = mess_io.reader.rates.relabel(rxn_ktp_dct, inv_label_dct)
+        # rxn_ktp_dct = mess_io.reader.rates.relabel(rxn_ktp_dct, inv_label_dct)
     else:
         rxn_ktp_dct = prompt_dissociation_ktp_dct(
+            pes_grp_rlst,
             pes_param_dct, rate_strs_dct, mess_paths_dct,
             inv_label_dct,
             pes_mod_dct[pes_mod]['rate_temps'],
@@ -155,7 +171,8 @@ def obtain_multipes_rxn_ktp_dct(rate_paths_dct, pes_param_dct,
     return rxn_ktp_dct
 
 
-def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
+def prompt_dissociation_ktp_dct(pes_grp_rlst,
+                                pes_param_dct, rate_strs_dct, mess_paths_dct,
                                 inv_label_dct,
                                 temps, pressures):
     """ Evaluate the prompt dissociation k(T,P) values.
@@ -164,21 +181,6 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
         PEDS and hot energies to modify the values accounting for prompt
         dissociation.
 
-        :param temps: temperatures to evaluate prompt dissociation rates
-        :type temps: numpy.array
-        :param rad_name: mechanism name of radical that is dissociated
-        :type rad_name: str
-        :param modeltype: statistical energy
-            distribution model for hot radical
-        :type modeltype: str
-        :param inp_str: MESSRATE input string
-        :type inp_str: str
-        :param ktp_out_str: MESSRATE output string with k(T,P) values
-        :type ktp_out_str: str
-        :param ke_out_str: MESSRATE output string with k(E) values
-        :type ke_out_str: str
-        :param log_str: MESSRATE output .log string
-        :type log_str: str
         :param bf_threshold: % branching fraction to include species in prods
         :type bf_threshold: float
         :rtype: dict[]
@@ -189,19 +191,23 @@ def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
     modeltype = pes_param_dct['modeltype']
     bf_thresh = pes_param_dct['bf_threshold']
 
+    # Get the strings and paths
+    ped_pes_inf = tuple(pes_grp_rlst.keys())[0]
+    hot_pes_inf = tuple(pes_grp_rlst.keys())[0]
+
     # Obtain the strings that are needed
-    ped_mess_path = tuple(mess_paths_dct.values())[0]
-    hot_mess_path = tuple(mess_paths_dct.values())[1]
+    ped_mess_path = mess_paths_dct[ped_pes_inf]['base']
+    hot_mess_path = mess_paths_dct[hot_pes_inf]['base']
     print('Fitting rates from\n'
           f'  - PED: {ped_mess_path}\n'
           f'  - HOT: {hot_mess_path}')
 
-    ped_strs_dct = tuple(rate_strs_dct.values())[0]
+    ped_strs_dct = rate_strs_dct[ped_pes_inf]['base']
     ped_inp_str, ped_out_str = ped_strs_dct['inp'], ped_strs_dct['ktp_out']
     ped_ped_str = ped_strs_dct['ped']
     ped_ke_out_str = ped_strs_dct['ke_out']
 
-    hot_strs_dct = tuple(rate_strs_dct.values())[1]
+    hot_strs_dct = rate_strs_dct[hot_pes_inf]['base']
     hot_inp_str, hot_out_str = hot_strs_dct['inp'], hot_strs_dct['ktp_out']
     hot_log_str = hot_strs_dct['log']
 

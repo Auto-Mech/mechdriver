@@ -149,6 +149,7 @@ TSK_VAL_DCT = {
     'kin_model': ((str,), (), None),
     'spc_model': ((str,), (), None),
     'nprocs': ((int,), (), 10),
+    'messrate_version': ((str,), ('v1', 'v2'), 'v1'),
     'use_well_extension': ((bool,), (), False),
     'linked_pes': ((tuple,), (), None),
     'float_precision': ((str,), ('double', 'quadruple'), 'double'),

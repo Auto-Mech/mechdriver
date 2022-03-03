@@ -139,9 +139,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         run_prefix, save_prefix, ref_idx=0)
     basis_energy_dct[spc_model].update(model_basis_energy_dct)
 
-    print('basis energy dct')
-    print(basis_energy_dct)
-
     # Loop over all the channels and write the MESS strings
     written_labels = []
     for rxn in rxn_lst:
@@ -253,33 +250,54 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 spc_strs.append(spc_str)
                 full_dat_dct.update(dat_dct)
 
-        # Set the labels to put into the file
-        spc_labels = ()
-        for name in rgt_names:
-            if name in label_dct:
-                spc_labels += (label_dct[name],)
-            else:
-                spc_labels += (name,)
-
+        # Generate auxiliary labels corresponding to SMILES for quick IDs
         aux_labels = tuple(automol.inchi.smiles(spc_dct[name]['inchi'])
                            for name in rgt_names)
 
-        # spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
-        #              for name in rgt_names]
+        # old MESS channel labels system
+        # Set the labels to put into the file
+        # spc_labels = ()
+        # for name in rgt_names:
+        #     if name in label_dct:
+        #         spc_labels += (label_dct[name],)
+        #     else:
+        #         spc_labels += (name,)
+        #
+        # _rxn_str = make_rxn_str(rgt_names)
+        # _rxn_str_rev = make_rxn_str(rgt_names[::-1])
+        # if _rxn_str in label_dct:
+        #     chn_label = label_dct[_rxn_str]
+        # elif _rxn_str_rev in label_dct:
+        #     chn_label = label_dct[_rxn_str_rev]
+        # else:
+        #     ioprinter.warning_message(f'no {_rxn_str} in label dct')
+
+        # new MESS channel labels system
+        spc_labels = rgt_names+tuple()
+
+        # always write as A+B
         _rxn_str = make_rxn_str(rgt_names)
         _rxn_str_rev = make_rxn_str(rgt_names[::-1])
-        if _rxn_str in label_dct:
-            chn_label = label_dct[_rxn_str]
-        elif _rxn_str_rev in label_dct:
-            chn_label = label_dct[_rxn_str_rev]
+        if _rxn_str_rev in written_labels:
+            chn_label = _rxn_str_rev
         else:
-            ioprinter.warning_message(f'no {_rxn_str} in label dct')
+            chn_label = _rxn_str
+
+        if any(lbl in written_labels for lbl in (_rxn_str, _rxn_str_rev)):
+            write_string = False
+        else:
+            write_string = True
 
         # Write the strings
-        if chn_label not in written_labels:
+        if write_string:
+            # Append unwritten label to master list for future loops
+
+            # Write appropriate string for Dummy, Bimol, Well
             written_labels.append(chn_label)
             if len(rgt_names) == 3:
-                aux_str = f'{spc_labels[0]}+{spc_labels[1]}+{spc_labels[2]}'
+                aux_str = (
+                    f'[{aux_labels[0]} + {aux_labels[1]} + {aux_labels[2]}]'
+                )
                 bi_str += mess_io.writer.dummy(
                     chn_label,
                     aux_id_label=aux_str,
@@ -292,7 +310,9 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 else:
                     calc_dens = (False, False)
 
-                aux_str = f'{spc_labels[0]} + {spc_labels[1]}'
+                aux_str = (
+                    f'[{aux_labels[0]} + {aux_labels[1]}]'
+                )
                 bi_str += mess_io.writer.bimolecular(
                     chn_label,
                     spc_labels[0], spc_strs[0],
@@ -307,9 +327,12 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 edown_str = rgt_infs[0].get('edown_str', None)
                 collid_freq_str = rgt_infs[0].get('collid_freq_str', None)
 
+                aux_str = (
+                    f'[{aux_labels[0]}]'
+                )
                 well_str += mess_io.writer.well(
                     chn_label, spc_strs[0],
-                    aux_id_label=aux_labels[0],
+                    aux_id_label=aux_str,
                     zero_ene=rgt_ene,
                     edown_str=edown_str,
                     collid_freq_str=collid_freq_str) + '\n'
@@ -327,7 +350,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
 
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
-            (reacs, prods), 'reacs', chnl_infs['fake_vdwr'],
+            tsname, (reacs, prods), 'reacs', chnl_infs['fake_vdwr'],
             chnl_enes, label_dct, reac_label)
 
         # Append the fake strings to overall strings
@@ -344,7 +367,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
 
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
-            (reacs, prods), 'prods', chnl_infs['fake_vdwp'],
+            tsname, (reacs, prods), 'prods', chnl_infs['fake_vdwp'],
             chnl_enes, label_dct, prod_label)
 
         # Append the fake strings to overall strings
@@ -359,7 +382,8 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
 
     # Write MESS string for the inner transition state; append full
     # Label has to correspond only to base name (ignores configuration)
-    ts_label = label_dct[tsname]
+    # ts_label = label_dct[tsname]
+    ts_label = tsname   # change MESS labels
     rclass = spc_dct[tsname+'_0']['class']
     sts_str, ts_dat_dct = _make_ts_mess_str(
         chnl_infs, chnl_enes, spc_model_dct_i, rclass,
@@ -474,7 +498,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
     return ts_str, ts_dat_dct
 
 
-def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
+def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
                          chnl_enes, label_dct, side_label):
     """ write the MESS strings for the fake wells and TSs
     """
@@ -506,15 +530,20 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
     }
 
     # MESS string for the fake reactant side well
-    well_dct_key = make_rxn_str(chnl[side_idx], prepend='F')
-    well_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend='F')
-    if well_dct_key in label_dct:
-        fake_well_label = label_dct[well_dct_key]
-    elif well_dct_key_rev in label_dct:
-        fake_well_label = label_dct[well_dct_key_rev]
-    else:
-        ioprinter.warning_message(f'No label {well_dct_key} in label dict')
-    # well_str += mess_io.writer.species_separation_str()
+
+    # Old MESS label code
+    # well_dct_key = make_rxn_str(chnl[side_idx], prepend='F')
+    # well_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend='F')
+    # if well_dct_key in label_dct:
+    #     fake_well_label = label_dct[well_dct_key]
+    # elif well_dct_key_rev in label_dct:
+    #     fake_well_label = label_dct[well_dct_key_rev]
+    # else:
+    #     ioprinter.warning_message(f'No label {well_dct_key} in label dict')
+
+    # New MESS label code
+    fake_well_label = make_rxn_str(chnl[side_idx], prepend='FW-')
+
     _side_str = '+'.join(chnl[side_idx])
     aux_str = f'Fake Well for {_side_str}'
     fake_well, well_dat = blocks.fake_species_block(*fake_inf_dcts)
@@ -524,14 +553,20 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
         zero_ene=chnl_enes[well_key])
 
     # MESS PST TS string for fake reactant side well -> reacs
-    pst_dct_key = make_rxn_str(chnl[side_idx], prepend=prepend_key)
-    pst_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend=prepend_key)
-    if pst_dct_key in label_dct:
-        pst_label = label_dct[pst_dct_key]
-    elif pst_dct_key_rev in label_dct:
-        pst_label = label_dct[pst_dct_key_rev]
-    else:
-        ioprinter.warning_message(f'No label {pst_dct_key} in label dict')
+
+    # Old MESS label code
+    # pst_dct_key = make_rxn_str(chnl[side_idx], prepend=prepend_key)
+    # pst_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend=prepend_key)
+    # if pst_dct_key in label_dct:
+    #     pst_label = label_dct[pst_dct_key]
+    # elif pst_dct_key_rev in label_dct:
+    #     pst_label = label_dct[pst_dct_key_rev]
+    # else:
+    #     ioprinter.warning_message(f'No label {pst_dct_key} in label dict')
+
+    # New MESS label code (use channel index for PST barrier label)
+    chn_idx = tsname.split('_')[2]  # ts_pesidx_chnidx_sadpt_idx
+    pst_label = f'{prepend_key}{chn_idx}'
     pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,

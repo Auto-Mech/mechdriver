@@ -9,6 +9,7 @@ import autorun
 import ratefit
 from mechlib import filesys
 from mechlib.amech_io import writer
+from mechlib.amech_io import reader
 from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models.typ import use_well_extension
@@ -86,25 +87,33 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
         print('User requested well extension scheme for rates...')
 
         # Run the base MESSRATE
+        print(f'  - Running base MESS job at path {base_mess_path}')
         autorun.run_script(autorun.SCRIPT_DCT['messrate'], base_mess_path)
 
         # Write the well-extended MESSRATE file
-        print('Reading the input and output from the base MESSRATE run...')
-        inp_str = ioformat.read_file(base_mess_path, 'mess.inp')
-        out_str = ioformat.read_file(base_mess_path, 'mess.out')
-        aux_str = ioformat.read_file(base_mess_path, 'mess.aux')
-        log_str = ioformat.read_file(base_mess_path, 'mess.log')
+        rate_strs_dct, mess_paths_dct = reader.mess.rate_strings(
+            rate_paths_dct)
+        read_mess_path = mess_paths_dct[pes_inf]['base']
+        print('  - Reading input and output from '
+              f'base MESSRATE job at {read_mess_path}')
 
-        print('Setting up the well-extended MESSRATE input...')
-        wext_mess_inp_str = ratefit.fit.well_lumped_input_file(
-            inp_str, out_str, aux_str, log_str,
-            pes_model_dct_i['well_extension_pressure'],
-            pes_model_dct_i['well_extension_temp'])
+        wext_p = pes_model_dct_i['well_extension_pressure']
+        wext_t = pes_model_dct_i['well_extension_temp']
+        print('  - Setting up the well-extended MESSRATE input with.')
+        print(f'   lumping/extension Scheme for P={wext_p} atm, T={wext_t} K')
+        wext_mess_inp_str = mess_io.new_well_lumped_input_file(
+            rate_strs_dct[pes_inf]['base']['inp'],
+            rate_strs_dct[pes_inf]['base']['ktp_out'],
+            rate_strs_dct[pes_inf]['base']['aux'],
+            rate_strs_dct[pes_inf]['base']['log'],
+            wext_p,
+            wext_t)
 
         wext_mess_path = rate_paths_dct[pes_inf]['wext']
         ioprinter.obj('line_plus')
-        ioprinter.writing('MESS input file', base_mess_path)
-        ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
+        ioprinter.writing('New Well-Extended MESS input file '
+                          f'at path {wext_mess_path}')
+        ioprinter.debug_message('MESS Input:\n\n'+wext_mess_inp_str)
         autorun.write_input(
             wext_mess_path, wext_mess_inp_str,
             aux_dct=dats, input_name='mess.inp')
@@ -159,7 +168,7 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
     ioprinter.info_message(
         'Reading Rate Constants from MESS outputs', newline=1)
     rxn_ktp_dct = obtain_multipes_rxn_ktp_dct(
-        rate_paths_dct, pes_param_dct,
+        pes_grp_rlst, rate_paths_dct, pes_param_dct,
         label_dct, pes_mod_dct, pes_mod)
 
     # Fit the rate constants
