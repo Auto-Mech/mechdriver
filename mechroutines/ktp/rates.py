@@ -6,8 +6,10 @@ import importlib
 import copy
 import ioformat
 import automol
+import autorun
 import mess_io
 from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
+from mechlib.amech_io import reader
 from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
 from mechroutines.models import blocks
@@ -28,10 +30,14 @@ from mechroutines.ktp._multipes import set_hot_enes
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
 
-# Headers
-def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
-                    pes_param_dct, hot_enes_dct, label_dct,
-                    temps, pressures, float_type):
+# Create full string by writing the appropriate header, accounting for
+# (1) MESS Version and (2) Use of Well-Extension
+# And include the global_etrans and reaction channel strings
+def make_full_str(energy_trans_str, rxn_chan_str, dats,
+                  pesgrp_num, pes_param_dct, hot_enes_dct,
+                  rate_paths_dct, pes_inf,
+                  pes_mod_dct_i,
+                  spc_dct, rxn_lst, pes_idx, tsk_key_dct):
     """ Built the head of the MESS input file that contains various global
         keywords used for running rate calculations.
 
@@ -47,42 +53,166 @@ def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         :rtype: str
     """
 
-    ioprinter.messpf('global_header')
+    # Pull from PES model dct
+    temps, pressures = pes_mod_dct_i['rate_temps'], pes_mod_dct_i['pressures']
+    float_type = tsk_key_dct['float_precision']
 
-    keystr1 = (
-        'EnergyStepOverTemperature, ExcessEnergyOverTemperature, ' +
-        'ModelEnergyLimit'
-    )
-    keystr2 = (
-        'CalculationMethod, WellCutoff, ' +
-        'ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin'
-    )
-    ioprinter.debug_message(f'     {keystr1}')
-    ioprinter.debug_message(f'     {keystr2}')
-
-    # Set the well extension energy thresh
-    if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
-        well_extend = None
-    else:
-        well_extend = 'auto'
-        ioprinter.debug_message('Including WellExtend in MESS input')
+    label_dct = {}
 
     # Set other parameters
     # Need the PES number to pull the correct params out of lists
     ped_spc_lst, hot_enes_dct, micro_out_params = energy_dist_params(
         pesgrp_num, pes_param_dct, hot_enes_dct, label_dct)
 
-    header_str = mess_io.writer.global_rates_input(
+    ioprinter.messpf('global_header')
+
+    # Write the header string
+    if tsk_key_dct['mess_version'] == 'v1':
+        _full_mess_v1(
+            energy_trans_str, rxn_chan_str, dats,
+            temps, pressures,
+            ped_spc_lst, hot_enes_dct,
+            micro_out_params,
+            float_type,
+            rate_paths_dct, pes_inf,
+            pes_mod_dct_i,
+            spc_dct, rxn_lst, pes_idx, tsk_key_dct)  # only for well-extend
+    else:
+        _full_mess_v2(
+            rxn_chan_str, energy_trans_str, dats,
+            temps, pressures,
+            ped_spc_lst, hot_enes_dct,
+            micro_out_params,
+            float_type,
+            pes_mod_dct_i,
+            rate_paths_dct, pes_inf)
+
+
+def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
+                  temps, pressures,
+                  ped_spc_lst, hot_enes_dct,
+                  micro_out_params,
+                  float_type,
+                  rate_paths_dct, pes_inf,
+                  pes_mod_dct_i,
+                  spc_dct, rxn_lst, pes_idx, tsk_key_dct):
+    """ Make the global header string for version 1
+
+        last line of arguments only used to determine well-extension
+    """
+
+    ioprinter.debug_message(
+        'EnergyStepOverTemperature, ExcessEnergyOverTemperature, ' +
+        'ModelEnergyLimit')
+    ioprinter.debug_message(
+        'CalculationMethod, WellCutoff, ' +
+        'ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin')
+
+    if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
+        well_extend, is_abstraction = None, True
+    else:
+        well_extend, is_abstraction = 'auto', False
+        ioprinter.debug_message('Including WellExtend in MESS input')
+
+    globkey_str = mess_io.writer.global_rates_input_v1(
         temps, pressures,
         calculation_method='direct',
+        excess_ene_temp=None,
         well_extension=well_extend,
+        well_reduction_thresh=10.0,
         ped_spc_lst=ped_spc_lst,
         hot_enes_dct=hot_enes_dct,
-        excess_ene_temp=None,
         micro_out_params=micro_out_params,
-        float_type=float_type)
+        float_type=float_type
+    )
 
-    return header_str
+    # Write base MESS input string into the RUN filesystem
+    mess_inp_str = mess_io.writer.messrates_inp_str(
+        globkey_str, rxn_chan_str,
+        energy_trans_str=energy_trans_str, well_lump_str=None)
+
+    print('rate_paths_dct test\n', rate_paths_dct)
+    base_mess_path = rate_paths_dct[pes_inf]['base-v1']
+    ioprinter.obj('line_plus')
+    ioprinter.writing('MESS input file', base_mess_path)
+    ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
+    autorun.write_input(
+        base_mess_path, mess_inp_str,
+        aux_dct=dats, input_name='mess.inp')
+
+    # Write the second MESS string (well extended), if needed
+    if not is_abstraction and tsk_key_dct['use_well_extension']:
+        print('User requested well extension scheme for rates...')
+
+        # Run the base MESSRATE
+        print(f'  - Running base MESS job at path {base_mess_path}')
+        autorun.run_script(autorun.SCRIPT_DCT['messrate-v1'], base_mess_path)
+
+        # Write the well-extended MESSRATE file
+        rate_strs_dct, mess_paths_dct = reader.mess.rate_strings(
+            rate_paths_dct)
+        read_mess_path = mess_paths_dct[pes_inf]['base-v1']
+        print('  - Reading input and output from '
+              f'base MESSRATE job at {read_mess_path}')
+
+        wext_p = pes_mod_dct_i['well_extension_pressure']
+        wext_t = pes_mod_dct_i['well_extension_temp']
+        print('  - Setting up the well-extended MESSRATE input with.')
+        print(f'   lumping/extension Scheme for P={wext_p} atm, T={wext_t} K')
+        wext_mess_inp_str = mess_io.new_well_lumped_input_file(
+            rate_strs_dct[pes_inf]['base-v1']['inp'],
+            rate_strs_dct[pes_inf]['base-v1']['ktp_out'],
+            rate_strs_dct[pes_inf]['base-v1']['aux'],
+            rate_strs_dct[pes_inf]['base-v1']['log'],
+            wext_p,
+            wext_t)
+
+        wext_mess_path = rate_paths_dct[pes_inf]['wext-v1']
+        ioprinter.obj('line_plus')
+        ioprinter.writing('New Well-Extended MESS input file '
+                          f'at path {wext_mess_path}')
+        ioprinter.debug_message('MESS Input:\n\n'+wext_mess_inp_str)
+        autorun.write_input(
+            wext_mess_path, wext_mess_inp_str,
+            aux_dct=dats, input_name='mess.inp')
+
+
+def _full_mess_v2(rxn_chan_str, energy_trans_str, dats,
+                  temps, pressures,
+                  ped_spc_lst, hot_enes_dct,
+                  micro_out_params,
+                  float_type,
+                  pes_mod_dct_i,
+                  rate_paths_dct, pes_inf):
+    """ Make the global header string for version 2
+    """
+
+    globkey_str = mess_io.writer.global_rates_input_v2(
+            temps, pressures,
+            ref_temperature=pes_mod_dct_i['well_extension_temp'],
+            ref_pressure=pes_mod_dct_i['well_extension_pressure'],
+            ene_cutoff_temp=20.0, excess_ene_temp=10.0,
+            chem_tol=1.0e-10,
+            well_pojection_thresh=0.1, well_reduction_thresh=10.0,
+            time_propagation_limit=50.0, time_propagation_step=0.02,
+            well_extension=0.5,
+            ped_spc_lst=ped_spc_lst, hot_enes_dct=hot_enes_dct,
+            micro_out_params=micro_out_params,
+            float_type=float_type
+    )
+
+    # Write base MESS input string into the RUN filesystem
+    mess_inp_str = mess_io.writer.messrates_inp_str(
+        globkey_str, rxn_chan_str,
+        energy_trans_str=energy_trans_str, well_lump_str=None)
+
+    base_mess_path = rate_paths_dct[pes_inf]['base-v2']
+    ioprinter.obj('line_plus')
+    ioprinter.writing('MESS input file', base_mess_path)
+    ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
+    autorun.write_input(
+        base_mess_path, mess_inp_str,
+        aux_dct=dats, input_name='mess.inp')
 
 
 def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
@@ -351,7 +481,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
             tsname, (reacs, prods), 'reacs', chnl_infs['fake_vdwr'],
-            chnl_enes, label_dct, reac_label)
+            chnl_enes, reac_label)
 
         # Append the fake strings to overall strings
         well_str += fwell_str + '\n'
@@ -368,7 +498,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
             tsname, (reacs, prods), 'prods', chnl_infs['fake_vdwp'],
-            chnl_enes, label_dct, prod_label)
+            chnl_enes, prod_label)
 
         # Append the fake strings to overall strings
         well_str += fwell_str + '\n'
@@ -499,7 +629,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
 
 
 def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
-                         chnl_enes, label_dct, side_label):
+                         chnl_enes, side_label):
     """ write the MESS strings for the fake wells and TSs
     """
 

@@ -12,7 +12,9 @@ from mechanalyzer.inf import spc as sinfo
 # Set paths to MESS jobs
 def rate_paths(pes_dct, run_prefix):
     """ Set up the path for saveing the input and output of
-        MESSRATE calculations
+        MESSRATE calculations.
+
+        Creates paths for two different versions of mess
 
         Run different types of directories (1 PES)
             - fml-base: Standard base rate calculations (use idx)
@@ -21,19 +23,22 @@ def rate_paths(pes_dct, run_prefix):
 
     rate_path_dct = {}
     for pes_inf in pes_dct:
-        pes_fml, pes_idx, subpes_idx = pes_inf
 
-        _pes_str = f'{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
-        # idx1 = f'{pes_idx}-{subpes_idx}-BASE'
-        # idx2 = f'{pes_idx}-{subpes_idx}-WEXT'
-        idx1 = int(f'{pes_idx}{subpes_idx}0')
-        idx2 = int(f'{pes_idx}{subpes_idx}1')
-        rate_path_dct[pes_inf] = {
-            'base': job_path(
-                run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx1),
-            'wext': job_path(
-                run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx2)
-        }
+        pes_fml, pes_idx, subpes_idx = pes_inf
+        rate_path_dct[pes_inf] = {}
+
+        for mess_version in (1, 2):
+            _pes_str = f'{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
+            # idx1 = f'{pes_idx}-{subpes_idx}-BASE'
+            # idx2 = f'{pes_idx}-{subpes_idx}-WEXT'
+            idx1 = int(f'{pes_idx}{subpes_idx}{mess_version}0')
+            idx2 = int(f'{pes_idx}{subpes_idx}{mess_version}1')
+            rate_path_dct[pes_inf].update({
+                f'base-v{mess_version}': job_path(
+                    run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx1),
+                f'wext-v{mess_version}': job_path(
+                    run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx2)
+            })
 
     return rate_path_dct
 

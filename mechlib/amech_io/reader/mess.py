@@ -23,22 +23,25 @@ def rate_strings(rate_paths_dct):
         # Determine if MESS files read from standard/well-extended run
         # Defaults to well-extended if output found for that run
         for typ in ('base', 'wext'):
+            for mess_version in ('v1', 'v2'):
+                
+                full_typ = f'{typ}-{mess_version}'
 
-            mess_path = rate_paths_dct[pes_inf][typ]
+                mess_path = rate_paths_dct[pes_inf][full_typ]
 
-            if os.path.exists(os.path.join(mess_path, 'rate.out')):
-                rate_strs_dct[pes_inf][typ] = {
-                    'inp': read_file(mess_path, 'mess.inp'),
-                    'ktp_out': read_file(mess_path, 'rate.out'),
-                    'ke_out': read_file(mess_path, 'ke.out'),
-                    'ped': read_file(mess_path, 'ped.out'),
-                    'aux': read_file(mess_path, 'mess.aux'),
-                    'log': read_file(mess_path, 'mess.log')
-                }
-            else:
-                rate_strs_dct[pes_inf][typ] = {}
+                if os.path.exists(os.path.join(mess_path, 'rate.out')):
+                    rate_strs_dct[pes_inf][full_typ] = {
+                        'inp': read_file(mess_path, 'mess.inp'),
+                        'ktp_out': read_file(mess_path, 'rate.out'),
+                        'ke_out': read_file(mess_path, 'ke.out'),
+                        'ped': read_file(mess_path, 'ped.out'),
+                        'aux': read_file(mess_path, 'mess.aux'),
+                        'log': read_file(mess_path, 'mess.log')
+                    }
+                else:
+                    rate_strs_dct[pes_inf][full_typ] = {}
 
-            mess_paths_dct[pes_inf][typ] = mess_path
+                mess_paths_dct[pes_inf][full_typ] = mess_path
 
     return rate_strs_dct, mess_paths_dct
 

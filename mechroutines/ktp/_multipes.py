@@ -117,7 +117,8 @@ def set_hot_enes(pesgrp_num, reacs, prods,
 
 def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
                                 rate_paths_dct, pes_param_dct,
-                                label_dct, pes_mod_dct, pes_mod):
+                                label_dct, pes_mod_dct, pes_mod,
+                                mess_version):
     """ Obtain the rate constants for all of the PESs in the group.
         Call additional
     """
@@ -134,12 +135,19 @@ def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
         pes_inf = tuple(pes_grp_rlst.keys())[0]
 
         rate_str_dct = rate_strs_dct[pes_inf]
-        if rate_str_dct['wext']:
-            mess_path = mess_paths_dct[pes_inf]['wext']
-            mess_str = rate_str_dct['wext']['ktp_out']
-        elif rate_str_dct['base']:
-            mess_path = mess_paths_dct[pes_inf]['base']
-            mess_str = rate_str_dct['base']['ktp_out']
+       
+        full_wext = f'wext-{mess_version}'
+        full_base = f'base-{mess_version}'
+        
+        print(rate_strs_dct[pes_inf].keys())
+        print(full_wext, full_base)
+
+        if rate_str_dct[full_wext]:
+            mess_path = mess_paths_dct[pes_inf][full_wext]
+            mess_str = rate_str_dct[full_wext]['ktp_out']
+        elif rate_str_dct[full_base]:
+            mess_path = mess_paths_dct[pes_inf][full_base]
+            mess_str = rate_str_dct[full_base]['ktp_out']
         else:
             print('No Rates to fit')
 

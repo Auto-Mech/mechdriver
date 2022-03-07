@@ -100,7 +100,8 @@ def run(pes_rlst, pes_grp_dct,
 
             # Run mess to produce rates (urrently nothing from tsk lst used)
             if run_rate_tsk is not None:
-                ktp_tasks.run_messrate_task(rate_paths_dct, pes_inf)
+                ktp_tasks.run_messrate_task(
+                    pes_inf, tsk_key_dct, rate_paths_dct)
 
         # ---------------------------------------- #
         # FIT THE COMBINES RATES FOR ENTIRE GROUP  #
