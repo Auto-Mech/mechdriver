@@ -741,6 +741,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
     # Gather data or set fake information for dummy reactants/products
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
     for rgts, side in zip((reacs, prods), ('reacs', 'prods')):
+        _need_ene_trans = bool(len(rgts) == 1)
         for rgt in rgts:
             spc_locs_lst = filesys.models.get_spc_locs_lst(
                 spc_dct[rgt], spc_model_dct_i,
@@ -751,6 +752,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
                 spc_dct, rgt,
                 pes_model_dct_i, spc_model_dct_i,
                 run_prefix, save_prefix, model_basis_energy_dct,
+                calc_ene_trans=_need_ene_trans,
                 spc_locs=spc_locs_lst[0])
             chnl_infs[side].append(chnl_infs_i)
 
