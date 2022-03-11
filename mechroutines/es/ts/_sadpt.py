@@ -11,7 +11,7 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechroutines.es.newts import _rpath as rpath
+from mechroutines.es.ts import _rpath as rpath
 
 
 # Functions to assess the status of existing saddle point structures in SAVE

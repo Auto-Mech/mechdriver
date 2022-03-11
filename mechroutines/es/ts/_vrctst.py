@@ -15,7 +15,7 @@ from mechlib import filesys
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 from mechroutines.es._routines import sp
-from mechroutines.es.newts import _rpath as rpath
+from mechroutines.es.ts import _rpath as rpath
 
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM

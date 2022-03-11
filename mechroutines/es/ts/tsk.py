@@ -9,12 +9,12 @@ import automol.par
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner import qchem_params
-from mechroutines.es.newts import _sadpt as sadpt
-from mechroutines.es.newts import _irc as irc
-from mechroutines.es.newts import _vrctst as vrctst
-from mechroutines.es.newts import _rpath as rpath
-from mechroutines.es.newts._util import thy_dcts
-from mechroutines.es.newts._fs import rpath_fs
+from mechroutines.es.ts import _sadpt as sadpt
+from mechroutines.es.ts import _irc as irc
+from mechroutines.es.ts import _vrctst as vrctst
+from mechroutines.es.ts import _rpath as rpath
+from mechroutines.es.ts._util import thy_dcts
+from mechroutines.es.ts._fs import rpath_fs
 
 
 ES_TSKS = {}
