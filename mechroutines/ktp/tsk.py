@@ -75,32 +75,47 @@ def run_messrate_task(pes_inf, tsk_key_dct, rate_paths_dct):
         Need an overwrite task
     """
 
-    mess_version = tsk_key_dct['mess_version']
-
+    # Get the path to the MESSRATE file to run
+    # (1) Vers1-Base, (2) Vers1-WellExtend, (3) Vers2-Base
     path_dct = rate_paths_dct[pes_inf]
-    for typ in ('wext', 'base'):
-        # add the version to get the correct path
-        path = path_dct[f'{typ}-{mess_version}']
-        mess_inp = os.path.join(path, 'mess.inp')
-        mess_out = os.path.join(path, 'mess.out')
-        if os.path.exists(mess_inp) and not os.path.exists(mess_out):
-            ioprinter.obj('vspace')
-            ioprinter.obj('line_dash')
-            if typ == 'wext':
-                ioprinter.info_message(
-                    f'Found well-extension MESS input file at {path}')
-            else:
-                ioprinter.info_message(
-                    f'Found standard MESS input file at {path}')
-            ioprinter.running(f'input with MESS version {mess_version}')
-            autorun.run_script(
-                autorun.SCRIPT_DCT[f'messrate-{mess_version}'], path
-            )
-            break
+    mess_version = tsk_key_dct['mess_version']
+    if mess_version == 'v1' and tsk_key_dct['well_extension']:
+        path = path_dct[f'wext-{mess_version}']
+        typ = 'wext'
+    else:
+        path = path_dct[f'base-{mess_version}']
+        typ = 'base'
+
+    mess_inp = os.path.join(path, 'mess.inp')
+    # mess_out = os.path.join(path, 'mess.out')
+    # if not os.path.exists(mess_out): (rerun option needed?)
+    if os.path.exists(mess_inp):
+        ioprinter.obj('vspace')
+        ioprinter.obj('line_dash')
+        if typ == 'base':
+            ioprinter.running(
+                f'base input with MESS version {mess_version} '
+                f'at {path}')
+        else:
+            ioprinter.running(
+                f'well-extended input with MESS version {mess_version} '
+                f'at {path}')
+        autorun.run_script(
+            autorun.SCRIPT_DCT[f'messrate-{mess_version}'], path
+        )
+    else:
+        if typ == 'base':
+            ioprinter.warning_message(
+                f'No base input for MESS version {mess_version} '
+                f'found at {path}')
+        else:
+            ioprinter.warning_message(
+                f'No well-extended input for MESS version {mess_version} '
+                f'found at {path}')
 
 
 def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
-                  label_dct, pes_mod_dct, spc_mod_dct, thy_dct,
+                  pes_mod_dct, spc_mod_dct, thy_dct,
                   tsk_key_dct):
     """ Run the fits and potentially
 
@@ -127,8 +142,8 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
         'Reading Rate Constants from MESS outputs', newline=1)
     rxn_ktp_dct = obtain_multipes_rxn_ktp_dct(
         pes_grp_rlst, rate_paths_dct, pes_param_dct,
-        label_dct, pes_mod_dct, pes_mod,
-        tsk_key_dct['mess_version'])
+        pes_mod_dct, pes_mod,
+        tsk_key_dct)
 
     # Fit the rate constants
     ioprinter.info_message(

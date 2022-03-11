@@ -61,8 +61,8 @@ def make_full_str(energy_trans_str, rxn_chan_str, dats,
 
     # Set other parameters
     # Need the PES number to pull the correct params out of lists
-    ped_spc_lst, hot_enes_dct, micro_out_params = energy_dist_params(
-        pesgrp_num, pes_param_dct, hot_enes_dct, label_dct)
+    ped_spc_lst, micro_out_params = energy_dist_params(
+        pesgrp_num, pes_param_dct, hot_enes_dct)
 
     ioprinter.messpf('global_header')
 
@@ -117,13 +117,17 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
     globkey_str = mess_io.writer.global_rates_input_v1(
         temps, pressures,
         calculation_method='direct',
-        excess_ene_temp=None,
+        model_ene_limit=800.0,
+        ene_stepover_temp=0.2, excess_ene_temp=None,
         well_extension=well_extend,
         well_reduction_thresh=10.0,
         ped_spc_lst=ped_spc_lst,
         hot_enes_dct=hot_enes_dct,
         micro_out_params=micro_out_params,
-        float_type=float_type
+        float_type=float_type,
+        ktp_outname='rate.out',
+        ke_outname='ke.out',
+        ped_outname='ped.out'
     )
 
     # Write base MESS input string into the RUN filesystem
@@ -141,7 +145,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         aux_dct=dats, input_name='mess.inp')
 
     # Write the second MESS string (well extended), if needed
-    if not is_abstraction and tsk_key_dct['use_well_extension']:
+    if not is_abstraction and tsk_key_dct['well_extension']:
         print('User requested well extension scheme for rates...')
 
         # Run the base MESSRATE
@@ -157,9 +161,10 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
 
         wext_p = pes_mod_dct_i['well_extension_pressure']
         wext_t = pes_mod_dct_i['well_extension_temp']
+
         print('  - Setting up the well-extended MESSRATE input with.')
         print(f'   lumping/extension Scheme for P={wext_p} atm, T={wext_t} K')
-        wext_mess_inp_str = mess_io.new_well_lumped_input_file(
+        wext_mess_inp_str = mess_io.well_lumped_input_file(
             rate_strs_dct[pes_inf]['base-v1']['inp'],
             rate_strs_dct[pes_inf]['base-v1']['ktp_out'],
             rate_strs_dct[pes_inf]['base-v1']['aux'],
@@ -191,14 +196,18 @@ def _full_mess_v2(rxn_chan_str, energy_trans_str, dats,
             temps, pressures,
             ref_temperature=pes_mod_dct_i['well_extension_temp'],
             ref_pressure=pes_mod_dct_i['well_extension_pressure'],
-            ene_cutoff_temp=20.0, excess_ene_temp=10.0,
-            chem_tol=1.0e-10,
+            model_ene_limit=800.0,
+            ene_stepover_temp=0.2, ene_cutoff_temp=20.0, excess_ene_temp=10.0,
+            chem_tol=1.0e-10, chem_thresh=0.1,
             well_pojection_thresh=0.1, well_reduction_thresh=10.0,
             time_propagation_limit=50.0, time_propagation_step=0.02,
             well_extension=0.5,
             ped_spc_lst=ped_spc_lst, hot_enes_dct=hot_enes_dct,
             micro_out_params=micro_out_params,
-            float_type=float_type
+            float_type=float_type,
+            ktp_outname='rate.out',
+            ke_outname='ke.out',
+            ped_outname='ped.out'
     )
 
     # Write base MESS input string into the RUN filesystem
