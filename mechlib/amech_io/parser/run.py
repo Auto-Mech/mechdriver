@@ -104,13 +104,15 @@ TSK_KEY_DCT = {
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
-                        'use_well_extension', 'mess_version',
+                        'well_extension', 'mess_version',
                         'float_precision',
                         'cnf_range', 'sort')),
     'run_mess': ((), ('kin_model', 'spc_model', 'nprocs',
-                      'mess_version',
+                      'well_extension', 'mess_version',
                       'cnf_range', 'sort')),
-    'run_fits': ((), ('kin_model', 'mess_version', 'cnf_range', 'sort')),
+    'run_fits': ((), ('kin_model',
+                      'well_extension', 'mess_version',
+                      'cnf_range', 'sort')),
 }
 
 # tsk: (object types, (allowed values), default)  # use functions for weird
@@ -152,7 +154,7 @@ TSK_VAL_DCT = {
     'spc_model': ((str,), (), None),
     'nprocs': ((int,), (), 10),
     'mess_version': ((str,), ('v1', 'v2'), 'v1'),
-    'use_well_extension': ((bool,), (), False),
+    'well_extension': ((bool,), (), False),
     'linked_pes': ((tuple,), (), None),
     'float_precision': ((str,), ('double', 'quadruple'), 'double'),
 }
