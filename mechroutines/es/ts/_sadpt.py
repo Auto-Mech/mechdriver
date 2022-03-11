@@ -128,7 +128,7 @@ def search(ini_zma, spc_dct, tsname,
             cnf_locs)
 
         status = assess_saddle_point(opt_ret, hess_ret,
-                                     ts_dct, runfs_dct, cnf_locs)
+                                     runfs_dct, cnf_locs)
         if status == 'save':
             save_saddle_point(opt_ret, hess_ret,
                               ts_dct, thy_method_dct['runlvl'],
@@ -211,7 +211,8 @@ def optimize_saddle_point(guess_zmas, ts_dct,
 
 
 # Checker functions
-def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
+# def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
+def assess_saddle_point(opt_ret, hess_ret, runfs_dct, cnf_locs):
     """ run things for checking Hessian
         If successful, Read the geom and energy from the optimization
     """
@@ -220,12 +221,12 @@ def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
     if hess_ret is not None:
 
         # Get the physical info used for the checks
-        zrxn = ts_dct['zrxn']
+        # zrxn = ts_dct['zrxn']
 
         opt_inf, _, opt_out_str = opt_ret
         hess_inf, _, hess_out_str = hess_ret
 
-        zma = elstruct.reader.opt_zmatrix(opt_inf.prog, opt_out_str)
+        # zma = elstruct.reader.opt_zmatrix(opt_inf.prog, opt_out_str)
         geo = elstruct.reader.opt_geometry(opt_inf.prog, opt_out_str)
         hess = elstruct.reader.hessian(hess_inf.prog, hess_out_str)
 
@@ -243,14 +244,15 @@ def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
         freq_success = _check_freqs(imags)
 
         # ted coordinate check
-        if not automol.zmat.dummy_keys(zma):
-            script_str = autorun.SCRIPT_DCT['intder']
-            ted_names = autorun.intder.ted_zmatrix_coordinates(
-                script_str, freq_run_path, geo, zma, hess, 0)
-            ted_success = _ted_coordinate_check(ted_names, zrxn, zma)
-        else:
-            print('Z-Matrix has dummy atoms, cannot do TED check')
-            ted_success = True
+        # if not automol.zmat.dummy_keys(zma):
+        #     script_str = autorun.SCRIPT_DCT['intder']
+        #     ted_names = autorun.intder.ted_zmatrix_coordinates(
+        #         script_str, freq_run_path, geo, zma, hess, 0)
+        #     ted_success = _ted_coordinate_check(ted_names, zrxn, zma)
+        # else:
+        #     print('Z-Matrix has dummy atoms, cannot do TED check')
+        #     ted_success = True
+        ted_success = True
 
         # Set overall success value to return
         if freq_success == 'kick':

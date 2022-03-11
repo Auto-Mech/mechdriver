@@ -131,14 +131,15 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
     # Add transitions states defined in species.dat not defined in spc_dct
     ts_dct = {}
     for tsname in (x for x in dat_dct if 'ts' in x):
-        ts_dct[tsname] = {**dat_dct[tsname]}
+        if dat_dct[tsname] is not None:
+            ts_dct[tsname] = {**dat_dct[tsname]}
 
-        # Need to add the TS defaults
-        ts_dct[tsname] = automol.util.dict_.right_update(
-            ts_default, ts_dct[tsname])
+            # Need to add the TS defaults
+            ts_dct[tsname] = automol.util.dict_.right_update(
+                ts_default, ts_dct[tsname])
 
-        # Add speciaized calls not in the default dct
-        # _set_active_key()
+            # Add speciaized calls not in the default dct
+            # _set_active_key()
 
     # add the TSs to the spc dct
     spc_dct.update(ts_dct)
