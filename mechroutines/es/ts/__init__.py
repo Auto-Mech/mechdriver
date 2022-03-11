@@ -1,8 +1,8 @@
 """ Transition state
 """
 
-from mechroutines.es.newts.tsk import findts
-from mechroutines.es.newts.tsk import rpath_tsk
+from mechroutines.es.ts.tsk import findts
+from mechroutines.es.ts.tsk import rpath_tsk
 
 
 __all__ = [
