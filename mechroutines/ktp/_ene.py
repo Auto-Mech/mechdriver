@@ -29,7 +29,7 @@ def set_reference_ene(rxn_lst, spc_dct, tsk_key_dct,
     # Get the model for the first reference species
     cnf_range = tsk_key_dct['cnf_range']
     sort_info_lst = filesys.mincnf.sort_info_lst(tsk_key_dct['sort'], thy_dct)
-    print('sort info list in ref ene', sort_info_lst)
+
     # Get the elec+zpe energy for the reference species
     ioprinter.info_message('')
     hf0k = 0.0

@@ -3,35 +3,45 @@
 """
 
 import os
-import ioformat.pathtools
+from ioformat.pathtools import read_file
 import mess_io
 
 
 def rate_strings(rate_paths_dct):
     """ Read the input and output for all of the PESs
+
+        returns dictionary for each pes group for a 'base' MESS run
+        and a well-extended MESS run
     """
 
     rate_strs_dct, mess_paths_dct = {}, {}
     for pes_inf in rate_paths_dct:
 
+        rate_strs_dct[pes_inf] = {}
+        mess_paths_dct[pes_inf] = {}
+
         # Determine if MESS files read from standard/well-extended run
         # Defaults to well-extended if output found for that run
-        base_mess_path = rate_paths_dct[pes_inf]['base']
-        wext_mess_path = rate_paths_dct[pes_inf]['wext']
-        if os.path.exists(os.path.join(wext_mess_path, 'rate.out')):
-            mess_path = wext_mess_path
-        else:
-            mess_path = base_mess_path
+        for typ in ('base', 'wext'):
+            for mess_version in ('v1', 'v2'):
+                
+                full_typ = f'{typ}-{mess_version}'
 
-        rate_strs_dct[pes_inf] = {
-            'inp': ioformat.pathtools.read_file(mess_path, 'mess.inp'),
-            'ktp_out': ioformat.pathtools.read_file(mess_path, 'rate.out'),
-            'ke_out': ioformat.pathtools.read_file(mess_path, 'ke.out'),
-            'ped': ioformat.pathtools.read_file(mess_path, 'ped.out'),
-            'aux': ioformat.pathtools.read_file(mess_path, 'mess.aux'),
-            'log': ioformat.pathtools.read_file(mess_path, 'mess.log')
-        }
-        mess_paths_dct[pes_inf] = mess_path
+                mess_path = rate_paths_dct[pes_inf][full_typ]
+
+                if os.path.exists(os.path.join(mess_path, 'rate.out')):
+                    rate_strs_dct[pes_inf][full_typ] = {
+                        'inp': read_file(mess_path, 'mess.inp'),
+                        'ktp_out': read_file(mess_path, 'rate.out'),
+                        'ke_out': read_file(mess_path, 'ke.out'),
+                        'ped': read_file(mess_path, 'ped.out'),
+                        'aux': read_file(mess_path, 'mess.aux'),
+                        'log': read_file(mess_path, 'mess.log')
+                    }
+                else:
+                    rate_strs_dct[pes_inf][full_typ] = {}
+
+                mess_paths_dct[pes_inf][full_typ] = mess_path
 
     return rate_strs_dct, mess_paths_dct
 

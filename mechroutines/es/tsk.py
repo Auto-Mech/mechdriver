@@ -16,8 +16,7 @@ from mechlib.amech_io import printer as ioprinter
 from mechroutines.es._routines import conformer
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
-from mechroutines.es._ts import findts
-# from mechroutines.es.newts import findts
+from mechroutines.es.ts import findts
 
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params

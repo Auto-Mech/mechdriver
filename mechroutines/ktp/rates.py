@@ -6,8 +6,10 @@ import importlib
 import copy
 import ioformat
 import automol
+import autorun
 import mess_io
 from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
+from mechlib.amech_io import reader
 from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
 from mechroutines.models import blocks
@@ -28,10 +30,14 @@ from mechroutines.ktp._multipes import set_hot_enes
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
 
-# Headers
-def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
-                    pes_param_dct, hot_enes_dct, label_dct,
-                    temps, pressures, float_type):
+# Create full string by writing the appropriate header, accounting for
+# (1) MESS Version and (2) Use of Well-Extension
+# And include the global_etrans and reaction channel strings
+def make_full_str(energy_trans_str, rxn_chan_str, dats,
+                  pesgrp_num, pes_param_dct, hot_enes_dct,
+                  rate_paths_dct, pes_inf,
+                  pes_mod_dct_i,
+                  spc_dct, rxn_lst, pes_idx, tsk_key_dct):
     """ Built the head of the MESS input file that contains various global
         keywords used for running rate calculations.
 
@@ -47,42 +53,175 @@ def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         :rtype: str
     """
 
-    ioprinter.messpf('global_header')
+    # Pull from PES model dct
+    temps, pressures = pes_mod_dct_i['rate_temps'], pes_mod_dct_i['pressures']
+    float_type = tsk_key_dct['float_precision']
 
-    keystr1 = (
-        'EnergyStepOverTemperature, ExcessEnergyOverTemperature, ' +
-        'ModelEnergyLimit'
-    )
-    keystr2 = (
-        'CalculationMethod, WellCutoff, ' +
-        'ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin'
-    )
-    ioprinter.debug_message(f'     {keystr1}')
-    ioprinter.debug_message(f'     {keystr2}')
-
-    # Set the well extension energy thresh
-    if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
-        well_extend = None
-    else:
-        well_extend = 'auto'
-        ioprinter.debug_message('Including WellExtend in MESS input')
+    label_dct = {}
 
     # Set other parameters
     # Need the PES number to pull the correct params out of lists
-    ped_spc_lst, hot_enes_dct, micro_out_params = energy_dist_params(
-        pesgrp_num, pes_param_dct, hot_enes_dct, label_dct)
+    ped_spc_lst, micro_out_params = energy_dist_params(
+        pesgrp_num, pes_param_dct, hot_enes_dct)
 
-    header_str = mess_io.writer.global_rates_input(
+    ioprinter.messpf('global_header')
+
+    # Write the header string
+    if tsk_key_dct['mess_version'] == 'v1':
+        _full_mess_v1(
+            energy_trans_str, rxn_chan_str, dats,
+            temps, pressures,
+            ped_spc_lst, hot_enes_dct,
+            micro_out_params,
+            float_type,
+            rate_paths_dct, pes_inf,
+            pes_mod_dct_i,
+            spc_dct, rxn_lst, pes_idx, tsk_key_dct)  # only for well-extend
+    else:
+        _full_mess_v2(
+            rxn_chan_str, energy_trans_str, dats,
+            temps, pressures,
+            ped_spc_lst, hot_enes_dct,
+            micro_out_params,
+            float_type,
+            pes_mod_dct_i,
+            rate_paths_dct, pes_inf)
+
+
+def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
+                  temps, pressures,
+                  ped_spc_lst, hot_enes_dct,
+                  micro_out_params,
+                  float_type,
+                  rate_paths_dct, pes_inf,
+                  pes_mod_dct_i,
+                  spc_dct, rxn_lst, pes_idx, tsk_key_dct):
+    """ Make the global header string for version 1
+
+        last line of arguments only used to determine well-extension
+    """
+
+    ioprinter.debug_message(
+        'EnergyStepOverTemperature, ExcessEnergyOverTemperature, ' +
+        'ModelEnergyLimit')
+    ioprinter.debug_message(
+        'CalculationMethod, WellCutoff, ' +
+        'ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin')
+
+    if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
+        well_extend, is_abstraction = None, True
+    else:
+        well_extend, is_abstraction = 'auto', False
+        ioprinter.debug_message('Including WellExtend in MESS input')
+
+    globkey_str = mess_io.writer.global_rates_input_v1(
         temps, pressures,
         calculation_method='direct',
+        model_ene_limit=800.0,
+        ene_stepover_temp=0.2, excess_ene_temp=None,
         well_extension=well_extend,
+        well_reduction_thresh=10.0,
         ped_spc_lst=ped_spc_lst,
         hot_enes_dct=hot_enes_dct,
-        excess_ene_temp=None,
         micro_out_params=micro_out_params,
-        float_type=float_type)
+        float_type=float_type,
+        ktp_outname='rate.out',
+        ke_outname='ke.out',
+        ped_outname='ped.out'
+    )
 
-    return header_str
+    # Write base MESS input string into the RUN filesystem
+    mess_inp_str = mess_io.writer.messrates_inp_str(
+        globkey_str, rxn_chan_str,
+        energy_trans_str=energy_trans_str, well_lump_str=None)
+
+    print('rate_paths_dct test\n', rate_paths_dct)
+    base_mess_path = rate_paths_dct[pes_inf]['base-v1']
+    ioprinter.obj('line_plus')
+    ioprinter.writing('MESS input file', base_mess_path)
+    ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
+    autorun.write_input(
+        base_mess_path, mess_inp_str,
+        aux_dct=dats, input_name='mess.inp')
+
+    # Write the second MESS string (well extended), if needed
+    if not is_abstraction and tsk_key_dct['well_extension']:
+        print('User requested well extension scheme for rates...')
+
+        # Run the base MESSRATE
+        print(f'  - Running base MESS job at path {base_mess_path}')
+        autorun.run_script(autorun.SCRIPT_DCT['messrate-v1'], base_mess_path)
+
+        # Write the well-extended MESSRATE file
+        rate_strs_dct, mess_paths_dct = reader.mess.rate_strings(
+            rate_paths_dct)
+        read_mess_path = mess_paths_dct[pes_inf]['base-v1']
+        print('  - Reading input and output from '
+              f'base MESSRATE job at {read_mess_path}')
+
+        wext_p = pes_mod_dct_i['well_extension_pressure']
+        wext_t = pes_mod_dct_i['well_extension_temp']
+
+        print('  - Setting up the well-extended MESSRATE input with.')
+        print(f'   lumping/extension Scheme for P={wext_p} atm, T={wext_t} K')
+        wext_mess_inp_str = mess_io.well_lumped_input_file(
+            rate_strs_dct[pes_inf]['base-v1']['inp'],
+            rate_strs_dct[pes_inf]['base-v1']['ktp_out'],
+            rate_strs_dct[pes_inf]['base-v1']['aux'],
+            rate_strs_dct[pes_inf]['base-v1']['log'],
+            wext_p,
+            wext_t)
+
+        wext_mess_path = rate_paths_dct[pes_inf]['wext-v1']
+        ioprinter.obj('line_plus')
+        ioprinter.writing('New Well-Extended MESS input file '
+                          f'at path {wext_mess_path}')
+        ioprinter.debug_message('MESS Input:\n\n'+wext_mess_inp_str)
+        autorun.write_input(
+            wext_mess_path, wext_mess_inp_str,
+            aux_dct=dats, input_name='mess.inp')
+
+
+def _full_mess_v2(rxn_chan_str, energy_trans_str, dats,
+                  temps, pressures,
+                  ped_spc_lst, hot_enes_dct,
+                  micro_out_params,
+                  float_type,
+                  pes_mod_dct_i,
+                  rate_paths_dct, pes_inf):
+    """ Make the global header string for version 2
+    """
+
+    globkey_str = mess_io.writer.global_rates_input_v2(
+            temps, pressures,
+            ref_temperature=pes_mod_dct_i['well_extension_temp'],
+            ref_pressure=pes_mod_dct_i['well_extension_pressure'],
+            model_ene_limit=800.0,
+            ene_stepover_temp=0.2, ene_cutoff_temp=20.0, excess_ene_temp=10.0,
+            chem_tol=1.0e-10, chem_thresh=0.1,
+            well_pojection_thresh=0.1, well_reduction_thresh=10.0,
+            time_propagation_limit=50.0, time_propagation_step=0.02,
+            well_extension=0.5,
+            ped_spc_lst=ped_spc_lst, hot_enes_dct=hot_enes_dct,
+            micro_out_params=micro_out_params,
+            float_type=float_type,
+            ktp_outname='rate.out',
+            ke_outname='ke.out',
+            ped_outname='ped.out'
+    )
+
+    # Write base MESS input string into the RUN filesystem
+    mess_inp_str = mess_io.writer.messrates_inp_str(
+        globkey_str, rxn_chan_str,
+        energy_trans_str=energy_trans_str, well_lump_str=None)
+
+    base_mess_path = rate_paths_dct[pes_inf]['base-v2']
+    ioprinter.obj('line_plus')
+    ioprinter.writing('MESS input file', base_mess_path)
+    ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
+    autorun.write_input(
+        base_mess_path, mess_inp_str,
+        aux_dct=dats, input_name='mess.inp')
 
 
 def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
@@ -138,9 +277,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         thy_dct, pes_model_dct_i, spc_model_dct_i,
         run_prefix, save_prefix, ref_idx=0)
     basis_energy_dct[spc_model].update(model_basis_energy_dct)
-
-    print('basis energy dct')
-    print(basis_energy_dct)
 
     # Loop over all the channels and write the MESS strings
     written_labels = []
@@ -253,33 +389,54 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 spc_strs.append(spc_str)
                 full_dat_dct.update(dat_dct)
 
-        # Set the labels to put into the file
-        spc_labels = ()
-        for name in rgt_names:
-            if name in label_dct:
-                spc_labels += (label_dct[name],)
-            else:
-                spc_labels += (name,)
-
+        # Generate auxiliary labels corresponding to SMILES for quick IDs
         aux_labels = tuple(automol.inchi.smiles(spc_dct[name]['inchi'])
                            for name in rgt_names)
 
-        # spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
-        #              for name in rgt_names]
+        # old MESS channel labels system
+        # Set the labels to put into the file
+        # spc_labels = ()
+        # for name in rgt_names:
+        #     if name in label_dct:
+        #         spc_labels += (label_dct[name],)
+        #     else:
+        #         spc_labels += (name,)
+        #
+        # _rxn_str = make_rxn_str(rgt_names)
+        # _rxn_str_rev = make_rxn_str(rgt_names[::-1])
+        # if _rxn_str in label_dct:
+        #     chn_label = label_dct[_rxn_str]
+        # elif _rxn_str_rev in label_dct:
+        #     chn_label = label_dct[_rxn_str_rev]
+        # else:
+        #     ioprinter.warning_message(f'no {_rxn_str} in label dct')
+
+        # new MESS channel labels system
+        spc_labels = rgt_names+tuple()
+
+        # always write as A+B
         _rxn_str = make_rxn_str(rgt_names)
         _rxn_str_rev = make_rxn_str(rgt_names[::-1])
-        if _rxn_str in label_dct:
-            chn_label = label_dct[_rxn_str]
-        elif _rxn_str_rev in label_dct:
-            chn_label = label_dct[_rxn_str_rev]
+        if _rxn_str_rev in written_labels:
+            chn_label = _rxn_str_rev
         else:
-            ioprinter.warning_message(f'no {_rxn_str} in label dct')
+            chn_label = _rxn_str
+
+        if any(lbl in written_labels for lbl in (_rxn_str, _rxn_str_rev)):
+            write_string = False
+        else:
+            write_string = True
 
         # Write the strings
-        if chn_label not in written_labels:
+        if write_string:
+            # Append unwritten label to master list for future loops
+
+            # Write appropriate string for Dummy, Bimol, Well
             written_labels.append(chn_label)
             if len(rgt_names) == 3:
-                aux_str = f'{spc_labels[0]}+{spc_labels[1]}+{spc_labels[2]}'
+                aux_str = (
+                    f'[{aux_labels[0]} + {aux_labels[1]} + {aux_labels[2]}]'
+                )
                 bi_str += mess_io.writer.dummy(
                     chn_label,
                     aux_id_label=aux_str,
@@ -292,7 +449,9 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 else:
                     calc_dens = (False, False)
 
-                aux_str = f'{spc_labels[0]} + {spc_labels[1]}'
+                aux_str = (
+                    f'[{aux_labels[0]} + {aux_labels[1]}]'
+                )
                 bi_str += mess_io.writer.bimolecular(
                     chn_label,
                     spc_labels[0], spc_strs[0],
@@ -307,9 +466,12 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 edown_str = rgt_infs[0].get('edown_str', None)
                 collid_freq_str = rgt_infs[0].get('collid_freq_str', None)
 
+                aux_str = (
+                    f'[{aux_labels[0]}]'
+                )
                 well_str += mess_io.writer.well(
                     chn_label, spc_strs[0],
-                    aux_id_label=aux_labels[0],
+                    aux_id_label=aux_str,
                     zero_ene=rgt_ene,
                     edown_str=edown_str,
                     collid_freq_str=collid_freq_str) + '\n'
@@ -327,8 +489,8 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
 
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
-            (reacs, prods), 'reacs', chnl_infs['fake_vdwr'],
-            chnl_enes, label_dct, reac_label)
+            tsname, (reacs, prods), 'reacs', chnl_infs['fake_vdwr'],
+            chnl_enes, reac_label)
 
         # Append the fake strings to overall strings
         well_str += fwell_str + '\n'
@@ -344,8 +506,8 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
 
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
-            (reacs, prods), 'prods', chnl_infs['fake_vdwp'],
-            chnl_enes, label_dct, prod_label)
+            tsname, (reacs, prods), 'prods', chnl_infs['fake_vdwp'],
+            chnl_enes, prod_label)
 
         # Append the fake strings to overall strings
         well_str += fwell_str + '\n'
@@ -359,7 +521,8 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
 
     # Write MESS string for the inner transition state; append full
     # Label has to correspond only to base name (ignores configuration)
-    ts_label = label_dct[tsname]
+    # ts_label = label_dct[tsname]
+    ts_label = tsname   # change MESS labels
     rclass = spc_dct[tsname+'_0']['class']
     sts_str, ts_dat_dct = _make_ts_mess_str(
         chnl_infs, chnl_enes, spc_model_dct_i, rclass,
@@ -474,8 +637,8 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
     return ts_str, ts_dat_dct
 
 
-def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
-                         chnl_enes, label_dct, side_label):
+def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
+                         chnl_enes, side_label):
     """ write the MESS strings for the fake wells and TSs
     """
 
@@ -506,15 +669,20 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
     }
 
     # MESS string for the fake reactant side well
-    well_dct_key = make_rxn_str(chnl[side_idx], prepend='F')
-    well_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend='F')
-    if well_dct_key in label_dct:
-        fake_well_label = label_dct[well_dct_key]
-    elif well_dct_key_rev in label_dct:
-        fake_well_label = label_dct[well_dct_key_rev]
-    else:
-        ioprinter.warning_message(f'No label {well_dct_key} in label dict')
-    # well_str += mess_io.writer.species_separation_str()
+
+    # Old MESS label code
+    # well_dct_key = make_rxn_str(chnl[side_idx], prepend='F')
+    # well_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend='F')
+    # if well_dct_key in label_dct:
+    #     fake_well_label = label_dct[well_dct_key]
+    # elif well_dct_key_rev in label_dct:
+    #     fake_well_label = label_dct[well_dct_key_rev]
+    # else:
+    #     ioprinter.warning_message(f'No label {well_dct_key} in label dict')
+
+    # New MESS label code
+    fake_well_label = make_rxn_str(chnl[side_idx], prepend='FW-')
+
     _side_str = '+'.join(chnl[side_idx])
     aux_str = f'Fake Well for {_side_str}'
     fake_well, well_dat = blocks.fake_species_block(*fake_inf_dcts)
@@ -524,14 +692,20 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
         zero_ene=chnl_enes[well_key])
 
     # MESS PST TS string for fake reactant side well -> reacs
-    pst_dct_key = make_rxn_str(chnl[side_idx], prepend=prepend_key)
-    pst_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend=prepend_key)
-    if pst_dct_key in label_dct:
-        pst_label = label_dct[pst_dct_key]
-    elif pst_dct_key_rev in label_dct:
-        pst_label = label_dct[pst_dct_key_rev]
-    else:
-        ioprinter.warning_message(f'No label {pst_dct_key} in label dict')
+
+    # Old MESS label code
+    # pst_dct_key = make_rxn_str(chnl[side_idx], prepend=prepend_key)
+    # pst_dct_key_rev = make_rxn_str(chnl[side_idx][::-1], prepend=prepend_key)
+    # if pst_dct_key in label_dct:
+    #     pst_label = label_dct[pst_dct_key]
+    # elif pst_dct_key_rev in label_dct:
+    #     pst_label = label_dct[pst_dct_key_rev]
+    # else:
+    #     ioprinter.warning_message(f'No label {pst_dct_key} in label dict')
+
+    # New MESS label code (use channel index for PST barrier label)
+    chn_idx = tsname.split('_')[2]  # ts_pesidx_chnidx_sadpt_idx
+    pst_label = f'{prepend_key}{chn_idx}'
     pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,
@@ -576,6 +750,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
     # Gather data or set fake information for dummy reactants/products
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
     for rgts, side in zip((reacs, prods), ('reacs', 'prods')):
+        _need_ene_trans = bool(len(rgts) == 1)
         for rgt in rgts:
             spc_locs_lst = filesys.models.get_spc_locs_lst(
                 spc_dct[rgt], spc_model_dct_i,
@@ -586,6 +761,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
                 spc_dct, rgt,
                 pes_model_dct_i, spc_model_dct_i,
                 run_prefix, save_prefix, model_basis_energy_dct,
+                calc_ene_trans=_need_ene_trans,
                 spc_locs=spc_locs_lst[0])
             chnl_infs[side].append(chnl_infs_i)
 

@@ -31,7 +31,9 @@ from mechroutines.thermo import basis
 def read_spc_data(spc_dct, spc_name,
                   pes_mod_dct_i, spc_mod_dct_i,
                   run_prefix, save_prefix, chn_basis_ene_dct,
-                  calc_chn_ene=True, spc_locs=None):
+                  calc_chn_ene=True,
+                  calc_ene_trans=True,
+                  spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a given species.
         Also sets the writer for appropriately formatting the data into
         an MESS input file string.
@@ -81,7 +83,9 @@ def read_spc_data(spc_dct, spc_name,
             inf_dct, chn_basis_ene_dct = mol_data(
                 spc_name, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i, chn_basis_ene_dct,
-                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene,
+                run_prefix, save_prefix,
+                calc_chn_ene=calc_chn_ene,
+                calc_ene_trans=calc_ene_trans,
                 spc_locs=spc_locs, zrxn=None)
             writer = 'species_block'
 
@@ -172,7 +176,9 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 tsname, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i,
                 chn_basis_ene_dct,
-                run_prefix, save_prefix, zrxn=zrxn, spc_locs=spc_locs)
+                run_prefix, save_prefix,
+                calc_ene_trans=False,
+                zrxn=zrxn, spc_locs=spc_locs)
             writer = 'species_block'
     else:
 
@@ -270,7 +276,10 @@ def atm_data(spc_dct, spc_name,
 def mol_data(spc_name, spc_dct,
              pes_mod_dct_i, spc_mod_dct_i,
              chn_basis_ene_dct,
-             run_prefix, save_prefix, calc_chn_ene=True, zrxn=None,
+             run_prefix, save_prefix,
+             calc_chn_ene=True,
+             calc_ene_trans=True,
+             zrxn=None,
              spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a molecule.
         Stores data into an info dictionary.

@@ -3,7 +3,6 @@
 
 import os
 import ioformat
-import mess_io
 import chemkin_io
 import autorun
 import ratefit
@@ -11,8 +10,7 @@ from mechlib import filesys
 from mechlib.amech_io import writer
 from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.models.typ import use_well_extension
-from mechroutines.ktp.rates import make_header_str
+from mechroutines.ktp.rates import make_full_str
 from mechroutines.ktp.rates import make_global_etrans_str
 from mechroutines.ktp.rates import make_pes_mess_str
 from mechroutines.ktp._multipes import obtain_multipes_rxn_ktp_dct
@@ -54,63 +52,21 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
         tsk_key_dct, pes_param_dct,
         thy_dct, pes_model_dct_i, spc_model_dct_i, spc_mod)
 
-    # Write the strings for the MESS input file
-    globkey_str = make_header_str(
-        spc_dct, rxn_lst, pes_idx, pesgrp_num,
-        pes_param_dct, hot_enes_dct, label_dct,
-        pes_model_dct_i['rate_temps'],
-        pes_model_dct_i['pressures'],
-        tsk_key_dct['float_precision'])
-
     # Write the energy transfer section strings for MESS file
     energy_trans_str = make_global_etrans_str(
         rxn_lst, spc_dct, pes_model_dct_i['energy_transfer'])
 
-    # Write base MESS input string into the RUN filesystem
-    mess_inp_str = mess_io.writer.messrates_inp_str(
-        globkey_str, rxn_chan_str,
-        energy_trans_str=energy_trans_str, well_lump_str=None)
-
-    base_mess_path = rate_paths_dct[pes_inf]['base']
-    ioprinter.obj('line_plus')
-    ioprinter.writing('MESS input file', base_mess_path)
-    ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
-    autorun.write_input(
-        base_mess_path, mess_inp_str,
-        aux_dct=dats, input_name='mess.inp')
-
-    # Write the second MESS string (well extended), if needed
-    if use_well_extension(spc_dct, rxn_lst, pes_idx,
-                          tsk_key_dct['use_well_extension']):
-
-        print('User requested well extension scheme for rates...')
-
-        # Run the base MESSRATE
-        autorun.run_script(autorun.SCRIPT_DCT['messrate'], base_mess_path)
-
-        # Write the well-extended MESSRATE file
-        print('Reading the input and output from the base MESSRATE run...')
-        inp_str = ioformat.read_file(base_mess_path, 'mess.inp')
-        out_str = ioformat.read_file(base_mess_path, 'mess.out')
-        aux_str = ioformat.read_file(base_mess_path, 'mess.aux')
-        log_str = ioformat.read_file(base_mess_path, 'mess.log')
-
-        print('Setting up the well-extended MESSRATE input...')
-        wext_mess_inp_str = ratefit.fit.well_lumped_input_file(
-            inp_str, out_str, aux_str, log_str,
-            pes_model_dct_i['well_extension_pressure'],
-            pes_model_dct_i['well_extension_temp'])
-
-        wext_mess_path = rate_paths_dct[pes_inf]['wext']
-        ioprinter.obj('line_plus')
-        ioprinter.writing('MESS input file', base_mess_path)
-        ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
-        autorun.write_input(
-            wext_mess_path, wext_mess_inp_str,
-            aux_dct=dats, input_name='mess.inp')
+    # Create full string by writing the appropriate header, accounting for
+    # (1) MESS Version and (2) Use of Well-Extension
+    # And include the global_etrans and reaction channel strings
+    make_full_str(energy_trans_str, rxn_chan_str, dats,
+                  pesgrp_num, pes_param_dct, hot_enes_dct,
+                  rate_paths_dct, pes_inf,
+                  pes_model_dct_i,
+                  spc_dct, rxn_lst, pes_idx, tsk_key_dct)
 
 
-def run_messrate_task(rate_paths_dct, pes_inf):
+def run_messrate_task(pes_inf, tsk_key_dct, rate_paths_dct):
     """ Run the MESSRATE input file.
 
         First tries to run a well-extended file, then tries to
@@ -118,22 +74,48 @@ def run_messrate_task(rate_paths_dct, pes_inf):
 
         Need an overwrite task
     """
+
+    # Get the path to the MESSRATE file to run
+    # (1) Vers1-Base, (2) Vers1-WellExtend, (3) Vers2-Base
     path_dct = rate_paths_dct[pes_inf]
-    for typ in ('wext', 'base'):
-        path = path_dct[typ]
-        mess_inp = os.path.join(path, 'mess.inp')
-        mess_out = os.path.join(path, 'mess.out')
-        if os.path.exists(mess_inp) and not os.path.exists(mess_out):
-            ioprinter.obj('vspace')
-            ioprinter.obj('line_dash')
-            ioprinter.info_message(f'Found MESS input file at {path}')
-            ioprinter.running('MESS input file')
-            autorun.run_script(autorun.SCRIPT_DCT['messrate'], path)
-            break
+    mess_version = tsk_key_dct['mess_version']
+    if mess_version == 'v1' and tsk_key_dct['well_extension']:
+        path = path_dct[f'wext-{mess_version}']
+        typ = 'wext'
+    else:
+        path = path_dct[f'base-{mess_version}']
+        typ = 'base'
+
+    mess_inp = os.path.join(path, 'mess.inp')
+    # mess_out = os.path.join(path, 'mess.out')
+    # if not os.path.exists(mess_out): (rerun option needed?)
+    if os.path.exists(mess_inp):
+        ioprinter.obj('vspace')
+        ioprinter.obj('line_dash')
+        if typ == 'base':
+            ioprinter.running(
+                f'base input with MESS version {mess_version} '
+                f'at {path}')
+        else:
+            ioprinter.running(
+                f'well-extended input with MESS version {mess_version} '
+                f'at {path}')
+        autorun.run_script(
+            autorun.SCRIPT_DCT[f'messrate-{mess_version}'], path
+        )
+    else:
+        if typ == 'base':
+            ioprinter.warning_message(
+                f'No base input for MESS version {mess_version} '
+                f'found at {path}')
+        else:
+            ioprinter.warning_message(
+                f'No well-extended input for MESS version {mess_version} '
+                f'found at {path}')
 
 
 def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
-                  label_dct, pes_mod_dct, spc_mod_dct, thy_dct,
+                  pes_mod_dct, spc_mod_dct, thy_dct,
                   tsk_key_dct):
     """ Run the fits and potentially
 
@@ -159,8 +141,9 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
     ioprinter.info_message(
         'Reading Rate Constants from MESS outputs', newline=1)
     rxn_ktp_dct = obtain_multipes_rxn_ktp_dct(
-        rate_paths_dct, pes_param_dct,
-        label_dct, pes_mod_dct, pes_mod)
+        pes_grp_rlst, rate_paths_dct, pes_param_dct,
+        pes_mod_dct, pes_mod,
+        tsk_key_dct)
 
     # Fit the rate constants
     ioprinter.info_message(
