@@ -196,7 +196,7 @@ def edown_params(tgt_info, bath_info, etrans_dct, ljpar=None):
                 ioprinter.info_message(
                     '    - Series to use for estimation for estimation:'
                     f' {model}\n'
-                    f'    - Found effective rotor count: {n_eff}\n'
+                    f'    - Found effective rotor count: {n_eff:.2f}\n'
                     '    - Using following LJ parameters for '
                     'collisional frequency and alpha calculation:\n'
                     f'       eps={eps*phycon.EH2WAVEN:.2f} cm-1, '
