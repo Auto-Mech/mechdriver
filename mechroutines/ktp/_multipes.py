@@ -2,7 +2,6 @@
 """
 
 import numpy
-import automol
 import mess_io
 import mechanalyzer
 from mechlib.amech_io import reader
@@ -111,52 +110,19 @@ def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
         Call additional
     """
 
-    # Grab options that set what MESS files should be read
-    mess_version = tsk_key_dct['mess_version']
-    use_well_extension = tsk_key_dct['well_extension']
-
     # Read the MESS input and output for all PES group members
     rate_strs_dct, mess_paths_dct = reader.mess.rate_strings(rate_paths_dct)
 
     # Read MESS file and get rate constants
     if len(pes_grp_rlst) == 1:
-
-        # Read the appropriate file based on desired versions
-        pes_inf = tuple(pes_grp_rlst.keys())[0]
-
-        if mess_version == 'v1' and use_well_extension:
-            typ = f'wext-{mess_version}'
-            mess_path = mess_paths_dct[pes_inf][typ]
-            mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
-        elif mess_version == 'v1' and not use_well_extension:
-            typ = f'base-{mess_version}'
-            mess_path = mess_paths_dct[pes_inf][typ]
-            mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
-        elif mess_version == 'v2':
-            typ = f'base-{mess_version}'
-            mess_path = mess_paths_dct[pes_inf][typ]
-            mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
-
-        # If file found, read and fit the rate constants
-        if mess_str is not None:
-            print('Fitting rates for single PES...')
-            print(f'Fitting rates from {mess_path}')
-
-            rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
-                mess_str,
-                filter_kts=True,
-                read_fake=False,
-                read_self=False,
-                read_rev=False,
-                tmin=min(pes_mod_dct[pes_mod]['rate_temps']),
-                tmax=max(pes_mod_dct[pes_mod]['rate_temps']),
-                pmin=min(pes_mod_dct[pes_mod]['pressures']),
-                pmax=max(pes_mod_dct[pes_mod]['pressures'])
-            )
-        else:
-            print(f'No MESS output found at {mess_path}')
+        rxn_ktp_dct = _single_pes_ktp_dct(
+            pes_grp_rlst,
+            tsk_key_dct, rate_strs_dct, mess_paths_dct,
+            pes_mod_dct[pes_mod]['rate_temps'],
+            pes_mod_dct[pes_mod]['pressures']
+        )
     else:
-        rxn_ktp_dct = prompt_dissociation_ktp_dct(
+        rxn_ktp_dct = _prompt_dissociation_ktp_dct(
             pes_grp_rlst,
             pes_param_dct, rate_strs_dct, mess_paths_dct,
             pes_mod_dct[pes_mod]['rate_temps'],
@@ -166,9 +132,57 @@ def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
     return rxn_ktp_dct
 
 
-def prompt_dissociation_ktp_dct(pes_grp_rlst,
-                                pes_param_dct, rate_strs_dct, mess_paths_dct,
-                                temps, pressures):
+def _single_pes_ktp_dct(pes_grp_rlst,
+                        tsk_key_dct, rate_strs_dct, mess_paths_dct,
+                        temps, pressures):
+    """ Read the rates from a single PES
+    """
+
+    # Read options
+    mess_version = tsk_key_dct['mess_version']
+    use_well_extension = tsk_key_dct['well_extension']
+
+    # Read the appropriate file based on desired versions
+    pes_inf = tuple(pes_grp_rlst.keys())[0]
+
+    if mess_version == 'v1' and use_well_extension:
+        typ = f'wext-{mess_version}'
+        mess_path = mess_paths_dct[pes_inf][typ]
+        mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
+    elif mess_version == 'v1' and not use_well_extension:
+        typ = f'base-{mess_version}'
+        mess_path = mess_paths_dct[pes_inf][typ]
+        mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
+    elif mess_version == 'v2':
+        typ = f'base-{mess_version}'
+        mess_path = mess_paths_dct[pes_inf][typ]
+        mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
+
+    # If file found, read and fit the rate constants
+    if mess_str is not None:
+        print('Fitting rates for single PES...')
+        print(f'Fitting rates from {mess_path}')
+
+        rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
+            mess_str,
+            filter_kts=True,
+            filter_reaction_types=('fake', 'self',
+                                   'loss', 'capture', 'reverse'),
+            tmin=min(temps),
+            tmax=max(temps),
+            pmin=min(pressures),
+            pmax=max(pressures)
+        )
+    else:
+        rxn_ktp_dct = None
+        print(f'No MESS output found at {mess_path}')
+
+    return rxn_ktp_dct
+
+
+def _prompt_dissociation_ktp_dct(pes_grp_rlst,
+                                 pes_param_dct, rate_strs_dct, mess_paths_dct,
+                                 temps, pressures):
     """ Evaluate the prompt dissociation k(T,P) values.
 
         Reads the k(T,P) values from the MESSRATE output, as well as the
@@ -180,10 +194,6 @@ def prompt_dissociation_ktp_dct(pes_grp_rlst,
         :rtype: dict[]
     """
 
-    # Get prompt dissociation parameters
-    modeltype = pes_param_dct['modeltype']
-    bf_thresh = pes_param_dct['bf_threshold']
-
     # Get the PES info objects for the PED and Hot surface
     ped_pes_inf = tuple(pes_grp_rlst.keys())[0]
     hot_pes_inf = tuple(pes_grp_rlst.keys())[1]
@@ -191,129 +201,16 @@ def prompt_dissociation_ktp_dct(pes_grp_rlst,
     # Obtain the strings that are needed
     ped_mess_path = mess_paths_dct[ped_pes_inf]['base-v1']
     hot_mess_path = mess_paths_dct[hot_pes_inf]['base-v1']
+    ped_strs_dct = rate_strs_dct[ped_pes_inf]['base-v1']
+    hot_strs_dct = rate_strs_dct[hot_pes_inf]['base-v1']
+
     print('Fitting rates from\n'
           f'  - PED: {ped_mess_path}\n'
           f'  - HOT: {hot_mess_path}')
 
-    ped_strs_dct = rate_strs_dct[ped_pes_inf]['base-v1']
-    ped_inp_str, ped_out_str = ped_strs_dct['inp'], ped_strs_dct['ktp_out']
-    ped_ped_str = ped_strs_dct['ped']
-    ped_ke_out_str = ped_strs_dct['ke_out']
-
-    hot_strs_dct = rate_strs_dct[hot_pes_inf]['base-v1']
-    hot_inp_str, hot_out_str = hot_strs_dct['inp'], hot_strs_dct['ktp_out']
-    hot_log_str = hot_strs_dct['log']
-
-    # 0. EXTRACT INPUT INFORMATION from me_ped.inp
-    spc_blocks_ped = mess_io.reader.get_species(ped_inp_str)
-    ped_spc, _ = mess_io.reader.ped.ped_names(ped_inp_str)  # can supply
-    energy_dct, _, conn_lst_dct, _ = mess_io.reader.pes(ped_inp_str)
-
-    # 0b. Read the rate constants from the two PESs
-    rxn_ktp_dct = {}
-    for mess_str in (ped_out_str, hot_out_str):
-        rxn_ktp_dct.update(
-            mess_io.reader.rates.get_rxn_ktp_dct(
-                mess_str,
-                filter_kts=True,
-                tmin=min(temps),
-                tmax=max(temps),
-                pmin=min(pressures),
-                pmax=max(pressures)
-            )
-        )
-
-    # 1. INFO FROM rate_ped.out and ke_ped.out:
-    #      rate dct, energy barriers, dofs, fragment names
-    ene_bw_dct = {}
-    dof_dct = {}
-    fragments_dct = {}
-    # get the rates for all set of pedspecies (using the old labels)
-    for spc in ped_spc:
-        reacs, prods = spc
-        label = ((reacs,), (prods,), (None,))
-
-        # Find the corresponding energy barrier
-        barrier_label = mess_io.reader.find_barrier(conn_lst_dct, reacs, prods)
-        try:
-            ene_bw_dct[label] = energy_dct[barrier_label]-energy_dct[prods]
-        except KeyError:
-            ene_bw_dct[label] = energy_dct[reacs]-energy_dct[prods]
-
-        # Derive dofs involved
-        dof_info = mechanalyzer.calculator.statmodels.get_dof_info(
-            spc_blocks_ped[prods], ask_for_ts=True)
-        dof_dct[label] = dof_info
-        fragments_dct[label] = mess_io.reader.dct_species_fragments(
-            spc_blocks_ped)[prods]
-
-    # 2. read PED
-    ped_dct = mess_io.reader.ped.get_ped(ped_ped_str, ped_spc, energy_dct)
-
-    # 3. READ ke_ped.out file and extract the energy density of each fragment
-    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str)
-
-    # 4. READ THE HOTENERGIES OUTPUT
-    spc_blocks_hoten = mess_io.reader.get_species(hot_inp_str)
-    hot_frag_dct = mess_io.reader.dct_species_fragments(spc_blocks_hoten)
-    hot_spc = mess_io.reader.hoten.get_hot_names(hot_inp_str)  # can supply
-    
-    print('hot test')
-    print('hot log str\n', hot_log_str)
-    print('\nhot spc\n', hot_spc)
-    print('\nhot keys\n', list(spc_blocks_hoten.keys()))
-    print('TP', temps, pressures)
-    
-    hoten_dct = mess_io.reader.hoten.extract_hot_branching(
-        hot_log_str, hot_spc, list(spc_blocks_hoten.keys()),
-        temps, pressures)
-
-    # DERIVE BF AND RATES
-    prompt_rxns = ()
-    prompt_rxn_ktp_dct = {}
-    for spc in ped_spc:
-        reacs, prods = spc
-        label = ((reacs,), (prods,), (None,))
-        _ped_label = '+'.join(label[0]) + '->' + '+'.join(label[1])
-
-        ped_df = ped_dct[_ped_label]
-        ene_bw = ene_bw_dct[label]
-        # select the fragment of which you want the PED:
-        # it is the one in common with hotspecies
-        fragments = fragments_dct[label]
-        try:
-            frag1 = list(set(hot_spc).intersection(fragments))[0]
-            frag2 = list(set(fragments).difference((frag1,)))[0]
-        except IndexError:
-            print('no superposition between PED fragments and hot fragments '
-                  '- exiting now \n')
-        # DERIVE PED OF THE HOT FRAGMENT
-        ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            ped_df, frag1, frag2, (modeltype,),
-            dos_df=dos_df, dof_info=dof_dct[label], ene_bw=ene_bw)
-
-        # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
-        bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
-            (modeltype,), ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
-            savefile=False)
-
-        # NEW KTP DICTIONARY
-        frag_reacs_dct = mess_io.reader.dct_species_fragments(
-            spc_blocks_ped)
-        frag_reacs = frag_reacs_dct[spc[0]]
-
-        prompt_rxn_ktp_dct.update(
-            mechanalyzer.builder.bf.merge_bf_ktp(
-                bf_tp_dct, rxn_ktp_dct[label],
-                frag_reacs, frag1, frag2, hot_frag_dct)[modeltype]
-        )
-        prompt_rxns += (label,)
-
-    # Remove the original reaction (currently in MESS labels
-    for rxn in prompt_rxns:
-        rxn_ktp_dct.pop(rxn)
-
-    # Add in the prompt versions of the reactions
-    rxn_ktp_dct.update(prompt_rxn_ktp_dct)
-
-    return rxn_ktp_dct
+    return mechanalyzer.calculator.prompt_dissociation_ktp_dct(
+        ped_strs_dct['inp'], ped_strs_dct['ktp_out'],
+        ped_strs_dct['ped'], ped_strs_dct['ke_out'],
+        hot_strs_dct['inp'], hot_strs_dct['ktp_out'], hot_strs_dct['log'],
+        pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])
+# add to function as None options: temps, pressures)
