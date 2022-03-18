@@ -100,6 +100,7 @@ def run(pes_rlst, pes_grp_dct,
 
             # Run mess to produce rates (urrently nothing from tsk lst used)
             if run_rate_tsk is not None:
+                tsk_key_dct = run_rate_tsk[-1]
                 ktp_tasks.run_messrate_task(
                     pes_inf, tsk_key_dct, rate_paths_dct)
 
