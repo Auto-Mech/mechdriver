@@ -785,19 +785,20 @@ def hr_tsk(job, spc_dct, spc_name,
         zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
         if ini_zma_save_fs[-1].file.torsions.exists([0]):
             tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-            torsions = automol.rotor.from_data(zma, tors_dct,)
+            rotors = automol.rotor.from_data(
+                zma, tors_dct, multi='md' in tors_model)
         else:
-            torsions = ()
+            rotors = ()
         zrxn = spc_dct_i.get('zrxn', None)
-        # If there aren't any torsions, stop hr tasks
-        if not any(torsions):
+        # If there aren't any rotors, stop hr tasks
+        if not any(rotors):
             ioprinter.info_message('No torsional modes in the species')
             break
 
         if 'fa' in tors_model:
             scn = 'CSCAN'
         elif 'f' in tors_model:
-            if len(torsions) > 1:
+            if len(rotors) > 1:
                 scn = 'CSCAN'
             else:
                 scn = 'SCAN'
@@ -858,13 +859,14 @@ def hr_tsk(job, spc_dct, spc_name,
             zma = zma_save_fs[-1].file.zmatrix.read((0,))
             if zma_save_fs[-1].file.torsions.exists([0]):
                 tors_dct = zma_save_fs[-1].file.torsions.read([0])
-                torsions = automol.rotor.from_data(zma, tors_dct,)
+                rotors = automol.rotor.from_data(
+                    zma, tors_dct, multi='md' in tors_model)
             else:
-                torsions = ()
+                rotors = ()
             if 'fa' in tors_model:
                 scn = 'CSCAN'
             elif 'f' in tors_model:
-                if len(torsions) > 1:
+                if len(rotors) > 1:
                     scn = 'CSCAN'
                 else:
                     scn = 'SCAN'
@@ -878,7 +880,7 @@ def hr_tsk(job, spc_dct, spc_name,
             hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info,
                 scn_run_fs, scn_save_fs,
-                torsions, tors_model, method_dct,
+                rotors, tors_model, method_dct,
                 overwrite,
                 zrxn=zrxn,
                 saddle=saddle,
@@ -896,9 +898,9 @@ def hr_tsk(job, spc_dct, spc_name,
 
             zrxn = spc_dct_i.get('zrxn', None)
 
-            run_tors_names = automol.rotor.names(torsions)
+            run_tors_names = automol.rotor.names(rotors)
             run_tors_grids = automol.rotor.grids(
-                torsions, increment=increment)
+                rotors, increment=increment)
 
             # Set constraints
             const_names = automol.zmat.set_constraint_names(
@@ -956,7 +958,7 @@ def hr_tsk(job, spc_dct, spc_name,
             ini_scn_run_fs, ini_scn_save_fs = build_fs(
                 ini_cnf_run_path, ini_cnf_save_path, scn,
                 zma_locs=(0,))
-            run_tors_names = automol.rotor.names(torsions, flat=True)
+            run_tors_names = automol.rotor.names(rotors, flat=True)
             for tors_names in run_tors_names:
 
                 # Set the constraint dct and filesys for the scan
