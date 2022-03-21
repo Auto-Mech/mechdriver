@@ -124,9 +124,7 @@ def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
     else:
         rxn_ktp_dct = _prompt_dissociation_ktp_dct(
             pes_grp_rlst,
-            pes_param_dct, rate_strs_dct, mess_paths_dct,
-            pes_mod_dct[pes_mod]['rate_temps'],
-            pes_mod_dct[pes_mod]['pressures']
+            pes_param_dct, rate_strs_dct, mess_paths_dct
         )
 
     return rxn_ktp_dct
@@ -181,8 +179,7 @@ def _single_pes_ktp_dct(pes_grp_rlst,
 
 
 def _prompt_dissociation_ktp_dct(pes_grp_rlst,
-                                 pes_param_dct, rate_strs_dct, mess_paths_dct,
-                                 temps, pressures):
+                                 pes_param_dct, rate_strs_dct, mess_paths_dct):
     """ Evaluate the prompt dissociation k(T,P) values.
 
         Reads the k(T,P) values from the MESSRATE output, as well as the
@@ -193,7 +190,11 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
         :type bf_threshold: float
         :rtype: dict[]
     """
-
+    if isinstance(pes_param_dct['modeltype'], str):
+        pes_param_dct['modeltype'] = [pes_param_dct['modeltype']]
+    if len(pes_param_dct['modeltype']) > 1:
+        print('*Warning: multiple prompt models detected \
+            CKI file will only consider the first one')
     # Get the PES info objects for the PED and Hot surface
     ped_pes_inf = tuple(pes_grp_rlst.keys())[0]
     hot_pes_inf = tuple(pes_grp_rlst.keys())[1]
@@ -212,5 +213,5 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
         ped_strs_dct['inp'], ped_strs_dct['ktp_out'],
         ped_strs_dct['ped'], ped_strs_dct['ke_out'],
         hot_strs_dct['inp'], hot_strs_dct['ktp_out'], hot_strs_dct['log'],
-        pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])
-# add to function as None options: temps, pressures)
+        pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])[pes_param_dct['modeltype'][0]]
+
