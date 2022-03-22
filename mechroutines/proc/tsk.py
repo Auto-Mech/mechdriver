@@ -49,7 +49,7 @@ def run_tsk(tsk, obj_queue,
 
     # Set up lists for reporting missing data
     miss_data = ()
-    ts_miss_data = ()
+    # ts_miss_data = ()
     # Initialize dictionaries to carry strings for writing
     disp_dct = {}
     # Begin the loop over the species
