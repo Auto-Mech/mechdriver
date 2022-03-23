@@ -113,6 +113,8 @@ def search(ini_zma, spc_dct, tsname,
             mref_params=mref_dct['runlvl'],
             scn_run_fs=runfs_dct['runlvl_scn'],
             scn_save_fs=savefs_dct['runlvl_scn'],
+            cscn_run_fs=runfs_dct['runlvl_cscn'],
+            cscn_save_fs=savefs_dct['runlvl_cscn'],
             es_keyword_dct=es_keyword_dct)
 
     # Optimize guess and check if saddle point good to save

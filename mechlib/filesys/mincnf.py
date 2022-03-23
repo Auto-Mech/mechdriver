@@ -230,7 +230,7 @@ def _sorted_cnf_lsts(
                 )
         locs_enes_dct_lst = execute_function_in_parallel(
             _parallel_get_sort_energy_parameters, cnf_locs_lst,
-            args, nprocs=nprocs)
+            args, nprocs=1)
         first_ene = None
         for locs_enes_dct in locs_enes_dct_lst:
             for locs in locs_enes_dct:
