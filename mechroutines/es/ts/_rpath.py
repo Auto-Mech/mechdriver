@@ -70,7 +70,7 @@ def internal_coordinates_scan(ts_zma, zrxn,
     if find_max:
         include_endpts = not mref_params
         max_zmas = rxngrid.grid_maximum_zmatrices(
-            zrxn.class_, ts_zma, coord_grids, coord_names, scn_save_fs,
+            zrxn.class_, ts_zma, coord_grids, coord_names, _scn_save_fs,
             mod_thy_info, constraint_dct, include_endpts=include_endpts)
     else:
         max_zmas = None
