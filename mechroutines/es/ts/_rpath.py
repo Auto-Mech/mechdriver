@@ -18,6 +18,7 @@ def internal_coordinates_scan(ts_zma, zrxn,
                               ts_info, rxn_class,
                               method_dct, mref_params,
                               scn_run_fs, scn_save_fs,
+                              cscn_run_fs, cscn_save_fs,
                               es_keyword_dct,
                               find_max=True):
     """ Scan along the internal coordinates that correspond to the
@@ -35,6 +36,12 @@ def internal_coordinates_scan(ts_zma, zrxn,
     scan_inf = automol.reac.build_scan_info(zrxn, ts_zma, var=var)
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
 
+    # Set the filesystem
+    if constraint_dct is None:
+        _scn_run_fs, _scn_save_fs = scn_run_fs, scn_save_fs
+    else:
+        _scn_run_fs, _scn_save_fs = cscn_run_fs, cscn_save_fs
+
     # Set up script string and kwargs
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(
@@ -47,8 +54,8 @@ def internal_coordinates_scan(ts_zma, zrxn,
         mod_thy_info=mod_thy_info,
         coord_names=coord_names,
         coord_grids=coord_grids,
-        scn_run_fs=scn_run_fs,
-        scn_save_fs=scn_save_fs,
+        scn_run_fs=_scn_run_fs,
+        scn_save_fs=_scn_save_fs,
         scn_typ='relaxed',
         script_str=script_str,
         overwrite=es_keyword_dct['overwrite'],

@@ -61,5 +61,8 @@ def rpath_fs(ts_dct, tsname,
     scn_fs = build_fs(
         ini_pfx_run_path, ini_pfx_save_path, 'SCAN',
         zma_locs=zma_locs)
+    cscn_fs = build_fs(
+        ini_pfx_run_path, ini_pfx_save_path, 'CSCAN',
+        zma_locs=zma_locs)
 
-    return scn_alg, scn_fs, cnf_fs, ini_min_locs
+    return scn_alg, scn_fs, cscn_fs, cnf_fs, ini_min_locs

@@ -293,7 +293,7 @@ def rpath_tsk(job, spc_dct, spc_name,
     mref_params = mref_dct['runlvl']
 
     # Build filesys objects
-    scn_alg, scn_fs, cnf_fs, cnf_locs = rpath_fs(
+    scn_alg, scn_fs, cscn_fs, cnf_fs, cnf_locs = rpath_fs(
         ts_dct, spc_name,
         mod_ini_thy_info,
         es_keyword_dct,
@@ -321,6 +321,7 @@ def rpath_tsk(job, spc_dct, spc_name,
                 ts_info, rclass,
                 method_dct, mref_params,
                 scn_fs[0], scn_fs[1],
+                cscn_fs[0], cscn_fs[1],
                 es_keyword_dct)
     elif job in ('energy', 'grad', 'hess'):
         # Set run-time options
