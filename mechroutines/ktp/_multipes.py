@@ -74,7 +74,7 @@ def set_hot_enes(pesgrp_num, reacs, prods,
     """
 
     if ene_range is None:
-        ene_range = numpy.arange(0.0, 226.0, 1.0).tolist()
+        ene_range = numpy.arange(0.0, 300.0, 1.0).tolist()
 
     if pes_param_dct is not None:
         all_hot_spc = pes_param_dct['hot']
