@@ -57,8 +57,6 @@ def make_full_str(energy_trans_str, rxn_chan_str, dats,
     temps, pressures = pes_mod_dct_i['rate_temps'], pes_mod_dct_i['pressures']
     float_type = tsk_key_dct['float_precision']
 
-    label_dct = {}
-
     # Set other parameters
     # Need the PES number to pull the correct params out of lists
     ped_spc_lst, micro_out_params = energy_dist_params(
@@ -96,7 +94,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
                   rate_paths_dct, pes_inf,
                   pes_mod_dct_i,
                   spc_dct, rxn_lst, pes_idx, tsk_key_dct):
-    """ Make the global header string for version 1
+    """ Make the global header string for MESS version 1
 
         last line of arguments only used to determine well-extension
     """
@@ -106,13 +104,21 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         'ModelEnergyLimit')
     ioprinter.debug_message(
         'CalculationMethod, WellCutoff, ' +
-        'ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin')
+        'ReductionMethod, AtomDistanceMin')
 
     if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         well_extend, is_abstraction = None, True
     else:
         well_extend, is_abstraction = 'auto', False
         ioprinter.debug_message('Including WellExtend in MESS input')
+
+    # Assume if that hot_enes are being passed, don't use chem eig max keywrd
+    if hot_enes_dct is not None:
+        chem_eig_max = None
+    else:
+        chem_eig_max = 0.2
+        ioprinter.debug_message(
+            'No Hot Energies Given. Setting ChemicalEigenvalueMax to 0.2')
 
     globkey_str = mess_io.writer.global_rates_input_v1(
         temps, pressures,
@@ -121,6 +127,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         ene_stepover_temp=0.2, excess_ene_temp=None,
         well_extension=well_extend,
         well_reduction_thresh=10.0,
+        chem_eig_max=chem_eig_max,
         ped_spc_lst=ped_spc_lst,
         hot_enes_dct=hot_enes_dct,
         micro_out_params=micro_out_params,
@@ -189,7 +196,7 @@ def _full_mess_v2(rxn_chan_str, energy_trans_str, dats,
                   float_type,
                   pes_mod_dct_i,
                   rate_paths_dct, pes_inf):
-    """ Make the global header string for version 2
+    """ Make the global header string for MESS version 2
     """
 
     globkey_str = mess_io.writer.global_rates_input_v2(
