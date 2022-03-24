@@ -92,6 +92,29 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             int_symm = automol.symm.rotor_reduced_symm_factor(
                 int_symm, rotor_symms)
 
+            ext_symm *= _umbrella_factor(rotors, geo)
+
         symm_factor = ext_symm * int_symm
 
     return symm_factor
+
+
+def _umbrella_factor(rotors, geo, grxn=None):
+    """ check to see if this torsion has umbrella floppies
+    """
+    umb_fact = 1
+    gra = automol.graph.dominant_resonance(automol.geom.graph(geo))
+    rad_atms = automol.graph.radical_atom_keys(gra)
+    if rad_atms:
+        dont_dbl = ()
+        for rotor in rotors:
+            for torsion in rotor:
+                if any([ax_atm in dont_dbl for ax_atm in torsion.axis]):
+                    continue
+                if any([rad_atm in torsion.axis for rad_atm in rad_atms]):
+                    if automol.pot.is_symmetric(torsion.pot):
+                        dont_dbl += tuple([rad_atm for rad_atm in torsion.axis if rad_atm in rad_atms])
+                        umb_fact *= 2
+                        ioprinter.info_message(
+                            'Umbrella mode identified for torsion about', torsion.axis)
+    return umb_fact

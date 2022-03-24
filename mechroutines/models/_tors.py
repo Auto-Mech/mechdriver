@@ -51,7 +51,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                 zma=zma_fs[-1].file.zmatrix.read([0]),
                 tors_inf_dct=zma_fs[-1].file.torsions.read([0]),
                 tors_names=spc_dct_i.get('tors_names', None),
-                multi=('md' in tors_model))
+                multi='md' in tors_model)
 
         # Read the potential grids
         if read_potentials and rotors is not None:

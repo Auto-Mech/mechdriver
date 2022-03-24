@@ -36,6 +36,7 @@ def full_vib_analysis(
             for rotor in rotors:
                 for torsion in rotor:
                     torsion.pot = automol.pot.relax_scale(torsion.pot)
+
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
@@ -89,16 +90,16 @@ def full_vib_analysis(
         freqs, imag, zpe, disps = ret
 
     if freqs:
-        freqs, zpe = scale_frequencies(
+        freqs, proj_tors_zpe = scale_frequencies(
             freqs, tors_zpe,
             spc_mod_dct_i, scale_method='c3')
-        harm_freqs, _ = scale_frequencies(
-            harm_freqs, None,
+
+        harm_freqs, harm_sc_zpe = scale_frequencies(
+            harm_freqs, 0,
             spc_mod_dct_i, scale_method='c3')
 
-        # harm_freqs, zpe = scale_frequencies(
-        #     harm_freqs, 0,
-        #    spc_mod_dct_i, scale_method='c3')
+        zpe = harm_sc_zpe
+        # zpe = proj_tors_zpe
 
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
             harm_freqs, disps)
