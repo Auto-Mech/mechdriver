@@ -3,7 +3,7 @@
 """
 
 import automol
-# import autorun
+import autorun
 import mess_io
 import projrot_io
 from phydat import phycon
@@ -34,7 +34,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
     mod_tors_ene_info = tinfo.modify_orb_label(
         tors_ene_info, sinfo.from_dct(spc_dct_i))
 
-    rotors = None
+    rotors, mdhr_dct = None, None
     if pf_filesystems['tors'] is not None:
         [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
@@ -50,16 +50,16 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                 zma=zma_fs[-1].file.zmatrix.read([0]),
                 tors_inf_dct=zma_fs[-1].file.torsions.read([0]),
                 tors_names=spc_dct_i.get('tors_names', None),
-                multi=bool('1d' in tors_model))
+                multi=('md' in tors_model))
 
         # Read the potential grids
         if read_potentials and rotors is not None:
-            rotors = _read_potentials(
+            rotors, mdhr_dct = _read_potentials(
                 rotors, spc_dct_i, run_path, cnf_save_path,
                 ref_ene, mod_tors_ene_info,
                 tors_model)
 
-    return rotors
+    return rotors, mdhr_dct
 
 
 def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
@@ -82,8 +82,10 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     # Recalculate the rotor potential grids using desired increment
     rotor_grids = automol.rotor.grids(rotors, increment=increment)
 
+    multi_idx = None
     for ridx, rotor in enumerate(rotors):
-        # multi_idx = ridx
+        if len(rotor) > 1:
+            multi_idx = ridx
 
         for tidx, torsion in enumerate(rotor):
             # Read and spline-fit potential
@@ -115,26 +117,34 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 torsion.pot = final_pot
             else:
                 torsion.pot = pot
-    # if multi_idx is not None:
-    #     mdhr_name = automol.rotor.names(rotors)[multi_idx]
-    #   mdhr_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]
 
-    #     pot, geoms, grads, hessians, _, _ = filesys.read.potential(
-    #         mdhr_name, mdhr_grid,
-    #         cnf_save_path,
-    #         mod_tors_ene_info, ref_ene,
-    #         constraint_dct=None,   # No extra frozen treatments
-    #         read_geom=bool('v' in tors_model),
-    #         read_grad=bool('v' in tors_model),
-    #         read_hess=bool('v' in tors_model))
-    #     script_str = autorun.SCRIPT_DCT['projrot']
-    #     freqs = autorun.projrot.pot_frequencies(
-    #         script_str, geoms, grads, hessians, run_path)
-    # else:
-    #     pass
+    if multi_idx is not None:
+        is_mdhrv = 'v' in tors_model
 
-    # return rotors, (pot, freqs)
-    return rotors
+        mdhr_name = automol.rotor.names(rotors)[multi_idx]
+        mdhr_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]
+
+        pot, geoms, grads, hessians, _, _ = filesys.read.potential(
+            mdhr_name, mdhr_grid,
+            cnf_save_path,
+            mod_tors_ene_info, ref_ene,
+            constraint_dct=None,   # No extra frozen treatments
+            read_geom=is_mdhrv,
+            read_grad=is_mdhrv,
+            read_hess=is_mdhrv)
+
+        if is_mdhrv:
+            script_str = autorun.SCRIPT_DCT['projrot']
+            freqs = autorun.projrot.pot_frequencies(
+                script_str, geoms, grads, hessians, run_path)
+        else:
+            freqs = None
+
+        mdhr_dct = {'pot': pot, 'freqs': freqs}
+    else:
+        mdhr_dct = None
+
+    return rotors, mdhr_dct
 
 
 def scale_rotor_pots(rotors, scale_factor=((), None)):
@@ -170,10 +180,10 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
 
 
 # FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
-def make_hr_strings(rotors):
+def make_hr_strings(rotors, mdhr_dct=None):
     """ Procedure for building the MESS strings
         :return mess_allrot_str: combination of intl and hr strs
-        :return mess_hr_str: hr strs
+        :return mess_hr_str: all 1dhr strs
     """
 
     # Initialize empty strings
@@ -184,33 +194,34 @@ def make_hr_strings(rotors):
     # Convert the rotor objects indexing to be in geoms
     geo, rotors = automol.rotor.relabel_for_geometry(rotors)
 
+    # Get the number of rotors
+    numrotors = len(rotors)
+
     for _, rotor in enumerate(rotors):
-        # multirotor = bool(len(rotor) > 1)
-        # mdhr_idx = ridx if multirotor else None
+        multirotor = len(rotor) > 1
+
         for _, torsion in enumerate(rotor):
-            
+
             # Write the rotor strings
-            hr_str, _, flux_str, prot_str = _tors_strs(torsion, geo)
-            mess_allr_str += hr_str
+            hr_str, ir_str, flux_str, prot_str = _tors_strs(torsion, geo)
+            # mess_allr_str += hr_str
             mess_hr_str += hr_str
             mess_flux_str += flux_str
             projrot_str += prot_str
 
             # For MDHR, add the appropriate string
-            # if 'mdhr' in tors_model:
-            #     if ((numrotors > 1 and multirotor) or numrotors == 1):
-            #         mess_allr_str += ir_str
-            #     else:
-            #         mess_allr_str += hr_str
-            # else:
-            #     mess_allr_str += hr_str
+            if mdhr_dct:
+                if ((numrotors > 1 and multirotor) or numrotors == 1):
+                    mess_allr_str += ir_str
+                else:
+                    mess_allr_str += hr_str
+            else:
+                mess_allr_str += hr_str
 
-    # write the mdhr dat string
-    # if mdhr_idx is not None:
-    #     mdhr_dat = mess_io.writer.mdhr_data(
-    #         pot, freqs=hr_freqs, nrot=numrotors)
-    # else:
-    mdhr_dat = ''
+    # Write the mdhr dat string
+    if mdhr_dct is not None:
+        mdhr_dat = mess_io.writer.mdhr_data(
+            mdhr_dct['pot'], freqs=mdhr_dct['freqs'], nrot=numrotors)
 
     return mess_allr_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
 

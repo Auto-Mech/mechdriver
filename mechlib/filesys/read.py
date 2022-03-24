@@ -23,7 +23,10 @@ def potential(names, grid_vals, cnf_save_path,
     """ Get the potential for a hindered rotor
     """
 
-    # print('potential test:', names)
+    print('potential test:')
+    print(names)
+    print(grid_vals)
+
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
@@ -50,6 +53,7 @@ def potential(names, grid_vals, cnf_save_path,
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
             back_locs = [constraint_dct] + back_locs
+        # print('path', scn_fs[-1].path(locs))
 
         # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
@@ -101,14 +105,15 @@ def potential(names, grid_vals, cnf_save_path,
         paths[vals] = scn_fs[-1].path(locs)
 
     # If potential has any terms that are not None, ID and remove bad points
-    if automol.pot.is_nonempty(pot):
-        pot = automol.pot.remove_empty_terms(pot)
-        bad_angle = identify_bad_point(pot)
-        if bad_angle is not None:
-            pot = remove_bad_point(pot, bad_angle)
+    if len(names) == 1:
+        if automol.pot.is_nonempty(pot):
             pot = automol.pot.remove_empty_terms(pot)
-    else:
-        pot = {}
+            bad_angle = identify_bad_point(pot)
+            if bad_angle is not None:
+                pot = remove_bad_point(pot, bad_angle)
+                pot = automol.pot.remove_empty_terms(pot)
+        else:
+            pot = {}
 
     return pot, geoms, grads, hessians, zmas, paths
 

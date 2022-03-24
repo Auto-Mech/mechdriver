@@ -330,14 +330,17 @@ def mol_data(spc_name, spc_dct,
     ioprinter.info_message(
         'Preparing internal rotor info building partition functions...',
         newline=1)
-    rotors = tors.build_rotors(
+    rotors, _ = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
     freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
+    
+    # Get the torsion strings
     allr_str = tors_strs[0]
+    mdhr_dat = tors_strs[4]
 
     # ioprinter.info_message('zpe in mol_data test:', zpe)
     if typ.anharm_vib(spc_mod_dct_i):
@@ -678,7 +681,7 @@ def tau_data(spc_dct_i,
     [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
 
     # Obtain all values from initial reference conformer
-    rotors = tors.build_rotors(
+    rotors, _ = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i, read_potentials=False)
     vib_info = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
