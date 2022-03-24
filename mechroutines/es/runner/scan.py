@@ -529,8 +529,6 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs,
             locs = [coord_names, vals]
             if constraint_dct is not None:
                 locs = [constraint_dct] + locs
-            print('scn test', scn_save_fs)
-            print('locs test', locs)
 
             # Check if ZMA (other info?) exists
             if not scn_save_fs[-1].file.zmatrix.exists(locs):
@@ -600,7 +598,6 @@ def write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
 
     traj_path = scn_save_fs[1].file.trajectory.path([ini_locs])
     print(f"Updating scan trajectory file at {traj_path}")
-    print(traj, ini_locs)
     scn_save_fs[1].file.trajectory.write(traj, [ini_locs])
 
 

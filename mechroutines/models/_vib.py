@@ -28,7 +28,7 @@ def full_vib_analysis(
     tors_freqs = []
     harm_freqs = []
 
-    rotors = tors.build_rotors(
+    rotors, mdhr_dct = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     # Squash the rotor potentials as necessary
     if rotors is not None:
@@ -39,7 +39,7 @@ def full_vib_analysis(
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
-        tors_strs = tors.make_hr_strings(rotors)
+        tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
         [_, hr_str, _, prot_str, _] = tors_strs
         ret = tors_projected_freqs(
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
@@ -72,7 +72,7 @@ def full_vib_analysis(
                 # for rotor in rotors:
                 #     for _tors in rotor:
                 #         print(_tors.pot)
-                tors_strs = tors.make_hr_strings(rotors)
+                tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
                 [_, hr_str, _, prot_str, _] = tors_strs
                 # print('tors string after scaling',tors_strs)
                 tors_zpe = tors_projected_scaled_zpe(

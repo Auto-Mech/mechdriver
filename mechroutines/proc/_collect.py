@@ -202,7 +202,7 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
         zma_path = zma_fs[-1].path([0])
         print(f'Checking for torsions at {zma_path}')
         if zma_fs[-1].file.torsions.exists([0]):
-            rotors = tors.build_rotors(
+            rotors, _ = tors.build_rotors(
                 spc_dct_i, pf_filesystems, spc_mod_dct_i)
             names = automol.rotor.names(rotors, flat=True)
             pots = automol.rotor.potentials(rotors, flat=True)
@@ -391,7 +391,7 @@ def messpf_input(
         run_prefix, save_prefix,
         name=spc_name, saddle=saddle, spc_locs=locs)
     geom = rot.read_geom(pf_filesystems)
-    rotors = tors.build_rotors(
+    rotors, _ = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
