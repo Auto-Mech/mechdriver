@@ -35,6 +35,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
         tors_ene_info, sinfo.from_dct(spc_dct_i))
 
     rotors, mdhr_dct = None, None
+    print('tors_model', tors_model)
     if pf_filesystems['tors'] is not None:
         [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
@@ -210,7 +211,7 @@ def make_hr_strings(rotors, mdhr_dct=None):
             projrot_str += prot_str
 
             # For MDHR, add the appropriate string
-            if mdhr_dct:
+            if mdhr_dct is not None:
                 if ((numrotors > 1 and multirotor) or numrotors == 1):
                     mess_allr_str += ir_str
                 else:

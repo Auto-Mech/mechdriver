@@ -490,9 +490,19 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     """
     coord_locs = list(coord_names)
     if constraint_dct is not None:
+
+        # Build a set of locs to match existing locs in filesys
+        # Have to round the constraint dct or else it wont match?
+        constraint_dct = {name: round(val, 2)
+                          for name, val in constraint_dct.items()}
         coord_locs = [constraint_dct]
         ext_coord_locs = coord_locs + [list(coord_names)]
+
+        # Grab locs from the filesystem
         tmp_locs = scn_save_fs[3].existing()
+
+        # Determine saved locs by matching locs_lst from inp names, constraints
+        # to the locs currently in the save filesystem
         scn_locs = [locs for locs in tmp_locs if locs[:2] == ext_coord_locs]
     else:
         coord_locs = [coord_locs]

@@ -137,9 +137,11 @@ def _build_correction_potential(ts_dct, scan_inf_dct,
     """
     rxn_info = ts_dct['rxn_info']
     ts_info = rinfo.ts_info(rxn_info)
+    ts_geo = automol.zmat.geometry(ts_dct['zma'])
 
     # Run the constrained and full opt potential scans
-    _run_potentials(ts_info, scan_inf_dct,
+    _run_potentials(ts_info, ts_geo,
+                    scan_inf_dct,
                     thy_inf_dct, thy_method_dct, mref_params,
                     es_keyword_dct, runfs_dct, savefs_dct)
 
@@ -168,7 +170,8 @@ def _build_correction_potential(ts_dct, scan_inf_dct,
     return inf_sep_ene, len(potentials), zma_for_inp
 
 
-def _run_potentials(ts_info, scan_inf_dct,
+def _run_potentials(ts_info, ts_geo,
+                    scan_inf_dct,
                     thy_inf_dct, thy_method_dct, mref_params,
                     es_keyword_dct, runfs_dct, savefs_dct):
     """ Run and save the scan along both grids while
@@ -186,13 +189,16 @@ def _run_potentials(ts_info, scan_inf_dct,
     scn_thy_info = thy_inf_dct['mod_var_scnlvl']
     sp_thy_info = thy_inf_dct['mod_var_splvl1']
 
+    # Set up the options for the Molpro input strings
     opt_script_str, opt_kwargs = qchem_params(
-        thy_method_dct['var_scnlvl'], elstruct.Job.OPTIMIZATION)
+        thy_method_dct['var_scnlvl'], elstruct.Job.OPTIMIZATION,
+        geo=ts_geo, spc_info=ts_info)
     cas_kwargs = mref_params['var_scnlvl']
     opt_kwargs.update(cas_kwargs)
 
     sp_script_str, sp_kwargs = qchem_params(
-        thy_method_dct['var_splvl1'])
+        thy_method_dct['var_splvl1'],
+        geo=ts_geo, spc_info=ts_info)
     sp_cas_kwargs = mref_params['var_splvl1']
     sp_kwargs.update(sp_cas_kwargs)
 
@@ -207,7 +213,6 @@ def _run_potentials(ts_info, scan_inf_dct,
             _save_fs = cscn_save_fs
             info_message('Running constrained scans..', newline=1)
 
-        thy_inf_str = tinfo.string(scn_thy_info)
         info_message('Method:', tinfo.string(scn_thy_info))
 
         # Loop over grids (both should start at same point and go in and out)
@@ -278,6 +283,7 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
                 locs = [[coord_name], [grid_val]]
             else:
                 locs = [constraint_dct, [coord_name], [grid_val]]
+            print('locs test', scn_fs, locs, thy_info)
             sp_ene = filesys.read.energy(scn_fs, locs, thy_info)
 
             # Store the energy in a lst
@@ -287,6 +293,7 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
                 const_pot.append(sp_ene)
             elif idx == 2:
                 sp_pot.append(sp_ene)
+
     print('pots test')
     print(smp_pot)
     print(const_pot)
