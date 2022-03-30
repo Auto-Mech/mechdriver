@@ -195,7 +195,7 @@ def optimize_saddle_point(guess_zmas, ts_dct,
         opt_inf_obj, _, opt_out_str = opt_ret
         opt_prog = opt_inf_obj.prog
         geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
-        
+
         # Set up the script str
         script_str, kwargs = qchem_params(
             method_dct,

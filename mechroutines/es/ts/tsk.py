@@ -329,6 +329,7 @@ def rpath_tsk(job, spc_dct, spc_name,
         for locs in ini_scn_save_fs[-1].existing():
             geo = ini_scn_save_fs[-1].file.geometry.read(locs)
             script_str, kwargs = qchem_params(
+                method_dct,
                 geo=geo, spc_info=ts_info)
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
@@ -337,10 +338,10 @@ def rpath_tsk(job, spc_dct, spc_name,
                 script_str, es_keyword_dct['overwrite'],
                 **kwargs)
             ioprinter.obj('vspace')
-    elif job == 'infene':
-        rpath.inf_sep_ene(
-            ts_dct, thy_inf_dct, mref_dct,
-            savefs_dct, runfs_dct, es_keyword_dct)
+    # elif job == 'infene':
+    #     rpath.inf_sep_ene(
+    #         ts_dct, thy_inf_dct, mref_dct,
+    #         savefs_dct, runfs_dct, es_keyword_dct)
 
 
 # Helper functions
