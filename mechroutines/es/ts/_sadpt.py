@@ -54,7 +54,7 @@ def search_required(runlvl_zma, es_keyword_dct):
     """ Determine if MechDriver needs to search for the saddle
         point of some reaction.
 
-        If a saddle point was found, the function assessess whether
+        If a saddle point was found, the function assesses whether
         the overwrite keyword has been set to True, which would
         requiring a new search from scratch.
 
@@ -66,9 +66,10 @@ def search_required(runlvl_zma, es_keyword_dct):
     overwrite = es_keyword_dct['overwrite']
 
     if runlvl_zma is None:
-        print('Since no transition state found in filesys',
-              f'at {es_keyword_dct["runlvl"]} level',
-              'proceeding to find it...')
+        ioprinter.info_message(
+            '\nSince no transition state found in filesys',
+            f'at {es_keyword_dct["runlvl"]} level',
+            'proceeding to find it...')
         _run = True
     else:
         if overwrite:
@@ -141,6 +142,62 @@ def search(ini_zma, spc_dct, tsname,
     return success
 
 
+def save_opt_from_run(spc_dct, tsname,
+                      thy_method_dct,
+                      runfs_dct, savefs_dct):
+    """ Look in the run filesystem for an opt+hess job and try and read it
+        to save the conformer
+    """
+
+    ts_dct = spc_dct[tsname]
+    runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
+
+    # just grab the first one for now, don't have better idea:
+    existing_locs = runlvl_cnf_run_fs[-1].existing()
+    if any(existing_locs):
+        # just grab the first one for now, don't have better idea:
+        cnf_locs = existing_locs[0]
+    else:
+        cnf_locs = None
+
+    # If locs exist then try and read the existing job
+    success = False
+    if cnf_locs is not None:
+        runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
+        run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
+
+        ioprinter.info_message(
+            '\nSearching for OPT job to save in the RUN filesys '
+            f'at path {run_fs[0].path()}')
+        opt_success, opt_ret = es_runner.read_job(
+            job='optimization',
+            run_fs=run_fs)
+        ioprinter.info_message(
+            'Searching for HESS job to save in the RUN filesys '
+            f'at path {run_fs[0].path()}')
+        hess_success, hess_ret = es_runner.read_job(
+            job='hessian',
+            run_fs=run_fs)
+
+        if opt_success and hess_success:
+            ioprinter.info_message(
+                'Saving geometry and hessian of TS conformer from RUN filesys '
+                f'at path {run_fs[0].path()}')
+            status = assess_saddle_point(opt_ret, hess_ret,
+                                         runfs_dct, cnf_locs)
+            if status == 'save':
+                save_saddle_point(opt_ret, hess_ret,
+                                  ts_dct, thy_method_dct['runlvl'],
+                                  savefs_dct, cnf_locs)
+                success = True
+    else:
+        ioprinter.info_message(
+            '\nNo optimization job of TS conformer found in '
+            'RUN filesys to save')
+
+    return success
+
+
 def optimize_saddle_point(guess_zmas, ts_dct,
                           method_dct, mref_kwargs,
                           runfs_dct, es_keyword_dct,
@@ -155,12 +212,15 @@ def optimize_saddle_point(guess_zmas, ts_dct,
     overwrite = es_keyword_dct['overwrite']
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
+    # Set the run filesystem for the job
     runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
     runlvl_cnf_run_fs[-1].create(cnf_locs)
     run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
-
+    
     ioprinter.info_message(
-        f'There are {len(guess_zmas)} guess Z-Matrices'
+        '\nAttempting to get optimized TS from guess Z-Matrices')
+    ioprinter.info_message(
+        f'There are {len(guess_zmas)} guess Z-Matrices '
         'to attempt to find saddle point.', newline=1)
 
     # Loop over all the guess zmas to find a TS
