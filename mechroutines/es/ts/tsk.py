@@ -324,19 +324,18 @@ def rpath_tsk(job, spc_dct, spc_name,
                 cscn_fs[0], cscn_fs[1],
                 es_keyword_dct)
     elif job in ('energy', 'grad', 'hess'):
-        # Set run-time options
-        overwrite = es_keyword_dct['overwrite']
-        script_str, kwargs = qchem_params(method_dct)
-
         # Run along the scan and calculate desired quantities
         ini_scn_run_fs, ini_scn_save_fs = scn_fs
         for locs in ini_scn_save_fs[-1].existing():
             geo = ini_scn_save_fs[-1].file.geometry.read(locs)
+            script_str, kwargs = qchem_params(
+                geo=geo, spc_info=ts_info)
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
                 None, geo, ts_info, mod_thy_info,
                 ini_scn_run_fs, ini_scn_save_fs, locs,
-                script_str, overwrite, **kwargs)
+                script_str, es_keyword_dct['overwrite'],
+                **kwargs)
             ioprinter.obj('vspace')
     elif job == 'infene':
         rpath.inf_sep_ene(

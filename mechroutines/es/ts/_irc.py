@@ -30,7 +30,8 @@ def execute_irc(zma, ts_info,
     # Run and Read the IRC in the forward and reverse direction
     for direction in directions:
         script_str, kwargs = qchem_params(
-            ini_method_dct, job=direction)
+            ini_method_dct, job=direction,
+            geo=automol.zmat.geometry(zma), spc_info=ts_info)
         run_irc(
             zma,
             direction,
