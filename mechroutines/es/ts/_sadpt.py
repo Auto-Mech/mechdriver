@@ -171,7 +171,8 @@ def optimize_saddle_point(guess_zmas, ts_dct,
 
         # Run the transition state optimization
         script_str, kwargs = qchem_params(
-            method_dct, job=elstruct.Job.OPTIMIZATION)
+            method_dct, job=elstruct.Job.OPTIMIZATION,
+            geo=automol.zmat.geometry(zma), spc_info=ts_info)
         kwargs.update(mref_kwargs)
 
         opt_success, opt_ret = es_runner.execute_job(
@@ -190,12 +191,15 @@ def optimize_saddle_point(guess_zmas, ts_dct,
             break
 
     if opt_success:
-        script_str, kwargs = qchem_params(method_dct)
-
         # Obtain geometry from optimization
         opt_inf_obj, _, opt_out_str = opt_ret
         opt_prog = opt_inf_obj.prog
         geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
+
+        # Set up the script str
+        script_str, kwargs = qchem_params(
+            method_dct,
+            geo=geo, spc_info=ts_info)
 
         # Run a Hessian
         _, hess_ret = es_runner.execute_job(
