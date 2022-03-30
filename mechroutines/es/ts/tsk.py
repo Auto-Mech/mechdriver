@@ -109,15 +109,20 @@ def run_sadpt(spc_dct, tsname,
     """ Find the saddle-point for a reaction
     """
 
-    # Check filesystem for existing zmatrixes
+    # Check save filesystem for existing zmatrixes
     run_zma, ini_zma = sadpt.read_existing_saddle_points(
         spc_dct, tsname, savefs_dct)
 
+    # Check run filesystem for optimizations
     if sadpt.search_required(run_zma, es_keyword_dct):
-        success = sadpt.search(ini_zma, spc_dct, tsname,
-                               thy_inf_dct, thy_method_dct, mref_dct,
-                               es_keyword_dct,
-                               runfs_dct, savefs_dct)
+        success = sadpt.save_opt_from_run(spc_dct, tsname,
+                                          thy_method_dct,
+                                          runfs_dct, savefs_dct)
+        if not success:
+            success = sadpt.search(ini_zma, spc_dct, tsname,
+                                   thy_inf_dct, thy_method_dct, mref_dct,
+                                   es_keyword_dct,
+                                   runfs_dct, savefs_dct)
     else:
         success = True
 
