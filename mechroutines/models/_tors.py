@@ -50,9 +50,10 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
             rotors = automol.rotor.from_data(
                 zma=zma_fs[-1].file.zmatrix.read([0]),
                 tors_inf_dct=zma_fs[-1].file.torsions.read([0]),
-                tors_names=spc_dct_i.get('tors_names', None),
+                tors_names=(
+                    spc_dct_i.get('tors_names', None)
+                    if 'md' in tors_model else None),
                 multi='md' in tors_model)
-
         # Read the potential grids
         if read_potentials and rotors is not None:
             rotors, mdhr_dct = _read_potentials(
@@ -77,6 +78,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
 
     # Determine base-line rotor non-specific info for constraints
     all_tors_names = automol.rotor.names(rotors)
+    print('rotor names', all_tors_names)
     const_names = automol.zmat.set_constraint_names(
         rotor_zma, all_tors_names, tors_model)
 
@@ -197,7 +199,6 @@ def make_hr_strings(rotors, mdhr_dct=None):
 
     # Get the number of rotors
     numrotors = len(rotors)
-
     for _, rotor in enumerate(rotors):
         multirotor = len(rotor) > 1
 
