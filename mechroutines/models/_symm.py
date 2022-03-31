@@ -1,10 +1,11 @@
 """ Handle symmetry factor stuff
 """
 
+import numpy
+
 import automol
 from autofile import fs
 from mechlib.amech_io import printer as ioprinter
-
 
 def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                     grxn=None, zma=None):
@@ -105,6 +106,17 @@ def _umbrella_factor(rotors, geo, grxn=None):
     umb_fact = 1
     gra = automol.graph.dominant_resonance(automol.geom.graph(geo))
     rad_atms = automol.graph.radical_atom_keys(gra)
+    # dih check
+    adj_atms_dct = automol.graph.atoms_neighbor_atom_keys(gra)
+    for rad_atm in rad_atms:
+        adj_atms = adj_atms_dct[rad_atm]  
+        if len(adj_atms) == 3:
+            a, b, c = adj_atms
+            dih_ang = automol.geom.dihedral_angle(geo, a, rad_atm, b, c)
+            planarity = min([abs(dih_ang + x - numpy.pi) for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]])
+            print(' umbrella mode dihedral', planarity)
+        else:
+            print('no umbrel dihedral')
     if rad_atms:
         dont_dbl = ()
         for rotor in rotors:
