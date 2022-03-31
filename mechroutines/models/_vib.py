@@ -20,7 +20,7 @@ def full_vib_analysis(
     """ process to get freq
     """
     # Pack into big object to pass into functions and return
-    tors_strs = ['']
+    tors_strs = ['', '', '', '', '']
     freqs = []
     imag = []
     tors_zpe = 0.0
@@ -36,6 +36,7 @@ def full_vib_analysis(
             for rotor in rotors:
                 for torsion in rotor:
                     torsion.pot = automol.pot.relax_scale(torsion.pot)
+
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
@@ -51,11 +52,12 @@ def full_vib_analysis(
             if typ.scale_1d(spc_mod_dct_i):
 
                 scaled_proj_freqs, _ = scale_frequencies(
-                    proj_freqs, None, spc_mod_dct_i,
-                    scale_method='c3_harm')
+                   proj_freqs, None, spc_mod_dct_i,
+                   scale_method='c3_harm')
                 scaled_harm_freqs, _ = scale_frequencies(
                     harm_freqs, None, spc_mod_dct_i,
                     scale_method='c3_harm')
+
                 # print('scaling test:', scaled_harm_freqs,
                 #       scaled_proj_freqs, tors_freqs)
                 # print('tors string before scaling',tors_strs)
@@ -87,19 +89,20 @@ def full_vib_analysis(
         ret = read_harmonic_freqs(
             pf_filesystems, run_prefix, zrxn=zrxn)
         freqs, imag, zpe, disps = ret
-
+        harm_freqs = freqs
+    print('what is freqs', freqs)
     if freqs:
-        freqs, zpe = scale_frequencies(
+        freqs, proj_tors_zpe = scale_frequencies(
             freqs, tors_zpe,
             spc_mod_dct_i, scale_method='c3')
-        harm_freqs, _ = scale_frequencies(
-            harm_freqs, None,
+    
+        harm_freqs, harm_sc_zpe = scale_frequencies(
+            harm_freqs, 0,
             spc_mod_dct_i, scale_method='c3')
 
-        # harm_freqs, zpe = scale_frequencies(
-        #     harm_freqs, 0,
-        #    spc_mod_dct_i, scale_method='c3')
-
+        zpe = harm_sc_zpe
+        # zpe = proj_tors_zpe
+    print('what is zpe', zpe)
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
             harm_freqs, disps)
 
