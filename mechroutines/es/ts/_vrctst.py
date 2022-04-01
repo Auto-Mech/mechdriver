@@ -26,45 +26,62 @@ def calc_vrctst_flux(ts_dct,
     """ Set up n VRC-TST calculations to get the flux file
     """
 
-    # Build VRC-TST stuff
+    # Build VRC-TST filesys stuff
     vrc_fs = runfs_dct['vrctst']
     vrc_path = vrc_fs[-1].create((0,))
     vrc_path = vrc_fs[-1].path((0,))
     vrc_dct = autorun.varecof.VRC_DCT  # need code to input one
-    machine_dct = {'bxxx': 10}  # how to do this when on a node
 
     # Get a bunch of info that describes the grid
     scan_inf_dct = _scan_inf_dct(ts_dct, savefs_dct)
 
-    # Calculate the correction potential along the MEP
-    inf_sep_ene, npot, zma_for_inp = _build_correction_potential(
+    # Run and Read all of the info for the correction potential
+    inf_sep_ene, potentials, pot_lbls, zma_for_inp = _correction_pot_data(
         ts_dct, scan_inf_dct,
         thy_inf_dct, thy_method_dct, mref_params,
         es_keyword_dct,
-        runfs_dct, savefs_dct,
-        vrc_dct, vrc_path)
+        runfs_dct, savefs_dct)
 
     # Write the VaReCoF input files
     inp_strs = autorun.varecof.write_input(
         vrc_path,
         zma_for_inp, scan_inf_dct['rct_zmas'],
-        npot, scan_inf_dct['rxn_bond_keys'],
-        machine_dct, vrc_dct)
+        len(potentials), scan_inf_dct['rxn_bond_keys'],
+        vrc_dct, machine_dct=None)
 
     rxn_info = ts_dct['rxn_info']
     ts_info = rinfo.ts_info(rxn_info)
-    mod_var_sp1_thy_info = thy_inf_dct['mod_var_splvl1']
+    mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
     cas_kwargs = mref_params['var_scnlvl']
     molp_tmpl_str = varecof_io.writer.molpro_template(
-        ts_info, mod_var_sp1_thy_info, inf_sep_ene, cas_kwargs)
+        ts_info, mod_var_scn_thy_info, inf_sep_ene, cas_kwargs)
 
     inp_strs.update({'run.tml': molp_tmpl_str})
+
+    # Build correction potential .so file used by VaReCoF
+    ndummy_added = 0
+    for zma in scan_inf_dct['rct_zmas']:
+        if automol.zmat.count(zma) > 2:
+            ndummy_added += 1
+    aidx = scan_inf_dct['rxn_bond_keys'][0]+1
+    bidx = scan_inf_dct['rxn_bond_keys'][1]+1+ndummy_added
+
+    autorun.varecof.compile_potentials(
+        vrc_path, scan_inf_dct['full_grid'], potentials,
+        aidx, bidx, vrc_dct['fortran_compiler'],
+        dist_restrict_idxs=(),
+        pot_labels=pot_lbls,
+        pot_file_names=[vrc_dct['spc_name']],
+        spc_name=vrc_dct['spc_name'])
 
     # Run VaReCoF to generate flux file
     running(f'VaReCoF at {vrc_path}')
     flux_str = autorun.varecof.flux_file(
-        autorun.SCRIPT_DCT['varecof'], autorun.SCRIPT_DCT['mcflux'],
-        vrc_path, inp_strs)
+        autorun.SCRIPT_DCT['varecof_multi'],
+        autorun.SCRIPT_DCT['varecof_conv_multi'],
+        autorun.SCRIPT_DCT['varecof_mcflux'],
+        vrc_path, inp_strs,
+        nprocs=es_keyword_dct['varecof_nprocs'])
 
     # Read the corr pot file to send to save
     pot_corr_str = ioformat.pathtools.read_file(
@@ -128,11 +145,10 @@ def _scan_inf_dct(ts_dct, savefs_dct):
 
 
 # FUNCTIONS TO SET UP THE libcorrpot.so FILE USED BY VARECOF
-def _build_correction_potential(ts_dct, scan_inf_dct,
-                                thy_inf_dct, thy_method_dct, mref_params,
-                                es_keyword_dct,
-                                runfs_dct, savefs_dct,
-                                vrc_dct, vrc_path):
+def _correction_pot_data(ts_dct, scan_inf_dct,
+                         thy_inf_dct, thy_method_dct, mref_params,
+                         es_keyword_dct,
+                         runfs_dct, savefs_dct):
     """  use the MEP potentials to compile the correction potential .so file
     """
     rxn_info = ts_dct['rxn_info']
@@ -154,20 +170,11 @@ def _build_correction_potential(ts_dct, scan_inf_dct,
     potentials, pot_labels, zma_for_inp = _read_potentials(
         scan_inf_dct, thy_inf_dct, savefs_dct)
 
-    # Build correction potential .so file used by VaReCoF
-    autorun.varecof.compile_potentials(
-        vrc_path, scan_inf_dct['full_grid'], potentials,
-        scan_inf_dct['rxn_bond_keys'], vrc_dct['fortran_compiler'],
-        dist_restrict_idxs=(),
-        pot_labels=pot_labels,
-        pot_file_names=[vrc_dct['spc_name']],
-        spc_name=vrc_dct['spc_name'])
-
     # Set zma if needed
     if zma_for_inp is None:
         zma_for_inp = ts_dct['zma']
 
-    return inf_sep_ene, len(potentials), zma_for_inp
+    return inf_sep_ene, potentials, pot_labels, zma_for_inp
 
 
 def _run_potentials(ts_info, ts_geo,
@@ -185,7 +192,7 @@ def _run_potentials(ts_info, ts_geo,
     scn_save_fs = savefs_dct['vscnlvl_scn']
     cscn_run_fs = runfs_dct['vscnlvl_cscn']
     cscn_save_fs = savefs_dct['vscnlvl_cscn']
-    sp_scn_save_fs = savefs_dct['vscnlvl_scn']
+    # sp_scn_save_fs = savefs_dct['vscnlvl_scn']
     scn_thy_info = thy_inf_dct['mod_var_scnlvl']
     sp_thy_info = thy_inf_dct['mod_var_splvl1']
 
@@ -283,7 +290,6 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
                 locs = [[coord_name], [grid_val]]
             else:
                 locs = [constraint_dct, [coord_name], [grid_val]]
-            print('locs test', scn_fs, locs, thy_info)
             sp_ene = filesys.read.energy(scn_fs, locs, thy_info)
 
             # Store the energy in a lst
@@ -294,13 +300,12 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
             elif idx == 2:
                 sp_pot.append(sp_ene)
 
-    print('pots test')
-    print(smp_pot)
-    print(const_pot)
-    print(sp_pot)
+    print('SUMMARY OF POTENTIALS:')
+    print(' - SAMPLING POT:', smp_pot)
+    print(' - CONSTRAINED POT:', const_pot)
+    print(' - SP POT:', sp_pot)
 
     sp_corr_inf = (sp_pot[-1] - smp_pot[-1])
-    print('inf sp_corr test', sp_corr_inf)
 
     # Calculate each of the correction potentials
     relax_corr_pot, sp_corr_pot, full_corr_pot = [], [], []
@@ -318,11 +323,11 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
 
     # Collate the potentials together in a list
     if sp_pot:
-        potentials = [relax_corr_pot, sp_corr_pot, full_corr_pot]
-        potential_labels = ['relax', 'sp', 'full']
+        potentials = [full_corr_pot, relax_corr_pot, sp_corr_pot]
+        potential_labels = ['full', 'relax', 'sp']
     else:
-        potentials = [relax_corr_pot, full_corr_pot]
-        potential_labels = ['relax', 'full']
+        potentials = [full_corr_pot, relax_corr_pot]
+        potential_labels = ['full', 'relax']
 
     # Get zma used to make structure.inp and divsur.inp
     inp_zma_locs = [[coord_name], [grid_val_for_zma]]

@@ -425,7 +425,7 @@ def flux_data(ts_dct, spc_mod_dct_i):
 
     # Read the flux file from the filesystem
     _, ts_save_path, _, _ = filesys.models.set_rpath_filesys(
-        ts_dct, spc_mod_dct_i['rpath'][1])
+        ts_dct, spc_mod_dct_i['rpath']['geolvl'][1])
 
     flux_str = flux.read_flux(ts_save_path)
 
