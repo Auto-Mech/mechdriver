@@ -63,7 +63,7 @@ SUPP_OBJS = ('spc', 'ts')
 TSK_KEY_DCT = {
     # Electronic Structure Driver Tasks
     'init_geom': (('spc',), BASE),
-    'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier',)),  # 're_id')),
+    'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier', 'varecof_nprocs')),
     'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
     'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
     'conf_energy': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
@@ -139,6 +139,7 @@ TSK_VAL_DCT = {
     'rxncoord': ((str,), ('irc', 'auto'), 'auto'),
     'nobarrier': ((str,), ('pst', 'rpvtst', 'vrctst'), None),
     're_id': ((bool,), (True, False), False),
+    'varecof_nprocs': ((int,), (), 10),
     # Trans
     'njobs': ((int,), (), 1),
     'nsamp': ((int,), (), 1),

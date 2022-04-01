@@ -179,7 +179,9 @@ def _optimize_atom(spc_info, zma_init,
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     script_str, kwargs = es_runner.qchem_params(
-        method_dct, job=elstruct.Job.OPTIMIZATION)
+        method_dct, 
+        geo=automol.zmat.geometry(zma_init),
+        spc_info=spc_info)
 
     # Call the electronic structure optimizer
     success, ret = es_runner.execute_job(

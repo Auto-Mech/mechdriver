@@ -98,6 +98,7 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
     var_scn_thy_info = thy_inf_dct['var_scnlvl']
     var_sp1_thy_info = thy_inf_dct['var_splvl1']
     var_sp2_thy_info = thy_inf_dct['var_splvl2']
+    hs_var_scn_thy_info = thy_inf_dct['hs_var_scnlvl']
     hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
     vscn_method_dct = thy_method_dct['var_scnlvl']
@@ -135,7 +136,9 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
             thy_info,
             var_scn_thy_info,
             var_sp1_thy_info, var_sp2_thy_info,
+            hs_var_scn_thy_info,
             hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+            vscn_method_dct,
             var_sp1_method_dct, var_sp2_method_dct,
             vscnlvl_scn_run_fs, vscnlvl_scn_save_fs, inf_locs,
             overwrite=overwrite,
@@ -159,7 +162,9 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
                           thy_info,
                           var_scn_thy_info,
                           var_sp1_thy_info, var_sp2_thy_info,
+                          hs_var_scn_thy_info,
                           hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+                          var_scn_method_dct,
                           var_sp1_method_dct, var_sp2_method_dct,
                           scn_run_fs, scn_save_fs, inf_locs,
                           overwrite=False,
@@ -186,9 +191,12 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
     """
 
     # Set groups for loops
-    hs_thy_infs = (hs_var_sp2_thy_info, hs_var_sp1_thy_info)
+    # hs_thy_infs = (hs_var_sp2_thy_info, hs_var_sp1_thy_info)
+    # # thy_infs = (var_sp2_thy_info, var_sp1_thy_info)
+    # method_dcts = (var_sp2_method_dct, var_sp1_method_dct)
+    hs_thy_infs = (hs_var_sp2_thy_info, hs_var_scn_thy_info)
     # thy_infs = (var_sp2_thy_info, var_sp1_thy_info)
-    method_dcts = (var_sp2_method_dct, var_sp1_method_dct)
+    method_dcts = (var_sp2_method_dct, var_scn_method_dct)
 
     # Calculate the energies for the two cases
     for idx, (meth_dct, thy_inf) in enumerate(zip(method_dcts, hs_thy_infs)):
