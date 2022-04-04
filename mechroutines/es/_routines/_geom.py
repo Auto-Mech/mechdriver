@@ -19,7 +19,8 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
 
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    hess_script_str, kwargs = qchem_params(method_dct)
+    hess_script_str, kwargs = qchem_params(
+        method_dct, spc_info=spc_info, geo=geo)
 
     ioprinter.info_message(
         'Checking the initial geometry for imaginary frequencies...')
@@ -37,7 +38,8 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
             ioprinter.info_message(
                 f'Attempting kick off along mode, attempt {count}...')
             opt_script_str, opt_kwargs = qchem_params(
-                method_dct, job=elstruct.Job.OPTIMIZATION)
+                method_dct, spc_info=spc_info, geo=geo,
+                job=elstruct.Job.OPTIMIZATION)
             disp_geo = _kickoff_saddle(
                 geo, norm_coords,
                 size=kickoff_size, backward=kickoff_backward,
@@ -45,16 +47,16 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
             geo, opt_ret = _opt(spc_info, mod_thy_info, disp_geo, run_fs,
                                 opt_script_str, opt_cart=True, **opt_kwargs)
             hess_script_str, hess_kwargs = qchem_params(
-                method_dct)
+                method_dct, spc_info=spc_info, geo=geo)
         else:
             ioprinter.info_message(
                 f'Attempting tight opt, attempt {count-2}...')
             opt_script_str, opt_kwargs = qchem_params(
-                method_dct, job='tightopt')
+                method_dct, spc_info=spc_info, geo=geo, job='tightopt')
             geo, opt_ret = _opt(spc_info, mod_thy_info, geo, run_fs,
                                 opt_script_str, opt_cart=True, **opt_kwargs)
             hess_script_str, hess_kwargs = qchem_params(
-                method_dct, job='tightfreq')
+                method_dct, spc_info=spc_info, geo=geo, job='tightfreq')
 
         # Assess the imaginary mode after the reoptimization
         ioprinter.info_message('Rerunning Hessian...')
