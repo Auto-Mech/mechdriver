@@ -21,14 +21,18 @@ def hindered_rotor_scans(
 
     if tors_model != '1dhrfa':
         script_str, kwargs = qchem_params(
-            method_dct, job=elstruct.Job.OPTIMIZATION)
+            method_dct, spc_info=spc_info,
+            geo=automol.zmat.geometry(zma),
+            job=elstruct.Job.OPTIMIZATION)
         scn_typ = 'relaxed'
         update_guess = True
         backstep = True
         reverse_sweep = True
     else:
         script_str, kwargs = qchem_params(
-            method_dct, job=elstruct.Job.ENERGY)
+            method_dct, spc_info=spc_info,
+            geo=automol.zmat.geometry(zma),
+            job=elstruct.Job.ENERGY)
         scn_typ = 'rigid'
         update_guess = False
         backstep = False
