@@ -6,6 +6,7 @@
   and calculate electronic and zero-point vibrational energies.
 """
 
+import os
 import automol
 import autofile
 import autorun
@@ -21,7 +22,6 @@ from mechroutines.models import _rot as rot
 from mechroutines.models import _tors as tors
 from mechroutines.models import _symm as symm
 from mechroutines.models import _vib as vib
-from mechroutines.models import _flux as flux
 from mechroutines.models import _util as util
 from mechroutines.thermo import basis
 # import thermfit
@@ -337,7 +337,7 @@ def mol_data(spc_name, spc_dct,
     freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
-    
+
     # Get the torsion strings
     allr_str = tors_strs[0]
     mdhr_dat = tors_strs[4]
@@ -427,7 +427,21 @@ def flux_data(ts_dct, spc_mod_dct_i):
     _, ts_save_path, _, _ = filesys.models.set_rpath_filesys(
         ts_dct, spc_mod_dct_i['rpath']['geolvl'][1])
 
-    flux_str = flux.read_flux(ts_save_path)
+    # Set the prefix assuming locs of 00 for TS and VRC
+    ts_save_prefix = os.path.join(ts_save_path, '00')
+    vrc_locs = (0,)
+
+    vrc_fs = autofile.fs.vrctst(ts_save_prefix)
+    if vrc_fs[-1].file.vrctst_flux.exists(vrc_locs):
+
+        flux_str = vrc_fs[-1].file.vrctst_flux.read(vrc_locs)
+
+        vrc_path = vrc_fs[-1].file.vrctst_flux.path(vrc_locs)
+        ioprinter.info_message(f'Reading flux file from {vrc_path}')
+        ioprinter.warning_message('We have assumed VRC locs of 00')
+    else:
+        flux_str = None
+        ioprinter.warning_message(f'No flux file at {ts_save_prefix}')
 
     # Create info dictionary
     inf_dct = {'flux_str': flux_str}
@@ -761,7 +775,7 @@ def tau_data(spc_dct_i,
                 hess = tau_save_fs[-1].json.hessian.read(locs)
             # hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess)
-       
+
         # Print progress message (every 150 geoms read)
         if idx % 149 == 0:
             print(f'Read {idx+1}/{tot_locs} samples...')
