@@ -35,6 +35,10 @@ def calc_vrctst_flux(ts_dct,
     # Get a bunch of info that describes the grid
     scan_inf_dct = _scan_inf_dct(ts_dct, savefs_dct)
 
+    # print the guess ts zma
+    print('guess zma\n')
+    print(automol.geom.string(automol.zmat.geometry(ts_dct['zma'])))
+
     # Run and Read all of the info for the correction potential
     inf_sep_ene, potentials, pot_lbls, zma_for_inp = _correction_pot_data(
         ts_dct, scan_inf_dct,
@@ -127,14 +131,14 @@ def _scan_inf_dct(ts_dct, savefs_dct):
     inf_sep_zma = automol.zmat.set_values_by_name(
         ts_zma, {coord_names[0]: coord_grids[1][-2]}, angstrom=False)
 
-    # set up grid
+    # set up grid from lowest R to largest R
     full_grid = tuple(sorted(list(coord_grids[0]) + list(coord_grids[1][1:])))
 
     return {
         'coord_names': coord_names,
         'coord_grids': coord_grids,
         'inf_sep_zma': inf_sep_zma,
-        'grid_val_for_zma': coord_grids[0][-1],
+        'grid_val_for_zma': coord_grids[0][0],  # first val should be ~ 2 Ang.
         'inf_locs': (coord_names, (coord_grids[1][-1],)),
         'full_grid': full_grid,
         'update_guess': update_guess,
@@ -241,7 +245,7 @@ def _run_potentials(ts_info, ts_geo,
                 saddle=False,
                 constraint_dct=constraints,
                 retryfail=True,
-                **cas_kwargs
+                **opt_kwargs
             )
             info_message('')
 
@@ -333,6 +337,9 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
     inp_zma_locs = [[coord_name], [grid_val_for_zma]]
     if scn_save_fs[-1].file.zmatrix.exists(inp_zma_locs):
         zma_for_inp = scn_save_fs[-1].file.zmatrix.read(inp_zma_locs)
+        print('Path for getting Z-Matrix to set dummy atom location'
+              'for structure.inp file for VaReCoF:')
+        print('  ', scn_save_fs[-1].file.zmatrix.path(inp_zma_locs))
     else:
         zma_for_inp = None
 

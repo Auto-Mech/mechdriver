@@ -331,7 +331,17 @@ def rpath_tsk(job, spc_dct, spc_name,
     elif job in ('energy', 'grad', 'hess'):
         # Run along the scan and calculate desired quantities
         ini_scn_run_fs, ini_scn_save_fs = scn_fs
-        for locs in ini_scn_save_fs[-1].existing():
+     
+        rxn_coord = es_keyword_dct['rxncoord']
+        existing_locs = ini_scn_save_fs[-1].existing()
+        rpath_locs = tuple(
+            locs for locs in existing_locs
+            if [rxn_coord] == locs[0]
+        )
+        print('existing_locs', existing_locs)
+        print('rpath_locs', rpath_locs)
+
+        for locs in rpath_locs:
             geo = ini_scn_save_fs[-1].file.geometry.read(locs)
             script_str, kwargs = qchem_params(
                 method_dct,
