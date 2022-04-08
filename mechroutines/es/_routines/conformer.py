@@ -217,7 +217,7 @@ def _optimize_molecule(spc_info, zma_init,
     script_str, kwargs = es_runner.qchem_params(
         method_dct,
         spc_info=spc_info,
-        geo=automol.zmat.geometry(zmat_init),
+        geo=automol.zmat.geometry(zma_init),
         job=elstruct.Job.OPTIMIZATION)
 
     # Call the electronic structure optimizer
