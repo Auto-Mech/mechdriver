@@ -27,17 +27,17 @@ def rate_paths(pes_dct, run_prefix):
         pes_fml, pes_idx, subpes_idx = pes_inf
         rate_path_dct[pes_inf] = {}
 
-        for mess_version in (1, 2):
+        for mess_version in ('v1', 'v2'):
             _pes_str = f'{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
-            # idx1 = f'{pes_idx}-{subpes_idx}-BASE'
-            # idx2 = f'{pes_idx}-{subpes_idx}-WEXT'
-            idx1 = int(f'{pes_idx}{subpes_idx}{mess_version}0')
-            idx2 = int(f'{pes_idx}{subpes_idx}{mess_version}1')
+            id1 = '{mess_version}-base')
+            id2 = '{mess_version}-wext')
             rate_path_dct[pes_inf].update({
                 f'base-v{mess_version}': job_path(
-                    run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx1),
+                    run_prefix, 'MESS', 'RATE', _pes_str,
+                    locs_id=id1)
                 f'wext-v{mess_version}': job_path(
-                    run_prefix, 'MESS', 'RATE', _pes_str, locs_idx=idx2)
+                    run_prefix, 'MESS', 'RATE', _pes_str,
+                    locs_id=id2)
             })
 
     return rate_path_dct
@@ -62,27 +62,27 @@ def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix):
                 spc_mod_thm_path_dct[mod] = (
                     job_path(
                         run_prefix, 'MESS', 'PF',
-                        thm_prefix, locs_idx=idx),
+                        thm_prefix, locs_id=idx),
                     job_path(
                         run_prefix, 'THERM', 'NASA',
-                        thm_prefix, locs_idx=idx)
+                        thm_prefix, locs_id=idx)
                 )
             spc_mod_thm_path_dct['mod_total'] = (
                 job_path(
                     run_prefix, 'MESS', 'PF',
-                    thm_prefix, locs_idx=sidx),
+                    thm_prefix, locs_id=sidx),
                 job_path(
                     run_prefix, 'THERM', 'NASA',
-                    thm_prefix, locs_idx=sidx)
+                    thm_prefix, locs_id=sidx)
             )
             spc_thm_path_dct[tuple(spc_locs)] = spc_mod_thm_path_dct
         spc_thm_path_dct['spc_total'] = (
             job_path(
                 run_prefix, 'MESS', 'PF',
-                thm_prefix, locs_idx=0),
+                thm_prefix, locs_id=0),
             job_path(
                 run_prefix, 'THERM', 'NASA',
-                thm_prefix, locs_idx=0)
+                thm_prefix, locs_id=0)
         )
         thm_path_dct[spc_name] = spc_thm_path_dct
     return thm_path_dct
@@ -117,7 +117,7 @@ def output_path(dat, make_path=True, print_path=False, prefix=None):
 
 
 def job_path(prefix, prog, job, fml,
-             locs_idx=None, make_path=True, print_path=False):
+             locs_id=None, make_path=True, print_path=False):
     """ Create the path for various types of calculations for
         a given species or PES.
 
@@ -127,8 +127,8 @@ def job_path(prefix, prog, job, fml,
         :type prog: str
         :param fml: stoichiometry of the species/PES associate with job
         :fml type: str
-        :param locs_idx: number denoting final layer of filesys for job
-        :type locs_idx: int
+        :param locs_id: some identifier for leaf of the build filesys
+        :type locs_id: int
         :param make_path: physically create directory for path during function
         :type make_path: bool
         :param print_path: print the created path to the screen
@@ -141,25 +141,22 @@ def job_path(prefix, prog, job, fml,
     bld_fs = autofile.fs.build(prog_prefix)
 
     # Determine the index for the locs if not provided
-    if locs_idx is not None:
-        assert isinstance(locs_idx, int), (
-            f'locs idx {locs_idx} is not an integer'
-        )
-    else:
-        locs_idx = random.randint(0, 9999999)
+    if locs_id is not None:
+        locs_id = str(random.randint(0, 9999999))
+    locs_idx = str(locs_id)
 
     if not isinstance(fml, str):
         fml = '-'.join(fml)
 
     # Build the path
-    bld_locs = [job, fml, locs_idx]
+    bld_locs = [job, fml, locs_id]
     bld_path = bld_fs[-1].path(bld_locs)
 
     # Make and print the path, if requested
     if make_path:
-        bld_fs[-1].create([job, fml, locs_idx])
+        bld_fs[-1].create([job, fml, locs_id])
     if print_path:
-        print(f'Path for {prog}/{job} Job:')
+        print(f'Path for {prog}/{job}/{locs_id} Job:')
         print(bld_path)
 
     return bld_path

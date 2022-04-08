@@ -26,7 +26,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
     spc_fml = automol.inchi.formula_string(spc_info[0])
     if spc_fml is None:
         spc_fml = 'TS'
-    run_path = job_path(run_prefix, 'PROJROT', 'FREQ', spc_fml, locs_idx=None)
+    run_path = job_path(run_prefix, 'PROJROT', 'FREQ', spc_fml, locs_id=None)
 
     # Set up tors level filesystem and model and level
     tors_model = spc_mod_dct_i['tors']['mod']
