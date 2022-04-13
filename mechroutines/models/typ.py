@@ -159,7 +159,7 @@ def is_atom(spc_dct_i):
         :type spc_dct_i:
         :rtype: bool
     """
-    return automol.geom.is_atom(automol.inchi.geometry(spc_dct_i['inchi']))
+    return automol.geom.is_atom(automol.chi.geometry(spc_dct_i['inchi']))
 
 
 def is_abstraction_pes(spc_dct, rxn_lst, pes_idx):

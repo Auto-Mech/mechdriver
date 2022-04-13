@@ -124,8 +124,8 @@ def _runlj(nsamp_needed,
     ich1, ich2 = sinfo.value(lj_info, 'inchi')
     fml_str = automol.formula.string(
         automol.formula.join(
-            automol.inchi.formula(ich1),
-            automol.inchi.formula(ich2)))
+            automol.chi.formula(ich1),
+            automol.chi.formula(ich2)))
 
     # Set job parameters
     njobs = etrans_keyword_dct['njobs']

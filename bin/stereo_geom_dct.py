@@ -7,11 +7,11 @@ import pprint
 geo_file = sys.argv[1]
 geo_str = io.read_file(geo_file)
 geo = automol.geom.from_string(geo_str)
-ich = automol.geom.inchi(geo, stereo=True)
-ich_key = automol.inchi.inchi_key(ich)
+ich = automol.geom.chi(geo, stereo=True)
+ich_key = automol.chi.inchi_key(ich)
 formula = automol.geom.formula(geo)
 gra = automol.geom.graph(geo)
-smiles = automol.inchi.smiles(ich)
+smiles = automol.chi.smiles(ich)
 
 bad_ich_dct = {
     ich: {
