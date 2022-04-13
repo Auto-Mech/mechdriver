@@ -199,7 +199,7 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
 
         zrxn, _ = tra
         prd_gras = automol.reac.product_graphs(zrxn)
-        constituent_ichs = tuple(automol.graph.inchi(gra, stereo=True)
+        constituent_ichs = tuple(automol.graph.chi(gra, stereo=True)
                                  for gra in prd_gras)
 
         _split_names = ()
@@ -211,9 +211,9 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
                     #     _split_names += (name,)
                     #     break
                     # Remove stereo since we used to not store this data
-                    ich_noste1 = automol.inchi.standard_form(
+                    ich_noste1 = automol.chi.standard_form(
                         ich, stereo=False)
-                    ich_noste2 = automol.inchi.standard_form(
+                    ich_noste2 = automol.chi.standard_form(
                         spc_dct_i.get('inchi'), stereo=False)
                     # print('name test', name)
                     # print(ich_noste1, ich_noste2)

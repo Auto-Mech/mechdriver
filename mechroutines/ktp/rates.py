@@ -396,7 +396,7 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                 full_dat_dct.update(dat_dct)
 
         # Generate auxiliary labels corresponding to SMILES for quick IDs
-        aux_labels = tuple(automol.inchi.smiles(spc_dct[name]['inchi'])
+        aux_labels = tuple(automol.chi.smiles(spc_dct[name]['inchi'])
                            for name in rgt_names)
 
         # old MESS channel labels system

@@ -4,7 +4,7 @@
 
 import sys
 import os
-import automol.inchi
+import automol.chi
 import automol.geom
 from phydat import phycon
 from autorun import execute_function_in_parallel
@@ -50,10 +50,10 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                     f'Basis Reaction: {reac_lbl}={prod_lbl} 1 1 1 ')
                 for i, reac in enumerate(reacs):
                     ioprinter.info_message(
-                        f'r{i},{reac},{automol.inchi.smiles(reac)},1')
+                        f'r{i},{reac},{automol.chi.smiles(reac)},1')
                 for i, prod in enumerate(prods):
                     ioprinter.info_message(
-                        f'p{i},{prod},{automol.inchi.smiles(prod)},1')
+                        f'p{i},{prod},{automol.chi.smiles(prod)},1')
             ioprinter.debug_message('bases energies test:', ich, name)
             pf_filesystems = filesys.models.pf_filesys(
                 spc_dct_i, spc_model_dct_i,
