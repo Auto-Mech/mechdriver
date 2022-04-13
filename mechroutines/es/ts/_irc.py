@@ -19,7 +19,7 @@ def execute_irc(zma, ts_info,
     """ Run and save the IRC
     """
 
-    coord_name = 'IRC'
+    coord_name = ['IRC',]
 
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
@@ -172,10 +172,11 @@ def update_traj_file(coord_name, ini_scn_save_fs, mod_ini_thy_info):
         filesystem
     """
     saved_locs = ini_scn_save_fs[-1].existing()
+    # Sort by second entry, which is the scan coordinate
+    sorted_locs = sorted(saved_locs, key=lambda x: x[1])
     if saved_locs:
         es_runner.scan.write_traj(
-            coord_name, ini_scn_save_fs, mod_ini_thy_info, sorted(saved_locs)
-        )
+            coord_name, ini_scn_save_fs, mod_ini_thy_info, sorted_locs)
 
 
 def launch_point_zmatrices(ts_dct, mod_thy_info,
