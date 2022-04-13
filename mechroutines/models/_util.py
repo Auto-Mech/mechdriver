@@ -19,5 +19,5 @@ def ini_elec_levels(spc_dct_i, spc_info):
 def atom_mass(spc_dct_i):
     """ write the atom string
     """
-    geo = automol.inchi.geometry(spc_dct_i['inchi'])
+    geo = automol.chi.geometry(spc_dct_i['inchi'])
     return automol.geom.total_mass(geo)

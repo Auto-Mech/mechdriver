@@ -10,7 +10,7 @@ OPEN = ['[H]', '[CH3]', 'CC(C)CC[O]', 'CC[C](C)CO', '[CH]=CCC', 'C#C[C]=C=C']
 #### Closed shell species #######
 #######################
 
-# closed_ichs = [automol.smiles.inchi(smi) for smi in CLOSED]
+# closed_ichs = [automol.smiles.chi(smi) for smi in CLOSED]
 # print(closed_ichs)
 
 CLOSED_ICHS = ['InChI=1S/H2/h1H', 'InChI=1S/CH4/h1H4', 'InChI=1S/C5H12O/c1-5(2)3-4-6/h5-6H,3-4H2,1-2H3', 'InChI=1S/C4H8/c1-3-4-2/h3H,1,4H2,2H3', 'InChI=1S/C5H4/c1-3-5-4-2/h1,5H,2H2']
@@ -47,7 +47,7 @@ assert(cbh2_refs == CLOSED_CBH2)
 ##### radicals ########
 #######################
 
-# open_ichs = [automol.smiles.inchi(smi) for smi in OPEN]
+# open_ichs = [automol.smiles.chi(smi) for smi in OPEN]
 # print(open_ichs)
 
 OPEN_ICHS = ['InChI=1S/H', 'InChI=1S/CH3/h1H3', 'InChI=1S/C5H11O/c1-5(2)3-4-6/h5H,3-4H2,1-2H3', 'InChI=1S/C5H11O/c1-3-5(2)4-6/h6H,3-4H2,1-2H3', 'InChI=1S/C4H7/c1-3-4-2/h1,3H,4H2,2H3', 'InChI=1S/C5H3/c1-3-5-4-2/h1H,2H2']
@@ -85,8 +85,8 @@ assert(cbh2_refs == OPEN_CBH2)
 
 # abs_rct_smis = ['CC(C)COO', 'C[CH]C']
 # abs_prd_smis = ['CC(C)CO[O]', 'CCC']
-# abs_rct_ichs = [automol.smiles.inchi(smi) for smi in abs_rct_smis]
-# abs_prd_ichs = [automol.smiles.inchi(smi) for smi in abs_prd_smis]
+# abs_rct_ichs = [automol.smiles.chi(smi) for smi in abs_rct_smis]
+# abs_prd_ichs = [automol.smiles.chi(smi) for smi in abs_prd_smis]
 # zrxn = automol.reac.rxn_objs_from_inchi(
 #     abs_rct_ichs, abs_prd_ichs, indexing='zma')[0][0]
 # 
@@ -232,8 +232,8 @@ assert(cbh1_refs == ABS_CBH1_REFS)
 
 # bs_rct_smis = ['CC[CH]CO']
 # bs_prd_smis = ['CCC=C', '[OH]']
-# bs_rct_ichs = [automol.smiles.inchi(smi) for smi in bs_rct_smis]
-# bs_prd_ichs = [automol.smiles.inchi(smi) for smi in bs_prd_smis]
+# bs_rct_ichs = [automol.smiles.chi(smi) for smi in bs_rct_smis]
+# bs_prd_ichs = [automol.smiles.chi(smi) for smi in bs_prd_smis]
 # zrxn = automol.reac.rxn_objs_from_inchi(
 #     bs_rct_ichs, bs_prd_ichs, indexing='zma')[0][0]
 # 

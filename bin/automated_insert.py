@@ -148,9 +148,9 @@ def parse_user_species(insert_dct):
             'with an inchi or smiles in input')
         sys.exit()
     if ich is None:
-        ich = automol.smiles.inchi(smi)
-    if not automol.inchi.is_complete(ich):
-        ich = automol.inchi.add_stereo(ich)
+        ich = automol.smiles.chi(smi)
+    if not automol.chi.is_complete(ich):
+        ich = automol.chi.add_stereo(ich)
     if mult is None:
         print('Error: user did not specify mult in input')
         sys.exit()
@@ -169,16 +169,16 @@ def parse_user_reaction(insert_dct):
     if ichs is None:
         ichs = [[], []]
         for smi in smis[0]:
-            ichs[0].append(automol.smiles.inchi(smi))
+            ichs[0].append(automol.smiles.chi(smi))
         for smi in smis[1]:
-            ichs[1].append(automol.smiles.inchi(smi))
+            ichs[1].append(automol.smiles.chi(smi))
     for idx, ich in enumerate(ichs[0]):
-        if not automol.inchi.is_complete(ich):
-            ich = automol.inchi.add_stereo(ich)
+        if not automol.chi.is_complete(ich):
+            ich = automol.chi.add_stereo(ich)
             ichs[0][idx] = ich
     for idx, ich in enumerate(ichs[1]):
-        if not automol.inchi.is_complete(ich):
-            ich = automol.inchi.add_stereo(ich)
+        if not automol.chi.is_complete(ich):
+            ich = automol.chi.add_stereo(ich)
             ichs[1][idx] = ich
     if mults is None:
         print('Error: user did not specify mults in input')
@@ -200,7 +200,7 @@ def parse_user_reaction(insert_dct):
     rxn_chgs = [[], []]
     for ich in ichs[0]:
         mults_allowed = automol.graph.possible_spin_multiplicities(
-            automol.inchi.graph(ich, stereo=False))
+            automol.chi.graph(ich, stereo=False))
         if mults[idx] not in mults_allowed:
             print(
                 'user specified mult of {}'.format(mults[idx]) +
@@ -211,7 +211,7 @@ def parse_user_reaction(insert_dct):
         idx += 1
     for ich in ichs[1]:
         mults_allowed = automol.graph.possible_spin_multiplicities(
-            automol.inchi.graph(ich, stereo=False))
+            automol.chi.graph(ich, stereo=False))
         if mults[idx] not in mults_allowed:
             print(
                 'user specified mult of {}'.format(mults[idx]) +
@@ -667,15 +667,15 @@ def get_zrxn(geo, rxn_info, rxn_class):
     ts_ichs = [[], []]
     for rgra in rxn_gras[0]:
         try:
-            rich = automol.graph.inchi(rgra, stereo=True)
+            rich = automol.graph.chi(rgra, stereo=True)
         except IndexError:
-            rich = automol.graph.inchi(rgra)
+            rich = automol.graph.chi(rgra)
         ts_ichs[0].append(rich)
     for pgra in rxn_gras[1]:
         try:
-            pich = automol.graph.inchi(pgra, stereo=True)
+            pich = automol.graph.chi(pgra, stereo=True)
         except IndexError:
-            pich = automol.graph.inchi(pgra)
+            pich = automol.graph.chi(pgra)
         ts_ichs[1].append(pich)
 
     # match_ich_info, ts_ichs, ts_gras, rxn_gras = _check_ichs_match(
@@ -813,8 +813,8 @@ def species_match(geo, spc_info):
     match = True
     ich, _, mul = spc_info
     mults_allowed = automol.graph.possible_spin_multiplicities(
-         automol.inchi.graph(ich, stereo=False))
-    geo_ich = automol.geom.inchi(geo, stereo=True)
+         automol.chi.graph(ich, stereo=False))
+    geo_ich = automol.geom.chi(geo, stereo=True)
     if ich != geo_ich:
         print(
             'user specified inchi {}'.format(ich) +
