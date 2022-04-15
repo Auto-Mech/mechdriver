@@ -109,8 +109,12 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
     if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         well_extend, is_abstraction = None, True
     else:
-        well_extend, is_abstraction = 'auto', False
-        ioprinter.debug_message('Including WellExtend in MESS input')
+        if tsk_key_dct['well_extension']:
+            well_extend = 'auto'
+            ioprinter.debug_message('Including WellExtend in MESS input')
+        else:
+            well_extend = None
+        is_abstraction = False
 
     # Assume if that hot_enes are being passed, don't use chem eig max keywrd
     if hot_enes_dct is not None:
