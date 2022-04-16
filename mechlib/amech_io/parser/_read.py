@@ -153,6 +153,7 @@ def _pes_grp_dct(pes_grp_str):
                                  if key != 'idxs'}
     else:
         ret_grp_dct = None
+    print('_pes_grp_dct output {}'.format(ret_grp_dct))
 
     return ret_grp_dct
 
