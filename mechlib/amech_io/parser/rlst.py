@@ -127,7 +127,7 @@ def pes_groups(pes_dct, pes_grp_dct):
             pes_grps += ((pes_grp, None),)
         else:
             pes_grps += ((pes_grp, pes_grp_dct.get(grp_idxs)),)
-
+    print('pes_groups output {}'.format(pes_grps))
     return pes_grps
 
 

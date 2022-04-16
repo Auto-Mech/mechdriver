@@ -62,7 +62,7 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct):
     return ped_spc_lst, micro_out_params
 
 
-def set_hot_enes(pesgrp_num, reacs, prods,
+def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
                  chnl_enes, pes_param_dct,
                  ene_range=None):
     """ Determine what hot energies should be for the requested
@@ -80,7 +80,6 @@ def set_hot_enes(pesgrp_num, reacs, prods,
         all_hot_spc = pes_param_dct['hot']
         pes_hot_spc = all_hot_spc[pesgrp_num]
 
-        hot_enes_dct = {}
         for spc in pes_hot_spc:
             if spc in reacs:
                 ene = chnl_enes['reacs']
@@ -93,11 +92,6 @@ def set_hot_enes(pesgrp_num, reacs, prods,
 
             if side is not None:
                 hot_enes_dct[side] = tuple(ene+x for x in ene_range)
-
-        if not hot_enes_dct:
-            hot_enes_dct = None
-    else:
-        hot_enes_dct = None
 
     return hot_enes_dct
 
@@ -195,23 +189,20 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
     if len(pes_param_dct['modeltype']) > 1:
         print('*Warning: multiple prompt models detected \
             CKI file will only consider the first one')
+        
     # Get the PES info objects for the PED and Hot surface
-    ped_pes_inf = tuple(pes_grp_rlst.keys())[0]
-    hot_pes_inf = tuple(pes_grp_rlst.keys())[1]
+    all_pes_inf = tuple(pes_grp_rlst.keys())
 
     # Obtain the strings that are needed
-    ped_mess_path = mess_paths_dct[ped_pes_inf]['base-v1']
-    hot_mess_path = mess_paths_dct[hot_pes_inf]['base-v1']
-    ped_strs_dct = rate_strs_dct[ped_pes_inf]['base-v1']
-    hot_strs_dct = rate_strs_dct[hot_pes_inf]['base-v1']
-
+    all_mess_path = [mess_paths_dct[all_i]['base-v1'] for all_i in all_pes_inf]
+    list_strs_dct = [rate_strs_dct[all_i]['base-v1'] for all_i in all_pes_inf]
+    
     print('Fitting rates from\n'
-          f'  - PED: {ped_mess_path}\n'
-          f'  - HOT: {hot_mess_path}')
+          f'  - paths: {all_mess_path}\n'
+          )
+    
+    # return the final ktp dictionary
 
-    return mechanalyzer.calculator.prompt_dissociation_ktp_dct(
-        ped_strs_dct['inp'], ped_strs_dct['ktp_out'],
-        ped_strs_dct['ped'], ped_strs_dct['ke_out'],
-        hot_strs_dct['inp'], hot_strs_dct['ktp_out'], hot_strs_dct['log'],
+    return mechanalyzer.calculator.multipes_prompt_dissociation_ktp_dct(
+        list_strs_dct,
         pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])[pes_param_dct['modeltype'][0]]
-
