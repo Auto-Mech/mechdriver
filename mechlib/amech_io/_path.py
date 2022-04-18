@@ -141,7 +141,7 @@ def job_path(prefix, prog, job, fml,
     bld_fs = autofile.fs.build(prog_prefix)
 
     # Determine the index for the locs if not provided
-    if locs_id is not None:
+    if locs_id is None:
         locs_id = str(random.randint(0, 9999999))
     locs_id = str(locs_id)
 
