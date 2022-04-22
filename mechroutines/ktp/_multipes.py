@@ -16,7 +16,7 @@ def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
 
         calc_dens = (False, False)
         for ped in pes_peds:
-            ped_spc = ped.split('_')[1]  # Get a string with prds
+            ped_spc = ped.split('=')[1]  # Get a string with prds
             if all(rgt in ped_spc for rgt in rgts):
                 calc_dens = (True, True)
                 break
