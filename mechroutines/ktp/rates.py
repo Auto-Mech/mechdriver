@@ -109,8 +109,12 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
     if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         well_extend, is_abstraction = None, True
     else:
-        well_extend, is_abstraction = 'auto', False
-        ioprinter.debug_message('Including WellExtend in MESS input')
+        if tsk_key_dct['well_extension']:
+            well_extend = 'auto'
+            ioprinter.debug_message('Including WellExtend in MESS input')
+        else:
+            well_extend = None
+        is_abstraction = False
 
     # Assume if that hot_enes are being passed, don't use chem eig max keywrd
     if hot_enes_dct is not None:
@@ -142,6 +146,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         globkey_str, rxn_chan_str,
         energy_trans_str=energy_trans_str, well_lump_str=None)
 
+    print('rate_paths_dct test\n', rate_paths_dct)
     base_mess_path = rate_paths_dct[pes_inf]['base-v1']
     ioprinter.obj('line_plus')
     ioprinter.writing('MESS input file', base_mess_path)
@@ -286,6 +291,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
 
     # Loop over all the channels and write the MESS strings
     written_labels = []
+    hot_enes_dct = {}
     for rxn in rxn_lst:
 
         chnl_idx, (reacs, prods) = rxn
@@ -313,7 +319,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
 
         # Set the hot energies using the relative enes that will be
         # written into the global key section of MESS input later
-        hot_enes_dct = set_hot_enes(pesgrp_num, reacs, prods,
+        hot_enes_dct = set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
                                     chnl_enes, pes_param_dct,
                                     ene_range=None)
 
@@ -334,7 +340,10 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
     # Combine all the reaction channel strings; remove empty lines
     rxn_chan_str = '\n'.join([full_well_str, full_bi_str, full_ts_str])
     rxn_chan_str = ioformat.remove_empty_lines(rxn_chan_str)
-
+    
+    if not hot_enes_dct:
+        hot_enes_dct = None
+        
     return rxn_chan_str, full_dat_str_dct, hot_enes_dct
 
 
@@ -653,16 +662,16 @@ def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
     if side == 'reacs':
         well_key = 'fake_vdwr'
         ts_key = 'fake_vdwr_ts'
-        prepend_key = 'FRB'
+        prepend_key = 'FakeRB'
         side_idx = 0
     elif side == 'prods':
         well_key = 'fake_vdwp'
         ts_key = 'fake_vdwp_ts'
         side_idx = 1
         if reacs in (prods, prods[::-1]):
-            prepend_key = 'FRB'
+            prepend_key = 'FakeRB'
         else:
-            prepend_key = 'FPB'
+            prepend_key = 'FakePB'
 
     # Initialize well and ts strs and data dcts
     fake_dat_dct = {}
@@ -687,7 +696,7 @@ def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
     #     ioprinter.warning_message(f'No label {well_dct_key} in label dict')
 
     # New MESS label code
-    fake_well_label = make_rxn_str(chnl[side_idx], prepend='FW-')
+    fake_well_label = make_rxn_str(chnl[side_idx], prepend='FakeW-')
 
     _side_str = '+'.join(chnl[side_idx])
     aux_str = f'Fake Well for {_side_str}'

@@ -917,15 +917,20 @@ def this_conformer_is_running(zma, cnf_run_fs):
                     inp_str = subrun_fs[0].file.input.read([0, 0])
                     inp_str = inp_str.replace('=', '')
                     prog = inf_obj.prog
-                    inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                    if automol.zmat.almost_equal(inp_zma, zma,
-                                                 dist_rtol=0.018, ang_atol=.2):
-                        _hr = (current_time - start_time).total_seconds()/3600.
-                        info_message(
-                            'This conformer was started in the last ' +
-                            f'{_hr:3.4f} hours in {run_path}.')
-                        running = True
-                        break
+                    if 'molpro' in prog:
+                        print('Warning: Since using Molpro, check for running '
+                              'conformer is disabled!')
+                        running = False
+                    else:
+                        inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                        if automol.zmat.almost_equal(
+                            inp_zma, zma, dist_rtol=0.018, ang_atol=.2):
+                            _hr = (current_time - start_time).total_seconds()/3600.
+                            info_message(
+                                'This conformer was started in the last ' +
+                                f'{_hr:3.4f} hours in {run_path}.')
+                            running = True
+                            break
     return running
 
 

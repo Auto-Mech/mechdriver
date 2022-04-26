@@ -156,7 +156,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
             inf_dct = rpvtst_data(
-                ts_dct, reac_dcts, spc_mod_dct_i,
+                tsname, ts_dct, reac_dcts, spc_mod_dct_i,
                 run_prefix, save_prefix, sadpt=sadpt)
             writer = 'rpvtst_block'
         else:
@@ -197,7 +197,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             writer = 'pst_block'
         elif ts_nobar == 'rpvtst':
             inf_dct = rpvtst_data(
-                ts_dct, reac_dcts,
+                tsname, ts_dct, reac_dcts,
                 spc_mod_dct_i,
                 run_prefix, save_prefix, sadpt=False)
             writer = 'rpvtst_block'
@@ -450,7 +450,7 @@ def flux_data(ts_dct, spc_mod_dct_i):
 
 
 # VTST
-def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
+def rpvtst_data(tsname, ts_dct, reac_dcts, spc_mod_dct_i,
                 run_prefix, save_prefix, sadpt=False):
     """ Pull all of the neccessary information from the
         filesystem for a species
@@ -463,7 +463,8 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
         # Set up filesystems and coordinates for saddle point
         # Scan along RxnCoord is under THY/TS/CONFS/cid/Z
         pf_filesystems = filesys.models.pf_filesys(
-            ts_dct, spc_mod_dct_i, run_prefix, save_prefix, True)
+            ts_dct, spc_mod_dct_i, run_prefix, save_prefix, 
+            saddle=True, name=tsname)
         tspaths = pf_filesystems['harm']
         [_, cnf_save_path, min_locs, _, cnf_run_fs] = tspaths
         ts_run_path = cnf_run_fs[-1].path(min_locs)

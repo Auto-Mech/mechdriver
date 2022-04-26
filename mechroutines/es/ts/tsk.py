@@ -4,6 +4,7 @@
     - KBM
 """
 
+import importlib
 import automol.par
 # from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
@@ -17,7 +18,14 @@ from mechroutines.es.ts._util import thy_dcts
 from mechroutines.es.ts._fs import rpath_fs
 
 
-ES_TSKS = {}
+SP_MODULE = importlib.import_module('mechroutines.es._routines.sp')
+ES_TSKS = {
+    'energy': SP_MODULE.run_energy,
+    'grad': SP_MODULE.run_gradient,
+    'hess': SP_MODULE.run_hessian,
+    'vpt2': SP_MODULE.run_vpt2,
+    'prop': SP_MODULE.run_prop
+}
 
 
 # Main callable function
@@ -331,25 +339,23 @@ def rpath_tsk(job, spc_dct, spc_name,
     elif job in ('energy', 'grad', 'hess'):
         # Run along the scan and calculate desired quantities
         ini_scn_run_fs, ini_scn_save_fs = scn_fs
-     
-        rxn_coord = es_keyword_dct['rxncoord']
+        rxn_coord = es_keyword_dct['rxncoord'].upper()
         existing_locs = ini_scn_save_fs[-1].existing()
         rpath_locs = tuple(
             locs for locs in existing_locs
-            if [rxn_coord] == locs[0]
-        )
-        print('existing_locs', existing_locs)
-        print('rpath_locs', rpath_locs)
+            if rxn_coord == locs[0][0])  # first item in first loc
 
         for locs in rpath_locs:
             geo = ini_scn_save_fs[-1].file.geometry.read(locs)
             script_str, kwargs = qchem_params(
                 method_dct,
                 geo=geo, spc_info=ts_info)
+            if job == 'hess':
+                kwargs.update({'correct_vals': False})
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
                 None, geo, ts_info, mod_thy_info,
-                ini_scn_run_fs, ini_scn_save_fs, locs,
+                ini_scn_run_fs, ini_scn_save_fs, locs, runfs_dct['prefix'],
                 script_str, es_keyword_dct['overwrite'],
                 **kwargs)
             ioprinter.obj('vspace')

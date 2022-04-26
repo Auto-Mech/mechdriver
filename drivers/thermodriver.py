@@ -110,11 +110,22 @@ def run(pes_rlst, spc_rlst,
             spc_locs_dct, spc_dct, spc_mods, spc_mod_dct,
             ref_scheme, ref_enes, run_prefix, save_prefix)
 
+        # Combine species for pf generation
+        tsk_key_dct = run_fit_tsk[-1]
+        if tsk_key_dct['combine'] == 'stereo':
+            comb_lst = build_combined_lst(spc_dct)
+        else:
+            comb_lst = None
+
         # This has to happen down here because the weights rely on
         # The heats of formation
-        spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
-            run_messpf_tsk, spc_locs_dct, spc_dct,
-            thm_paths_dct)
+        if comb_lst is None:
+            spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
+                run_messpf_tsk, spc_locs_dct, spc_dct,
+                thm_paths_dct)
+        else:
+            spc_dct, thm_paths_dct = new_boltzmann_weigh_function(
+                spc_dct, thm_paths_dct, comb_lst)
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
