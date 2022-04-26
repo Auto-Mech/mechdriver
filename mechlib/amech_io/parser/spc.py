@@ -23,6 +23,7 @@ SPC_VAL_DCT = {
     'inchi': ((str,), (), None),
     'inchikey': ((str,), (), None),
     'smiles': ((str,), (), None),
+    'exc_flag': ((int,), (), 0),
     'sens': ((int, float), (), None),  # auto from CSV reader, not used
     'fml': ((dict,), (), None),  # auto from CSV reader, not used
     'pst_params': ((tuple,), (), (1.0, 6)),
@@ -73,7 +74,8 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
     """
 
     # Parse out the dcts from the strings
-    spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
+    # spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
+    spc_dct = mechanalyzer.parser.new_spc.parse_mech_spc_dct(spc_str)
     dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 

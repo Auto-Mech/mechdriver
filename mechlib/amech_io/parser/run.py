@@ -112,6 +112,7 @@ TSK_KEY_DCT = {
                       'cnf_range', 'sort')),
     'run_fits': ((), ('kin_model',
                       'well_extension', 'mess_version',
+                      'combine',
                       'cnf_range', 'sort')),
 }
 
@@ -156,6 +157,7 @@ TSK_VAL_DCT = {
     'nprocs': ((int,), (), 10),
     'mess_version': ((str,), ('v1', 'v2'), 'v1'),
     'well_extension': ((bool,), (), False),
+    'combine': ((str,), ('stereo',), None),
     'linked_pes': ((tuple,), (), None),
     'float_precision': ((str,), ('double', 'quadruple'), 'double'),
 }
