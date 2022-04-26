@@ -73,8 +73,15 @@ def run(pes_rlst, spc_rlst,
 
     # Build a list of the species to calculate thermochem for loops below
     # and build the paths [(messpf, nasa)], models and levels for each spc
-    cnf_range = write_messpf_tsk[-1]['cnf_range']
-    sort_str = write_messpf_tsk[-1]['sort']
+    if write_messpf_tsk is not None:
+        cnf_range = write_messpf_tsk[-1]['cnf_range']
+        sort_str = write_messpf_tsk[-1]['sort']
+    elif run_fit_tsk is not None:
+        cnf_range = run_fit_tsk[-1]['cnf_range']
+        sort_str = run_fit_tsk[-1]['sort']
+    else:
+        cnf_range = run_messpf_tsk[-1]['cnf_range']
+        sort_str = run_messpf_tsk[-1]['sort']
     spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst, spc_dct, thy_dct,
         save_prefix, run_prefix, cnf_range, sort_str)
@@ -113,19 +120,22 @@ def run(pes_rlst, spc_rlst,
         # Combine species for pf generation
         tsk_key_dct = run_fit_tsk[-1]
         if tsk_key_dct['combine'] == 'stereo':
-            comb_lst = build_combined_lst(spc_dct)
+            spc_grp_lst = parser.rlst.species_groups(spc_rlst, spc_dct)
         else:
-            comb_lst = None
+            spc_grp_lst = None
 
         # This has to happen down here because the weights rely on
         # The heats of formation
-        if comb_lst is None:
+        if spc_grp_lst is None:
+            # Add Hf for species to species
             spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
                 run_messpf_tsk, spc_locs_dct, spc_dct,
                 thm_paths_dct)
         else:
-            spc_dct, thm_paths_dct = new_boltzmann_weigh_function(
-                spc_dct, thm_paths_dct, comb_lst)
+            # Build new spc dct and thm paths dct with combined spc
+            spc_dct, thm_paths_dct = thermo_tasks.multi_species_pf(
+                run_messpf_tsk, spc_locs_dct, spc_dct,
+                thm_paths_dct, spc_grp_lst)
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
