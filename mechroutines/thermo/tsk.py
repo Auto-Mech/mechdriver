@@ -166,7 +166,17 @@ def multi_species_pf(
 
         # Add the H0K to spc_dct for spc
         # Set a new spc_dct entry
-        spc_dct[grp_name]['Hfs']['final'] = [min(hf_array)]
+        if len(spc_grp) > 1:
+            spc_dct[grp_name] = init_spc_dct
+            spc_dct[grp_name]['Hfs']['final'] = [min(hf_array)]
+            thm_paths_dct[grp_name]['spc_total'] = (
+                job_path(
+                    run_prefix, 'MESS', 'PF',
+                    thm_prefix, locs_id=idx),
+                job_path(
+                    run_prefix, 'THERM', 'NASA',
+                    thm_prefix, locs_id=idx)
+            )
 
     return spc_dct, thm_paths_dct
 
