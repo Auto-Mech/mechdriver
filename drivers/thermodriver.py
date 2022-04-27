@@ -120,22 +120,15 @@ def run(pes_rlst, spc_rlst,
         # Combine species for pf generation
         tsk_key_dct = run_fit_tsk[-1]
         if tsk_key_dct['combine'] == 'stereo':
-            spc_grp_lst = parser.rlst.species_groups(spc_rlst, spc_dct)
+            spc_grp_dct = parser.rlst.species_groups(spc_rlst, spc_dct)
+            spc_dct, thm_paths_dct = thermo_tasks.multi_species_pf(
+                run_messpf_tsk, spc_locs_dct, spc_dct,
+                thm_paths_dct, spc_grp_dct)
         else:
-            spc_grp_lst = None
-
-        # This has to happen down here because the weights rely on
-        # The heats of formation
-        if spc_grp_lst is None:
-            # Add Hf for species to species
+            spc_grp_dct = {name: (name,) for name in spc_locs_dct}
             spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
                 run_messpf_tsk, spc_locs_dct, spc_dct,
                 thm_paths_dct)
-        else:
-            # Build new spc dct and thm paths dct with combined spc
-            spc_dct, thm_paths_dct = thermo_tasks.multi_species_pf(
-                run_messpf_tsk, spc_locs_dct, spc_dct,
-                thm_paths_dct, spc_grp_lst)
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(

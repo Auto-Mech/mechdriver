@@ -133,13 +133,10 @@ def multi_species_pf(
     spc_mods, _ = parser.models.extract_models(run_messpf_tsk)
     print('starting produce_boltz...')
 
-    print(spc_grp_lst)
-    print(thm_paths_dct)
-
-    for spc_grp in spc_grp_lst:
+    for grp_name, grp_lst in spc_grp_lst:
         locs_pfs_arrays = []
         hf_array = []
-        for spc_name in spc_grp:
+        for spc_name in grp_lst:
             ioprinter.message(f'Run MESSPF: {spc_name}', newline=1)
             for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
                 locs_pfs_arrays.append(reader.mess.messpf(
@@ -152,7 +149,7 @@ def multi_species_pf(
                 hf_array.append(hf_val)
 
         # Get the final species named and formula
-        init_spc = spc_grp[0]
+        init_spc = grp_lst[0]
         init_spc_dct = spc_dct[init_spc]
         spc_fml = fstring(init_spc_dct['inchi'])
 
@@ -164,25 +161,12 @@ def multi_species_pf(
         writer.mess.output(
             spc_fml,
             final_pf,
-            thm_paths_dct[spc_name]['spc_total'][0],
+            # thm_paths_dct[grp_name]['spc_total'][0],
             filename='pf.dat')
 
         # Add the H0K to spc_dct for spc
         # Set a new spc_dct entry
-        if len(spc_grp) > 1:
-            combined_name = init_spc + '-GROUP'
-            spc_dct[combined_name] = init_spc_dct
-            thm_paths_dct[combined_name]['spc_total'] = (
-                job_path(
-                    run_prefix, 'MESS', 'PF',
-                    thm_prefix, locs_id=idx),
-                job_path(
-                    run_prefix, 'THERM', 'NASA',
-                    thm_prefix, locs_id=idx)
-            )
-            spc_dct[combined_name]['Hfs']['final'] = [min(hf_array)]
-        else:
-            spc_dct[init_spc]['Hfs']['final'] = [min(hf_array)]
+        spc_dct[grp_name]['Hfs']['final'] = [min(hf_array)]
 
     return spc_dct, thm_paths_dct
 
