@@ -59,8 +59,8 @@ def make_full_str(energy_trans_str, rxn_chan_str, dats,
 
     # Set other parameters
     # Need the PES number to pull the correct params out of lists
-    ped_spc_lst, micro_out_params = energy_dist_params(
-        pesgrp_num, pes_param_dct, hot_enes_dct)
+    ped_spc_lst, micro_out_params, pes_param_dct = energy_dist_params(
+        pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str)
 
     ioprinter.messpf('global_header')
 
@@ -85,6 +85,7 @@ def make_full_str(energy_trans_str, rxn_chan_str, dats,
             pes_mod_dct_i,
             rate_paths_dct, pes_inf)
 
+    return pes_param_dct
 
 def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
                   temps, pressures,
@@ -320,8 +321,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         # Set the hot energies using the relative enes that will be
         # written into the global key section of MESS input later
         hot_enes_dct = set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
-                                    chnl_enes, pes_param_dct,
-                                    ene_range=None)
+                                    chnl_enes, pes_param_dct)
 
         # Write the mess strings for all spc on the channel
         mess_strs, dat_str_dct, written_labels = _make_channel_mess_strs(
