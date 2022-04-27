@@ -473,6 +473,7 @@ def rpvtst_data(tsname, ts_dct, reac_dcts, spc_mod_dct_i,
         frm_name = 'IRC'
         scn_vals = filesys.models.get_rxn_scn_coords(cnf_save_path, frm_name)
         scn_vals.sort()
+        print('spc_mod_dct_i:\n', spc_mod_dct_i)
         scn_ene_info = spc_mod_dct_i['ene'][1][0][1]  # fix to be ene lvl
         scn_prefix = cnf_save_path
     else:
@@ -617,6 +618,127 @@ def rpvtst_data(tsname, ts_dct, reac_dcts, spc_mod_dct_i,
     inf_dct.update({'ts_idx': ts_idx})
 
     return inf_dct
+
+
+def rpvtst_sadpt(tsname, ts_dct, reac_dcts, spc_mod_dct_i, run_prefix, 
+                 save_prefix):
+
+    zrxn = ts_dct['zrxn']
+    # Set up filesystems and coordinates for saddle point
+    # Scan along RxnCoord is under THY/TS/CONFS/cid/Z
+    pf_filesystems = filesys.models.pf_filesys(
+        ts_dct, spc_mod_dct_i, run_prefix, save_prefix, 
+        saddle=True, name=tsname)
+    tspaths = pf_filesystems['harm']
+    [_, cnf_save_path, min_locs, _, cnf_run_fs] = tspaths
+    ts_run_path = cnf_run_fs[-1].path(min_locs)
+
+    # Set TS reaction coordinate
+    frm_name = 'IRC'
+    scn_vals = filesys.models.get_rxn_scn_coords(cnf_save_path, frm_name)
+    scn_vals.sort()
+    print('spc_mod_dct_i:\n', spc_mod_dct_i)
+    scn_ene_info = spc_mod_dct_i['ene'][1][0][1]  # fix to be ene lvl
+    scn_prefix = cnf_save_path
+
+    # Modify the scn thy info
+    ioprinter.debug_message('scn thy info', scn_ene_info)
+    ioprinter.info_message('scn vals', scn_vals)
+    mod_scn_ene_info = filesys.inf.modify_orb_restrict(
+        filesys.inf.get_spc_info(ts_dct), scn_ene_info)
+    # scn thy info [[1.0, ['molpro2015', 'ccsd(t)', 'cc-pvdz', 'RR']]]
+
+    # Need to read the sp vals along the scan. add to read
+    ref_ene = 0.0
+    enes, geoms, grads, hessians, _, _ = filesys.read.potential(
+        [frm_name], [scn_vals],
+        scn_prefix,
+        mod_scn_ene_info, ref_ene,
+        constraint_dct=None,   # No extra frozen treatments
+        read_geom=True,
+        read_grad=True,
+        read_hess=True)
+    script_str = autorun.SCRIPT_DCT['projrot']
+    freqs = autorun.projrot.pot_frequencies(
+        script_str, geoms, grads, hessians, ts_run_path)
+
+    fr_idx = len(scn_vals) - 1
+    zpe_ref = (sum(freqs[(fr_idx,)]) / 2.0) * phycon.WAVEN2KCAL
+
+    # Get the reactants and infinite seperation energy
+    reac_ene = 0.0
+    ene_hs_sr_inf = 0.0
+    for dct in reac_dcts:
+        pf_filesystems = filesys.models.pf_filesys(
+            dct, spc_mod_dct_i, run_prefix, save_prefix, False)
+        new_spc_dct_i = {
+            'ene': spc_mod_dct_i['ene'],
+            'harm': spc_mod_dct_i['harm'],
+            'tors': spc_mod_dct_i['tors']
+        }
+        reac_ene += ene.read_energy(
+            dct, pf_filesystems, new_spc_dct_i, run_prefix,
+            read_ene=True, read_zpe=True, saddle=sadpt)
+
+        ioprinter.debug_message('rpath', spc_mod_dct_i['rpath'][1])
+        new_spc_dct_i = {
+            'ene': ['mlvl', [[1.0, spc_mod_dct_i['rpath'][1][2]]]],
+            'harm': spc_mod_dct_i['harm'],
+            'tors': spc_mod_dct_i['tors']
+        }
+        ene_hs_sr_inf += ene.read_energy(
+            dct, pf_filesystems, new_spc_dct_i, run_prefix,
+            read_ene=True, read_zpe=False)
+
+    # Scale the scn values
+    scn_vals = [val / 100.0 for val in scn_vals]
+
+    # Grab the values from the read
+    inf_dct = {}
+    inf_dct['rpath'] = []
+    pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
+    for rval, pot, geo, frq in pot_info:
+        # Scale the r-values
+
+        # Get the relative energy (edit for radrad scans)
+        zpe = (sum(frq) / 2.0) * phycon.WAVEN2KCAL
+        zero_ene = (pot + zpe) * phycon.KCAL2EH
+
+        # Set values constant across the scan
+        elec_levels = ts_dct['elec_levels']
+
+        # Create info dictionary and append to lst
+        keys = ['rval', 'geom', 'freqs', 'elec_levels', 'ene_chnlvl']
+        vals = [rval, geo, frq, elec_levels, zero_ene]
+        inf_dct['rpath'].append(dict(zip(keys, vals)))
+
+    # Calculate and store the imaginary mode
+    _, imag, _ = vib.read_harmonic_freqs(
+        pf_filesystems, run_prefix, zrxn=zrxn)
+    ts_idx = scn_vals.index(0.00)
+    inf_dct.update({'imag': imag})
+    inf_dct.update({'ts_idx': ts_idx})
+
+    return inf_dct
+
+
+def rpvtst_nobar(tsname, ts_dct, reac_dcts, spc_mod_dct_i, run_prefix, 
+                 save_prefix):
+
+    zrxn = ts_dct['zrxn']
+
+
+    # Set up filesystems and coordinates for reaction path
+    # Scan along RxnCoord is under THY/TS/Z
+    tspaths = filesys.models.set_rpath_filesys(
+        ts_dct, spc_mod_dct_i['rpath'][1])
+    ts_run_path, _, _, thy_save_path = tspaths
+
+    # Set TS reaction coordinate
+    scn_vals = filesys.models.get_rxn_scn_coords(thy_save_path, frm_name)
+    scn_vals.sort()
+    scn_ene_info = spc_mod_dct_i['rpath'][1][0]
+    scn_prefix = thy_save_path
 
 
 # PST
@@ -801,3 +923,4 @@ def tau_data(spc_dct_i,
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct
+
