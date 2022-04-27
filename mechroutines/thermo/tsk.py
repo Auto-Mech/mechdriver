@@ -43,7 +43,7 @@ def write_messpf_task(
                     messpf_inp_str,
                     aux_dct=dat_dct,
                     input_name='pf.inp')
-    
+
     ioprinter.info_message('\n\n')
     ioprinter.obj('line_dash')
 
@@ -84,7 +84,7 @@ def run_messpf_task(
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0],
                 filename='pf.dat')
             _locs_pfs.append(final_pf)
-    
+
     ioprinter.info_message('\n\n')
     ioprinter.obj('line_dash')
 
@@ -121,6 +121,64 @@ def produce_boltzmann_weighted_conformers_pf(
             filename='pf.dat')
         spc_dct[spc_name]['Hfs']['final'] = [min(hf_array)]
     return spc_dct
+
+
+def multi_species_pf(
+        run_messpf_tsk, spc_locs_dct, spc_dct,
+        thm_paths_dct, spc_grp_lst):
+    """ Combine PFs into final pf
+    """
+    ioprinter.messpf('run_header')
+
+    spc_mods, _ = parser.models.extract_models(run_messpf_tsk)
+    print('starting produce_boltz...')
+
+    for grp_name, grp_lst in spc_grp_lst:
+        locs_pfs_arrays = []
+        hf_array = []
+        for spc_name in grp_lst:
+            ioprinter.message(f'Run MESSPF: {spc_name}', newline=1)
+            for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
+                locs_pfs_arrays.append(reader.mess.messpf(
+                    thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0]))
+                hf_val = 0.
+                for spc_mod in spc_mods:
+                    hf_val += (
+                        spc_dct[spc_name]['Hfs'][idx][spc_mod][0] / len(spc_mods)
+                    )
+                hf_array.append(hf_val)
+
+        # Get the final species named and formula
+        init_spc = grp_lst[0]
+        init_spc_dct = spc_dct[init_spc]
+        spc_fml = fstring(init_spc_dct['inchi'])
+
+        # Combine the PFs and H0K for all confs of all species
+        final_pf = thermfit.pf.boltzmann_pf_combination(
+            locs_pfs_arrays, hf_array)
+
+        # Write MESSPF file for combined PFs
+        writer.mess.output(
+            spc_fml,
+            final_pf,
+            # thm_paths_dct[grp_name]['spc_total'][0],
+            filename='pf.dat')
+
+        # Add the H0K to spc_dct for spc
+        # Set a new spc_dct entry
+        if len(spc_grp) > 1:
+            spc_dct[grp_name] = init_spc_dct
+            spc_dct[grp_name]['Hfs']['final'] = [min(hf_array)]
+            thm_paths_dct[grp_name]['spc_total'] = (
+                job_path(
+                    run_prefix, 'MESS', 'PF',
+                    thm_prefix, locs_id=idx),
+                job_path(
+                    run_prefix, 'THERM', 'NASA',
+                    thm_prefix, locs_id=idx)
+            )
+
+    return spc_dct, thm_paths_dct
 
 
 def _weigh_heat_of_formation(hf_array, weights):
@@ -217,7 +275,7 @@ def get_heats_of_formation(
             run_prefix, save_prefix, read_species=False)
         for spc_basis_i, ene_basis_i in zip(basis_ichs, ene_basis):
             chn_basis_ene_dct[spc_mod][spc_basis_i] = ene_basis_i
-                
+
     for spc_name in spc_locs_dct:
         for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
             spc_locs = tuple(spc_locs)

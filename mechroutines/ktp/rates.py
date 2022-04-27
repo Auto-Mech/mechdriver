@@ -662,16 +662,16 @@ def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
     if side == 'reacs':
         well_key = 'fake_vdwr'
         ts_key = 'fake_vdwr_ts'
-        prepend_key = 'FRB'
+        prepend_key = 'FakeRB'
         side_idx = 0
     elif side == 'prods':
         well_key = 'fake_vdwp'
         ts_key = 'fake_vdwp_ts'
         side_idx = 1
         if reacs in (prods, prods[::-1]):
-            prepend_key = 'FRB'
+            prepend_key = 'FakeRB'
         else:
-            prepend_key = 'FPB'
+            prepend_key = 'FakePB'
 
     # Initialize well and ts strs and data dcts
     fake_dat_dct = {}
@@ -696,7 +696,7 @@ def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
     #     ioprinter.warning_message(f'No label {well_dct_key} in label dict')
 
     # New MESS label code
-    fake_well_label = make_rxn_str(chnl[side_idx], prepend='FW-')
+    fake_well_label = make_rxn_str(chnl[side_idx], prepend='FakeW-')
 
     _side_str = '+'.join(chnl[side_idx])
     aux_str = f'Fake Well for {_side_str}'

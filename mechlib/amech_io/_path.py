@@ -29,8 +29,8 @@ def rate_paths(pes_dct, run_prefix):
 
         for mess_version in ('v1', 'v2'):
             _pes_str = f'{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
-            id1 = '{mess_version}-base'
-            id2 = '{mess_version}-wext'
+            id1 = f'base{mess_version}'
+            id2 = f'wext{mess_version}'
             rate_path_dct[pes_inf].update({
                 f'base-{mess_version}': job_path(
                     run_prefix, 'MESS', 'RATE', _pes_str,
@@ -141,7 +141,7 @@ def job_path(prefix, prog, job, fml,
     bld_fs = autofile.fs.build(prog_prefix)
 
     # Determine the index for the locs if not provided
-    if locs_id is not None:
+    if locs_id is None:
         locs_id = str(random.randint(0, 9999999))
     locs_id = str(locs_id)
 
