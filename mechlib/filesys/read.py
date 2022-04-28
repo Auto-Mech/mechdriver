@@ -20,13 +20,14 @@ def potential(names, grid_vals, cnf_save_path,
               constraint_dct,
               read_geom=False, read_grad=False,
               read_hess=False, read_zma=False,
+              read_energy_backstep=True,
               remove_bad_points=True):
     """ Get the potential for a hindered rotor
     """
 
     print('potential test:')
-    print(names)
-    print(grid_vals)
+    print('names', names)
+    print('grids', grid_vals)
 
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
@@ -58,27 +59,30 @@ def potential(names, grid_vals, cnf_save_path,
 
         # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
-        back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
-        step_ene = None
-        if ene is not None:
-            if back_ene is not None:
-                step_ene = min(ene, back_ene)
-            else:
-                step_ene = ene
-        elif back_ene is not None:
-            step_ene = back_ene
+        if read_energy_backstep:
+            back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
+            step_ene = None
+            if ene is not None:
+                if back_ene is not None:
+                    step_ene = min(ene, back_ene)
+                else:
+                    step_ene = ene
+            elif back_ene is not None:
+                step_ene = back_ene
 
-        if step_ene is not None:
-            enediff = (step_ene - ref_ene) * phycon.EH2KCAL
-            if idx == 0:
-                if enediff > 0.05:
-                    print('Warning the first potential value does not match the reference energy {:.2f}',enediff)
-                ref_ene = step_ene
-                enediff = 0
-            pot[vals_conv] = enediff
+            if step_ene is not None:
+                enediff = (step_ene - ref_ene) * phycon.EH2KCAL
+                if idx == 0:
+                    if enediff > 0.05:
+                        print('Warning the first potential value does not',
+                              f'match the reference energy {enediff:.2f}')
+                    ref_ene = step_ene
+                    enediff = 0
+                pot[vals_conv] = enediff
+            else:
+                pot[vals_conv] = None
         else:
-            pot[vals_conv] = None
-        print('ene in pot', enediff, ene, back_ene, step_ene)
+            pot[vals_conv] = (ene - ref_ene) * phycon.EH2KCAL
 
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):

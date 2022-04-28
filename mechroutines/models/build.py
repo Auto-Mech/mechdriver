@@ -484,27 +484,29 @@ def rpvtst_sadpt(tsname, spc_dct,
 
     print(f'Using conformer from path {cnf_save_path}')
 
-    # Set TS reaction coordinate
+    # Set TS reaction coordinate and the scan values
     scn_vals, frm_name = filesys.models.get_rxn_scn_coords(
         cnf_save_path, coord_name='IRC', zma_locs=(0,))
     scn_vals.sort()
-    scn_ene_info = spc_mod_dct_i['ene']['lvl1'][1][1]
-    # ^ assumes no composite ene
     scn_prefix = cnf_save_path
 
     # Modify the scn thy info
+    # Assumes no composite ene being used for variational treats
+    scn_ene_info = spc_mod_dct_i['ene']['lvl1'][1][1]
     mod_scn_ene_info = tinfo.modify_orb_label(
         scn_ene_info, sinfo.from_dct(ts_dct))
+    ioprinter.warning_message(
+        'using energy {scn_ene_info}, '
+        'assuming no composite energy for variational for now.')
 
     # Need to read the sp vals along the scan. add to read
+    ioprinter.info_message('Reading molecular data across the potential')
+    ioprinter.info_message(f'Scan potential name = {frm_name}')
     enes, geoms, freqs, _ = _rpath_ene_data(
         ts_dct, frm_name, scn_vals,
         None, spc_mod_dct_i,
         mod_scn_ene_info,
         scn_prefix, run_prefix, save_prefix)
-
-    # Scale the scn values
-    scn_vals = [val / 100.0 for val in scn_vals]
 
     # Grab the values from the read
     inf_dct = {}
@@ -512,13 +514,21 @@ def rpvtst_sadpt(tsname, spc_dct,
     pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
     for rval, pot, geo, frqs in pot_info:
 
-        # Determine additional values
+        ioprinter.info_message(
+            f'\nDetermining variational values for R = {rval} Bohr')
+
+        # Scale the R value if needed
+        if frm_name == 'IRC':
+            rval /= 100.0
+
+        # Determine energy values
         zero_ene = _rpath_rel_ene(pot, frqs)
         hf0k, hf0k_trs, chn_basis_ene_dct, _ = basis.enthalpy_calculation(
             spc_dct, tsname, zero_ene,
             chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix, zrxn=ts_dct['zrxn'])
 
+        # Set electronic energy values for all points
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
@@ -555,16 +565,19 @@ def rpvtst_nobar(tsname, spc_dct, reac_dcts,
     scn_vals, frm_name = filesys.models.get_rxn_scn_coords(
         thy_save_path, coord_name=None, zma_locs=(0,))
     scn_vals.sort()
-    scn_ene_info = spc_mod_dct_i['rpath'][1][0]
     scn_prefix = thy_save_path
 
     # Modify the scn thy info
-    ioprinter.debug_message('scn thy info', scn_ene_info)
-    ioprinter.info_message('scn vals', scn_vals)
+    scn_ene_info = spc_mod_dct_i['rpath'][1][0]
     mod_scn_ene_info = tinfo.modify_orb_label(
         scn_ene_info, sinfo.from_dct(ts_dct))
+    ioprinter.warning_message(
+        'using energy {scn_ene_info}, '
+        'assuming no composite energy for variational for now.')
 
     # Need to read the sp vals along the scan. add to read
+    ioprinter.info_message('Reading molecular data across the potential')
+    ioprinter.info_message(f'Scan potential name = {frm_name}')
     enes, geoms, freqs, mref = _rpath_ene_data(
         ts_dct, frm_name, scn_vals,
         reac_dcts, spc_mod_dct_i,
@@ -578,7 +591,10 @@ def rpvtst_nobar(tsname, spc_dct, reac_dcts,
     pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
     for rval, pot, geo, frq in pot_info:
 
-        # Determine additional values
+        ioprinter.info_message(
+            f'\nDetermining variational values for R = {rval} Bohr')
+
+        # Determine energy values
         zero_ene = _rpath_rel_ene(
             pot, frq,
             ene_hs_sr_ref=ene_hs_sr_ref,
@@ -592,7 +608,7 @@ def rpvtst_nobar(tsname, spc_dct, reac_dcts,
             chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix, zrxn=ts_dct['zrxn'])
 
-        # Set values constant across the scan
+        # Set electronic energy values for all points
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
@@ -629,8 +645,9 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
         read_geom=True,
         read_grad=True,
         read_hess=True,
+        read_energy_backstep=False,
         remove_bad_points=False)
-    print('enes read', enes)
+
     script_str = autorun.SCRIPT_DCT['projrot']
     freqs = autorun.projrot.pot_frequencies(
         script_str, geoms, grads, hessians, vib_path)
@@ -638,6 +655,10 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
     # Read all data needed to get multiref inf sep ene values
     # Based on if scan is a multireference method
     if elstruct.par.Method.is_multiref(mod_scn_ene_info[1]):
+        ioprinter.info_message(
+            'Scan ene method ({mod_scn_ene_info}) is multireference method. '
+            '\n Reading all values to get infinite separation energy')
+
         # Get the energies and zpes at R_ref
         _, ene_hs_sr_ref, ene_hs_mr_ref = ene.rpath_ref_idx(
             ts_dct, scn_vals, frm_name, scn_prefix,
@@ -674,7 +695,6 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
         mref_data = (ene_hs_sr_inf, ene_hs_sr_ref, ene_hs_mr_ref,
                      reac_ene, zpe_ref)
     else:
-        print('NOT MULTIREF PRINT TEST')
         mref_data = None
 
     return enes, geoms, freqs, mref_data
@@ -690,9 +710,6 @@ def _rpath_rel_ene(pot, frqs,
     """
 
     # Get the relative energy (edit for radrad scans)
-    print('ENE TEST')
-    print('pot', pot)
-    print('frqs', frqs)
     zpe = (sum(frqs) / 2.0) * phycon.WAVEN2KCAL
 
     if ene_hs_sr_ref is None:
@@ -700,11 +717,17 @@ def _rpath_rel_ene(pot, frqs,
         zero_ene = (pot + zpe) * phycon.KCAL2EH
     else:
         # Use energy components for a multireference energy
-        ioprinter.debug_message('enes')
+        ioprinter.debug_message('Energies to get total ene:')
+        ioprinter.debug_message("""
+        elec_ene = (ene_hs_sr_ref - ene_hs_sr_inf -
+                    ene_hs_mr_ref + pot)""")
+        ioprinter.debug_message("""
+            zero_ene = (reac_ene +
+                        (elec_ene + zpe_pt * phycon.KCAL2EH))""")
         ioprinter.debug_message('reac ene', reac_ene)
-        ioprinter.debug_message('hs sr', ene_hs_sr_ref)
-        ioprinter.debug_message('inf', ene_hs_sr_inf)
-        ioprinter.debug_message('hs mr', ene_hs_mr_ref)
+        ioprinter.debug_message('ene_hs_sr_ref', ene_hs_sr_ref)
+        ioprinter.debug_message('ene_hs_sr_inf', ene_hs_sr_inf)
+        ioprinter.debug_message('ene_hs_mr_ref', ene_hs_mr_ref)
         ioprinter.debug_message('pot R', pot * phycon.KCAL2EH)
         ioprinter.debug_message('zpe', zpe)
         ioprinter.debug_message('zpe ref', zpe_ref)

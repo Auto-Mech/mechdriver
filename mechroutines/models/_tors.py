@@ -100,6 +100,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct,
+                read_energy_backstep=True,
                 remove_bad_points=True)
             if pot:
                 # fit_pot = automol.pot.setup_1d_potential(
@@ -136,6 +137,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
             read_geom=is_mdhrv,
             read_grad=is_mdhrv,
             read_hess=is_mdhrv,
+            read_energy_backstep=False,
             remove_bad_points=True)
 
         if is_mdhrv:

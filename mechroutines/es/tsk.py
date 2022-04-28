@@ -921,6 +921,7 @@ def hr_tsk(job, spc_dct, spc_name,
                     mod_thy_info, ref_ene,
                     constraint_dct,
                     read_zma=True,
+                    read_energy_backstep=True,
                     remove_bad_points=False)
                 tors_pots[tors_names] = pot
                 tors_zmas[tors_names] = zmas
