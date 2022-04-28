@@ -163,7 +163,7 @@ def species_groups(spc_rlst, mech_spc_dct):
 
     # Get the groups of species grouped by isomer
     # Keep all of the groups composed of species in the spc_rlst
-    mech_spc_dct_no_ts = {spc: dct for spc, dct in mech_spc_dct.items()
+    mech_spc_dct_no_ts = {spc: dct.copy() for spc, dct in mech_spc_dct.items()
                           if 'ts_' not in spc}
     mech_spc_dct_strpd, _ = mechanalyzer.builder.strip_ste.strip_mech_spc_dct(
         mech_spc_dct_no_ts)
@@ -183,7 +183,7 @@ def species_groups(spc_rlst, mech_spc_dct):
     # Now get the rest of the spc_rlst not in the iso_grps
     for spc in spc_lst:
         if spc not in spc_in_iso_grps:
-            spc_grps.update({spc: (spc,)})
+            spc_grps.update({'solo-' + spc: (spc,)})
 
     # Print message saying the groups if there are any
     if any(len(grp) > 1 for grp in spc_grps):
