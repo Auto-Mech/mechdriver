@@ -59,12 +59,13 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
     # Create full string by writing the appropriate header, accounting for
     # (1) MESS Version and (2) Use of Well-Extension
     # And include the global_etrans and reaction channel strings
-    make_full_str(energy_trans_str, rxn_chan_str, dats,
+    pes_param_dct = make_full_str(energy_trans_str, rxn_chan_str, dats,
                   pesgrp_num, pes_param_dct, hot_enes_dct,
                   rate_paths_dct, pes_inf,
                   pes_model_dct_i,
                   spc_dct, rxn_lst, pes_idx, tsk_key_dct)
 
+    return pes_param_dct
 
 def run_messrate_task(pes_inf, tsk_key_dct, rate_paths_dct):
     """ Run the MESSRATE input file.

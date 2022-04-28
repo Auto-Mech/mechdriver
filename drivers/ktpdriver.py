@@ -90,7 +90,7 @@ def run(pes_rlst, pes_grp_dct,
             # Write the MESS file
             if write_rate_tsk is not None:
                 tsk_key_dct = write_rate_tsk[-1]
-                ktp_tasks.write_messrate_task(
+                pes_param_dct = ktp_tasks.write_messrate_task(
                     pesgrp_num, pes_inf, all_rxn_lst[pesgrp_num],
                     tsk_key_dct, pes_param_dct,
                     spc_dct,
@@ -98,7 +98,7 @@ def run(pes_rlst, pes_grp_dct,
                     all_instab_chnls[pesgrp_num], label_dct,
                     rate_paths_dct, run_prefix, save_prefix)
 
-            # Run mess to produce rates (urrently nothing from tsk lst used)
+            # Run mess to produce rates (currently nothing from tsk lst used)
             if run_rate_tsk is not None:
                 tsk_key_dct = run_rate_tsk[-1]
                 ktp_tasks.run_messrate_task(

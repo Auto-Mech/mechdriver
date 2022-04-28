@@ -26,12 +26,33 @@ def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
     return calc_dens
 
 
-def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct):
+def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
     """ set values to determine input parameters for handling
         energy distributions in MESS calculations
 
         maybe just call this before the writer and pass to make_pes_str
     """
+
+    micro_limit = 320.  # default
+
+    def get_ped_ene_info(pes_peds, rxn_chan_str):
+        """ info for PED species - get approximate energy limit
+        """
+        spc_blocks_ped = mess_io.reader.get_species(rxn_chan_str)
+        energy_dct, _, _, _ = mess_io.reader.pes(rxn_chan_str)
+        max_ene = []
+        max_ene_ped = []
+        for ped in pes_peds:
+            reacs, prods = ped.split('=')
+            ene_bw = energy_dct[reacs] - energy_dct[prods]
+            dof_info = mechanalyzer.calculator.statmodels.get_dof_info(
+                spc_blocks_ped[prods])
+            max_ene_ped.append(mechanalyzer.calculator.statmodels.max_en_auto(
+                dof_info['n_atoms']['TS'], ene_bw, ref_ene=energy_dct[prods]))
+            max_ene.append(mechanalyzer.calculator.statmodels.max_en_auto(
+                dof_info['n_atoms']['TS'], ene_bw))
+        micro_limit = max(max_ene_ped)
+        return max_ene, micro_limit
 
     if pes_param_dct is not None:
 
@@ -45,6 +66,8 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct):
             ped_spc_lst = pes_peds
             ped_str = ' '.join(ped_spc_lst)
             print(f'Species for PED: {ped_str}')
+            max_ene, micro_limit = get_ped_ene_info(pes_peds, rxn_chan_str)
+            pes_param_dct['en_limit'][pesgrp_num] = max_ene
         else:
             ped_spc_lst = None
 
@@ -52,19 +75,20 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct):
         if hot_enes_dct is not None:
             hot_str = ' '.join(hot_enes_dct.keys())
             print(f'Species for Hot: {hot_str}')
-
+            # set limit based on hoten
+            micro_limit = max([max(hoten) for hoten in hot_enes_dct.values()])
         # Set the micro params for writing k(E)s (When to set this?)
-        micro_out_params = (0.1, 320.0, 0.1)
+
+        micro_out_params = (0.1, micro_limit, 0.1)
         print(f'Ranges for k(E) calculations: {micro_out_params}')
     else:
         ped_spc_lst, micro_out_params = None, None
 
-    return ped_spc_lst, micro_out_params
+    return ped_spc_lst, micro_out_params, pes_param_dct
 
 
 def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
-                 chnl_enes, pes_param_dct,
-                 ene_range=None):
+                 chnl_enes, pes_param_dct):
     """ Determine what hot energies should be for the requested
         species.
 
@@ -72,9 +96,17 @@ def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
         for the side of the reaction the hot spc appears and the values
         are the energies to set in the mechanism file. {side: ene_lst}
     """
+    def set_ene_max(spc, pes_param_dct):
+        """ Determine max en to write as hoten max """
+        max_ene_lst = []
+        for grp_num, ped_max in enumerate(pes_param_dct['en_limit']):
+            for ped_i, en in enumerate(ped_max):
+                if spc in pes_param_dct['peds'][grp_num][ped_i].split('=')[1]:
+                    max_ene_lst.append(en)
 
-    if ene_range is None:
-        ene_range = numpy.arange(0.0, 300.0, 1.0).tolist()
+        return max(max_ene_lst)
+    # default ene_range
+    ene_max = 300.0
 
     if pes_param_dct is not None:
         all_hot_spc = pes_param_dct['hot']
@@ -90,8 +122,13 @@ def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
             else:
                 side, ene = None, None
 
+            # update ene_max val if possible
             if side is not None:
+                ene_max = set_ene_max(spc, pes_param_dct)
+                ene_range = numpy.arange(0.0, ene_max, 1.0).tolist()
                 hot_enes_dct[side] = tuple(ene+x for x in ene_range)
+                print('Setting {:.1f} as max hoten val for {} \n'.format(
+                    ene_max+ene, side))
 
     return hot_enes_dct
 
@@ -189,18 +226,18 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
     if len(pes_param_dct['modeltype']) > 1:
         print('*Warning: multiple prompt models detected \
             CKI file will only consider the first one')
-        
+
     # Get the PES info objects for the PED and Hot surface
     all_pes_inf = tuple(pes_grp_rlst.keys())
 
     # Obtain the strings that are needed
     all_mess_path = [mess_paths_dct[all_i]['base-v1'] for all_i in all_pes_inf]
     list_strs_dct = [rate_strs_dct[all_i]['base-v1'] for all_i in all_pes_inf]
-    
+
     print('Fitting rates from\n'
           f'  - paths: {all_mess_path}\n'
           )
-    
+
     # return the final ktp dictionary
 
     return mechanalyzer.calculator.multipes_prompt_dissociation_ktp_dct(

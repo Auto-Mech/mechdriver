@@ -151,6 +151,9 @@ def _pes_grp_dct(pes_grp_str):
             idxs = tuple((int(x[0])-1, int(x[1])-1) for x in dct['idxs'])
             ret_grp_dct[idxs] = {key: dct[key] for key in dct.keys()
                                  if key != 'idxs'}
+            ret_grp_dct[idxs]['en_limit'] = []
+            [ret_grp_dct[idxs]['en_limit'].append([]) for i in idxs]
+
     else:
         ret_grp_dct = None
     print('_pes_grp_dct output {}'.format(ret_grp_dct))
