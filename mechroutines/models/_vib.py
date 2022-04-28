@@ -69,7 +69,7 @@ def full_vib_analysis(
                 # for rotor in rotors:
                 #     for _tors in rotor:
                 #         print(_tors.pot)
-                rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
+                rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef, scale_override=None)
                 # print('after scaling')
                 # for rotor in rotors:
                 #     for _tors in rotor:
@@ -100,8 +100,8 @@ def full_vib_analysis(
             harm_freqs, 0,
             spc_mod_dct_i, scale_method='c3')
 
-        zpe = harm_sc_zpe
-        # zpe = proj_tors_zpe
+        # zpe = harm_sc_zpe
+        zpe = proj_tors_zpe
     print('what is zpe', zpe)
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
             harm_freqs, disps)

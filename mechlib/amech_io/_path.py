@@ -43,7 +43,7 @@ def rate_paths(pes_dct, run_prefix):
     return rate_path_dct
 
 
-def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix):
+def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix, spc_grp_dct):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
@@ -85,6 +85,21 @@ def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix):
                 thm_prefix, locs_id=0)
         )
         thm_path_dct[spc_name] = spc_thm_path_dct
+    if spc_grp_dct is not None:
+        for grp_name in spc_grp_dct:
+            spc_info = sinfo.from_dct(spc_dct[spc_grp_dct[grp_name][0]])
+            spc_formula = automol.inchi.formula_string(spc_info[0])
+            thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
+            spc_thm_path_dct = {'spc_group': (
+                job_path(
+                    run_prefix, 'MESS', 'PF',
+                    thm_prefix, locs_id=1000),
+                job_path(
+                    run_prefix, 'THERM', 'NASA',
+                    thm_prefix, locs_id=1000)
+            )}
+            thm_path_dct[grp_name] = spc_thm_path_dct
+
     return thm_path_dct
 
 

@@ -33,6 +33,7 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path,
     ioprinter.generating('NASA polynomials', nasa_path)
 
     # Generate forumula
+    print('in build poly', spc_name)
     spc_dct_i = spc_dct[spc_name]
     formula_str = automol.inchi.formula_string(spc_dct_i['inchi'])
     formula_dct = automol.inchi.formula(spc_dct_i['inchi'])
