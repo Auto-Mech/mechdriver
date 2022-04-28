@@ -181,16 +181,16 @@ def set_rpath_filesys(ts_dct, level):
     thy_run_path = thy_run_fs[-1].path(levelp[1:4])
 
     ts_save_fs = autofile.fs.transition_state(thy_save_path)
-    ts_save_fs[0].create()
+    # ts_save_fs[0].create()
     ts_save_path = ts_save_fs[0].path()
     ts_run_fs = autofile.fs.transition_state(thy_run_path)
-    ts_run_fs[0].create()
+    # ts_run_fs[0].create()
     ts_run_path = ts_run_fs[0].path()
 
     return ts_run_path, ts_save_path, thy_run_path, thy_save_path
 
 
-def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
+def get_rxn_scn_coords(ts_path, coord_name=None, zma_locs=(0,)):
     """ Get the values along the reaction coordinate
     """
 
@@ -200,11 +200,16 @@ def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
 
     # Read the values of the reaction coord
     scn_save_fs = autofile.fs.scan(zma_path)
+
+    if coord_name is None:
+        coord_name = list(scn_save_fs[0].existing())[0]
+
     scn_locs = scn_save_fs[-1].existing([[coord_name]])
+
     scn_grids = [locs[1][0] for locs in scn_locs
                  if locs[1][0] != 1000.0]
 
-    return scn_grids
+    return scn_grids, coord_name
 
 
 def make_run_path(pf_filesystems, choice):
