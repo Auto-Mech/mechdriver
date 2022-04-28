@@ -8,6 +8,7 @@
 
 import os
 import automol
+import elstruct
 import autofile
 import autorun
 from phydat import phycon
@@ -138,15 +139,26 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     ts_mod = spc_mod_dct_i['ts']
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
 
+    # Override the models specification with species.dat, if avail
+    search = ts_dct.get('ts_search')
+    if search is not None:
+        if search == 'rpvtst':
+            ts_sadpt, ts_nobar = 'rpvtst', 'rpvtst'
+        elif search == 'vrctst':
+            ts_sadpt, ts_nobar = 'vrctst', 'vrctst'
+        elif search == 'pst':
+            ts_sadpt, ts_nobar = 'pst', 'pst'
+        elif search == 'sadpt':
+            ts_sadpt, ts_nobar = 'sadpt', 'sadpt'
+
     # Get all of the information for the filesystem
     if not automol.par.is_radrad(ts_dct['class']):
 
         # Set up the saddle point keyword
-        sadpt = True
         search = ts_dct.get('ts_search')
         if search is not None:
             if 'vtst' in search:
-                sadpt = False
+                ts_sadpt = False
 
         # Build MESS string for TS at a saddle point
         if ts_sadpt == 'pst':
@@ -156,8 +168,10 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
-            inf_dct = rpvtst_sadpt(
-                tsname, ts_dct, spc_mod_dct_i,
+            inf_dct, chn_basis_ene_dct = rpvtst_sadpt(
+                tsname, spc_dct,
+                pes_mod_dct_i, spc_mod_dct_i,
+                chn_basis_ene_dct,
                 run_prefix, save_prefix)
             writer = 'rpvtst_block'
         else:
@@ -197,9 +211,11 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                     run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_nobar == 'rpvtst':
-            inf_dct = rpvtst_nobar(
-                ts_dct, reac_dcts,
-                spc_mod_dct_i, run_prefix, save_prefix)
+            inf_dct, chn_basis_ene_dct = rpvtst_nobar(
+                tsname, spc_dct, reac_dcts,
+                pes_mod_dct_i, spc_mod_dct_i,
+                chn_basis_ene_dct,
+                run_prefix, save_prefix)
             writer = 'rpvtst_block'
         elif ts_nobar == 'vrctst':
             inf_dct = flux_data(
@@ -306,7 +322,6 @@ def mol_data(spc_name, spc_dct,
     zpe = None
     hf0k = None
     hf0k_trs = None
-    hf0k = None
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
@@ -450,10 +465,15 @@ def flux_data(ts_dct, spc_mod_dct_i):
 
 
 # VTST
-def rpvtst_sadpt(tsname, ts_dct, spc_mod_dct_i, run_prefix, save_prefix):
+def rpvtst_sadpt(tsname, spc_dct,
+                 pes_mod_dct_i, spc_mod_dct_i,
+                 chn_basis_ene_dct,
+                 run_prefix, save_prefix):
     """ Pull all of the neccessary information from the
         filesystem for a species
     """
+
+    ts_dct = spc_dct[tsname]
 
     # Set up filesystems and coordinates for saddle point
     # Scan along RxnCoord is under THY/TS/CONFS/cid/Z
@@ -462,18 +482,17 @@ def rpvtst_sadpt(tsname, ts_dct, spc_mod_dct_i, run_prefix, save_prefix):
         saddle=True, name=tsname)
     cnf_save_path = pf_filesystems['harm'][1]
 
+    print(f'Using conformer from path {cnf_save_path}')
+
     # Set TS reaction coordinate
     scn_vals, frm_name = filesys.models.get_rxn_scn_coords(
         cnf_save_path, coord_name='IRC', zma_locs=(0,))
     scn_vals.sort()
-    print('spc_mod_dct_i:\n', spc_mod_dct_i)
     scn_ene_info = spc_mod_dct_i['ene']['lvl1'][1][1]
     # ^ assumes no composite ene
     scn_prefix = cnf_save_path
 
     # Modify the scn thy info
-    ioprinter.debug_message('scn thy info', scn_ene_info)
-    ioprinter.info_message('scn vals', scn_vals)
     mod_scn_ene_info = tinfo.modify_orb_label(
         scn_ene_info, sinfo.from_dct(ts_dct))
 
@@ -482,8 +501,7 @@ def rpvtst_sadpt(tsname, ts_dct, spc_mod_dct_i, run_prefix, save_prefix):
         ts_dct, frm_name, scn_vals,
         None, spc_mod_dct_i,
         mod_scn_ene_info,
-        scn_prefix, run_prefix, save_prefix,
-        saddle=False)
+        scn_prefix, run_prefix, save_prefix)
 
     # Scale the scn values
     scn_vals = [val / 100.0 for val in scn_vals]
@@ -492,14 +510,22 @@ def rpvtst_sadpt(tsname, ts_dct, spc_mod_dct_i, run_prefix, save_prefix):
     inf_dct = {}
     inf_dct['rpath'] = []
     pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
-    for rval, pot, geo, frq in pot_info:
-        # Determine values
-        zero_ene = _rpath_rel_ene(pot, frq)
+    for rval, pot, geo, frqs in pot_info:
+
+        # Determine additional values
+        zero_ene = _rpath_rel_ene(pot, frqs)
+        hf0k, hf0k_trs, chn_basis_ene_dct, _ = basis.enthalpy_calculation(
+            spc_dct, tsname, zero_ene,
+            chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
+            run_prefix, save_prefix, zrxn=ts_dct['zrxn'])
+
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
-        keys = ['rval', 'geom', 'freqs', 'elec_levels', 'ene_chnlvl']
-        vals = [rval, geo, frq, elec_levels, zero_ene]
+        keys = ['rval', 'geom', 'freqs', 'elec_levels',
+                'ene_chnlvl', 'ene_tsref']
+        vals = [rval, geo, frqs, elec_levels,
+                hf0k, hf0k_trs]
         inf_dct['rpath'].append(dict(zip(keys, vals)))
 
     # Calculate and store the imaginary mode and the index of the saddle point
@@ -508,12 +534,17 @@ def rpvtst_sadpt(tsname, ts_dct, spc_mod_dct_i, run_prefix, save_prefix):
     inf_dct.update({'imag': imag})
     inf_dct.update({'ts_idx': scn_vals.index(0.00)})
 
-    return inf_dct
+    return inf_dct, chn_basis_ene_dct
 
 
-def rpvtst_nobar(ts_dct, reac_dcts, spc_mod_dct_i, run_prefix, save_prefix):
+def rpvtst_nobar(tsname, spc_dct, reac_dcts,
+                 pes_mod_dct_i, spc_mod_dct_i,
+                 chn_basis_ene_dct,
+                 run_prefix, save_prefix):
     """ get info for barrierless transition state
     """
+
+    ts_dct = spc_dct[tsname]
 
     # Set up filesystems and coordinates for reaction path
     # Scan along RxnCoord is under THY/TS/Z
@@ -538,8 +569,7 @@ def rpvtst_nobar(ts_dct, reac_dcts, spc_mod_dct_i, run_prefix, save_prefix):
         ts_dct, frm_name, scn_vals,
         reac_dcts, spc_mod_dct_i,
         mod_scn_ene_info,
-        scn_prefix, run_prefix, save_prefix,
-        saddle=False)
+        scn_prefix, run_prefix, save_prefix)
     ene_hs_sr_inf, ene_hs_sr_ref, ene_hs_mr_ref, reac_ene, zpe_ref = mref
 
     # Grab the values from the read
@@ -548,7 +578,7 @@ def rpvtst_nobar(ts_dct, reac_dcts, spc_mod_dct_i, run_prefix, save_prefix):
     pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
     for rval, pot, geo, frq in pot_info:
 
-        # Calculate the energy
+        # Determine additional values
         zero_ene = _rpath_rel_ene(
             pot, frq,
             ene_hs_sr_ref=ene_hs_sr_ref,
@@ -557,26 +587,32 @@ def rpvtst_nobar(ts_dct, reac_dcts, spc_mod_dct_i, run_prefix, save_prefix):
             reac_ene=reac_ene,
             zpe_ref=zpe_ref)
 
+        hf0k, hf0k_trs, chn_basis_ene_dct, _ = basis.enthalpy_calculation(
+            spc_dct, tsname, zero_ene,
+            chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
+            run_prefix, save_prefix, zrxn=ts_dct['zrxn'])
+
         # Set values constant across the scan
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
-        keys = ['rval', 'geom', 'freqs', 'elec_levels', 'ene_chnlvl']
-        vals = [rval, geo, frq, elec_levels, zero_ene]
+        keys = ['rval', 'geom', 'freqs', 'elec_levels',
+                'ene_chnlvl', 'ene_tsref']
+        vals = [rval, geo, frq, elec_levels,
+                hf0k, hf0k_trs]
         inf_dct['rpath'].append(dict(zip(keys, vals)))
 
     # Calculate and store the imaginary mode
     inf_dct.update({'imag': None})
     inf_dct.update({'ts_idx': 0})
 
-    return inf_dct
+    return inf_dct, chn_basis_ene_dct
 
 
 def _rpath_ene_data(ts_dct, frm_name, scn_vals,
                     reac_dcts, spc_mod_dct_i,
                     mod_scn_ene_info,
-                    scn_prefix, run_prefix, save_prefix,
-                    saddle=False):
+                    scn_prefix, run_prefix, save_prefix):
     """ Read molecular data along a scan including what is needed
         to get the multireference infinite separation energy value
     """
@@ -587,23 +623,21 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
     # Read all of the data along the scan
     ref_ene = 0.0
     enes, geoms, grads, hessians, _, _ = filesys.read.potential(
-        [frm_name], [scn_vals],
-        scn_prefix,
+        [frm_name], [scn_vals], scn_prefix,
         mod_scn_ene_info, ref_ene,
-        constraint_dct=None,   # No extra frozen treatments
+        None,   # No extra frozen treatments
         read_geom=True,
         read_grad=True,
         read_hess=True,
         remove_bad_points=False)
+    print('enes read', enes)
     script_str = autorun.SCRIPT_DCT['projrot']
     freqs = autorun.projrot.pot_frequencies(
         script_str, geoms, grads, hessians, vib_path)
 
-    # Determine if scan is a multireference method
-    multiref = False
-
     # Read all data needed to get multiref inf sep ene values
-    if multiref:
+    # Based on if scan is a multireference method
+    if elstruct.par.Method.is_multiref(mod_scn_ene_info[1]):
         # Get the energies and zpes at R_ref
         _, ene_hs_sr_ref, ene_hs_mr_ref = ene.rpath_ref_idx(
             ts_dct, scn_vals, frm_name, scn_prefix,
@@ -625,7 +659,7 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
             }
             reac_ene += ene.read_energy(
                 dct, pf_filesystems, new_spc_dct_i, run_prefix,
-                read_ene=True, read_zpe=True, saddle=saddle)
+                read_ene=True, read_zpe=True, saddle=False)
 
             ioprinter.debug_message('rpath', spc_mod_dct_i['rpath'][1])
             new_spc_dct_i = {
@@ -635,17 +669,18 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
             }
             ene_hs_sr_inf += ene.read_energy(
                 dct, pf_filesystems, new_spc_dct_i, run_prefix,
-                read_ene=True, read_zpe=False)
+                read_ene=True, read_zpe=False, saddle=True)
 
         mref_data = (ene_hs_sr_inf, ene_hs_sr_ref, ene_hs_mr_ref,
                      reac_ene, zpe_ref)
     else:
+        print('NOT MULTIREF PRINT TEST')
         mref_data = None
 
     return enes, geoms, freqs, mref_data
 
 
-def _rpath_rel_ene(pot, frq,
+def _rpath_rel_ene(pot, frqs,
                    ene_hs_sr_ref=None,
                    ene_hs_sr_inf=None,
                    ene_hs_mr_ref=None,
@@ -655,7 +690,11 @@ def _rpath_rel_ene(pot, frq,
     """
 
     # Get the relative energy (edit for radrad scans)
-    zpe = (sum(frq) / 2.0) * phycon.WAVEN2KCAL
+    print('ENE TEST')
+    print('pot', pot)
+    print('frqs', frqs)
+    zpe = (sum(frqs) / 2.0) * phycon.WAVEN2KCAL
+
     if ene_hs_sr_ref is None:
         # Single reference energy
         zero_ene = (pot + zpe) * phycon.KCAL2EH
@@ -876,4 +915,3 @@ def tau_data(spc_dct_i,
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct
-

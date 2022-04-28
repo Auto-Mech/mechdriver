@@ -78,6 +78,7 @@ def potential(names, grid_vals, cnf_save_path,
             pot[vals_conv] = enediff
         else:
             pot[vals_conv] = None
+        print('ene in pot', enediff, ene, back_ene, step_ene)
 
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
