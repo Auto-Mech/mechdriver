@@ -19,7 +19,8 @@ def potential(names, grid_vals, cnf_save_path,
               mod_tors_ene_info, ref_ene,
               constraint_dct,
               read_geom=False, read_grad=False,
-              read_hess=False, read_zma=False):
+              read_hess=False, read_zma=False,
+              remove_bad_points=True):
     """ Get the potential for a hindered rotor
     """
 
@@ -105,7 +106,7 @@ def potential(names, grid_vals, cnf_save_path,
         paths[vals] = scn_fs[-1].path(locs)
 
     # If potential has any terms that are not None, ID and remove bad points
-    if len(names) == 1:
+    if remove_bad_points and len(names) == 1:
         if automol.pot.is_nonempty(pot):
             pot = automol.pot.remove_empty_terms(pot)
             bad_angle = identify_bad_point(pot)
