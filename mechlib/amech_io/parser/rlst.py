@@ -193,7 +193,7 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
             # Add to generic list to be used in next step
             spc_in_iso_grps += tuple(iso_grp)
 
-            # Add to master group list
+            # Rename and add to master group list
             niso = len(iso_grp)
             spc_grps.update({f's{niso}-{iso_grp[0]}': tuple(iso_grp)})
             # iso_name = mechanalyzer.builder.remove_stereo_name_suffix(
