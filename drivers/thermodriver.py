@@ -82,9 +82,14 @@ def run(pes_rlst, spc_rlst,
     else:
         cnf_range = run_messpf_tsk[-1]['cnf_range']
         sort_str = run_messpf_tsk[-1]['sort']
+    spc_grp_dct = None
+    if run_fit_tsk is not None:
+        tsk_key_dct = run_fit_tsk[-1]
+        if tsk_key_dct['combine'] == 'stereo':
+            spc_grp_dct = parser.rlst.species_groups(spc_rlst, spc_dct)
     spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst, spc_dct, thy_dct,
-        save_prefix, run_prefix, cnf_range, sort_str)
+        save_prefix, run_prefix, cnf_range, sort_str, spc_grp_dct)
 
     # ----------------------------------- #
     # RUN THE REQUESTED THERMDRIVER TASKS #
@@ -120,27 +125,20 @@ def run(pes_rlst, spc_rlst,
         # Combine species for pf generation
         tsk_key_dct = run_fit_tsk[-1]
         if tsk_key_dct['combine'] == 'stereo':
-            spc_grp_lst = parser.rlst.species_groups(spc_rlst, spc_dct)
+            spc_dct = thermo_tasks.multi_species_pf(
+                run_messpf_tsk, spc_locs_dct, spc_dct,
+                thm_paths_dct, spc_grp_dct)
         else:
-            spc_grp_lst = None
-
-        # This has to happen down here because the weights rely on
-        # The heats of formation
-        if spc_grp_lst is None:
-            # Add Hf for species to species
+            # spc_grp_dct = {name: (name,) for name in spc_locs_dct}
             spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
                 run_messpf_tsk, spc_locs_dct, spc_dct,
                 thm_paths_dct)
-        else:
-            # Build new spc dct and thm paths dct with combined spc
-            spc_dct, thm_paths_dct = thermo_tasks.multi_species_pf(
-                run_messpf_tsk, spc_locs_dct, spc_dct,
-                thm_paths_dct, spc_grp_lst)
 
+        print('spc dct here', spc_dct)
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
-            spc_mod_dct, spc_mods, sort_info_lst, ref_scheme)
+            spc_mod_dct, spc_mods, sort_info_lst, ref_scheme, spc_grp_dct)
 
         for idx, nasa_str in ckin_nasa_str_dct.items():
             ioprinter.print_thermo(
@@ -155,7 +153,7 @@ def run(pes_rlst, spc_rlst,
 def _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst,
         spc_dct, thy_dct, save_prefix, run_prefix,
-        cnf_range='min', sort_str=None):
+        cnf_range='min', sort_str=None, spc_grp_dct=None):
     """ Determine the list of species to do thermo on
     """
     spc_mods = list(spc_mod_dct.keys())  # hack
@@ -168,7 +166,9 @@ def _set_spc_queue(
     spc_locs_dct = _set_spc_locs_dct(
         spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
         cnf_range, sort_info_lst)
-    thm_paths = thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix)
+    thm_paths = thermo_paths(
+        spc_dct, spc_locs_dct, spc_mods, run_prefix,
+        spc_grp_dct)
     return spc_locs_dct, thm_paths, sort_info_lst
 
 

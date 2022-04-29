@@ -133,13 +133,12 @@ def multi_species_pf(
     spc_mods, _ = parser.models.extract_models(run_messpf_tsk)
     print('starting produce_boltz...')
 
-    print(spc_grp_lst)
-    print(thm_paths_dct)
-
-    for spc_grp in spc_grp_lst:
-        locs_pfs_arrays = []
-        hf_array = []
-        for spc_name in spc_grp:
+    for grp_name, grp_lst in spc_grp_lst.items():
+        locs_pfs_arrays_lst = []
+        hf_array_lst = []
+        for spc_name in grp_lst:
+            hf_array = []
+            locs_pfs_arrays = []
             ioprinter.message(f'Run MESSPF: {spc_name}', newline=1)
             for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
                 locs_pfs_arrays.append(reader.mess.messpf(
@@ -150,41 +149,51 @@ def multi_species_pf(
                         spc_dct[spc_name]['Hfs'][idx][spc_mod][0] / len(spc_mods)
                     )
                 hf_array.append(hf_val)
-
+                hf_array_lst.append(hf_val)
+            final_pf = thermfit.pf.boltzmann_pf_combination(
+                locs_pfs_arrays, hf_array)
+            locs_pfs_arrays_lst.append(final_pf)
+            writer.mess.output(
+                fstring(spc_dct[spc_name]['inchi']),
+                final_pf,
+                thm_paths_dct[spc_name]['spc_total'][0],
+                filename='pf.dat')
+            print('mess output at', thm_paths_dct[spc_name]['spc_total'][0])
+            spc_dct[spc_name]['Hfs']['final'] = [min(hf_array)]
+        
         # Get the final species named and formula
-        init_spc = spc_grp[0]
-        init_spc_dct = spc_dct[init_spc]
-        spc_fml = fstring(init_spc_dct['inchi'])
+        init_spc = grp_lst[0]
+        spc_dct[grp_name] = spc_dct[init_spc]
+        spc_fml = fstring(spc_dct[grp_name]['inchi'])
 
         # Combine the PFs and H0K for all confs of all species
-        final_pf = thermfit.pf.boltzmann_pf_combination(
-            locs_pfs_arrays, hf_array)
+        final_combo_pf = thermfit.pf.combine_pfs_additively(
+            locs_pfs_arrays_lst)
 
         # Write MESSPF file for combined PFs
+        print('mess output at', thm_paths_dct[grp_name]['spc_group'][0])
         writer.mess.output(
             spc_fml,
-            final_pf,
-            thm_paths_dct[spc_name]['spc_total'][0],
+            final_combo_pf,
+            thm_paths_dct[grp_name]['spc_group'][0],
             filename='pf.dat')
 
+        spc_dct[grp_name]['Hfs']['final'] = [min(hf_array_lst)]
         # Add the H0K to spc_dct for spc
         # Set a new spc_dct entry
-        if len(spc_grp) > 1:
-            combined_name = init_spc + '-GROUP'
-            spc_dct[combined_name] = init_spc_dct
-            thm_paths_dct[combined_name]['spc_total'] = (
-                job_path(
-                    run_prefix, 'MESS', 'PF',
-                    thm_prefix, locs_id=idx),
-                job_path(
-                    run_prefix, 'THERM', 'NASA',
-                    thm_prefix, locs_id=idx)
-            )
-            spc_dct[combined_name]['Hfs']['final'] = [min(hf_array)]
-        else:
-            spc_dct[init_spc]['Hfs']['final'] = [min(hf_array)]
+        # if len(spc_grp) > 1:
+        #     spc_dct[grp_name] = init_spc_dct
+        #     spc_dct[grp_name]['Hfs']['final'] = [min(hf_array)]
+        #     thm_paths_dct[grp_name]['spc_total'] = (
+        #         job_path(
+        #             run_prefix, 'MESS', 'PF',
+        #             thm_prefix, locs_id=idx),
+        #         job_path(
+        #             run_prefix, 'THERM', 'NASA',
+        #             thm_prefix, locs_id=idx)
+        #     )
 
-    return spc_dct, thm_paths_dct
+    return spc_dct
 
 
 def _weigh_heat_of_formation(hf_array, weights):
@@ -303,7 +312,10 @@ def get_heats_of_formation(
 
 def nasa_polynomial_task(
         mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
-        spc_mod_dct, spc_mods, sort_info_lst, ref_scheme):
+        spc_mod_dct, spc_mods, sort_info_lst, ref_scheme,
+        spc_grp_dct=None):
+    ckin_nasa_str_dct = {}
+    ckin_nasa_str_dct[0] = ''
     """ generate the nasa polynomials
     """
     ckin_nasa_str_dct = {}
@@ -315,19 +327,6 @@ def nasa_polynomial_task(
                 ckin_nasa_str_dct[idx] = ''
             spc_locs = tuple(spc_locs)
             ioprinter.nasa('calculate', spc_name)
-            # for spc_mod in spc_mods:
-            #     ioprinter.message('for: ', spc_locs, spc_mod)
-            #     # Write the header describing the models used in thermo calcs
-            #     ckin_nasa_str += writer.ckin.model_header(
-            #         [spc_mod], spc_mod_dct, refscheme=ref_scheme)
-            #     # Build and write NASA polynomial in CHEMKIN-format string
-            #     # Call dies if you haven't run "write mess" task
-            #     ckin_nasa_str += nasapoly.build_polynomial(
-            #         spc_name, spc_dct,
-            #         thm_paths_dct[spc_name][tuple(spc_locs)][spc_mod][0],
-            #         thm_paths_dct[spc_name][tuple(spc_locs)][spc_mod][1],
-            #         spc_locs=spc_locs, spc_mod=spc_mod)
-            #     ckin_nasa_str += '\n\n'
             ioprinter.message('for: ', spc_locs, ' combined models')
             ckin_nasa_str_dct[idx] += writer.ckin.model_header(
                 spc_mods, spc_mod_dct,
@@ -339,8 +338,8 @@ def nasa_polynomial_task(
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][1],
                 spc_locs_idx=idx-1, spc_mod=','.join(spc_mods))
             ckin_nasa_str_dct[idx] += '\n\n'
-            ioprinter.info_message('CKIN NASA STR\n')
-            ioprinter.info_message(ckin_nasa_str_dct[idx])
+            # ioprinter.info_message('CKIN NASA STR\n')
+            # ioprinter.info_message(ckin_nasa_str_dct[idx])
         ioprinter.message('for combined rid cids:', spc_locs_dct[spc_name])
         ckin_nasa_str_dct[0] += writer.ckin.model_header(
             spc_mods, spc_mod_dct,
@@ -352,6 +351,25 @@ def nasa_polynomial_task(
             thm_paths_dct[spc_name]['spc_total'][1],
             spc_locs_idx='final', spc_mod=','.join(spc_mods))
         ckin_nasa_str_dct[0] += '\n\n'
-        ioprinter.info_message('CKIN NASA STR\n')
-        ioprinter.info_message(ckin_nasa_str_dct[0])
+    for idx in ckin_nasa_str_dct:
+        ioprinter.info_message('CKIN NASA STR {}\n'.format(str(idx)))
+        ioprinter.info_message(ckin_nasa_str_dct[idx])
+
+    if spc_grp_dct is not None:
+        ckin_nasa_str_dct[1000] = ''
+        for grp_name in spc_grp_dct:
+            ioprinter.message('for combined species:', grp_name)
+            ckin_nasa_str_dct[1000] += writer.ckin.model_header(
+                spc_mods, spc_mod_dct,
+                sort_info_lst=sort_info_lst,
+                refscheme=ref_scheme)
+            ckin_nasa_str_dct[1000] += nasapoly.build_polynomial(
+                grp_name, spc_dct,
+                thm_paths_dct[grp_name]['spc_group'][0],
+                thm_paths_dct[grp_name]['spc_group'][1],
+                spc_locs_idx='final', spc_mod=','.join(spc_mods))
+            ckin_nasa_str_dct[1000] += '\n\n'
+        ioprinter.info_message('CKIN NASA STR COMBINED SPECIES\n')
+        ioprinter.info_message(ckin_nasa_str_dct[1000])
+
     return ckin_nasa_str_dct, ckin_path

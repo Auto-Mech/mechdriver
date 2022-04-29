@@ -95,15 +95,19 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
             tors_grid = rotor_grids[ridx][tidx]
             constraint_dct = automol.zmat.constraint_dct(
                 rotor_zma, const_names, (torsion.name,))
-            pot, _, _, _, _, _ = filesys.read.potential(
+            pot, scan_geos, _, _, _, _ = filesys.read.potential(
                 (torsion.name,), (tors_grid,),
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
-                constraint_dct)
+                constraint_dct,
+                read_energy_backstep=True,
+                remove_bad_points=True,
+                read_geom=True)
+
             if pot:
-                # fit_pot = automol.pot.setup_1d_potential(
-                fit_pot = automol.pot.fit_1d_potential(
-                    pot, min_thresh=-0.0001, max_thresh=50.0)
+                # fit_pot = automol.pot.fit_1d_potential(
+                fit_pot = automol.pot.setup_1d_potential(
+                     pot, min_thresh=-0.0001, max_thresh=50.0)
                 # Scale pot relative to first time
                 # Code here dies if pot is empty
                 final_pot = {}
@@ -113,13 +117,14 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 # print('gridvals', gridvals)
                 # print('ref_val', ref_val)
                 # print('fit_pot', fit_pot)
-                for i, val in enumerate(gridvals):
-                    final_pot[(val[0] - ref_val,)] = fit_pot[(i,)]
-                # for idx, val in fit_pot.items():
-                #     final_pot[(gridvals[idx[0]][0] - ref_val,)] = val
+                # for i, val in enumerate(gridvals):
+                #     final_pot[(val[0] - ref_val,)] = fit_pot[(i,)]
+                for idx, val in fit_pot.items():
+                    final_pot[(gridvals[idx[0]][0] - ref_val,)] = val
                 torsion.pot = final_pot
             else:
                 torsion.pot = pot
+            torsion.scan_geos = scan_geos
 
     if multi_idx is not None:
         is_mdhrv = 'v' in tors_model
@@ -134,7 +139,9 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
             constraint_dct=None,   # No extra frozen treatments
             read_geom=is_mdhrv,
             read_grad=is_mdhrv,
-            read_hess=is_mdhrv)
+            read_hess=is_mdhrv,
+            read_energy_backstep=False,
+            remove_bad_points=True)
 
         if is_mdhrv:
             script_str = autorun.SCRIPT_DCT['projrot']
@@ -150,7 +157,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     return rotors, mdhr_dct
 
 
-def scale_rotor_pots(rotors, scale_factor=((), None)):
+def scale_rotor_pots(rotors, scale_factor=((), None), scale_override=None):
     """ scale the pots
     """
 
@@ -163,10 +170,16 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
     scale_indcs, factor = scale_factor
     nscale = numtors - len(scale_indcs)
 
+    
     if nscale > 0:
-        sfactor = factor**(2.0/nscale)
-        ioprinter.debug_message(
-            'scale_coeff test:', factor, nscale, sfactor)
+        if scale_override is not None:
+            sfactor = scale_override
+            ioprinter.debug_message(
+                'scale_coeff override test:', factor, nscale, sfactor)
+        else:
+            sfactor = factor**(2.0/nscale)
+            ioprinter.debug_message(
+                'scale_coeff test:', factor, nscale, sfactor)
 
         # test
         # sfactor = 1
@@ -248,9 +261,9 @@ def _tors_strs(torsion, geo):
         group=torsion.groups[0],
         axis=torsion.axis,
         symmetry=torsion.symmetry,
-        grid_size=100,
+        grid_size=50,
         mass_exp_size=5,
-        pot_exp_size=5,
+        pot_exp_size=11,
         hmin=13,
         hmax=101,
         geo=None,

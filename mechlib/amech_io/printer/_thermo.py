@@ -94,7 +94,7 @@ def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
         nasa7_params = nasa7_params_all[spc_name]
         whitespace = 18-len(spc_name)
         whitespace = whitespace*' '
-        if spc_locs_idx == 0:
+        if spc_locs_idx in [0, 1000]:
             hf0 = (
                 spc_dct[spc_name]['Hfs']['final'][0]
                 * phycon.EH2KCAL)

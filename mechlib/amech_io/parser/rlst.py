@@ -145,10 +145,17 @@ def species_groups(spc_rlst, mech_spc_dct):
 
         List is ordered by having all the groups first, then the remaining
         species.
+
+        Each group is assigned a name, right now it is generic string.
+
+        spc_grps = (
+            (name1, (grp_lst1),
+            (name2, (grp_lst2),
+        )
     """
 
     # Initialize final groups list to return
-    spc_grps = ()
+    spc_grps = {}
 
     # Get rlst into a set for later comparisons
     spc_lst = list(spc_rlst.values())[0]
@@ -156,7 +163,7 @@ def species_groups(spc_rlst, mech_spc_dct):
 
     # Get the groups of species grouped by isomer
     # Keep all of the groups composed of species in the spc_rlst
-    mech_spc_dct_no_ts = {spc: dct for spc, dct in mech_spc_dct.items()
+    mech_spc_dct_no_ts = {spc: dct.copy() for spc, dct in mech_spc_dct.items()
                           if 'ts_' not in spc}
     mech_spc_dct_strpd, _ = mechanalyzer.builder.strip_ste.strip_mech_spc_dct(
         mech_spc_dct_no_ts)
@@ -164,22 +171,27 @@ def species_groups(spc_rlst, mech_spc_dct):
         mech_spc_dct_strpd)
 
     spc_in_iso_grps = ()
-    for iso_grp in iso_grps:
+    for idx, iso_grp in enumerate(iso_grps, start=1):
         if set(iso_grp) <= spc_rlst_set:
-            spc_grps += (tuple(iso_grp),)
+
+            # Add to generic list to be used in next step
             spc_in_iso_grps += tuple(iso_grp)
+
+            # Add to master group list
+            spc_grps.update({f'combined-{idx}': tuple(iso_grp)})
 
     # Now get the rest of the spc_rlst not in the iso_grps
     for spc in spc_lst:
         if spc not in spc_in_iso_grps:
-            spc_grps += ((spc,),)
+            spc_grps.update({'solo-' + spc: (spc,)})
 
     # Print message saying the groups if there are any
     if any(len(grp) > 1 for grp in spc_grps):
         print('Identified relationships among species used for groupings')
         print('Here are the groups that will be used to get combined info:')
-        for idx, grp in enumerate(spc_grps, start=1):
-            print(f'{idx}. {grp}')
+        print('number. group-name group-members')
+        for idx, (name, grp) in enumerate(spc_grps.items(), start=1):
+            print(f'{idx}. {name} {grp}')
 
     return spc_grps
 
