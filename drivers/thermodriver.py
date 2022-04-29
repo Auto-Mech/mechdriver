@@ -82,6 +82,7 @@ def run(pes_rlst, spc_rlst,
     else:
         cnf_range = run_messpf_tsk[-1]['cnf_range']
         sort_str = run_messpf_tsk[-1]['sort']
+
     spc_grp_dct, spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst,
         run_fit_tsk,
