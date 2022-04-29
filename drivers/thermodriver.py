@@ -86,7 +86,8 @@ def run(pes_rlst, spc_rlst,
     if run_fit_tsk is not None:
         tsk_key_dct = run_fit_tsk[-1]
         if tsk_key_dct['combine'] == 'stereo':
-            spc_grp_dct = parser.rlst.species_groups(spc_rlst, spc_dct)
+            spc_grp_dct = parser.rlst.species_groups(
+                pes_rlst, spc_rlst, spc_dct)
     spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst, spc_dct, thy_dct,
         save_prefix, run_prefix, cnf_range, sort_str, spc_grp_dct)

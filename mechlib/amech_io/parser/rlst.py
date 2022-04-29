@@ -132,7 +132,7 @@ def pes_groups(pes_dct, pes_grp_dct):
     return pes_grps
 
 
-def species_groups(spc_rlst, mech_spc_dct):
+def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
     """ Group the species that the user requested to run (given in the
         spc_rlst) that can be grouped by some means.
 
@@ -158,8 +158,16 @@ def species_groups(spc_rlst, mech_spc_dct):
     spc_grps = {}
 
     # Get rlst into a set for later comparisons
-    spc_lst = list(spc_rlst.values())[0]
-    spc_rlst_set = set(spc_lst)
+    spc_lst = ()
+    if pes_rlst is not None:
+        for rxn_lst in pes_rlst.values():
+            spc_lst += rxn_lst[1][0]
+            spc_lst += rxn_lst[1][1]
+        spc_lst = tuple(i for n, i in enumerate(spc_lst)
+                        if i not in spc_lst[:n])
+    if spc_rlst is not None:
+        spc_lst += list(spc_rlst.values())[0]
+    spc_lst_set = set(spc_lst)
 
     # Get the groups of species grouped by isomer
     # Keep all of the groups composed of species in the spc_rlst
@@ -172,7 +180,7 @@ def species_groups(spc_rlst, mech_spc_dct):
 
     spc_in_iso_grps = ()
     for idx, iso_grp in enumerate(iso_grps, start=1):
-        if set(iso_grp) <= spc_rlst_set:
+        if set(iso_grp) <= spc_lst_set:
 
             # Add to generic list to be used in next step
             spc_in_iso_grps += tuple(iso_grp)
