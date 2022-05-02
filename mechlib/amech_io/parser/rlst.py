@@ -161,8 +161,9 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
     spc_lst = ()
     if pes_rlst is not None:
         for rxn_lst in pes_rlst.values():
-            spc_lst += rxn_lst[1][0]
-            spc_lst += rxn_lst[1][1]
+            for rxn in rxn_lst:
+                spc_lst += rxn[1][0]
+                spc_lst += rxn[1][1]
         spc_lst = tuple(i for n, i in enumerate(spc_lst)
                         if i not in spc_lst[:n])
     if spc_rlst is not None:
@@ -171,12 +172,19 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
 
     # Get the groups of species grouped by isomer
     # Keep all of the groups composed of species in the spc_rlst
+    # iso groups returns all species that COULD have stereoisomers
+    # if only one stereoisomer is present, we get a list of 1
     mech_spc_dct_no_ts = {spc: dct.copy() for spc, dct in mech_spc_dct.items()
                           if 'ts_' not in spc}
     mech_spc_dct_strpd, _ = mechanalyzer.builder.strip_ste.strip_mech_spc_dct(
         mech_spc_dct_no_ts)
     iso_grps = mechanalyzer.builder.strip_ste.find_iso_sets(
         mech_spc_dct_strpd)
+
+    print('iso grp test')
+    for grp in iso_grps:
+        print(grp)
+    print('---')
 
     spc_in_iso_grps = ()
     for idx, iso_grp in enumerate(iso_grps, start=1):
@@ -186,7 +194,12 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
             spc_in_iso_grps += tuple(iso_grp)
 
             # Add to master group list
-            spc_grps.update({f'combined-{idx}': tuple(iso_grp)})
+            if len(iso_grp) == 1:
+                spc_grps.update({f'solo-{iso_grp[0]}': tuple(iso_grp)})
+            else:
+                iso_name = mechanalyzer.builder.remove_stereo_name_suffix(
+                    iso_grp[0])
+                spc_grps.update({f'combined-{iso_name}': tuple(iso_grp)})
 
     # Now get the rest of the spc_rlst not in the iso_grps
     for spc in spc_lst:
