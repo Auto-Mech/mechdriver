@@ -133,6 +133,10 @@ def multi_species_pf(
     spc_mods, _ = parser.models.extract_models(run_messpf_tsk)
     print('starting produce_boltz...')
 
+    for x in spc_locs_dct:
+        print(x)
+    print('---')
+
     for grp_name, grp_lst in spc_grp_lst.items():
         locs_pfs_arrays_lst = []
         hf_array_lst = []
