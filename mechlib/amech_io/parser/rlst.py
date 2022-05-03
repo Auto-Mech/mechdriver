@@ -128,7 +128,7 @@ def pes_groups(pes_dct, pes_grp_dct):
             pes_grps += ((pes_grp, None),)
         else:
             pes_grps += ((pes_grp, pes_grp_dct.get(grp_idxs)),)
-    print('pes_groups output {}'.format(pes_grps))
+
     return pes_grps
 
 
@@ -194,17 +194,16 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
             spc_in_iso_grps += tuple(iso_grp)
 
             # Add to master group list
-            if len(iso_grp) == 1:
-                spc_grps.update({f'solo-{iso_grp[0]}': tuple(iso_grp)})
-            else:
-                iso_name = mechanalyzer.builder.remove_stereo_name_suffix(
-                    iso_grp[0])
-                spc_grps.update({f'combined-{iso_name}': tuple(iso_grp)})
+            niso = len(iso_grp)
+            spc_grps.update({f's{niso}-{iso_grp[0]}': tuple(iso_grp)})
+            # iso_name = mechanalyzer.builder.remove_stereo_name_suffix(
+            #     iso_grp[0])
+            # spc_grps.update({f'combined-{iso_name}': tuple(iso_grp)})
 
     # Now get the rest of the spc_rlst not in the iso_grps
     for spc in spc_lst:
         if spc not in spc_in_iso_grps:
-            spc_grps.update({'solo-' + spc: (spc,)})
+            spc_grps.update({'s1-' + spc: (spc,)})
 
     # Print message saying the groups if there are any
     if any(len(grp) > 1 for grp in spc_grps):
