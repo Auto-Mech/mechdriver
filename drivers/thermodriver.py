@@ -132,7 +132,6 @@ def run(pes_rlst, spc_rlst,
                 run_messpf_tsk, spc_locs_dct, spc_dct,
                 thm_paths_dct)
 
-        print('spc dct here', spc_dct)
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
