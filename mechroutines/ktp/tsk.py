@@ -10,6 +10,7 @@ from mechlib import filesys
 from mechlib.amech_io import writer
 from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.models.typ import is_abstraction_pes
 from mechroutines.ktp.rates import make_full_str
 from mechroutines.ktp.rates import make_global_etrans_str
 from mechroutines.ktp.rates import make_pes_mess_str
@@ -59,15 +60,17 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
     # Create full string by writing the appropriate header, accounting for
     # (1) MESS Version and (2) Use of Well-Extension
     # And include the global_etrans and reaction channel strings
-    pes_param_dct = make_full_str(energy_trans_str, rxn_chan_str, dats,
-                  pesgrp_num, pes_param_dct, hot_enes_dct,
-                  rate_paths_dct, pes_inf,
-                  pes_model_dct_i,
-                  spc_dct, rxn_lst, pes_idx, tsk_key_dct)
+    pes_param_dct = make_full_str(
+        energy_trans_str, rxn_chan_str, dats,
+        pesgrp_num, pes_param_dct, hot_enes_dct,
+        rate_paths_dct, pes_inf,
+        pes_model_dct_i,
+        spc_dct, rxn_lst, pes_idx, tsk_key_dct)
 
     return pes_param_dct
 
-def run_messrate_task(pes_inf, tsk_key_dct, rate_paths_dct):
+
+def run_messrate_task(pes_inf, rxn_lst, tsk_key_dct, spc_dct, rate_paths_dct):
     """ Run the MESSRATE input file.
 
         First tries to run a well-extended file, then tries to
@@ -76,11 +79,17 @@ def run_messrate_task(pes_inf, tsk_key_dct, rate_paths_dct):
         Need an overwrite task
     """
 
+    _, pes_idx, _ = pes_inf
+
     # Get the path to the MESSRATE file to run
     # (1) Vers1-Base, (2) Vers1-WellExtend, (3) Vers2-Base
     path_dct = rate_paths_dct[pes_inf]
     mess_version = tsk_key_dct['mess_version']
-    if mess_version == 'v1' and tsk_key_dct['well_extension']:
+    if (
+        mess_version == 'v1' and
+        tsk_key_dct['well_extension'] and
+        not is_abstraction_pes(spc_dct, rxn_lst, pes_idx)
+    ):
         path = path_dct[f'wext-{mess_version}']
         typ = 'wext'
     else:
@@ -95,11 +104,11 @@ def run_messrate_task(pes_inf, tsk_key_dct, rate_paths_dct):
         ioprinter.obj('line_dash')
         if typ == 'base':
             ioprinter.running(
-                f'base input with MESS version {mess_version} '
+                f'MESS base input with version {mess_version} '
                 f'at {path}')
         else:
             ioprinter.running(
-                f'well-extended input with MESS version {mess_version} '
+                f'MESS well-extended input with version {mess_version} '
                 f'at {path}')
         autorun.run_script(
             autorun.SCRIPT_DCT[f'messrate-{mess_version}'], path
@@ -107,11 +116,11 @@ def run_messrate_task(pes_inf, tsk_key_dct, rate_paths_dct):
     else:
         if typ == 'base':
             ioprinter.warning_message(
-                f'No base input for MESS version {mess_version} '
+                f'No MESS base input for version {mess_version} '
                 f'found at {path}')
         else:
             ioprinter.warning_message(
-                f'No well-extended input for MESS version {mess_version} '
+                f'No MESS well-extended input for version {mess_version} '
                 f'found at {path}')
 
 
