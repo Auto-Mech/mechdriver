@@ -147,7 +147,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         globkey_str, rxn_chan_str,
         energy_trans_str=energy_trans_str, well_lump_str=None)
 
-    print('rate_paths_dct test\n', rate_paths_dct)
+    # print('rate_paths_dct test\n', rate_paths_dct)
     base_mess_path = rate_paths_dct[pes_inf]['base-v1']
     ioprinter.obj('line_plus')
     ioprinter.writing('MESS input file', base_mess_path)
@@ -161,7 +161,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         print('User requested well extension scheme for rates...')
 
         # Run the base MESSRATE
-        print(f'  - Running base MESS job at path {base_mess_path}')
+        print(f'  - Running MESS base job at path {base_mess_path}')
         autorun.run_script(autorun.SCRIPT_DCT['messrate-v1'], base_mess_path)
 
         # Write the well-extended MESSRATE file
