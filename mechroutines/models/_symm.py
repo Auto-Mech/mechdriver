@@ -156,4 +156,5 @@ def _umbrella_factor(rotors, geo, grxn=None):
     #                 #    ioprinter.info_message(
     #                 #        'Umbrella mode identified for torsion about', torsion.axis)
     # return 2 if umb_inv else 1
-    return 2 if planarity < .29 else 1 
+    return 2 if planarity < .29 and planarity > .09 else 1
+
