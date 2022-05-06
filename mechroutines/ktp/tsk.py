@@ -126,7 +126,7 @@ def run_messrate_task(pes_inf, rxn_lst, tsk_key_dct, spc_dct, rate_paths_dct):
 
 def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
                   pes_mod_dct, spc_mod_dct, thy_dct,
-                  tsk_key_dct):
+                  tsk_key_dct, spc_dct):
     """ Run the fits and potentially
 
         assume that the rate_paths_dct will come in with all PESs in group
@@ -153,7 +153,7 @@ def run_fits_task(pes_grp_rlst, pes_param_dct, rate_paths_dct, mdriver_path,
     rxn_ktp_dct = obtain_multipes_rxn_ktp_dct(
         pes_grp_rlst, rate_paths_dct, pes_param_dct,
         pes_mod_dct, pes_mod,
-        tsk_key_dct)
+        tsk_key_dct, spc_dct)
 
     # Fit the rate constants
     ioprinter.info_message(
