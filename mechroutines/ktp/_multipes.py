@@ -5,6 +5,7 @@ import numpy
 import mess_io
 import mechanalyzer
 from mechlib.amech_io import reader
+from mechroutines.models.typ import is_abstraction_pes
 
 
 def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
@@ -136,7 +137,7 @@ def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
 def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
                                 rate_paths_dct, pes_param_dct,
                                 pes_mod_dct, pes_mod,
-                                tsk_key_dct):
+                                tsk_key_dct, spc_dct):
     """ Obtain the rate constants for all of the PESs in the group.
         Call additional
     """
@@ -155,6 +156,7 @@ def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
     else:
         rxn_ktp_dct = _prompt_dissociation_ktp_dct(
             pes_grp_rlst,
+            tsk_key_dct, spc_dct,
             pes_param_dct, rate_strs_dct, mess_paths_dct
         )
 
@@ -210,6 +212,7 @@ def _single_pes_ktp_dct(pes_grp_rlst,
 
 
 def _prompt_dissociation_ktp_dct(pes_grp_rlst,
+                                 tsk_key_dct, spc_dct,
                                  pes_param_dct, rate_strs_dct, mess_paths_dct):
     """ Evaluate the prompt dissociation k(T,P) values.
 
@@ -227,19 +230,37 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
         print('*Warning: multiple prompt models detected \
             CKI file will only consider the first one')
 
-    # Get the PES info objects for the PED and Hot surface
-    all_pes_inf = tuple(pes_grp_rlst.keys())
+    all_mess_paths = []
+    strs_dct_lst = []
+    for (pes_inf, rxn_lst) in pes_grp_rlst.items():
+        _, pes_idx, _ = pes_inf
+        if (
+            tsk_key_dct['well_extension'] and
+            not is_abstraction_pes(spc_dct, rxn_lst, pes_idx)
+        ):
+            typ = 'wext-v1'
+        else:
+            typ = 'base-v1'
+        all_mess_paths.append(mess_paths_dct[pes_inf][typ])
+        strs_dct_lst.append(rate_strs_dct[pes_inf][typ])
 
-    # Obtain the strings that are needed
-    all_mess_path = [mess_paths_dct[all_i]['base-v1'] for all_i in all_pes_inf]
-    list_strs_dct = [rate_strs_dct[all_i]['base-v1'] for all_i in all_pes_inf]
+    print('Fitting rates from')
+    for path in all_mess_paths:
+        print(f'  - {path}')
 
-    print('Fitting rates from\n'
-          f'  - paths: {all_mess_path}\n'
-          )
-
+    # # Get the PES info objects for the PED and Hot surface
+    # all_pes_inf = tuple(pes_grp_rlst.keys())
+    # # Obtain the strings that are needed
+    # all_mess_path = [mess_paths_dct[all_i]['base-v1']
+    #                  for all_i in all_pes_inf]
+    # list_strs_dct = [rate_strs_dct[all_i]['base-v1']
+    #                  for all_i in all_pes_inf]
+    # print('Fitting rates from\n'
+    #       f'  - paths: {all_mess_path}\n'
+    #       )
     # return the final ktp dictionary
 
     return mechanalyzer.calculator.multipes_prompt_dissociation_ktp_dct(
-        list_strs_dct,
-        pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])[pes_param_dct['modeltype'][0]]
+        strs_dct_lst,
+        pes_param_dct['modeltype'],
+        pes_param_dct['bf_threshold'])[pes_param_dct['modeltype'][0]]
