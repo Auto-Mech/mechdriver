@@ -43,8 +43,12 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
         energy_dct, _, _, _ = mess_io.reader.pes(rxn_chan_str)
         max_ene = []
         max_ene_ped = []
+        print(rxn_chan_str)
+        print('peds', pes_peds)
         for ped in pes_peds:
             reacs, prods = ped.split('=')
+            print('ene dct test')
+            print(energy_dct)
             ene_bw = energy_dct[reacs] - energy_dct[prods]
             dof_info = mechanalyzer.calculator.statmodels.get_dof_info(
                 spc_blocks_ped[prods])
@@ -204,6 +208,8 @@ def _single_pes_ktp_dct(pes_grp_rlst,
             pmin=min(pressures),
             pmax=max(pressures)
         )
+        print('Reaction dict test')
+        print(rxn_ktp_dct.keys())
     else:
         rxn_ktp_dct = None
         print(f'No MESS output found at {mess_path}')
@@ -246,7 +252,7 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
 
     print('Fitting rates from')
     for path in all_mess_paths:
-        print(f'  - {path}')
+        print(f'{path}')
 
     # # Get the PES info objects for the PED and Hot surface
     # all_pes_inf = tuple(pes_grp_rlst.keys())
