@@ -147,7 +147,9 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
     # Write base MESS input string into the RUN filesystem
     mess_inp_str = mess_io.writer.messrates_inp_str(
         globkey_str, rxn_chan_str,
-        energy_trans_str=energy_trans_str, well_lump_str=None)
+        energy_trans_str=energy_trans_str,
+        well_lump_str=None,
+        use_short_names=True)
 
     # print('rate_paths_dct test\n', rate_paths_dct)
     base_mess_path = rate_paths_dct[pes_inf]['base-v1']
@@ -234,7 +236,9 @@ def _full_mess_v2(energy_trans_str, rxn_chan_str, dats,
     # Write base MESS input string into the RUN filesystem
     mess_inp_str = mess_io.writer.messrates_inp_str(
         globkey_str, rxn_chan_str,
-        energy_trans_str=energy_trans_str, well_lump_str=None)
+        energy_trans_str=energy_trans_str,
+        well_lump_str=None,
+        use_short_names=True)
 
     base_mess_path = rate_paths_dct[pes_inf]['base-v2']
     ioprinter.obj('line_plus')
