@@ -82,14 +82,12 @@ def run(pes_rlst, spc_rlst,
     else:
         cnf_range = run_messpf_tsk[-1]['cnf_range']
         sort_str = run_messpf_tsk[-1]['sort']
-    spc_grp_dct = None
-    if run_fit_tsk is not None:
-        tsk_key_dct = run_fit_tsk[-1]
-        if tsk_key_dct['combine'] == 'stereo':
-            spc_grp_dct = parser.rlst.species_groups(spc_rlst, spc_dct)
-    spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
-        spc_mod_dct, pes_rlst, spc_rlst, spc_dct, thy_dct,
-        save_prefix, run_prefix, cnf_range, sort_str, spc_grp_dct)
+    spc_grp_dct, spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
+        spc_mod_dct, pes_rlst, spc_rlst,
+        run_fit_tsk,
+        spc_dct, thy_dct,
+        save_prefix, run_prefix,
+        cnf_range, sort_str)
 
     # ----------------------------------- #
     # RUN THE REQUESTED THERMDRIVER TASKS #
@@ -134,7 +132,6 @@ def run(pes_rlst, spc_rlst,
                 run_messpf_tsk, spc_locs_dct, spc_dct,
                 thm_paths_dct)
 
-        print('spc dct here', spc_dct)
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
@@ -152,24 +149,40 @@ def run(pes_rlst, spc_rlst,
 
 def _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst,
-        spc_dct, thy_dct, save_prefix, run_prefix,
+        run_fit_tsk,
+        spc_dct, thy_dct,
+        save_prefix, run_prefix,
         cnf_range='min', sort_str=None, spc_grp_dct=None):
     """ Determine the list of species to do thermo on
     """
+    # Build various species lists
     spc_mods = list(spc_mod_dct.keys())  # hack
     spc_mod_dct_i = spc_mod_dct[spc_mods[0]]
     sort_info_lst = filesys.mincnf.sort_info_lst(sort_str, thy_dct)
     split_rlst = split_unstable_full(
         pes_rlst, spc_rlst, spc_dct, spc_mod_dct_i, save_prefix)
+
+    # Dict for run_fits task
+    spc_grp_dct = None
+    if run_fit_tsk is not None:
+        tsk_key_dct = run_fit_tsk[-1]
+        if tsk_key_dct['combine'] == 'stereo':
+            spc_grp_dct = parser.rlst.species_groups(
+                None, split_rlst, spc_dct)
+
+    # Queue for all tasks
     spc_queue = parser.rlst.spc_queue(
         tuple(split_rlst.values())[0], 'SPC')
+
+    # Set locs and paths to species we will be doing calcs for
     spc_locs_dct = _set_spc_locs_dct(
         spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
         cnf_range, sort_info_lst)
     thm_paths = thermo_paths(
         spc_dct, spc_locs_dct, spc_mods, run_prefix,
         spc_grp_dct)
-    return spc_locs_dct, thm_paths, sort_info_lst
+
+    return spc_grp_dct, spc_locs_dct, thm_paths, sort_info_lst
 
 
 def _set_spc_locs_dct(
