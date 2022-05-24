@@ -111,7 +111,6 @@ def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
 
         return max(max_ene_lst)
     # default ene_range
-    ene_max = 300.0
 
     if pes_param_dct is not None:
         all_hot_spc = pes_param_dct['hot']
@@ -130,8 +129,8 @@ def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
             # update ene_max val if possible
             if side is not None:
                 ene_max = set_ene_max(spc, pes_param_dct)
-                ene_range = numpy.arange(0.0, ene_max, 1.0).tolist()
-                hot_enes_dct[side] = tuple(ene+x for x in ene_range)
+                ene_range = numpy.array([0.0 + ene, 1.0, ene_max + ene])
+                hot_enes_dct[side] = tuple(ene_range)
                 print('Setting {:.1f} as max hoten val for {} \n'.format(
                     ene_max+ene, side))
 
@@ -230,11 +229,6 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
         :type bf_threshold: float
         :rtype: dict[]
     """
-    if isinstance(pes_param_dct['modeltype'], str):
-        pes_param_dct['modeltype'] = [pes_param_dct['modeltype']]
-    if len(pes_param_dct['modeltype']) > 1:
-        print('*Warning: multiple prompt models detected \
-            CKI file will only consider the first one')
 
     all_mess_paths = []
     strs_dct_lst = []
@@ -268,5 +262,4 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
 
     return mechanalyzer.calculator.multipes_prompt_dissociation_ktp_dct(
         strs_dct_lst,
-        pes_param_dct['modeltype'],
-        pes_param_dct['bf_threshold'])[pes_param_dct['modeltype'][0]]
+        pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])
