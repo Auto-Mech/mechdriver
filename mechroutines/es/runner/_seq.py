@@ -288,8 +288,11 @@ def updated_kwargs(kwargs_dct, opts_mat):
     all_keys = list(itertools.chain(*opts_col))
     assert len(all_keys) == len(set(all_keys))
 
+    # print('ini', kwargs_dct['gen_lines'])
     for opts_dct in opts_col:
+        # print('test', opts_dct)
         kwargs_dct = _update_kwargs(kwargs_dct, opts_dct)
+    # print('sec', kwargs_dct['gen_lines'])
 
     return kwargs_dct
 
@@ -306,16 +309,26 @@ def _update_kwargs(kwargs_dct, opts_dct):
 
     kwargs_dct = dict(kwargs_dct).copy()
 
-    for key, opts in opts_dct.items():
+    for key, new_opts in opts_dct.items():
+        # print('key', key)
+        # print('opts', new_opts)
         # sanity check: make sure the options are valid
         # assert key.endswith('_options')
         # assert _is_nonstring_sequence(opts)
 
         if key in kwargs_dct:
             # assert _is_nonstring_sequence(kwargs_dct[key])
-            kwargs_dct[key] = tuple(itertools.chain(kwargs_dct[key], opts))
+            current_opt = kwargs_dct[key]
+            # hack to make the gen_lines dict work
+            if not isinstance(current_opt, dict):
+                # combine the two sequences together
+                kwargs_dct[key] = tuple(
+                    itertools.chain(current_opt, new_opts))
+            else:
+                # replce old dct with new one
+                kwargs_dct[key] = new_opts
         else:
-            kwargs_dct[key] = opts
+            kwargs_dct[key] = new_opts
 
     return kwargs_dct
 

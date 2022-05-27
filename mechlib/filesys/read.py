@@ -19,11 +19,16 @@ def potential(names, grid_vals, cnf_save_path,
               mod_tors_ene_info, ref_ene,
               constraint_dct,
               read_geom=False, read_grad=False,
-              read_hess=False, read_zma=False):
+              read_hess=False, read_zma=False,
+              read_energy_backstep=True,
+              remove_bad_points=True):
     """ Get the potential for a hindered rotor
     """
 
-    # print('potential test:', names)
+    print('potential test:')
+    print('names', names)
+    print('grids', grid_vals)
+
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
@@ -50,29 +55,34 @@ def potential(names, grid_vals, cnf_save_path,
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
             back_locs = [constraint_dct] + back_locs
+        # print('path', scn_fs[-1].path(locs))
 
         # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
-        back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
-        step_ene = None
-        if ene is not None:
-            if back_ene is not None:
-                step_ene = min(ene, back_ene)
-            else:
-                step_ene = ene
-        elif back_ene is not None:
-            step_ene = back_ene
+        if read_energy_backstep:
+            back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
+            step_ene = None
+            if ene is not None:
+                if back_ene is not None:
+                    step_ene = min(ene, back_ene)
+                else:
+                    step_ene = ene
+            elif back_ene is not None:
+                step_ene = back_ene
 
-        if step_ene is not None:
-            enediff = (step_ene - ref_ene) * phycon.EH2KCAL
-            if idx == 0:
-                if enediff > 0.05:
-                    print('Warning the first potential value does not match the reference energy {:.2f}',enediff)
-                ref_ene = step_ene
-                enediff = 0
-            pot[vals_conv] = enediff
+            if step_ene is not None:
+                enediff = (step_ene - ref_ene) * phycon.EH2KCAL
+                if idx == 0:
+                    if enediff > 0.05:
+                        print('Warning the first potential value does not',
+                              f'match the reference energy {enediff:.2f}')
+                    ref_ene = step_ene
+                    enediff = 0
+                pot[vals_conv] = enediff
+            else:
+                pot[vals_conv] = None
         else:
-            pot[vals_conv] = None
+            pot[vals_conv] = (ene - ref_ene) * phycon.EH2KCAL
 
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
@@ -101,14 +111,15 @@ def potential(names, grid_vals, cnf_save_path,
         paths[vals] = scn_fs[-1].path(locs)
 
     # If potential has any terms that are not None, ID and remove bad points
-    if automol.pot.is_nonempty(pot):
-        pot = automol.pot.remove_empty_terms(pot)
-        bad_angle = identify_bad_point(pot)
-        if bad_angle is not None:
-            pot = remove_bad_point(pot, bad_angle)
+    if remove_bad_points and len(names) == 1:
+        if automol.pot.is_nonempty(pot):
             pot = automol.pot.remove_empty_terms(pot)
-    else:
-        pot = {}
+            bad_angle = identify_bad_point(pot)
+            if bad_angle is not None:
+                pot = remove_bad_point(pot, bad_angle)
+                pot = automol.pot.remove_empty_terms(pot)
+        else:
+            pot = {}
 
     return pot, geoms, grads, hessians, zmas, paths
 
@@ -269,17 +280,25 @@ def reactions(rxn_info, ini_thy_info, zma_locs, save_prefix):
 
     rxn_fs = autofile.fs.reaction(save_prefix)
     if rxn_fs[-1].exists(sort_rxn_info):
+        rxn_path = rxn_fs[-1].path(sort_rxn_info)
         _, ts_save_fs = build_fs(
             save_prefix, save_prefix, 'TRANSITION STATE',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:])
-        for ts_locs in ts_save_fs[-1].existing():
-            zrxn, zma = reaction(
-                rxn_info, ini_thy_info,
-                zma_locs, save_prefix, ts_locs=ts_locs)
-            if zrxn is not None:
-                zrxns += (zrxn,)
-                zmas += (zma,)
+        print('rxn_path test', rxn_path)
+        ts_locs = ts_save_fs[-1].existing()
+        if ts_locs:
+            for locs in ts_save_fs[-1].existing():
+                ts_path = ts_save_fs[-1].path(locs)
+                print(f'    - Checking for TS info in CONFS/Z in {ts_path}')
+                zrxn, zma = reaction(
+                    rxn_info, ini_thy_info,
+                    zma_locs, save_prefix, ts_locs=locs)
+                if zrxn is not None:
+                    zrxns += (zrxn,)
+                    zmas += (zma,)
+        else:
+            print(f'No info at {rxn_path}')
 
     if not zrxns:
         zrxns, zmas = None, None

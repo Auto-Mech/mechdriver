@@ -2,12 +2,12 @@
 """
 
 from mechroutines.es.tsk import run_tsk
-from mechroutines.es import newts
+from mechroutines.es import ts
 from mechroutines.es import runner
 
 
 __all__ = [
     'run_tsk',
-    'newts',
+    'ts',
     'runner'
 ]

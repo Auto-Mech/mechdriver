@@ -51,7 +51,7 @@ RUN_INP_VAL_DCT = {
 # Commonly useful task keyword lists
 BASE = ('runlvl', 'inplvl', 'retryfail', 'overwrite')
 MREF = ('var_splvl1', 'var_splvl2', 'var_scnlvl')
-TRANS = ('bath', 'njobs', 'nsamp', 'conf')
+TRANS = ('njobs', 'nsamp', 'conf', 'cnf_range', 'sort')
 PRNT = ('geolvl', 'proplvl', 'cnf_range', 'sort')
 
 # Supported object types for task (useful if task requestes 'all')
@@ -63,7 +63,7 @@ SUPP_OBJS = ('spc', 'ts')
 TSK_KEY_DCT = {
     # Electronic Structure Driver Tasks
     'init_geom': (('spc',), BASE),
-    'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier',)),  # 're_id')),
+    'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier', 'varecof_nprocs')),
     'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
     'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
     'conf_energy': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
@@ -104,11 +104,16 @@ TSK_KEY_DCT = {
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
-                        'use_well_extension', 'float_precision',
+                        'well_extension', 'mess_version',
+                        'float_precision',
                         'cnf_range', 'sort')),
     'run_mess': ((), ('kin_model', 'spc_model', 'nprocs',
+                      'well_extension', 'mess_version',
                       'cnf_range', 'sort')),
-    'run_fits': ((), ('kin_model', 'cnf_range', 'sort')),
+    'run_fits': ((), ('kin_model',
+                      'well_extension', 'mess_version',
+                      'combine',
+                      'cnf_range', 'sort')),
 }
 
 # tsk: (object types, (allowed values), default)  # use functions for weird
@@ -135,6 +140,7 @@ TSK_VAL_DCT = {
     'rxncoord': ((str,), ('irc', 'auto'), 'auto'),
     'nobarrier': ((str,), ('pst', 'rpvtst', 'vrctst'), None),
     're_id': ((bool,), (True, False), False),
+    'varecof_nprocs': ((int,), (), 10),
     # Trans
     'njobs': ((int,), (), 1),
     'nsamp': ((int,), (), 1),
@@ -149,7 +155,9 @@ TSK_VAL_DCT = {
     'kin_model': ((str,), (), None),
     'spc_model': ((str,), (), None),
     'nprocs': ((int,), (), 10),
-    'use_well_extension': ((bool,), (), False),
+    'mess_version': ((str,), ('v1', 'v2'), 'v1'),
+    'well_extension': ((bool,), (), False),
+    'combine': ((str,), ('stereo',), None),
     'linked_pes': ((tuple,), (), None),
     'float_precision': ((str,), ('double', 'quadruple'), 'double'),
 }

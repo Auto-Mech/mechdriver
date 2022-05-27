@@ -29,7 +29,7 @@ def set_reference_ene(rxn_lst, spc_dct, tsk_key_dct,
     # Get the model for the first reference species
     cnf_range = tsk_key_dct['cnf_range']
     sort_info_lst = filesys.mincnf.sort_info_lst(tsk_key_dct['sort'], thy_dct)
-    print('sort info list in ref ene', sort_info_lst)
+
     # Get the elec+zpe energy for the reference species
     ioprinter.info_message('')
     hf0k = 0.0
@@ -127,11 +127,14 @@ def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
             ts_enes = [sum(inf['ene_chnlvl'] for inf in channel_infs['prods'])]
         channel_infs['ts'][0].update({'ene_chnlvl': ts_enes})
     else:
-        if 'rpath' in channel_infs['ts']:
-            ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']['rpath']]
+        # Assume 1-TS when providing an RPATH for variational calc for now
+        # IF RPATH not given, need list for ts_enes for multiple sadpts
+        if 'rpath' in channel_infs['ts'][0]:
+            ts_enes = [dct[ene_lvl] for dct in channel_infs['ts'][0]['rpath']]
         else:
             ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']]
             # ts_enes = [channel_infs['ts'][ene_lvl]]
+
         ioprinter.debug_message(
             'TS HoF (0 K) ts lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
         if reac_ref_ene:
@@ -142,6 +145,7 @@ def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
         ioprinter.debug_message(
             'TS HoF (0 K) approx spc lvl kcal/mol: ',
             ts_enes[0] * phycon.EH2KCAL)
+
     ts_enes = [(ene - ref_ene) * phycon.EH2KCAL for ene in ts_enes]
 
     sum_ene.update({'ts': ts_enes})

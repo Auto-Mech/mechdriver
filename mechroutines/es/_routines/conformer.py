@@ -179,7 +179,8 @@ def _optimize_atom(spc_info, zma_init,
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     script_str, kwargs = es_runner.qchem_params(
-        method_dct, job=elstruct.Job.OPTIMIZATION)
+        method_dct, spc_info=spc_info,
+        geo=automol.zmat.geometry(zma_init))
 
     # Call the electronic structure optimizer
     success, ret = es_runner.execute_job(
@@ -214,7 +215,10 @@ def _optimize_molecule(spc_info, zma_init,
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     script_str, kwargs = es_runner.qchem_params(
-        method_dct, job=elstruct.Job.OPTIMIZATION)
+        method_dct,
+        spc_info=spc_info,
+        geo=automol.zmat.geometry(zma_init),
+        job=elstruct.Job.OPTIMIZATION)
 
     # Call the electronic structure optimizer
     success, ret = es_runner.execute_job(
@@ -382,6 +386,14 @@ def single_conformer(zma, spc_info, mod_thy_info,
                         cnf_save_fs, mod_thy_info)
                     filesys.mincnf.traj_sort(
                         cnf_save_fs, mod_thy_info, locs[0])
+                else:
+                    sym_locs = saved_locs[sym_id]
+                    filesys.save.sym_indistinct_conformer(
+                        geo, cnf_save_fs, locs, sym_locs)
+                    if cnf_save_fs[-1].exists(locs):
+                        cnf_save_path = cnf_save_fs[-1].path(locs)
+                    if cnf_run_fs[-1].exists(locs):
+                        cnf_run_path = cnf_run_fs[-1].path(locs)
 
 
 def conformer_sampling(zma, spc_info, thy_info,
@@ -905,15 +917,20 @@ def this_conformer_is_running(zma, cnf_run_fs):
                     inp_str = subrun_fs[0].file.input.read([0, 0])
                     inp_str = inp_str.replace('=', '')
                     prog = inf_obj.prog
-                    inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                    if automol.zmat.almost_equal(inp_zma, zma,
-                                                 dist_rtol=0.018, ang_atol=.2):
-                        _hr = (current_time - start_time).total_seconds()/3600.
-                        info_message(
-                            'This conformer was started in the last ' +
-                            f'{_hr:3.4f} hours in {run_path}.')
-                        running = True
-                        break
+                    if 'molpro' in prog:
+                        print('Warning: Since using Molpro, check for running '
+                              'conformer is disabled!')
+                        running = False
+                    else:
+                        inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                        if automol.zmat.almost_equal(
+                            inp_zma, zma, dist_rtol=0.018, ang_atol=.2):
+                            _hr = (current_time - start_time).total_seconds()/3600.
+                            info_message(
+                                'This conformer was started in the last ' +
+                                f'{_hr:3.4f} hours in {run_path}.')
+                            running = True
+                            break
     return running
 
 

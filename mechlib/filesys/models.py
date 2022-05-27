@@ -3,15 +3,13 @@
 """
 
 import autofile
-import automol.geom
-import automol.zmat
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys.mincnf import min_energy_conformer_locators
 from mechlib.filesys.mincnf import this_conformer_was_run_in_run
 from mechlib.filesys.mincnf import conformer_locators
-from mechlib.filesys.mincnf import fs_confs_dict as fs_confs_dict
+from mechlib.filesys.mincnf import fs_confs_dict
 from mechlib.filesys._build import build_fs
 from mechlib.filesys._build import root_locs
 from mechlib.amech_io import printer as ioprinter
@@ -88,7 +86,7 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
             if spc_model_dct_i['tors']['mod'] != 'rigid':
                 scan_locs = get_matching_tors_locs(
                     spc_model_dct_i, spc_dct_i, pf_filesystems['harm'],
-                    run_prefix, save_prefix, saddle=False)
+                    run_prefix, save_prefix, saddle=saddle, name=name)
                 pf_filesystems['tors'] = set_model_filesys(
                     spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
                     run_prefix, save_prefix, saddle, name=name,
@@ -183,16 +181,16 @@ def set_rpath_filesys(ts_dct, level):
     thy_run_path = thy_run_fs[-1].path(levelp[1:4])
 
     ts_save_fs = autofile.fs.transition_state(thy_save_path)
-    ts_save_fs[0].create()
+    # ts_save_fs[0].create()
     ts_save_path = ts_save_fs[0].path()
     ts_run_fs = autofile.fs.transition_state(thy_run_path)
-    ts_run_fs[0].create()
+    # ts_run_fs[0].create()
     ts_run_path = ts_run_fs[0].path()
 
     return ts_run_path, ts_save_path, thy_run_path, thy_save_path
 
 
-def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
+def get_rxn_scn_coords(ts_path, coord_name=None, zma_locs=(0,)):
     """ Get the values along the reaction coordinate
     """
 
@@ -202,11 +200,16 @@ def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
 
     # Read the values of the reaction coord
     scn_save_fs = autofile.fs.scan(zma_path)
+
+    if coord_name is None:
+        coord_name = list(scn_save_fs[0].existing())[0]
+
     scn_locs = scn_save_fs[-1].existing([[coord_name]])
+
     scn_grids = [locs[1][0] for locs in scn_locs
                  if locs[1][0] != 1000.0]
 
-    return scn_grids
+    return scn_grids, coord_name
 
 
 def make_run_path(pf_filesystems, choice):
@@ -283,12 +286,12 @@ def _get_prop_fs(
 
 def get_all_tors_locs_lst(
         spc_dct_i, spc_model_dct_i,
-        run_prefix, save_prefix, saddle, nprocs=1):
+        run_prefix, save_prefix, saddle, name, nprocs=1):
     """get all conformer locations for the torsion method
     """
     tors_run_fs, tors_save_fs, levelp, _ = _get_prop_fs(
         spc_model_dct_i, spc_dct_i, 'tors', None,
-        run_prefix, save_prefix, saddle=saddle)
+        run_prefix, save_prefix, saddle=saddle, name=name)
     hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     tors_locs_lst, _ = conformer_locators(
         tors_save_fs, levelp, cnf_range='all',
@@ -299,7 +302,7 @@ def get_all_tors_locs_lst(
 
 def get_matching_tors_locs(
         spc_model_dct_i, spc_dct_i, harm_filesys,
-        run_prefix, save_prefix, saddle=False,
+        run_prefix, save_prefix, saddle=False, name=None,
         nprocs=1):
     """get a list of locations in at the scan level filesystem
          that match the conformer
@@ -308,7 +311,8 @@ def get_matching_tors_locs(
     cnf_save_fs, cnf_path, cnf_locs, _, _ = harm_filesys
     if spc_model_dct_i['tors']['geolvl'] != spc_model_dct_i['vib']['geolvl']:
         tors_run_fs, tors_save_fs, tors_locs_lst = get_all_tors_locs_lst(
-            spc_dct_i, spc_model_dct_i, run_prefix, save_prefix, saddle,
+            spc_dct_i, spc_model_dct_i, run_prefix, save_prefix,
+            saddle, name,
             nprocs=nprocs)
         match_dct = fs_confs_dict(
             tors_save_fs, tors_locs_lst, cnf_save_fs, [cnf_locs])

@@ -23,6 +23,7 @@ SPC_VAL_DCT = {
     'inchi': ((str,), (), None),
     'inchikey': ((str,), (), None),
     'smiles': ((str,), (), None),
+    'exc_flag': ((int,), (), 0),
     'sens': ((int, float), (), None),  # auto from CSV reader, not used
     'fml': ((dict,), (), None),  # auto from CSV reader, not used
     'pst_params': ((tuple,), (), (1.0, 6)),
@@ -39,9 +40,9 @@ SPC_VAL_DCT = {
     'smin': ((int, float), (), None),
     'smax': ((int, float), (), None),
     'etrans_nsamp': ((int,), (), None),
-    'bath': ((str,), (), None),
-    'lj': ((str,), (), None),
-    'edown': ((str,), (), None),
+    'mass': ((float,), (), None),
+    'lj': ((tuple, str), (), 'estimate'),
+    'edown': ((tuple, str), (), 'estimate'),
     'active': ((tuple,), (), None),
     'zma_idx': ((int,), (), 0),
     'conf_id': ((tuple, list), (), None)
@@ -73,7 +74,8 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
     """
 
     # Parse out the dcts from the strings
-    spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
+    # spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
+    spc_dct = mechanalyzer.parser.new_spc.parse_mech_spc_dct(spc_str)
     dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 
@@ -131,14 +133,15 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
     # Add transitions states defined in species.dat not defined in spc_dct
     ts_dct = {}
     for tsname in (x for x in dat_dct if 'ts' in x):
-        ts_dct[tsname] = {**dat_dct[tsname]}
+        if dat_dct[tsname] is not None:
+            ts_dct[tsname] = {**dat_dct[tsname]}
 
-        # Need to add the TS defaults
-        ts_dct[tsname] = automol.util.dict_.right_update(
-            ts_default, ts_dct[tsname])
+            # Need to add the TS defaults
+            ts_dct[tsname] = automol.util.dict_.right_update(
+                ts_default, ts_dct[tsname])
 
-        # Add speciaized calls not in the default dct
-        # _set_active_key()
+            # Add speciaized calls not in the default dct
+            # _set_active_key()
 
     # add the TSs to the spc dct
     spc_dct.update(ts_dct)
@@ -321,7 +324,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
-    print(f'\n  Preparing for reaction {rct_str} = {prd_str}')
+    print(f'\n  Preparing TS for PES-Channel {pes_idx+1}-{chnl_idx+1} : '
+          f'{rct_str} = {prd_str}')
 
     # Set the reacs and prods for the desired direction
     reacs, prods = rxnid.set_reaction_direction(

@@ -180,7 +180,7 @@ def frequencies(
     return fxn_ret, miss_data
 
 
-def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
+def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
              mod_thy_info, run_prefix, save_prefix):
     """ get the torsion potentials
         currently just checks if there any non-empty potentials
@@ -193,22 +193,29 @@ def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
-        name=spc_name, saddle=saddle)
+        name=spc_name, saddle=saddle, spc_locs=locs)
 
     # Do initial check to see if a torsions file exists
     if pf_filesystems['tors'] is not None:
         [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['tors']
         zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
-        print('cnf_path', cnf_fs[-1].path(min_cnf_locs))
+        zma_path = zma_fs[-1].path([0])
+        print(f'Checking for torsions at {zma_path}')
         if zma_fs[-1].file.torsions.exists([0]):
-            rotors = tors.build_rotors(
+            rotors, _ = tors.build_rotors(
                 spc_dct_i, pf_filesystems, spc_mod_dct_i)
+            names = automol.rotor.names(rotors, flat=True)
             pots = automol.rotor.potentials(rotors, flat=True)
             # Just check if there any potentials with
-            if all(pot for pot in pots):
-                miss_data = None
-            else:
-                miss_data = (spc_name, mod_thy_info, 'torsions')
+            miss_data = None
+            for name, pot in zip(names, pots):
+                if pot:
+                    # pot_str = ' '.join((f'{0:.1f}' for val in pot))
+                    # print(f'Rotor {name}: {pot_str}')
+                    print(f'Rotor {name}: {pot}')
+                else:
+                    print(f'Rotor {name}: MISSING POTENIAL')
+                    miss_data = (spc_name, mod_thy_info, 'torsions')
         else:
             miss_data = None
             print('No rotors file in SAVE filesys. Assuming no rotors')
@@ -276,11 +283,14 @@ def energy(spc_name, spc_dct_i,
                 ioprinter.reading('Energy', sp_path)
                 _ene = sp_save_fs[-1].file.energy.read(
                     mod_thy_info[1:4])
+        else:
+            ioprinter.warning_message(f'No Energy found at {sp_path}')
 
     if _ene is not None:
         miss_data = None
     else:
-        miss_data = (spc_name + '_'.join(locs), mod_thy_info, 'energy')
+        # miss_data = (spc_name + '_'.join(locs), mod_thy_info, 'energy')
+        miss_data = (spc_name, mod_thy_info, 'energy')
 
     return [locs_path, _ene], miss_data
 
@@ -381,7 +391,7 @@ def messpf_input(
         run_prefix, save_prefix,
         name=spc_name, saddle=saddle, spc_locs=locs)
     geom = rot.read_geom(pf_filesystems)
-    rotors = tors.build_rotors(
+    rotors, _ = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,

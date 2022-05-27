@@ -2,6 +2,7 @@
   Handle building the energy transfer section
 """
 
+from phydat import phycon
 import automol
 import mess_io
 from mechanalyzer.inf import spc as sinfo
@@ -9,30 +10,38 @@ from mechlib.amech_io import printer as ioprinter
 
 
 # FUNCTIONS TO WRITE THE ENERGY TRANSFER  STRINGS
-def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
+def make_energy_transfer_strs(tgt_info, bath_info, etrans_dct):
     """ Writes the energy down (`Edown`) and collision frequency (`ColldFreq`)
         section strings for the MESS input.
 
-    Makes the standard header and energy transfer sections
-        for MESS input file
+        Function and subfunctions examine the etrans_dct to decide how to
+        set the energy transfer parameters written into the string:
+        mass, lj params, and alpha params.
+
+        If user-specified options in etrans_dct, those will be used. If
+        'estimate' given in the etrans_dct. Then the function will use the
+        bath and target spc_info objects to estimate the values using Jasper
+        formulae.
     """
 
     # Determine all of the energy transfer parameters
     ioprinter.info_message(
         '- Determining the masses...', newline=1)
     mass1, mass2 = mass_params(
-        well_info, bath_info, etrans_dct)
+        tgt_info, bath_info, etrans_dct)
 
     ioprinter.info_message(
         '- Determining the Lennard-Jones model parameters...', newline=1)
-    sig1, eps1, sig2, eps2 = lj_params(
-        well_info, bath_info, etrans_dct)
+    sig, eps = lj_params(
+        tgt_info, bath_info, etrans_dct)
+    sig1, eps1, sig2, eps2 = sig, eps, sig, eps
+    # ^ Get two sets of A+B params. Are written in MESS and then uncombined
 
     ioprinter.info_message(
         '- Determining the energy-down transfer model parameters...',
         newline=1)
     exp_factor, exp_power, exp_cutoff = edown_params(
-        well_info, bath_info, etrans_dct,
+        tgt_info, bath_info, etrans_dct,
         ljpar=(sig1, eps1, mass1, mass2))
 
     # Write the Energy Transfer section string
@@ -50,101 +59,121 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
 
 
 # FUNCTIONS TO SET ALL OF THE PARAMETERS FOR THE MESS FILE
-def mass_params(well_info, bath_info, etrans_dct):
-    """ Determine the mass parameters used to
-        define the energy transfer model for master equation simulations.
+def mass_params(tgt_info, bath_info, etrans_dct):
+    """ Determine the mass parameters used to define the energy transfer model
+        for target-bath collisions in master equation simulations.
 
         Function first assesses if a user has supplied mass parameters
-        by way of ___. If masses have not been provided, then the masses
-        will be simply calculated using the geometries of the well and
+        by way of etrans_dct. If masses have not been provided, then the masses
+        will be simply calculated using the geometries of the target and
         bath species.
 
-        :param well_info: spc_info object for well species
-        :type well_info: mechanalyzer.inf.spc object
+        :param tgt_info: spc_info object for target species
+        :type tgt_info: mechanalyzer.inf.spc object
         :param bath_info: spc_info object for bath species
         :type bath_info: mechanalyzer.inf.spc object
-        :param etrans_dct:
+        :param etrans_dct: energy transfer options for mass, lj, alpha
+        :type: etrans_dct: dict[str:tuple/str]
     """
 
+    # First try and get the mass for spc or PES (global_mass)
     mass = etrans_dct.get('mass', None)
+    if mass is None:
+        mass = etrans_dct.get('global_mass', None)
+
+    # Now set the values
     if mass is not None:
         ioprinter.info_message('  - Using the user input values...')
         [mass1, mass2] = mass
     else:
         ioprinter.info_message('  - Obtaining masses from geometries...')
-        geo = automol.inchi.geometry(well_info[0])
-        mass1 = sum(automol.geom.masses(geo))
-
-        geo = automol.inchi.geometry(bath_info[0])
-        mass2 = sum(automol.geom.masses(geo))
+        mass1 = sum(automol.geom.masses(automol.inchi.geometry(tgt_info[0])))
+        mass2 = sum(automol.geom.masses(automol.inchi.geometry(bath_info[0])))
 
     return mass1, mass2
 
 
-def lj_params(well_info, bath_info, etrans_dct):
+def lj_params(tgt_info, bath_info, etrans_dct):
     """ Determine the Lennard-Jones (LJ) epsilon and sigma parameters used to
-        define the energy transfer model for master equation simulations.
+        define the energy transfer model for target-bath collisions in
+        master equation simulations.
 
-        Function first assesses if a user has supplied mass parameters
-        by way of ___. If masses have not been provided, then the masses
-        will be simply calculated using the geometries of the well and
+        Function first assesses if a user has supplied LJ parameters
+        by way of etrans_dct. If params have not been provided, then the params
+        will be simply calculated estimating them using the Jasper formulae,
+        which requires the InChI strings of the target and bath.
+
+        :param tgt_info: spc_info object for target species
+        :type tgt_info: mechanalyzer.inf.spc object
+        :param bath_info: spc_info object for bath species
+        :type bath_info: mechanalyzer.inf.spc object
+        :param etrans_dct: energy transfer options for mass, lj, alpha
+        :type: etrans_dct: dict[str:tuple/str]
     """
 
-    sig1, eps1, sig2, eps2 = None, None, None, None
+    sig, eps = None, None
 
-    ljpar = etrans_dct.get('lj', None)
+    # First try and get the ljpar for spc or PES (global_ljpar)
+    ljpar = etrans_dct.get('lj', 'estimate')
+    if ljpar == 'estimate':
+        ljpar = etrans_dct.get('global_lj', 'estimate')
+
+    # Now set the values
     if ljpar is not None:
 
         if isinstance(ljpar, list):
 
             ioprinter.info_message('  - Using the user input values...')
-            [sig1, eps1, sig2, eps2] = ljpar
+            [sig, eps] = ljpar
 
         elif ljpar == 'estimate':
 
             ioprinter.info_message('- Estimating the parameters...')
-            well_ich = well_info[0]
-            well_geo = automol.inchi.geometry(well_ich)
-            params = automol.etrans.effective_model(
-                well_ich, bath_info[0])
-            if params is not None:
-                bath_model, tgt_model = params
-                ioprinter.info_message(
-                    '    - Series to use for estimation for estimation...')
-                ioprinter.info_message(
-                    f'      Bath: {bath_model}, Target: {tgt_model} ')
+            tgt_ich, bath_ich = tgt_info[0], bath_info[0]
+            model = automol.etrans.estimate.determine_collision_model_series(
+                tgt_ich, bath_ich, 'lj')
+            n_heavy = automol.geom.atom_count(
+                automol.inchi.geometry(tgt_ich), 'H', match=False)
+            ioprinter.info_message(
+                '    - Series to use for estimation for estimation: '
+                f' {model}\n'
+                f'    - Heavy atom count: {n_heavy}')
 
-                ioprinter.info_message(
-                    '    - Effective atom numbers for estimation...')
-                n_heavy = automol.geom.atom_count(well_geo, 'H', match=False)
-                ioprinter.info_message(
-                    '      N_heavy: ', n_heavy)
-                sig, eps = automol.etrans.eff.lennard_jones_params(
-                    n_heavy, bath_model, tgt_model)
-                sig1, eps1, sig2, eps2 = sig, eps, sig, eps
-
-        # elif ljpar == 'read':
-        #     ioprinter.info_message('- Reading the filesystem...')
-        #     ljs_lvl = etrans_dct.get('ljlvl', None)
-        #     if ljs_lvl is not None:
-        #         # Get the levels into theory objects
-        #         pf_filesystems = 0
-        #         sig1, eps1, sig2, eps2 = _read_lj(pf_filesystems)
-
+            sig, eps = automol.etrans.estimate.lennard_jones_params(
+                n_heavy, model)
     else:
-        sig1, eps1, sig2, eps2 = None, None, None, None
+        sig, eps = None, None
 
-    return sig1, eps1, sig2, eps2
+    return sig, eps
 
 
-def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
-    """ Energy down model parameters
+def edown_params(tgt_info, bath_info, etrans_dct, ljpar=None):
+    """ Determine the average collisional energy (alpha) parameter used to
+        define the energy transfer model for target-bath collisions in
+        master equation simulations.
+
+        Function first assesses if a user has supplied alpha parameter
+        by way of etrans_dct. If params have not been provided, then the param
+        will be simply calculated estimating them using the Jasper formulae,
+        which requires the InChI strings of the target and bath, as well as
+        masses and LJ params.
+
+        :param tgt_info: spc_info object for target species
+        :type tgt_info: mechanalyzer.inf.spc object
+        :param bath_info: spc_info object for bath species
+        :type bath_info: mechanalyzer.inf.spc object
+        :param etrans_dct: energy transfer options for mass, lj, alpha
+        :type: etrans_dct: dict[str:tuple/str]
     """
 
     efactor, epower, ecutoff = None, None, None
 
-    edown = etrans_dct.get('edown', None)
+    # First try and get the edown for spc or PES (global_edown)
+    edown = etrans_dct.get('edown', 'estimate')
+    if edown == 'estimate':
+        edown = etrans_dct.get('global_edown', 'estimate')
 
+    # Now get the values
     if edown is not None:
 
         if isinstance(edown, list):
@@ -157,74 +186,58 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
             assert ljpar is not None
 
             ioprinter.info_message('  - Estimating the parameters...')
-            well_ich = well_info[0]
-            well_geo = automol.inchi.geometry(well_ich)
-            params = automol.etrans.effective_model(
-                well_ich, bath_info[0])
-            if params is not None:
-                bath_model, tgt_model = params
-                ioprinter.info_message(
-                    '    - Series to use for estimation for estimation...')
-                ioprinter.info_message(
-                    f'      Bath: {bath_model}, Target: {tgt_model} ')
 
-                ioprinter.info_message(
-                    '    - Calculating the LJ collisional frequencies...')
-                ioprinter.info_message(
-                    '    - Effective atom numbers for estimation...')
+            tgt_geo = automol.inchi.geometry(tgt_info[0])
+            model = automol.etrans.estimate.determine_collision_model_series(
+                tgt_info[0], bath_info[0], 'alpha')
+            if model is not None:
                 sig, eps, mass1, mass2 = ljpar
-                n_eff = automol.etrans.eff.effective_rotor_count(well_geo)
+                n_eff = automol.etrans.estimate.effective_rotor_count(tgt_geo)
                 ioprinter.info_message(
-                    '      N_eff: ', n_eff)
-                efactor, epower = automol.etrans.eff.alpha(
-                    n_eff, eps, sig, mass1, mass2, bath_model, tgt_model)
+                    '    - Series to use for estimation for estimation:'
+                    f' {model}\n'
+                    f'    - Found effective rotor count: {n_eff:.2f}\n'
+                    '    - Using following LJ parameters for '
+                    'collisional frequency and alpha calculation:\n'
+                    f'       eps={eps*phycon.EH2WAVEN:.2f} cm-1, '
+                    f'sigma={sig*phycon.BOHR2ANG:.2f} Ang,\n'
+                    f'       mass1={mass1:.2f} amu, mass2={mass2:.2f} amu')
+                efactor, epower = automol.etrans.estimate.alpha(
+                    n_eff, eps, sig, mass1, mass2, model,
+                    empirical_factor=2.0)
                 ecutoff = 15.0
-
-        # elif edown == 'read':
-        #     ioprinter.info_message('  - Reading the filesystem...')
-        #     edownlvl = etrans_dct.get('edownlvl', None)
-        #     if edownlvl is not None:
-        #         # NEED: Get the levels into theory objects
-        #         pf_filesystems = 0
-        #         efactor = _read_alpha(pf_filesystems)
+            else:
+                efactor, epower, ecutoff = None, None, None
+                ioprinter.warning_message(
+                    f'Cannot calculate Zalpha for {model}')
 
     return efactor, epower, ecutoff
 
 
 # FUNCTION TO HANDLE BUILDING ETRANS OBJECTS
-def build_etrans_dct(spc_dct_i):
-    """  Build an energy transfer dict from a spc dct
+def etrans_dct_for_species(spc_dct_i, pes_mod_dct_i):
+    """  Build an energy transfer dictionary for species from a spc dct
     """
-
-    etrans_dct = {}
-
-    mass = spc_dct_i.get('mass', None)
-    if mass is not None:
-        etrans_dct['mass'] = mass
-
-    ljpar = spc_dct_i.get('lj', None)
-    if ljpar is not None:
-        etrans_dct['lj'] = ljpar
-
-    edown = spc_dct_i.get('edown', None)
-    if edown is not None:
-        etrans_dct['edown'] = edown
-
-    return etrans_dct
+    return {
+        'bath': pes_mod_dct_i['energy_transfer']['bath'],
+        'mass': spc_dct_i.get('mass', None),
+        'lj': spc_dct_i.get('lj', 'estimate'),
+        'edown': spc_dct_i.get('edown', 'estimate')
+    }
 
 
 def set_etrans_well(rxn_lst, spc_dct):
-    """ Build info object for reference well on PES
+    """ Determine the species that can represent energy transfer
+        for the entire PES.
     """
 
-    well_dct = None
-
     _, (reacs, prods) = rxn_lst[0]
-
     if len(reacs) == 1:
         well_dct = spc_dct[reacs[0]]
+        well_name = reacs[0]
     elif len(prods) == 1:
         well_dct = spc_dct[prods[0]]
+        well_name = prods[0]
     else:
         rct1_dct = spc_dct[reacs[0]]
         rct2_dct = spc_dct[reacs[1]]
@@ -234,10 +247,14 @@ def set_etrans_well(rxn_lst, spc_dct):
             automol.inchi.geometry(rct2_dct['inchi']))
         if rct1_count > rct2_count:
             well_dct = rct1_dct
+            well_name = reacs[0]
         else:
             well_dct = rct2_dct
+            well_name = reacs[1]
 
     well_info = sinfo.from_dct(well_dct)
+    ioprinter.info_message(
+        f'  - Using {well_name} for global collision target for PES')
 
     return well_info
 
@@ -255,6 +272,6 @@ def set_bath(spc_dct, etrans_dct):
     else:
         bath_info = ['InChI=1S/Ar', 0, 1]
         ioprinter.info_message(
-            '  - No bath provided, using Argon as bath')
+            '  - No bath provided, using Argon bath as default')
 
     return bath_info

@@ -4,20 +4,28 @@
     - KBM
 """
 
+import importlib
 import automol.par
 # from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner import qchem_params
-from mechroutines.es.newts import _sadpt as sadpt
-from mechroutines.es.newts import _irc as irc
-from mechroutines.es.newts import _vrctst as vrctst
-from mechroutines.es.newts import _rpath as rpath
-from mechroutines.es.newts._util import thy_dcts
-from mechroutines.es.newts._fs import rpath_fs
+from mechroutines.es.ts import _sadpt as sadpt
+from mechroutines.es.ts import _irc as irc
+from mechroutines.es.ts import _vrctst as vrctst
+from mechroutines.es.ts import _rpath as rpath
+from mechroutines.es.ts._util import thy_dcts
+from mechroutines.es.ts._fs import rpath_fs
 
 
-ES_TSKS = {}
+SP_MODULE = importlib.import_module('mechroutines.es._routines.sp')
+ES_TSKS = {
+    'energy': SP_MODULE.run_energy,
+    'grad': SP_MODULE.run_gradient,
+    'hess': SP_MODULE.run_hessian,
+    'vpt2': SP_MODULE.run_vpt2,
+    'prop': SP_MODULE.run_prop
+}
 
 
 # Main callable function
@@ -109,15 +117,20 @@ def run_sadpt(spc_dct, tsname,
     """ Find the saddle-point for a reaction
     """
 
-    # Check filesystem for existing zmatrixes
+    # Check save filesystem for existing zmatrixes
     run_zma, ini_zma = sadpt.read_existing_saddle_points(
         spc_dct, tsname, savefs_dct)
 
+    # Check run filesystem for optimizations
     if sadpt.search_required(run_zma, es_keyword_dct):
-        success = sadpt.search(ini_zma, spc_dct, tsname,
-                               thy_inf_dct, thy_method_dct, mref_dct,
-                               es_keyword_dct,
-                               runfs_dct, savefs_dct)
+        success = sadpt.save_opt_from_run(spc_dct, tsname,
+                                          thy_method_dct,
+                                          runfs_dct, savefs_dct)
+        if not success:
+            success = sadpt.search(ini_zma, spc_dct, tsname,
+                                   thy_inf_dct, thy_method_dct, mref_dct,
+                                   es_keyword_dct,
+                                   runfs_dct, savefs_dct)
     else:
         success = True
 
@@ -293,7 +306,7 @@ def rpath_tsk(job, spc_dct, spc_name,
     mref_params = mref_dct['runlvl']
 
     # Build filesys objects
-    scn_alg, scn_fs, cnf_fs, cnf_locs = rpath_fs(
+    scn_alg, scn_fs, cscn_fs, cnf_fs, cnf_locs = rpath_fs(
         ts_dct, spc_name,
         mod_ini_thy_info,
         es_keyword_dct,
@@ -321,26 +334,35 @@ def rpath_tsk(job, spc_dct, spc_name,
                 ts_info, rclass,
                 method_dct, mref_params,
                 scn_fs[0], scn_fs[1],
+                cscn_fs[0], cscn_fs[1],
                 es_keyword_dct)
     elif job in ('energy', 'grad', 'hess'):
-        # Set run-time options
-        overwrite = es_keyword_dct['overwrite']
-        script_str, kwargs = qchem_params(method_dct)
-
         # Run along the scan and calculate desired quantities
         ini_scn_run_fs, ini_scn_save_fs = scn_fs
-        for locs in ini_scn_save_fs[-1].existing():
+        rxn_coord = es_keyword_dct['rxncoord'].upper()
+        existing_locs = ini_scn_save_fs[-1].existing()
+        rpath_locs = tuple(
+            locs for locs in existing_locs
+            if rxn_coord == locs[0][0])  # first item in first loc
+
+        for locs in rpath_locs:
             geo = ini_scn_save_fs[-1].file.geometry.read(locs)
+            script_str, kwargs = qchem_params(
+                method_dct,
+                geo=geo, spc_info=ts_info)
+            if job == 'hess':
+                kwargs.update({'correct_vals': False})
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
                 None, geo, ts_info, mod_thy_info,
-                ini_scn_run_fs, ini_scn_save_fs, locs,
-                script_str, overwrite, **kwargs)
+                ini_scn_run_fs, ini_scn_save_fs, locs, runfs_dct['prefix'],
+                script_str, es_keyword_dct['overwrite'],
+                **kwargs)
             ioprinter.obj('vspace')
-    elif job == 'infene':
-        rpath.inf_sep_ene(
-            ts_dct, thy_inf_dct, mref_dct,
-            savefs_dct, runfs_dct, es_keyword_dct)
+    # elif job == 'infene':
+    #     rpath.inf_sep_ene(
+    #         ts_dct, thy_inf_dct, mref_dct,
+    #         savefs_dct, runfs_dct, es_keyword_dct)
 
 
 # Helper functions

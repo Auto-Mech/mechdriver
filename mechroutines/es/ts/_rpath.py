@@ -18,6 +18,7 @@ def internal_coordinates_scan(ts_zma, zrxn,
                               ts_info, rxn_class,
                               method_dct, mref_params,
                               scn_run_fs, scn_save_fs,
+                              cscn_run_fs, cscn_save_fs,
                               es_keyword_dct,
                               find_max=True):
     """ Scan along the internal coordinates that correspond to the
@@ -35,10 +36,17 @@ def internal_coordinates_scan(ts_zma, zrxn,
     scan_inf = automol.reac.build_scan_info(zrxn, ts_zma, var=var)
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
 
+    # Set the filesystem
+    if constraint_dct is None:
+        _scn_run_fs, _scn_save_fs = scn_run_fs, scn_save_fs
+    else:
+        _scn_run_fs, _scn_save_fs = cscn_run_fs, cscn_save_fs
+
     # Set up script string and kwargs
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(
-        method_dct, job=elstruct.Job.OPTIMIZATION)
+        method_dct, job=elstruct.Job.OPTIMIZATION,
+        geo=automol.zmat.geometry(ts_zma), spc_info=ts_info)
     kwargs.update(mref_params)
 
     es_runner.scan.execute_scan(
@@ -47,8 +55,8 @@ def internal_coordinates_scan(ts_zma, zrxn,
         mod_thy_info=mod_thy_info,
         coord_names=coord_names,
         coord_grids=coord_grids,
-        scn_run_fs=scn_run_fs,
-        scn_save_fs=scn_save_fs,
+        scn_run_fs=_scn_run_fs,
+        scn_save_fs=_scn_save_fs,
         scn_typ='relaxed',
         script_str=script_str,
         overwrite=es_keyword_dct['overwrite'],
@@ -63,7 +71,7 @@ def internal_coordinates_scan(ts_zma, zrxn,
     if find_max:
         include_endpts = not mref_params
         max_zmas = rxngrid.grid_maximum_zmatrices(
-            zrxn.class_, ts_zma, coord_grids, coord_names, scn_save_fs,
+            zrxn.class_, ts_zma, coord_grids, coord_names, _scn_save_fs,
             mod_thy_info, constraint_dct, include_endpts=include_endpts)
     else:
         max_zmas = None
@@ -90,6 +98,7 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
     var_scn_thy_info = thy_inf_dct['var_scnlvl']
     var_sp1_thy_info = thy_inf_dct['var_splvl1']
     var_sp2_thy_info = thy_inf_dct['var_splvl2']
+    hs_var_scn_thy_info = thy_inf_dct['hs_var_scnlvl']
     hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
     vscn_method_dct = thy_method_dct['var_scnlvl']
@@ -127,17 +136,18 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
             thy_info,
             var_scn_thy_info,
             var_sp1_thy_info, var_sp2_thy_info,
+            hs_var_scn_thy_info,
             hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+            vscn_method_dct,
             var_sp1_method_dct, var_sp2_method_dct,
             vscnlvl_scn_run_fs, vscnlvl_scn_save_fs, inf_locs,
             overwrite=overwrite,
             **cas_kwargs)
     else:
-        vscn_thy_info = thy_inf_dct['var_scnlvl']
         _inf_sep_ene = _singleref_inf_sep_ene(
-            rct_info, thy_info, vscn_thy_info,
-            rcts_cnf_fs, run_prefix,
-            vscn_method_dct, overwrite)
+            rct_info, rcts_cnf_fs,
+            vscn_method_dct, thy_info,
+            run_prefix, overwrite)
 
     if _inf_sep_ene is not None:
         ioprinter.energy(_inf_sep_ene)
@@ -152,7 +162,9 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
                           thy_info,
                           var_scn_thy_info,
                           var_sp1_thy_info, var_sp2_thy_info,
+                          hs_var_scn_thy_info,
                           hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+                          var_scn_method_dct,
                           var_sp1_method_dct, var_sp2_method_dct,
                           scn_run_fs, scn_save_fs, inf_locs,
                           overwrite=False,
@@ -179,9 +191,12 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
     """
 
     # Set groups for loops
-    hs_thy_infs = (hs_var_sp2_thy_info, hs_var_sp1_thy_info)
-    thy_infs = (var_sp2_thy_info, var_sp1_thy_info)
-    method_dcts = (var_sp2_method_dct, var_sp1_method_dct)
+    # hs_thy_infs = (hs_var_sp2_thy_info, hs_var_sp1_thy_info)
+    # # thy_infs = (var_sp2_thy_info, var_sp1_thy_info)
+    # method_dcts = (var_sp2_method_dct, var_sp1_method_dct)
+    hs_thy_infs = (hs_var_sp2_thy_info, hs_var_scn_thy_info)
+    # thy_infs = (var_sp2_thy_info, var_sp1_thy_info)
+    method_dcts = (var_sp2_method_dct, var_scn_method_dct)
 
     # Calculate the energies for the two cases
     for idx, (meth_dct, thy_inf) in enumerate(zip(method_dcts, hs_thy_infs)):
@@ -193,14 +208,16 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
             ioprinter.info_message(
                 " - Running high-spin multi reference energy ...")
 
-        ioprinter.info_message(' - Method:', tinfo.string(var_scn_thy_info, thy_inf))
-
-        # Calculate the single point energy
-        script_str, kwargs = qchem_params(meth_dct)
-        cas_kwargs.update(kwargs)
+        ioprinter.info_message(
+            ' - Method:', tinfo.string(var_scn_thy_info, thy_inf))
 
         geo = scn_save_fs[-1].file.geometry.read(inf_locs)
         zma = scn_save_fs[-1].file.zmatrix.read(inf_locs)
+
+        # Calculate the single point energy
+        script_str, kwargs = qchem_params(
+            meth_dct, geo=geo, spc_info=hs_info)
+        cas_kwargs.update(kwargs)
 
         # geo = automol.zmat.geometry(ref_zma)
         sp.run_energy(zma, geo, hs_info, thy_inf,
@@ -225,13 +242,13 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
 
     # Get the single reference energy for each of the reactant configurations
     ioprinter.info_message('')
-    ioprinter.info_message('Running single-point calculations for reactants (need DFT)...')
+    ioprinter.info_message(
+        'Running single-point calculations for reactants (need DFT)...')
     ioprinter.info_message('Method:', tinfo.string(thy_info, var_sp2_thy_info))
-    sp_script_str, kwargs = qchem_params(var_sp2_method_dct)
     reac_ene = _reac_sep_ene(
-        rct_info, var_sp2_thy_info,
-        rcts_cnf_fs, run_prefix,
-        overwrite, sp_script_str, **kwargs)
+        rct_info, rcts_cnf_fs,
+        var_sp2_method_dct, var_sp2_thy_info,
+        run_prefix, overwrite)
 
     # Calculate the infinite seperation energy
     all_enes = (reac_ene, hs_sr_ene, hs_mr_ene)
@@ -250,9 +267,9 @@ def _multiref_inf_sep_ene(hs_info, ref_zma,
     return _inf_sep_ene
 
 
-def _singleref_inf_sep_ene(rct_info, sp_thy_info,
-                           rcts_cnf_fs, run_prefix,
-                           method_dct, overwrite):
+def _singleref_inf_sep_ene(rct_info, rcts_cnf_fs,
+                           method_dct, sp_thy_info,
+                           run_prefix, overwrite):
     """ Obtain the electronic energy for a set of reactants at infinite
         separation for a single-reference electronic structure method.
 
@@ -263,15 +280,14 @@ def _singleref_inf_sep_ene(rct_info, sp_thy_info,
         Function will attempt to read the energy from the SAVE filesystem
         and calculate it if it does not currently exist.
     """
-    script_str, kwargs = qchem_params(method_dct)
     return _reac_sep_ene(
-        rct_info, sp_thy_info,
-        rcts_cnf_fs, run_prefix,
-        overwrite, script_str, **kwargs)
+        rct_info, rcts_cnf_fs,
+        method_dct, sp_thy_info,
+        run_prefix, overwrite)
 
 
-def _reac_sep_ene(rct_info, sp_thy_info, rcts_cnf_fs, run_prefix,
-                  overwrite, sp_script_str, **kwargs):
+def _reac_sep_ene(rct_info, rcts_cnf_fs, method_dct, sp_thy_info,
+                  run_prefix, overwrite):
     """ Determine the sum of electronic energies of two reactants specified
         at the level of theory described in the theory info object. Will
         calculate the energy if it is not currently in the SAVE filesystem.
@@ -290,6 +306,10 @@ def _reac_sep_ene(rct_info, sp_thy_info, rcts_cnf_fs, run_prefix,
         # Read the geometry and set paths
         zma = zma_fs[-1].file.zmatrix.read([0])
         geo = save_fs[-1].file.geometry.read(mlocs)
+
+        # Set up the run script
+        sp_script_str, kwargs = qchem_params(
+            method_dct, geo=geo, spc_info=inf)
 
         # Build the single point filesys objects
         sp_save_fs = autofile.fs.single_point(mpath)

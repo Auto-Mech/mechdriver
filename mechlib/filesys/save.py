@@ -199,7 +199,7 @@ def flux(flux_str, corr_pot_str, inp_strs, vrc_fs, vrc_locs=(0,)):
     molpro_str = inp_strs['molpro.inp']
     struct_str = inp_strs['structure.inp']
     tml_str = inp_strs['run.tml']
-    
+
     # Save the files
     vrc_fs[-1].create(vrc_locs)
     vrc_fs[-1].file.vrctst_tst.write(tst_str, vrc_locs)
@@ -467,6 +467,10 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     """
 
     zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+    # print('zma')
+    # print(automol.zmat.string(zma))
+    # print('\nzrxn')
+    # print(zrxn)
     rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_path = zma_fs[-1].path(zma_locs)

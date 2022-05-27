@@ -75,7 +75,6 @@ def run_scan(zma, spc_info, mod_thy_info,
         coord_locs = coord_names
     else:
         coord_locs = constraint_dct
-
     scn_save_fs[1].create([coord_locs])
     inf_obj = autofile.schema.info_objects.scan_branch(
         dict(zip(coord_names, coord_grids)))
@@ -157,7 +156,6 @@ def run_backsteps(
 
     pot = {}
     for idx, grid_vals in enumerate(mixed_grid_vals_lst):
-
         locs = [coord_names, grid_vals]
         back_locs = [coord_names, rev_grid_vals_lst[idx]]
         if constraint_dct is not None:
@@ -259,18 +257,23 @@ def run_backsteps(
             sp_save_fs = autofile.fs.single_point(path)
             orig_sp_save_fs = autofile.fs.single_point(path_orig)
             ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
-            ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
-            ene = ene * phycon.EH2KCAL
-            ene_orig = ene_orig * phycon.EH2KCAL
-            pot = ene - ene_orig
-            pot_thresh = -0.1
 
-            # Print status message about backstop
-            no_backstep_required = (pot > pot_thresh and passed_bad_point)
+            no_backstep_required = False
+            if orig_sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+                ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+                ene = ene * phycon.EH2KCAL
+                ene_orig = ene_orig * phycon.EH2KCAL
+                pot = ene - ene_orig
+                pot_thresh = -0.1
+
+                # Print status message about backstop
+                no_backstep_required = (pot > pot_thresh and passed_bad_point)
+
             if no_backstep_required:
                 ioprinter.info_message("Reverse Sweep finds a potential "
                                        f"{pot:5.2f} from the forward sweep")
                 ioprinter.info_message("...no more backsteps required")
+                break
             else:
                 ioprinter.warning_message("Backstep finds a potential less "
                                           "than forward sweep of "
@@ -279,8 +282,8 @@ def run_backsteps(
                 ioprinter.info_message("...more backsteps required")
 
             # Break loop if no backstep is required
-            if no_backstep_required:
-                break
+            # if no_backstep_required:
+            #     break
 
 
 def _scan_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):
@@ -440,7 +443,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
     coord_locs, save_locs = scan_locs(
         scn_run_fs, coord_names, constraint_dct=constraint_dct)
 
-    if not scn_run_fs[1].exists([coord_locs]):
+    if not scn_run_fs[1].exists(coord_locs):
         ioprinter.info_message("No scan to save. Skipping...")
     else:
         locs_lst = []
@@ -468,7 +471,10 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
+            if constraint_dct is not None:
+                write_traj(constraint_dct, scn_save_fs, mod_thy_info, locs_lst)
+            else:
+                write_traj(coord_names, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
@@ -482,18 +488,25 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
         :param constraint_dct: values of coordinates to constrain during scan
         :type constraint_dct: dict[str: float]
     """
+    coord_locs = list(coord_names)
+    if constraint_dct is not None:
 
-    if constraint_dct is None:
-        coord_locs = coord_names
-        scn_locs = scn_save_fs[-1].existing([coord_locs])
+        # Build a set of locs to match existing locs in filesys
+        # Have to round the constraint dct or else it wont match?
+        constraint_dct = {name: round(val, 2)
+                          for name, val in constraint_dct.items()}
+        coord_locs = [constraint_dct]
+        ext_coord_locs = coord_locs + [list(coord_names)]
+
+        # Grab locs from the filesystem
+        tmp_locs = scn_save_fs[3].existing()
+
+        # Determine saved locs by matching locs_lst from inp names, constraints
+        # to the locs currently in the save filesystem
+        scn_locs = [locs for locs in tmp_locs if locs[:2] == ext_coord_locs]
     else:
-        coord_locs = constraint_dct
-        scn_locs = ()
-        for locs1 in scn_save_fs[2].existing([coord_locs]):
-            if scn_save_fs[2].exists(locs1):
-                for locs2 in scn_save_fs[3].existing(locs1):
-                    scn_locs += (locs2,)
-
+        coord_locs = [coord_locs]
+        scn_locs = scn_save_fs[2].existing(coord_locs)
     return coord_locs, scn_locs
 
 

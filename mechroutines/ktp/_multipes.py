@@ -2,25 +2,22 @@
 """
 
 import numpy
-import automol
 import mess_io
 import mechanalyzer
 from mechlib.amech_io import reader
+from mechroutines.models.typ import is_abstraction_pes
 
 
 def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
     """ Figure out if densities should be calculated
     """
     if pes_param_dct is not None:
-        # print('prod density test')
         all_peds = pes_param_dct['peds']
         pes_peds = all_peds[pesgrp_num]
 
         calc_dens = (False, False)
         for ped in pes_peds:
-            ped_spc = ped.split('_')[1]  # Get a string with prds
-            # print('ped_spc', ped_spc)
-            # print('rgts', rgts)
+            ped_spc = ped.split('=')[1]  # Get a string with prds
             if all(rgt in ped_spc for rgt in rgts):
                 calc_dens = (True, True)
                 break
@@ -30,54 +27,73 @@ def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
     return calc_dens
 
 
-def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, label_dct):
+def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
     """ set values to determine input parameters for handling
         energy distributions in MESS calculations
 
         maybe just call this before the writer and pass to make_pes_str
     """
 
+    micro_limit = 320.  # default
+
+    def get_ped_ene_info(pes_peds, rxn_chan_str):
+        """ info for PED species - get approximate energy limit
+        """
+        spc_blocks_ped = mess_io.reader.get_species(rxn_chan_str)
+        energy_dct, _, _, _ = mess_io.reader.pes(rxn_chan_str)
+        max_ene = []
+        max_ene_ped = []
+        print(rxn_chan_str)
+        print('peds', pes_peds)
+        for ped in pes_peds:
+            reacs, prods = ped.split('=')
+            print('ene dct test')
+            print(energy_dct)
+            ene_bw = energy_dct[reacs] - energy_dct[prods]
+            dof_info = mechanalyzer.calculator.statmodels.get_dof_info(
+                spc_blocks_ped[prods])
+            max_ene_ped.append(mechanalyzer.calculator.statmodels.max_en_auto(
+                dof_info['n_atoms']['TS'], ene_bw, ref_ene=energy_dct[prods]))
+            max_ene.append(mechanalyzer.calculator.statmodels.max_en_auto(
+                dof_info['n_atoms']['TS'], ene_bw))
+        micro_limit = max(max_ene_ped)
+        return max_ene, micro_limit
+
     if pes_param_dct is not None:
 
         # Grab the desired PED and hot enes for the PES in the group
+        # Currenly just printing them, may need to move
         all_peds = pes_param_dct['peds']
         pes_peds = all_peds[pesgrp_num]
 
         # Set the PEDs
         if any(pes_peds):
-            ped_spc_lst = tuple()
-            for ped in pes_peds:
-                _ped = ped.split('_')
-                ped_spc_lst += (f'{label_dct[_ped[0]]}_{label_dct[_ped[1]]}',)
+            ped_spc_lst = pes_peds
             ped_str = ' '.join(ped_spc_lst)
             print(f'Species for PED: {ped_str}')
+            max_ene, micro_limit = get_ped_ene_info(pes_peds, rxn_chan_str)
+            pes_param_dct['en_limit'][pesgrp_num] = max_ene
         else:
             ped_spc_lst = None
 
         # Set the Hot Energies section
         if hot_enes_dct is not None:
-            _hot_enes_dct = {label_dct[spc]: enes
-                             for spc, enes in hot_enes_dct.items()}
-            hot_str = ' '.join(_hot_enes_dct.keys())
+            hot_str = ' '.join(hot_enes_dct.keys())
             print(f'Species for Hot: {hot_str}')
-        else:
-            _hot_enes_dct = None
+            # set limit based on hoten
+            micro_limit = max([max(hoten) for hoten in hot_enes_dct.values()])
+        # Set the micro params for writing k(E)s (When to set this?)
 
-        # Set the micro params for writing k(E)s
-        # When to set this
-        micro_out_params = (0.1, 320.0, 0.1)
+        micro_out_params = (0.1, micro_limit, 0.1)
         print(f'Ranges for k(E) calculations: {micro_out_params}')
     else:
-        ped_spc_lst = None
-        _hot_enes_dct = None
-        micro_out_params = None
+        ped_spc_lst, micro_out_params = None, None
 
-    return ped_spc_lst, _hot_enes_dct, micro_out_params
+    return ped_spc_lst, micro_out_params, pes_param_dct
 
 
-def set_hot_enes(pesgrp_num, reacs, prods,
-                 chnl_enes, pes_param_dct,
-                 ene_range=None):
+def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
+                 chnl_enes, pes_param_dct):
     """ Determine what hot energies should be for the requested
         species.
 
@@ -85,15 +101,21 @@ def set_hot_enes(pesgrp_num, reacs, prods,
         for the side of the reaction the hot spc appears and the values
         are the energies to set in the mechanism file. {side: ene_lst}
     """
+    def set_ene_max(spc, pes_param_dct):
+        """ Determine max en to write as hoten max """
+        max_ene_lst = []
+        for grp_num, ped_max in enumerate(pes_param_dct['en_limit']):
+            for ped_i, en in enumerate(ped_max):
+                if spc in pes_param_dct['peds'][grp_num][ped_i].split('=')[1]:
+                    max_ene_lst.append(en)
 
-    if ene_range is None:
-        ene_range = numpy.arange(0.0, 226.0, 1.0).tolist()
+        return max(max_ene_lst)
+    # default ene_range
 
     if pes_param_dct is not None:
         all_hot_spc = pes_param_dct['hot']
         pes_hot_spc = all_hot_spc[pesgrp_num]
 
-        hot_enes_dct = {}
         for spc in pes_hot_spc:
             if spc in reacs:
                 ene = chnl_enes['reacs']
@@ -104,19 +126,21 @@ def set_hot_enes(pesgrp_num, reacs, prods,
             else:
                 side, ene = None, None
 
+            # update ene_max val if possible
             if side is not None:
-                hot_enes_dct[side] = tuple(ene+x for x in ene_range)
-
-        if not hot_enes_dct:
-            hot_enes_dct = None
-    else:
-        hot_enes_dct = None
+                ene_max = set_ene_max(spc, pes_param_dct)
+                ene_range = numpy.array([0.0 + ene, 1.0, ene_max + ene])
+                hot_enes_dct[side] = tuple(ene_range)
+                print('Setting {:.1f} as max hoten val for {} \n'.format(
+                    ene_max+ene, side))
 
     return hot_enes_dct
 
 
-def obtain_multipes_rxn_ktp_dct(rate_paths_dct, pes_param_dct,
-                                label_dct, pes_mod_dct, pes_mod):
+def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
+                                rate_paths_dct, pes_param_dct,
+                                pes_mod_dct, pes_mod,
+                                tsk_key_dct, spc_dct):
     """ Obtain the rate constants for all of the PESs in the group.
         Call additional
     """
@@ -124,193 +148,118 @@ def obtain_multipes_rxn_ktp_dct(rate_paths_dct, pes_param_dct,
     # Read the MESS input and output for all PES group members
     rate_strs_dct, mess_paths_dct = reader.mess.rate_strings(rate_paths_dct)
 
-    # Get an inverted label dct mess->mech
-    inv_label_dct = automol.util.dict_.invert(label_dct)
-
     # Read MESS file and get rate constants
-    if len(rate_strs_dct) == 1:
-        mess_path = tuple(mess_paths_dct.values())[0]
-
-        print('Fitting rates for single PES...')
-        print(f'Fitting rates from {mess_path}')
-        mess_str = tuple(rate_strs_dct.values())[0]['ktp_out']
-        rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
-            mess_str,
-            filter_kts=True,
-            read_rev=False,
-            tmin=min(pes_mod_dct[pes_mod]['rate_temps']),
-            tmax=max(pes_mod_dct[pes_mod]['rate_temps']),
-            pmin=min(pes_mod_dct[pes_mod]['pressures']),
-            pmax=max(pes_mod_dct[pes_mod]['pressures'])
-        )
-        rxn_ktp_dct = mess_io.reader.rates.relabel(rxn_ktp_dct, inv_label_dct)
-    else:
-        rxn_ktp_dct = prompt_dissociation_ktp_dct(
-            pes_param_dct, rate_strs_dct, mess_paths_dct,
-            inv_label_dct,
+    if len(pes_grp_rlst) == 1:
+        rxn_ktp_dct = _single_pes_ktp_dct(
+            pes_grp_rlst,
+            tsk_key_dct, rate_strs_dct, mess_paths_dct,
             pes_mod_dct[pes_mod]['rate_temps'],
             pes_mod_dct[pes_mod]['pressures']
+        )
+    else:
+        rxn_ktp_dct = _prompt_dissociation_ktp_dct(
+            pes_grp_rlst,
+            tsk_key_dct, spc_dct,
+            pes_param_dct, rate_strs_dct, mess_paths_dct
         )
 
     return rxn_ktp_dct
 
 
-def prompt_dissociation_ktp_dct(pes_param_dct, rate_strs_dct, mess_paths_dct,
-                                inv_label_dct,
-                                temps, pressures):
+def _single_pes_ktp_dct(pes_grp_rlst,
+                        tsk_key_dct, rate_strs_dct, mess_paths_dct,
+                        temps, pressures):
+    """ Read the rates from a single PES
+    """
+
+    # Read options
+    mess_version = tsk_key_dct['mess_version']
+    use_well_extension = tsk_key_dct['well_extension']
+
+    # Read the appropriate file based on desired versions
+    pes_inf = tuple(pes_grp_rlst.keys())[0]
+
+    if mess_version == 'v1' and use_well_extension:
+        typ = f'wext-{mess_version}'
+        mess_path = mess_paths_dct[pes_inf][typ]
+        mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
+    elif mess_version == 'v1' and not use_well_extension:
+        typ = f'base-{mess_version}'
+        mess_path = mess_paths_dct[pes_inf][typ]
+        mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
+    elif mess_version == 'v2':
+        typ = f'base-{mess_version}'
+        mess_path = mess_paths_dct[pes_inf][typ]
+        mess_str = rate_strs_dct[pes_inf][typ]['ktp_out']
+
+    # If file found, read and fit the rate constants
+    if mess_str is not None:
+        print('Fitting rates for single PES...')
+        print(f'Fitting rates from {mess_path}')
+
+        rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
+            mess_str,
+            filter_kts=True,
+            filter_reaction_types=('fake', 'self',
+                                   'loss', 'capture', 'reverse'),
+            tmin=min(temps),
+            tmax=max(temps),
+            pmin=min(pressures),
+            pmax=max(pressures)
+        )
+        print('Reaction dict test')
+        print(rxn_ktp_dct.keys())
+    else:
+        rxn_ktp_dct = None
+        print(f'No MESS output found at {mess_path}')
+
+    return rxn_ktp_dct
+
+
+def _prompt_dissociation_ktp_dct(pes_grp_rlst,
+                                 tsk_key_dct, spc_dct,
+                                 pes_param_dct, rate_strs_dct, mess_paths_dct):
     """ Evaluate the prompt dissociation k(T,P) values.
 
         Reads the k(T,P) values from the MESSRATE output, as well as the
         PEDS and hot energies to modify the values accounting for prompt
         dissociation.
 
-        :param temps: temperatures to evaluate prompt dissociation rates
-        :type temps: numpy.array
-        :param rad_name: mechanism name of radical that is dissociated
-        :type rad_name: str
-        :param modeltype: statistical energy
-            distribution model for hot radical
-        :type modeltype: str
-        :param inp_str: MESSRATE input string
-        :type inp_str: str
-        :param ktp_out_str: MESSRATE output string with k(T,P) values
-        :type ktp_out_str: str
-        :param ke_out_str: MESSRATE output string with k(E) values
-        :type ke_out_str: str
-        :param log_str: MESSRATE output .log string
-        :type log_str: str
         :param bf_threshold: % branching fraction to include species in prods
         :type bf_threshold: float
         :rtype: dict[]
     """
 
-    # Get prompt dissociation parameters
-    # rad_name = pes_param_dct['rad_name']
-    modeltype = pes_param_dct['modeltype']
-    bf_thresh = pes_param_dct['bf_threshold']
+    all_mess_paths = []
+    strs_dct_lst = []
+    for (pes_inf, rxn_lst) in pes_grp_rlst.items():
+        _, pes_idx, _ = pes_inf
+        if (
+            tsk_key_dct['well_extension'] and
+            not is_abstraction_pes(spc_dct, rxn_lst, pes_idx)
+        ):
+            typ = 'wext-v1'
+        else:
+            typ = 'base-v1'
+        all_mess_paths.append(mess_paths_dct[pes_inf][typ])
+        strs_dct_lst.append(rate_strs_dct[pes_inf][typ])
 
-    # Obtain the strings that are needed
-    ped_mess_path = tuple(mess_paths_dct.values())[0]
-    hot_mess_path = tuple(mess_paths_dct.values())[1]
-    print('Fitting rates from\n'
-          f'  - PED: {ped_mess_path}\n'
-          f'  - HOT: {hot_mess_path}')
+    print('Fitting rates from')
+    for path in all_mess_paths:
+        print(f'{path}')
 
-    ped_strs_dct = tuple(rate_strs_dct.values())[0]
-    ped_inp_str, ped_out_str = ped_strs_dct['inp'], ped_strs_dct['ktp_out']
-    ped_ped_str = ped_strs_dct['ped']
-    ped_ke_out_str = ped_strs_dct['ke_out']
+    # # Get the PES info objects for the PED and Hot surface
+    # all_pes_inf = tuple(pes_grp_rlst.keys())
+    # # Obtain the strings that are needed
+    # all_mess_path = [mess_paths_dct[all_i]['base-v1']
+    #                  for all_i in all_pes_inf]
+    # list_strs_dct = [rate_strs_dct[all_i]['base-v1']
+    #                  for all_i in all_pes_inf]
+    # print('Fitting rates from\n'
+    #       f'  - paths: {all_mess_path}\n'
+    #       )
+    # return the final ktp dictionary
 
-    hot_strs_dct = tuple(rate_strs_dct.values())[1]
-    hot_inp_str, hot_out_str = hot_strs_dct['inp'], hot_strs_dct['ktp_out']
-    hot_log_str = hot_strs_dct['log']
-
-    # 0. EXTRACT INPUT INFORMATION from me_ped.inp
-    spc_blocks_ped = mess_io.reader.get_species(ped_inp_str)
-    ped_spc, _ = mess_io.reader.ped.ped_names(ped_inp_str)  # can supply
-    energy_dct, _, conn_lst_dct, _ = mess_io.reader.pes(ped_inp_str)
-
-    # 0b. Read the rate constants from the two PESs
-    rxn_ktp_dct = {}
-    for mess_str in (ped_out_str, hot_out_str):
-        rxn_ktp_dct.update(
-            mess_io.reader.rates.get_rxn_ktp_dct(
-                mess_str,
-                filter_kts=True,
-                tmin=min(temps),
-                tmax=max(temps),
-                pmin=min(pressures),
-                pmax=max(pressures)
-            )
-        )
-
-    # 1. INFO FROM rate_ped.out and ke_ped.out:
-    #      rate dct, energy barriers, dofs, fragment names
-    ene_bw_dct = {}
-    dof_dct = {}
-    fragments_dct = {}
-    # get the rates for all set of pedspecies (using the old labels)
-    for spc in ped_spc:
-        reacs, prods = spc
-        label = ((reacs,), (prods,), (None,))
-
-        # Find the corresponding energy barrier
-        barrier_label = mess_io.reader.find_barrier(conn_lst_dct, reacs, prods)
-        try:
-            ene_bw_dct[label] = energy_dct[barrier_label]-energy_dct[prods]
-        except KeyError:
-            ene_bw_dct[label] = energy_dct[reacs]-energy_dct[prods]
-
-        # Derive dofs involved
-        dof_info = mechanalyzer.calculator.statmodels.get_dof_info(
-            spc_blocks_ped[prods], ask_for_ts=True)
-        dof_dct[label] = dof_info
-        fragments_dct[label] = mess_io.reader.dct_species_fragments(
-            spc_blocks_ped)[prods]
-
-    # 2. read PED
-    ped_dct = mess_io.reader.ped.get_ped(ped_ped_str, ped_spc, energy_dct)
-
-    # 3. READ ke_ped.out file and extract the energy density of each fragment
-    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str)
-
-    # 4. READ THE HOTENERGIES OUTPUT
-    spc_blocks_hoten = mess_io.reader.get_species(hot_inp_str)
-    hot_frag_dct = mess_io.reader.dct_species_fragments(spc_blocks_hoten)
-    hot_spc = mess_io.reader.hoten.get_hot_names(hot_inp_str)  # can supply
-    hoten_dct = mess_io.reader.hoten.extract_hot_branching(
-        hot_log_str, hot_spc, list(spc_blocks_hoten.keys()),
-        temps, pressures)
-
-    # DERIVE BF AND RATES
-    prompt_rxns = ()
-    prompt_rxn_ktp_dct = {}
-    for spc in ped_spc:
-        reacs, prods = spc
-        label = ((reacs,), (prods,), (None,))
-        _ped_label = '+'.join(label[0]) + '->' + '+'.join(label[1])
-
-        ped_df = ped_dct[_ped_label]
-        ene_bw = ene_bw_dct[label]
-        # select the fragment of which you want the PED:
-        # it is the one in common with hotspecies
-        fragments = fragments_dct[label]
-        try:
-            frag1 = list(set(hot_spc).intersection(fragments))[0]
-            frag2 = list(set(fragments).difference((frag1,)))[0]
-        except IndexError:
-            print('no superposition between PED fragments and hot fragments '
-                  '- exiting now \n')
-        # DERIVE PED OF THE HOT FRAGMENT
-        ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            ped_df, frag1, frag2, (modeltype,),
-            dos_df=dos_df, dof_info=dof_dct[label], ene_bw=ene_bw)
-
-        # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
-        bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
-            (modeltype,), ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
-            savefile=False)
-
-        # NEW KTP DICTIONARY
-        frag_reacs_dct = mess_io.reader.dct_species_fragments(
-            spc_blocks_ped)
-        frag_reacs = frag_reacs_dct[spc[0]]
-
-        prompt_rxn_ktp_dct.update(
-            mechanalyzer.builder.bf.merge_bf_ktp(
-                bf_tp_dct, rxn_ktp_dct[label],
-                frag_reacs, frag1, frag2, hot_frag_dct)[modeltype]
-        )
-        prompt_rxns += (label,)
-
-    # Remove the original reaction (currently in MESS labels
-    for rxn in prompt_rxns:
-        rxn_ktp_dct.pop(rxn)
-
-    # Add in the prompt versions of the reactions
-    rxn_ktp_dct.update(prompt_rxn_ktp_dct)
-
-    # Remap the names of the remaining, non-prompt reactions ktp dct
-    rxn_ktp_dct = mess_io.reader.rates.relabel(rxn_ktp_dct, inv_label_dct)
-
-    return rxn_ktp_dct
+    return mechanalyzer.calculator.multipes_prompt_dissociation_ktp_dct(
+        strs_dct_lst,
+        pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])

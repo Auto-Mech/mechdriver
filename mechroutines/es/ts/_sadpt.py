@@ -11,7 +11,7 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechroutines.es.newts import _rpath as rpath
+from mechroutines.es.ts import _rpath as rpath
 
 
 # Functions to assess the status of existing saddle point structures in SAVE
@@ -54,7 +54,7 @@ def search_required(runlvl_zma, es_keyword_dct):
     """ Determine if MechDriver needs to search for the saddle
         point of some reaction.
 
-        If a saddle point was found, the function assessess whether
+        If a saddle point was found, the function assesses whether
         the overwrite keyword has been set to True, which would
         requiring a new search from scratch.
 
@@ -66,9 +66,10 @@ def search_required(runlvl_zma, es_keyword_dct):
     overwrite = es_keyword_dct['overwrite']
 
     if runlvl_zma is None:
-        print('Since no transition state found in filesys',
-              f'at {es_keyword_dct["runlvl"]} level',
-              'proceeding to find it...')
+        ioprinter.info_message(
+            '\nSince no transition state found in filesys',
+            f'at {es_keyword_dct["runlvl"]} level',
+            'proceeding to find it...')
         _run = True
     else:
         if overwrite:
@@ -113,6 +114,8 @@ def search(ini_zma, spc_dct, tsname,
             mref_params=mref_dct['runlvl'],
             scn_run_fs=runfs_dct['runlvl_scn'],
             scn_save_fs=savefs_dct['runlvl_scn'],
+            cscn_run_fs=runfs_dct['runlvl_cscn'],
+            cscn_save_fs=savefs_dct['runlvl_cscn'],
             es_keyword_dct=es_keyword_dct)
 
     # Optimize guess and check if saddle point good to save
@@ -128,13 +131,69 @@ def search(ini_zma, spc_dct, tsname,
             cnf_locs)
 
         status = assess_saddle_point(opt_ret, hess_ret,
-                                     ts_dct, runfs_dct, cnf_locs)
+                                     runfs_dct, cnf_locs)
         if status == 'save':
             save_saddle_point(opt_ret, hess_ret,
                               ts_dct, thy_method_dct['runlvl'],
                               savefs_dct, cnf_locs)
             success = True
             # print the saddle point
+
+    return success
+
+
+def save_opt_from_run(spc_dct, tsname,
+                      thy_method_dct,
+                      runfs_dct, savefs_dct):
+    """ Look in the run filesystem for an opt+hess job and try and read it
+        to save the conformer
+    """
+
+    ts_dct = spc_dct[tsname]
+    runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
+
+    # just grab the first one for now, don't have better idea:
+    existing_locs = runlvl_cnf_run_fs[-1].existing()
+    if any(existing_locs):
+        # just grab the first one for now, don't have better idea:
+        cnf_locs = existing_locs[0]
+    else:
+        cnf_locs = None
+
+    # If locs exist then try and read the existing job
+    success = False
+    if cnf_locs is not None:
+        runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
+        run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
+
+        ioprinter.info_message(
+            '\nSearching for OPT job to save in the RUN filesys '
+            f'at path {run_fs[0].path()}')
+        opt_success, opt_ret = es_runner.read_job(
+            job='optimization',
+            run_fs=run_fs)
+        ioprinter.info_message(
+            'Searching for HESS job to save in the RUN filesys '
+            f'at path {run_fs[0].path()}')
+        hess_success, hess_ret = es_runner.read_job(
+            job='hessian',
+            run_fs=run_fs)
+
+        if opt_success and hess_success:
+            ioprinter.info_message(
+                'Saving geometry and hessian of TS conformer from RUN filesys '
+                f'at path {run_fs[0].path()}')
+            status = assess_saddle_point(opt_ret, hess_ret,
+                                         runfs_dct, cnf_locs)
+            if status == 'save':
+                save_saddle_point(opt_ret, hess_ret,
+                                  ts_dct, thy_method_dct['runlvl'],
+                                  savefs_dct, cnf_locs)
+                success = True
+    else:
+        ioprinter.info_message(
+            '\nNo optimization job of TS conformer found in '
+            'RUN filesys to save')
 
     return success
 
@@ -153,12 +212,15 @@ def optimize_saddle_point(guess_zmas, ts_dct,
     overwrite = es_keyword_dct['overwrite']
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
+    # Set the run filesystem for the job
     runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
     runlvl_cnf_run_fs[-1].create(cnf_locs)
     run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
-
+    
     ioprinter.info_message(
-        f'There are {len(guess_zmas)} guess Z-Matrices'
+        '\nAttempting to get optimized TS from guess Z-Matrices')
+    ioprinter.info_message(
+        f'There are {len(guess_zmas)} guess Z-Matrices '
         'to attempt to find saddle point.', newline=1)
 
     # Loop over all the guess zmas to find a TS
@@ -169,7 +231,8 @@ def optimize_saddle_point(guess_zmas, ts_dct,
 
         # Run the transition state optimization
         script_str, kwargs = qchem_params(
-            method_dct, job=elstruct.Job.OPTIMIZATION)
+            method_dct, job=elstruct.Job.OPTIMIZATION,
+            geo=automol.zmat.geometry(zma), spc_info=ts_info)
         kwargs.update(mref_kwargs)
 
         opt_success, opt_ret = es_runner.execute_job(
@@ -188,12 +251,15 @@ def optimize_saddle_point(guess_zmas, ts_dct,
             break
 
     if opt_success:
-        script_str, kwargs = qchem_params(method_dct)
-
         # Obtain geometry from optimization
         opt_inf_obj, _, opt_out_str = opt_ret
         opt_prog = opt_inf_obj.prog
         geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
+
+        # Set up the script str
+        script_str, kwargs = qchem_params(
+            method_dct,
+            geo=geo, spc_info=ts_info)
 
         # Run a Hessian
         _, hess_ret = es_runner.execute_job(
@@ -211,7 +277,8 @@ def optimize_saddle_point(guess_zmas, ts_dct,
 
 
 # Checker functions
-def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
+# def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
+def assess_saddle_point(opt_ret, hess_ret, runfs_dct, cnf_locs):
     """ run things for checking Hessian
         If successful, Read the geom and energy from the optimization
     """
@@ -220,12 +287,12 @@ def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
     if hess_ret is not None:
 
         # Get the physical info used for the checks
-        zrxn = ts_dct['zrxn']
+        # zrxn = ts_dct['zrxn']
 
         opt_inf, _, opt_out_str = opt_ret
         hess_inf, _, hess_out_str = hess_ret
 
-        zma = elstruct.reader.opt_zmatrix(opt_inf.prog, opt_out_str)
+        # zma = elstruct.reader.opt_zmatrix(opt_inf.prog, opt_out_str)
         geo = elstruct.reader.opt_geometry(opt_inf.prog, opt_out_str)
         hess = elstruct.reader.hessian(hess_inf.prog, hess_out_str)
 
@@ -243,14 +310,15 @@ def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
         freq_success = _check_freqs(imags)
 
         # ted coordinate check
-        if not automol.zmat.dummy_keys(zma):
-            script_str = autorun.SCRIPT_DCT['intder']
-            ted_names = autorun.intder.ted_zmatrix_coordinates(
-                script_str, freq_run_path, geo, zma, hess, 0)
-            ted_success = _ted_coordinate_check(ted_names, zrxn, zma)
-        else:
-            print('Z-Matrix has dummy atoms, cannot do TED check')
-            ted_success = True
+        # if not automol.zmat.dummy_keys(zma):
+        #     script_str = autorun.SCRIPT_DCT['intder']
+        #     ted_names = autorun.intder.ted_zmatrix_coordinates(
+        #         script_str, freq_run_path, geo, zma, hess, 0)
+        #     ted_success = _ted_coordinate_check(ted_names, zrxn, zma)
+        # else:
+        #     print('Z-Matrix has dummy atoms, cannot do TED check')
+        #     ted_success = True
+        ted_success = True
 
         # Set overall success value to return
         if freq_success == 'kick':

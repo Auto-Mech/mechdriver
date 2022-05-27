@@ -19,7 +19,7 @@ def execute_irc(zma, ts_info,
     """ Run and save the IRC
     """
 
-    coord_name = 'IRC'
+    coord_name = ['IRC',]
 
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
@@ -30,7 +30,8 @@ def execute_irc(zma, ts_info,
     # Run and Read the IRC in the forward and reverse direction
     for direction in directions:
         script_str, kwargs = qchem_params(
-            ini_method_dct, job=direction)
+            ini_method_dct, job=direction,
+            geo=automol.zmat.geometry(zma), spc_info=ts_info)
         run_irc(
             zma,
             direction,
@@ -171,10 +172,11 @@ def update_traj_file(coord_name, ini_scn_save_fs, mod_ini_thy_info):
         filesystem
     """
     saved_locs = ini_scn_save_fs[-1].existing()
+    # Sort by second entry, which is the scan coordinate
+    sorted_locs = sorted(saved_locs, key=lambda x: x[1])
     if saved_locs:
         es_runner.scan.write_traj(
-            coord_name, ini_scn_save_fs, mod_ini_thy_info, sorted(saved_locs)
-        )
+            coord_name, ini_scn_save_fs, mod_ini_thy_info, sorted_locs)
 
 
 def launch_point_zmatrices(ts_dct, mod_thy_info,
@@ -211,10 +213,5 @@ def launch_point_zmatrices(ts_dct, mod_thy_info,
         irc_zmas = rxngrid.grid_maximum_zmatrices(
             zrxn.class_, zma, coord_grids, coord_names, scn_save_fs,
             mod_thy_info, constraint_dct, series='full-n1')
-
-    print('irc zmas', irc_zmas)
-
-    import sys
-    sys.exit()
 
     return irc_zmas

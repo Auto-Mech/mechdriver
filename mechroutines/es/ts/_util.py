@@ -88,7 +88,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
             thy_locs=mod_ini_thy_info[1:])
 
         inplvl_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            inplvl_cnf_save_fs, mod_thy_info)
+            inplvl_cnf_save_fs, mod_ini_thy_info)
         inplvl_min_cnf_locs, _ = inplvl_loc_info
         inplvl_cnf_save_tuple = (inplvl_cnf_save_fs, inplvl_min_cnf_locs)
 
@@ -111,7 +111,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
             run_prefix, save_prefix, 'CONFORMER',
             rxn_locs=rxn_info_sort, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:])
-
+        
         runlvl_loc_info = filesys.mincnf.min_energy_conformer_locators(
             runlvl_cnf_save_fs, mod_thy_info)
         runlvl_min_cnf_locs, _ = runlvl_loc_info

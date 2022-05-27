@@ -91,12 +91,6 @@ def run_energy(zma, geo, spc_info, thy_info,
 
     if _run:
 
-        # Add options matrix for energy runs for molpro
-        _kwargs = copy.deepcopy(kwargs)
-        if thy_info[0] == 'molpro2015':
-            errs, optmat = es_runner.molpro_opts_mat(spc_info, geo)
-            _kwargs.update({'errors': errs, 'options_mat': optmat})
-
         sp_run_fs[-1].create(thy_info[1:4])
         run_fs = autofile.fs.run(sp_run_path)
 
@@ -110,7 +104,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             zrxn=zrxn,
             overwrite=overwrite,
             retryfail=retryfail,
-            **_kwargs,
+            **kwargs,
         )
 
         if success:
@@ -235,7 +229,8 @@ def rerun_hessian_and_opt(
         run_fs = autofile.fs.run(geo_run_path)
 
         script_str, kwargs = qchem_params(
-            method_dct, job='tightopt')
+            method_dct, spc_info=spc_info, 
+            geo=automol.zmat.geometry(zma), job='tightopt')
 
         success, ret = es_runner.execute_job(
             job=elstruct.Job.OPTIMIZATION,
@@ -322,7 +317,9 @@ def run_hessian(zma, geo, spc_info, thy_info,
         if _run:
 
             if attempt > 0:
-                script_str, kwargs = qchem_params(method_dct, job='tightfreq')
+                script_str, kwargs = qchem_params(
+                    method_dct, spc_info=spc_info,
+                    geo=geo, job='tightfreq')
 
             run_fs = autofile.fs.run(geo_run_path)
 

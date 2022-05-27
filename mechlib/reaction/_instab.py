@@ -205,15 +205,33 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
         _split_names = ()
         for ich in constituent_ichs:
             for name, spc_dct_i in spc_dct.items():
-                # if ich == spc_dct_i.get('inchi'):
-                ich_noste1 = automol.inchi.standard_form(ich, stereo=False)
-                ich_noste2 = automol.inchi.standard_form(spc_dct_i.get('inchi'), stereo=False)
-                if ich_noste1 == ich_noste2:
-                    _split_names += (name,)
-                    break
+                if 'ts_' not in name:
+                    # Try to match inchis with stereo included in checks
+                    # if ich == spc_dct_i.get('inchi'):
+                    #     _split_names += (name,)
+                    #     break
+                    # Remove stereo since we used to not store this data
+                    ich_noste1 = automol.inchi.standard_form(
+                        ich, stereo=False)
+                    ich_noste2 = automol.inchi.standard_form(
+                        spc_dct_i.get('inchi'), stereo=False)
+                    # print('name test', name)
+                    # print(ich_noste1, ich_noste2)
+                    if ich_noste1 == ich_noste2:
+                        _split_names += (name,)
+                        break
         split_names = tuple(i for n, i in enumerate(_split_names)
                             if i not in _split_names[:n])
-
-        ioprinter.info_message(f'- Splitting species {spc_name} into {split_names}')
+        split_name_str = ' and '.join(split_names)
+        
+        ioprinter.info_message(f'- Splitting species {spc_name} '
+                               f'into {split_name_str}')
+        if len(split_names) < 2:
+            ioprinter.warning_message(
+                'Could not match all following InChI strings '
+                '(corresponding to instability products) to\n'
+                'to ones currently defined in the species.csv file:')
+            for ich in constituent_ichs:
+                ioprinter.info_message(f'  - {ich}')
 
     return split_names

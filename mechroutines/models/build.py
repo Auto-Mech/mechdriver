@@ -6,7 +6,9 @@
   and calculate electronic and zero-point vibrational energies.
 """
 
+import os
 import automol
+import elstruct
 import autofile
 import autorun
 from phydat import phycon
@@ -14,6 +16,7 @@ from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io._path import job_path
 from mechroutines.models import ene
 from mechroutines.models import typ
 from mechroutines.models import etrans
@@ -21,7 +24,6 @@ from mechroutines.models import _rot as rot
 from mechroutines.models import _tors as tors
 from mechroutines.models import _symm as symm
 from mechroutines.models import _vib as vib
-from mechroutines.models import _flux as flux
 from mechroutines.models import _util as util
 from mechroutines.thermo import basis
 # import thermfit
@@ -31,7 +33,9 @@ from mechroutines.thermo import basis
 def read_spc_data(spc_dct, spc_name,
                   pes_mod_dct_i, spc_mod_dct_i,
                   run_prefix, save_prefix, chn_basis_ene_dct,
-                  calc_chn_ene=True, spc_locs=None):
+                  calc_chn_ene=True,
+                  calc_ene_trans=True,
+                  spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a given species.
         Also sets the writer for appropriately formatting the data into
         an MESS input file string.
@@ -81,7 +85,9 @@ def read_spc_data(spc_dct, spc_name,
             inf_dct, chn_basis_ene_dct = mol_data(
                 spc_name, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i, chn_basis_ene_dct,
-                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene,
+                run_prefix, save_prefix,
+                calc_chn_ene=calc_chn_ene,
+                calc_ene_trans=calc_ene_trans,
                 spc_locs=spc_locs, zrxn=None)
             writer = 'species_block'
 
@@ -133,15 +139,26 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     ts_mod = spc_mod_dct_i['ts']
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
 
+    # Override the models specification with species.dat, if avail
+    search = ts_dct.get('ts_search')
+    if search is not None:
+        if search == 'rpvtst':
+            ts_sadpt, ts_nobar = 'rpvtst', 'rpvtst'
+        elif search == 'vrctst':
+            ts_sadpt, ts_nobar = 'vrctst', 'vrctst'
+        elif search == 'pst':
+            ts_sadpt, ts_nobar = 'pst', 'pst'
+        elif search == 'sadpt':
+            ts_sadpt, ts_nobar = 'sadpt', 'sadpt'
+
     # Get all of the information for the filesystem
     if not automol.par.is_radrad(ts_dct['class']):
 
         # Set up the saddle point keyword
-        sadpt = True
         search = ts_dct.get('ts_search')
         if search is not None:
             if 'vtst' in search:
-                sadpt = False
+                ts_sadpt = False
 
         # Build MESS string for TS at a saddle point
         if ts_sadpt == 'pst':
@@ -151,9 +168,11 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
-            inf_dct = rpvtst_data(
-                ts_dct, reac_dcts, spc_mod_dct_i,
-                run_prefix, save_prefix, sadpt=sadpt)
+            inf_dct, chn_basis_ene_dct = rpvtst_sadpt(
+                tsname, spc_dct,
+                pes_mod_dct_i, spc_mod_dct_i,
+                chn_basis_ene_dct,
+                run_prefix, save_prefix)
             writer = 'rpvtst_block'
         else:
             print('Obtaining a ZRXN object from conformer any TS, '
@@ -172,7 +191,9 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 tsname, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i,
                 chn_basis_ene_dct,
-                run_prefix, save_prefix, zrxn=zrxn, spc_locs=spc_locs)
+                run_prefix, save_prefix,
+                calc_ene_trans=False,
+                zrxn=zrxn, spc_locs=spc_locs)
             writer = 'species_block'
     else:
 
@@ -190,10 +211,11 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                     run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_nobar == 'rpvtst':
-            inf_dct = rpvtst_data(
-                ts_dct, reac_dcts,
-                spc_mod_dct_i,
-                run_prefix, save_prefix, sadpt=False)
+            inf_dct, chn_basis_ene_dct = rpvtst_nobar(
+                tsname, spc_dct, reac_dcts,
+                pes_mod_dct_i, spc_mod_dct_i,
+                chn_basis_ene_dct,
+                run_prefix, save_prefix)
             writer = 'rpvtst_block'
         elif ts_nobar == 'vrctst':
             inf_dct = flux_data(
@@ -270,7 +292,10 @@ def atm_data(spc_dct, spc_name,
 def mol_data(spc_name, spc_dct,
              pes_mod_dct_i, spc_mod_dct_i,
              chn_basis_ene_dct,
-             run_prefix, save_prefix, calc_chn_ene=True, zrxn=None,
+             run_prefix, save_prefix,
+             calc_chn_ene=True,
+             calc_ene_trans=True,
+             zrxn=None,
              spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a molecule.
         Stores data into an info dictionary.
@@ -297,7 +322,6 @@ def mol_data(spc_name, spc_dct,
     zpe = None
     hf0k = None
     hf0k_trs = None
-    hf0k = None
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
@@ -321,14 +345,17 @@ def mol_data(spc_name, spc_dct,
     ioprinter.info_message(
         'Preparing internal rotor info building partition functions...',
         newline=1)
-    rotors = tors.build_rotors(
+    rotors, _ = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
     freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
+
+    # Get the torsion strings
     allr_str = tors_strs[0]
+    mdhr_dat = tors_strs[4]
 
     # ioprinter.info_message('zpe in mol_data test:', zpe)
     if typ.anharm_vib(spc_mod_dct_i):
@@ -374,14 +401,13 @@ def mol_data(spc_name, spc_dct,
     if zrxn is None:
         ioprinter.info_message(
             'Determining energy transfer parameters...', newline=1)
-        well_info = sinfo.from_dct(spc_dct_i)
-        # ioprinter.debug_message('well_inf', well_info)
-        # bath_info = ['InChI=1S/N2/c1-2', 0, 1]  # how to do...
-        bath_info = ['InChI=1S/Ar', 0, 1]  # how to do...
-        etrans_dct = etrans.build_etrans_dct(spc_dct_i)
+        etrans_dct = etrans.etrans_dct_for_species(
+            spc_dct_i, pes_mod_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i)
+        bath_info = etrans.set_bath(spc_dct, etrans_dct)
 
         edown_str, collid_freq_str = etrans.make_energy_transfer_strs(
-            well_info, bath_info, etrans_dct)
+            spc_info, bath_info, etrans_dct)
     else:
         edown_str, collid_freq_str = None, None
 
@@ -414,9 +440,23 @@ def flux_data(ts_dct, spc_mod_dct_i):
 
     # Read the flux file from the filesystem
     _, ts_save_path, _, _ = filesys.models.set_rpath_filesys(
-        ts_dct, spc_mod_dct_i['rpath'][1])
+        ts_dct, spc_mod_dct_i['rpath']['geolvl'][1])
 
-    flux_str = flux.read_flux(ts_save_path)
+    # Set the prefix assuming locs of 00 for TS and VRC
+    ts_save_prefix = os.path.join(ts_save_path, '00')
+    vrc_locs = (0,)
+
+    vrc_fs = autofile.fs.vrctst(ts_save_prefix)
+    if vrc_fs[-1].file.vrctst_flux.exists(vrc_locs):
+
+        flux_str = vrc_fs[-1].file.vrctst_flux.read(vrc_locs)
+
+        vrc_path = vrc_fs[-1].file.vrctst_flux.path(vrc_locs)
+        ioprinter.info_message(f'Reading flux file from {vrc_path}')
+        ioprinter.warning_message('We have assumed VRC locs of 00')
+    else:
+        flux_str = None
+        ioprinter.warning_message(f'No flux file at {ts_save_prefix}')
 
     # Create info dictionary
     inf_dct = {'flux_str': flux_str}
@@ -425,102 +465,125 @@ def flux_data(ts_dct, spc_mod_dct_i):
 
 
 # VTST
-def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
-                run_prefix, save_prefix, sadpt=False):
+def rpvtst_sadpt(tsname, spc_dct,
+                 pes_mod_dct_i, spc_mod_dct_i,
+                 chn_basis_ene_dct,
+                 run_prefix, save_prefix):
     """ Pull all of the neccessary information from the
         filesystem for a species
     """
 
-    zrxn = ts_dct['zrxn']
+    ts_dct = spc_dct[tsname]
 
-    # Set up all the filesystem objects using models and levels
-    if sadpt:
-        # Set up filesystems and coordinates for saddle point
-        # Scan along RxnCoord is under THY/TS/CONFS/cid/Z
-        pf_filesystems = filesys.models.pf_filesys(
-            ts_dct, spc_mod_dct_i, run_prefix, save_prefix, True)
-        tspaths = pf_filesystems['harm']
-        [_, cnf_save_path, min_locs, _, cnf_run_fs] = tspaths
-        ts_run_path = cnf_run_fs[-1].path(min_locs)
+    # Set up filesystems and coordinates for saddle point
+    # Scan along RxnCoord is under THY/TS/CONFS/cid/Z
+    pf_filesystems = filesys.models.pf_filesys(
+        ts_dct, spc_mod_dct_i, run_prefix, save_prefix,
+        saddle=True, name=tsname)
+    cnf_save_path = pf_filesystems['harm'][1]
 
-        # Set TS reaction coordinate
-        frm_name = 'IRC'
-        scn_vals = filesys.models.get_rxn_scn_coords(cnf_save_path, frm_name)
-        scn_vals.sort()
-        scn_ene_info = spc_mod_dct_i['ene'][1][0][1]  # fix to be ene lvl
-        scn_prefix = cnf_save_path
-    else:
-        # Set up filesystems and coordinates for reaction path
-        # Scan along RxnCoord is under THY/TS/Z
-        tspaths = filesys.models.set_rpath_filesys(
-            ts_dct, spc_mod_dct_i['rpath'][1])
-        ts_run_path, _, _, thy_save_path = tspaths
+    print(f'Using conformer from path {cnf_save_path}')
 
-        # Set TS reaction coordinate
-        scn_vals = filesys.models.get_rxn_scn_coords(thy_save_path, frm_name)
-        scn_vals.sort()
-        scn_ene_info = spc_mod_dct_i['rpath'][1][0]
-        scn_prefix = thy_save_path
+    # Set TS reaction coordinate and the scan values
+    scn_vals, frm_name = filesys.models.get_rxn_scn_coords(
+        cnf_save_path, coord_name='IRC', zma_locs=(0,))
+    scn_vals.sort()
+    scn_prefix = cnf_save_path
 
     # Modify the scn thy info
-    ioprinter.debug_message('scn thy info', scn_ene_info)
-    ioprinter.info_message('scn vals', scn_vals)
-    mod_scn_ene_info = filesys.inf.modify_orb_restrict(
-        filesys.inf.get_spc_info(ts_dct), scn_ene_info)
-    # scn thy info [[1.0, ['molpro2015', 'ccsd(t)', 'cc-pvdz', 'RR']]]
+    # Assumes no composite ene being used for variational treats
+    scn_ene_info = spc_mod_dct_i['ene']['lvl1'][1][1]
+    mod_scn_ene_info = tinfo.modify_orb_label(
+        scn_ene_info, sinfo.from_dct(ts_dct))
+    ioprinter.warning_message(
+        'using energy {scn_ene_info}, '
+        'assuming no composite energy for variational for now.')
 
     # Need to read the sp vals along the scan. add to read
-    ref_ene = 0.0
-    enes, geoms, grads, hessians, _, _ = filesys.read.potential(
-        [frm_name], [scn_vals],
-        scn_prefix,
-        mod_scn_ene_info, ref_ene,
-        constraint_dct=None,   # No extra frozen treatments
-        read_geom=True,
-        read_grad=True,
-        read_hess=True)
-    script_str = autorun.SCRIPT_DCT['projrot']
-    freqs = autorun.projrot.pot_frequencies(
-        script_str, geoms, grads, hessians, ts_run_path)
+    ioprinter.info_message('Reading molecular data across the potential')
+    ioprinter.info_message(f'Scan potential name = {frm_name}')
+    enes, geoms, freqs, _ = _rpath_ene_data(
+        ts_dct, frm_name, scn_vals,
+        None, spc_mod_dct_i,
+        mod_scn_ene_info,
+        scn_prefix, run_prefix, save_prefix)
 
-    # Get the energies and zpes at R_ref
-    if not sadpt:
-        _, ene_hs_sr_ref, ene_hs_mr_ref = ene.rpath_ref_idx(
-            ts_dct, scn_vals, frm_name, scn_prefix,
-            spc_mod_dct_i['ene'],
-            spc_mod_dct_i['rpath'][1])
-    fr_idx = len(scn_vals) - 1
-    zpe_ref = (sum(freqs[(fr_idx,)]) / 2.0) * phycon.WAVEN2KCAL
+    # Grab the values from the read
+    inf_dct = {}
+    inf_dct['rpath'] = []
+    pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
+    for rval, pot, geo, frqs in pot_info:
 
-    # Get the reactants and infinite seperation energy
-    reac_ene = 0.0
-    ene_hs_sr_inf = 0.0
-    for dct in reac_dcts:
-        pf_filesystems = filesys.models.pf_filesys(
-            dct, spc_mod_dct_i, run_prefix, save_prefix, False)
-        new_spc_dct_i = {
-            'ene': spc_mod_dct_i['ene'],
-            'harm': spc_mod_dct_i['harm'],
-            'tors': spc_mod_dct_i['tors']
-        }
-        reac_ene += ene.read_energy(
-            dct, pf_filesystems, new_spc_dct_i, run_prefix,
-            read_ene=True, read_zpe=True, saddle=sadpt)
+        ioprinter.info_message(
+            f'\nDetermining variational values for R = {rval} Bohr')
 
-        ioprinter.debug_message('rpath', spc_mod_dct_i['rpath'][1])
-        new_spc_dct_i = {
-            'ene': ['mlvl', [[1.0, spc_mod_dct_i['rpath'][1][2]]]],
-            'harm': spc_mod_dct_i['harm'],
-            'tors': spc_mod_dct_i['tors']
-        }
-        ene_hs_sr_inf += ene.read_energy(
-            dct, pf_filesystems, new_spc_dct_i, run_prefix,
-            read_ene=True, read_zpe=False)
+        # Scale the R value if needed
+        if frm_name == 'IRC':
+            rval /= 100.0
 
-    # Scale the scn values
-    if sadpt:
-        scn_vals = [val / 100.0 for val in scn_vals]
-    # scn_vals = [val * phycon.BOHR2ANG for val in scn_vals]
+        # Determine energy values
+        zero_ene = _rpath_rel_ene(pot, frqs)
+        hf0k, hf0k_trs, chn_basis_ene_dct, _ = basis.enthalpy_calculation(
+            spc_dct, tsname, zero_ene,
+            chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
+            run_prefix, save_prefix, zrxn=ts_dct['zrxn'])
+
+        # Set electronic energy values for all points
+        elec_levels = ts_dct['elec_levels']
+
+        # Create info dictionary and append to lst
+        keys = ['rval', 'geom', 'freqs', 'elec_levels',
+                'ene_chnlvl', 'ene_tsref']
+        vals = [rval, geo, frqs, elec_levels,
+                hf0k, hf0k_trs]
+        inf_dct['rpath'].append(dict(zip(keys, vals)))
+
+    # Calculate and store the imaginary mode and the index of the saddle point
+    _, imag, _, _ = vib.read_harmonic_freqs(
+        pf_filesystems, run_prefix, zrxn=ts_dct['zrxn'])
+    inf_dct.update({'imag': imag})
+    inf_dct.update({'ts_idx': scn_vals.index(0.00)})
+
+    return inf_dct, chn_basis_ene_dct
+
+
+def rpvtst_nobar(tsname, spc_dct, reac_dcts,
+                 pes_mod_dct_i, spc_mod_dct_i,
+                 chn_basis_ene_dct,
+                 run_prefix, save_prefix):
+    """ get info for barrierless transition state
+    """
+
+    ts_dct = spc_dct[tsname]
+
+    # Set up filesystems and coordinates for reaction path
+    # Scan along RxnCoord is under THY/TS/Z
+    _, _, _, thy_save_path = filesys.models.set_rpath_filesys(
+        ts_dct, spc_mod_dct_i['rpath'][1])
+
+    # Set TS reaction coordinate
+    scn_vals, frm_name = filesys.models.get_rxn_scn_coords(
+        thy_save_path, coord_name=None, zma_locs=(0,))
+    scn_vals.sort()
+    scn_prefix = thy_save_path
+
+    # Modify the scn thy info
+    scn_ene_info = spc_mod_dct_i['rpath'][1][0]
+    mod_scn_ene_info = tinfo.modify_orb_label(
+        scn_ene_info, sinfo.from_dct(ts_dct))
+    ioprinter.warning_message(
+        'using energy {scn_ene_info}, '
+        'assuming no composite energy for variational for now.')
+
+    # Need to read the sp vals along the scan. add to read
+    ioprinter.info_message('Reading molecular data across the potential')
+    ioprinter.info_message(f'Scan potential name = {frm_name}')
+    enes, geoms, freqs, mref = _rpath_ene_data(
+        ts_dct, frm_name, scn_vals,
+        reac_dcts, spc_mod_dct_i,
+        mod_scn_ene_info,
+        scn_prefix, run_prefix, save_prefix)
+    ene_hs_sr_inf, ene_hs_sr_ref, ene_hs_mr_ref, reac_ene, zpe_ref = mref
 
     # Grab the values from the read
     inf_dct = {}
@@ -528,69 +591,169 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
     pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
     for rval, pot, geo, frq in pot_info:
 
-        # Scale the r-values
+        ioprinter.info_message(
+            f'\nDetermining variational values for R = {rval} Bohr')
 
-        # Get the relative energy (edit for radrad scans)
-        zpe = (sum(frq) / 2.0) * phycon.WAVEN2KCAL
-        if sadpt:
-            zero_ene = (pot + zpe) * phycon.KCAL2EH
-        else:
-            ioprinter.debug_message('enes')
-            ioprinter.debug_message('reac ene', reac_ene)
-            ioprinter.debug_message('hs sr', ene_hs_sr_ref)
-            ioprinter.debug_message('inf', ene_hs_sr_inf)
-            ioprinter.debug_message('hs mr', ene_hs_mr_ref)
-            ioprinter.debug_message('pot R', pot * phycon.KCAL2EH)
-            ioprinter.debug_message('zpe', zpe)
-            ioprinter.debug_message('zpe ref', zpe_ref)
+        # Determine energy values
+        zero_ene = _rpath_rel_ene(
+            pot, frq,
+            ene_hs_sr_ref=ene_hs_sr_ref,
+            ene_hs_sr_inf=ene_hs_sr_inf,
+            ene_hs_mr_ref=ene_hs_mr_ref,
+            reac_ene=reac_ene,
+            zpe_ref=zpe_ref)
 
-            elec_ene = (
-                ene_hs_sr_ref - ene_hs_sr_inf -
-                ene_hs_mr_ref + pot * phycon.KCAL2EH
-            )
-            zpe_pt = zpe - zpe_ref
-            zero_ene = reac_ene + (elec_ene + zpe_pt * phycon.KCAL2EH)
-            ioprinter.info_message('elec ene', elec_ene)
-            ioprinter.info_message('zero ene', zero_ene)
+        hf0k, hf0k_trs, chn_basis_ene_dct, _ = basis.enthalpy_calculation(
+            spc_dct, tsname, zero_ene,
+            chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
+            run_prefix, save_prefix, zrxn=ts_dct['zrxn'])
 
-        # ENE
-        # ene = (reac_ene +
-        #        ene_hs_sr(R_ref) - ene_hs_sr(inf) +
-        #        ene_ls_mr(R_ref) - ene_hs_mr(R_ref) +
-        #        ene_ls_mr(R) - ene_ls_mr(R_ref))
-        # ene = (reac_ene +
-        #        ene_hs_sr(R_ref) - ene_hs_sr(inf) -
-        #        ene_hs_mr(R_ref) + ene_ls_mr(R))
-        # inf_sep_ene = reac_ene + hs_sr_ene - hs_mr_ene
-        # inf_sep_ene_p = (reac_ene +
-        #                  hs_sr_ene(R_ref) - ene_hs_sr(inf) +
-        #                  ls_mr_ene(R_ref) - hs_mr_ene(R_ref))
-        # ene = inf_sep_ene_p + ene_ls_mr(R) - ene_ls_mr(R_ref)
-        # ZPE
-        # zpe = zpe(R) - zpe(inf)
-        # or
-        # zpe = zpe_ls_mr(R) - zpe_ls_mr(R_ref)
-
-        # Set values constant across the scan
+        # Set electronic energy values for all points
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
-        keys = ['rval', 'geom', 'freqs', 'elec_levels', 'ene_chnlvl']
-        vals = [rval, geo, frq, elec_levels, zero_ene]
+        keys = ['rval', 'geom', 'freqs', 'elec_levels',
+                'ene_chnlvl', 'ene_tsref']
+        vals = [rval, geo, frq, elec_levels,
+                hf0k, hf0k_trs]
         inf_dct['rpath'].append(dict(zip(keys, vals)))
 
     # Calculate and store the imaginary mode
-    if sadpt:
-        _, imag, _ = vib.read_harmonic_freqs(
-            pf_filesystems, run_prefix, zrxn=zrxn)
-        ts_idx = scn_vals.index(0.00)
-    else:
-        imag = None
-        ts_idx = 0
-    inf_dct.update({'imag': imag})
-    inf_dct.update({'ts_idx': ts_idx})
+    inf_dct.update({'imag': None})
+    inf_dct.update({'ts_idx': 0})
 
-    return inf_dct
+    return inf_dct, chn_basis_ene_dct
+
+
+def _rpath_ene_data(ts_dct, frm_name, scn_vals,
+                    reac_dcts, spc_mod_dct_i,
+                    mod_scn_ene_info,
+                    scn_prefix, run_prefix, save_prefix):
+    """ Read molecular data along a scan including what is needed
+        to get the multireference infinite separation energy value
+    """
+
+    fml_str = 'RPATH'
+    vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
+
+    # Read all of the data along the scan
+    ref_ene = 0.0
+    enes, geoms, grads, hessians, _, _ = filesys.read.potential(
+        [frm_name], [scn_vals], scn_prefix,
+        mod_scn_ene_info, ref_ene,
+        None,   # No extra frozen treatments
+        read_geom=True,
+        read_grad=True,
+        read_hess=True,
+        read_energy_backstep=False,
+        remove_bad_points=False)
+
+    script_str = autorun.SCRIPT_DCT['projrot']
+    freqs = autorun.projrot.pot_frequencies(
+        script_str, geoms, grads, hessians, vib_path)
+
+    # Read all data needed to get multiref inf sep ene values
+    # Based on if scan is a multireference method
+    if elstruct.par.Method.is_multiref(mod_scn_ene_info[1]):
+        ioprinter.info_message(
+            'Scan ene method ({mod_scn_ene_info}) is multireference method. '
+            '\n Reading all values to get infinite separation energy')
+
+        # Get the energies and zpes at R_ref
+        _, ene_hs_sr_ref, ene_hs_mr_ref = ene.rpath_ref_idx(
+            ts_dct, scn_vals, frm_name, scn_prefix,
+            spc_mod_dct_i['ene'],
+            spc_mod_dct_i['rpath'][1])
+        fr_idx = len(scn_vals) - 1
+        zpe_ref = (sum(freqs[(fr_idx,)]) / 2.0) * phycon.WAVEN2KCAL
+
+        # Get the reactants and infinite seperation energy
+        reac_ene = 0.0
+        ene_hs_sr_inf = 0.0
+        for dct in reac_dcts:
+            pf_filesystems = filesys.models.pf_filesys(
+                dct, spc_mod_dct_i, run_prefix, save_prefix, False)
+            new_spc_dct_i = {
+                'ene': spc_mod_dct_i['ene'],
+                'harm': spc_mod_dct_i['harm'],
+                'tors': spc_mod_dct_i['tors']
+            }
+            reac_ene += ene.read_energy(
+                dct, pf_filesystems, new_spc_dct_i, run_prefix,
+                read_ene=True, read_zpe=True, saddle=False)
+
+            ioprinter.debug_message('rpath', spc_mod_dct_i['rpath'][1])
+            new_spc_dct_i = {
+                'ene': ['mlvl', [[1.0, spc_mod_dct_i['rpath'][1][2]]]],
+                'harm': spc_mod_dct_i['harm'],
+                'tors': spc_mod_dct_i['tors']
+            }
+            ene_hs_sr_inf += ene.read_energy(
+                dct, pf_filesystems, new_spc_dct_i, run_prefix,
+                read_ene=True, read_zpe=False, saddle=True)
+
+        mref_data = (ene_hs_sr_inf, ene_hs_sr_ref, ene_hs_mr_ref,
+                     reac_ene, zpe_ref)
+    else:
+        mref_data = None
+
+    return enes, geoms, freqs, mref_data
+
+
+def _rpath_rel_ene(pot, frqs,
+                   ene_hs_sr_ref=None,
+                   ene_hs_sr_inf=None,
+                   ene_hs_mr_ref=None,
+                   reac_ene=None,
+                   zpe_ref=None):
+    """ Calculate the relative energy
+    """
+
+    # Get the relative energy (edit for radrad scans)
+    zpe = (sum(frqs) / 2.0) * phycon.WAVEN2KCAL
+
+    if ene_hs_sr_ref is None:
+        # Single reference energy
+        zero_ene = (pot + zpe) * phycon.KCAL2EH
+    else:
+        # Use energy components for a multireference energy
+        ioprinter.debug_message('Energies to get total ene:')
+        ioprinter.debug_message("""
+        elec_ene = (ene_hs_sr_ref - ene_hs_sr_inf -
+                    ene_hs_mr_ref + pot)""")
+        ioprinter.debug_message("""
+            zero_ene = (reac_ene +
+                        (elec_ene + zpe_pt * phycon.KCAL2EH))""")
+        ioprinter.debug_message('reac ene', reac_ene)
+        ioprinter.debug_message('ene_hs_sr_ref', ene_hs_sr_ref)
+        ioprinter.debug_message('ene_hs_sr_inf', ene_hs_sr_inf)
+        ioprinter.debug_message('ene_hs_mr_ref', ene_hs_mr_ref)
+        ioprinter.debug_message('pot R', pot * phycon.KCAL2EH)
+        ioprinter.debug_message('zpe', zpe)
+        ioprinter.debug_message('zpe ref', zpe_ref)
+
+        elec_ene = (
+            ene_hs_sr_ref - ene_hs_sr_inf -
+            ene_hs_mr_ref + pot * phycon.KCAL2EH
+        )
+        zpe_pt = zpe - zpe_ref
+        zero_ene = reac_ene + (elec_ene + zpe_pt * phycon.KCAL2EH)
+
+    # ENE
+    # ene = (reac_ene +
+    #        ene_hs_sr(R_ref) - ene_hs_sr(inf) +
+    #        ene_ls_mr(R_ref) - ene_hs_mr(R_ref) +
+    #        ene_ls_mr(R) - ene_ls_mr(R_ref))
+    # ene = (reac_ene +
+    #        ene_hs_sr(R_ref) - ene_hs_sr(inf) -
+    #        ene_hs_mr(R_ref) + ene_ls_mr(R))
+    # inf_sep_ene = reac_ene + hs_sr_ene - hs_mr_ene
+    # inf_sep_ene_p = (reac_ene +
+    #                  hs_sr_ene(R_ref) - ene_hs_sr(inf) +
+    #                  ls_mr_ene(R_ref) - hs_mr_ene(R_ref))
+    # ene = inf_sep_ene_p + ene_ls_mr(R) - ene_ls_mr(R_ref)
+
+    return zero_ene
 
 
 # PST
@@ -670,7 +833,7 @@ def tau_data(spc_dct_i,
     [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
 
     # Obtain all values from initial reference conformer
-    rotors = tors.build_rotors(
+    rotors, _ = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i, read_potentials=False)
     vib_info = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
@@ -750,7 +913,7 @@ def tau_data(spc_dct_i,
                 hess = tau_save_fs[-1].json.hessian.read(locs)
             # hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess)
-       
+
         # Print progress message (every 150 geoms read)
         if idx % 149 == 0:
             print(f'Read {idx+1}/{tot_locs} samples...')

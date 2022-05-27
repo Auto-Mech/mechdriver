@@ -133,7 +133,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             run_prefix, save_prefix
             )
     h_basis_dct_lst = execute_function_in_parallel(
-        _read_basis_energy, ichs, args, nprocs=4)
+        _read_basis_energy, ichs, args, nprocs=1)
     print('hbasis list', h_basis_dct_lst)
     for ich in ichs:
         for h_basis_dct in h_basis_dct_lst:
