@@ -87,8 +87,8 @@ def mass_params(tgt_info, bath_info, etrans_dct):
         [mass1, mass2] = mass
     else:
         ioprinter.info_message('  - Obtaining masses from geometries...')
-        mass1 = sum(automol.geom.masses(automol.inchi.geometry(tgt_info[0])))
-        mass2 = sum(automol.geom.masses(automol.inchi.geometry(bath_info[0])))
+        mass1 = sum(automol.geom.masses(automol.chi.geometry(tgt_info[0])))
+        mass2 = sum(automol.geom.masses(automol.chi.geometry(bath_info[0])))
 
     return mass1, mass2
 
@@ -133,7 +133,7 @@ def lj_params(tgt_info, bath_info, etrans_dct):
             model = automol.etrans.estimate.determine_collision_model_series(
                 tgt_ich, bath_ich, 'lj')
             n_heavy = automol.geom.atom_count(
-                automol.inchi.geometry(tgt_ich), 'H', match=False)
+                automol.chi.geometry(tgt_ich), 'H', match=False)
             ioprinter.info_message(
                 '    - Series to use for estimation for estimation: '
                 f' {model}\n'
@@ -187,7 +187,7 @@ def edown_params(tgt_info, bath_info, etrans_dct, ljpar=None):
 
             ioprinter.info_message('  - Estimating the parameters...')
 
-            tgt_geo = automol.inchi.geometry(tgt_info[0])
+            tgt_geo = automol.chi.geometry(tgt_info[0])
             model = automol.etrans.estimate.determine_collision_model_series(
                 tgt_info[0], bath_info[0], 'alpha')
             if model is not None:
@@ -242,9 +242,9 @@ def set_etrans_well(rxn_lst, spc_dct):
         rct1_dct = spc_dct[reacs[0]]
         rct2_dct = spc_dct[reacs[1]]
         rct1_count = automol.geom.count(
-            automol.inchi.geometry(rct1_dct['inchi']))
+            automol.chi.geometry(rct1_dct['inchi']))
         rct2_count = automol.geom.count(
-            automol.inchi.geometry(rct2_dct['inchi']))
+            automol.chi.geometry(rct2_dct['inchi']))
         if rct1_count > rct2_count:
             well_dct = rct1_dct
             well_name = reacs[0]

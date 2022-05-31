@@ -2,7 +2,7 @@
 """
 
 import autorun
-from automol.inchi import formula_string as fstring
+from automol.chi import formula_string as fstring
 import thermfit
 from mechlib import filesys
 from mechlib.amech_io import reader

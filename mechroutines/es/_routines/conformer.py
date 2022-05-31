@@ -157,7 +157,7 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
                 'Getting initial geometry from geom dictionary')
 
     if geo_init is None:
-        geo_init = automol.inchi.geometry(spc_dct_i['inchi'])
+        geo_init = automol.chi.geometry(spc_dct_i['inchi'])
         info_message('Getting initial geometry from inchi')
 
     # Check if the init geometry is connected
@@ -990,8 +990,8 @@ def _inchi_are_same(orig_ich, geo):
      saved geos evaluated in temrs of inchi
     """
     same = False
-    ich = automol.geom.inchi(geo)
-    assert automol.inchi.is_complete(orig_ich), (
+    ich = automol.geom.chi(geo)
+    assert automol.chi.is_complete(orig_ich), (
         f'the inchi {orig_ich} orig_ich is not complete')
     if ich == orig_ich:
         same = True
@@ -1007,7 +1007,7 @@ def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
     This assumes you already have bad geos in your save
     """
     for i, geoi in enumerate(seen_geos):
-        if not orig_ich == automol.geom.inchi(geoi):
+        if not orig_ich == automol.geom.chi(geoi):
             smi = automol.geom.smiles(geoi)
             path = cnf_save_fs[-1].path(saved_locs[i])
             error_message(
