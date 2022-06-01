@@ -414,6 +414,12 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                         **kwargs
                     )
 
+            else:
+                # If the geo/zma exists and updating the guess is desired
+                # read zma to use as guess
+                if update_guess:
+                    guess_zma = scn_save_fs[-1].file.zmatrix.read(locs)
+
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,
               coord_names, constraint_dct,
