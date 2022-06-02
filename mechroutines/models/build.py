@@ -221,6 +221,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             inf_dct = flux_data(
                 ts_dct, spc_mod_dct_i)
             writer = 'vrctst_block'
+    print('here I am!')
 
     # Add writer to inf dct
     inf_dct['writer'] = writer
@@ -459,7 +460,8 @@ def flux_data(ts_dct, spc_mod_dct_i):
         ioprinter.warning_message(f'No flux file at {ts_save_prefix}')
 
     # Create info dictionary
-    inf_dct = {'flux_str': flux_str}
+    inf_dct = {'flux_str': flux_str,
+               'elec_levels': ts_dct['elec_levels']}
 
     return inf_dct
 

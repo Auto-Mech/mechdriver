@@ -306,8 +306,8 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     # Combine electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor'] * 0.850
 
-    elec_levels = automol.combine.electronic_energy_levels(
-        inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
+    #elec_levels = automol.combine.electronic_energy_levels(
+    #    inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
     freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
 
@@ -330,7 +330,7 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     spc_str = mess_io.writer.molecule(
         core=core_str,
         freqs=freqs,
-        elec_levels=elec_levels,
+        elec_levels=inf_dct_ts['elec_levels'],
         hind_rot=mess_hr_str,
         xmat=(),
         rovib_coups=(),

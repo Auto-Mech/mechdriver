@@ -295,6 +295,10 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
             else:
                 locs = [constraint_dct, [coord_name], [grid_val]]
             sp_ene = filesys.read.energy(scn_fs, locs, thy_info)
+            print('scn_fs: ', scn_fs)
+            print('locs: ', locs)
+            print('thy_info: ', thy_info)
+            print('sp_ene: ', sp_ene)
 
             # Store the energy in a lst
             if idx == 0:
