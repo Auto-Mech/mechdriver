@@ -632,13 +632,8 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
     if len(mess_strs) == 1:
         mess_str = mess_strs[0]
 
-        ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
-        radrad = bool('radical radical' in ts_class)
-        write_ts_pt_str = bool(
-            (not radrad and ts_sadpt != 'rpvtst') or
-            (radrad and ts_nobar != 'rpvtst')
-        )
-        if write_ts_pt_str:
+        # If writer was previously overwritten with something else, use instead
+        if chnl_infs['ts'][0]['writer'] != 'rpvtst_block':
             ts_ene = chnl_enes['ts'][0]
             ts_str = '\n' + mess_io.writer.ts_sadpt(
                 ts_label, inner_reac_label, inner_prod_label, mess_str,

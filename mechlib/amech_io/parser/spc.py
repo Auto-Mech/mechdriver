@@ -62,7 +62,7 @@ TS_VAL_DCT.update(SPC_VAL_DCT)
 
 
 # Build spc
-def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
+def species_dictionary(spc_str, dat_str, geo_dct, act_dct, spc_type):
     """ Read each of the species input files:
             (1) species.csv: CSV file with basic info like names,inchis,mults
             (2) species.dat:
@@ -80,7 +80,7 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 
     # Merge all of the species inputs into a dictionary
-    mod_spc_dct, glob_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct)
+    mod_spc_dct, glob_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct, act_dct)
     # Assess if the species.dat information is valid
     for name, dct in mod_spc_dct.items():
         # last comment breaks since TS only partially built at this stage
@@ -96,7 +96,7 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
 
 
 # Format spc
-def modify_spc_dct(spc_dct, amech_dct, geo_dct):
+def modify_spc_dct(spc_dct, amech_dct, geo_dct, act_dct):
     """ Modify the species dct using input from the additional AMech file
     """
 
@@ -139,6 +139,12 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
             # Need to add the TS defaults
             ts_dct[tsname] = automol.util.dict_.right_update(
                 ts_default, ts_dct[tsname])
+
+            # Check if an active space was defined; if so, get info
+            aspc = dat_dct[tsname].get('active')
+            if aspc is not None:
+                ts_dct[tsname]['active'] = (aspc[0], aspc[1], aspc[2], 
+                                            act_dct[tsname])
 
             # Add speciaized calls not in the default dct
             # _set_active_key()

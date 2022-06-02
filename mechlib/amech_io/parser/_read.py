@@ -206,14 +206,14 @@ def _active_space_dictionary(job_path):
             ! {spc_name}
         """
         comm_line = aspace_str.splitlines()[0]
-        comm_line.replace('!', '').strip()
+        comm_line = comm_line.replace('!', '').strip()
         return comm_line
 
     aspace_dct, path_dct = {}, {}
     _inp_paths = _inp_file_paths(job_path)
     if _inp_paths:
         for file_path, file_name in _inp_paths:
-            if file_path.endswith('.asp'):
+            if file_name.endswith('.asp'):
                 aspace_str = ioformat.pathtools.read_file(file_path, file_name)
                 spc_name = _comment_name(aspace_str)
                 if spc_name in aspace_dct:

@@ -135,8 +135,7 @@ def lj_params(tgt_info, bath_info, etrans_dct):
             n_heavy = automol.geom.atom_count(
                 automol.chi.geometry(tgt_ich), 'H', match=False)
             ioprinter.info_message(
-                '    - Series to use for estimation for estimation: '
-                f' {model}\n'
+                f'    - Series to use for estimation: {model}\n'
                 f'    - Heavy atom count: {n_heavy}')
 
             sig, eps = automol.etrans.estimate.lennard_jones_params(
@@ -194,17 +193,21 @@ def edown_params(tgt_info, bath_info, etrans_dct, ljpar=None):
                 sig, eps, mass1, mass2 = ljpar
                 n_eff = automol.etrans.estimate.effective_rotor_count(tgt_geo)
                 ioprinter.info_message(
-                    '    - Series to use for estimation for estimation:'
-                    f' {model}\n'
+                    f'    - Series to use for estimation: {model}\n'
                     f'    - Found effective rotor count: {n_eff:.2f}\n'
                     '    - Using following LJ parameters for '
                     'collisional frequency and alpha calculation:\n'
                     f'       eps={eps*phycon.EH2WAVEN:.2f} cm-1, '
                     f'sigma={sig*phycon.BOHR2ANG:.2f} Ang,\n'
                     f'       mass1={mass1:.2f} amu, mass2={mass2:.2f} amu')
+                emp_fac = 2.0
                 efactor, epower = automol.etrans.estimate.alpha(
                     n_eff, eps, sig, mass1, mass2, model,
-                    empirical_factor=2.0)
+                    empirical_factor=emp_fac)
+                ioprinter.info_message(
+                    '    - E_down prefactor (after dividing by empirical '
+                    f'factor of {emp_fac:.1f}): {efactor}\n'
+                    f'    - E_down power: {epower:.2f}')
                 ecutoff = 15.0
             else:
                 efactor, epower, ecutoff = None, None, None
