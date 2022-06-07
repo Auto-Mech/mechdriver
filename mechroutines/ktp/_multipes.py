@@ -26,7 +26,23 @@ def set_prod_density_param(rgts, pesgrp_num, pes_param_dct):
 
     return calc_dens
 
-
+def relabel_ped_spc_lst(ped_spc_lst):
+    """ check that all ped spc lists are of type 'A+B=C+D'.
+        if A=C+D or A+B=C is found: rewrite as C+D=C+D, A+B=A+B
+        reason: mess does not accept PEDs with unimol
+    """
+    ped_spc_lst_new = []
+    for ped in ped_spc_lst:
+        reacs, prods = ped.split('=')
+        if '+' not in reacs:
+            ped_spc_lst_new.append('='.join([prods, prods]))
+        elif '+' not in prods:
+            ped_spc_lst_new.append('='.join([reacs, reacs]))
+        else:
+            ped_spc_lst_new.append(ped)
+            
+    return ped_spc_lst_new
+            
 def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
     """ set values to determine input parameters for handling
         energy distributions in MESS calculations
@@ -50,11 +66,11 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
             print('ene dct test')
             print(energy_dct)
             ene_bw = energy_dct[reacs] - energy_dct[prods]
-            dof_info = mechanalyzer.calculator.statmodels.get_dof_info(
+            dof_info = mechanalyzer.calculator.ene_partition.get_dof_info(
                 spc_blocks_ped[prods])
-            max_ene_ped.append(mechanalyzer.calculator.statmodels.max_en_auto(
+            max_ene_ped.append(mechanalyzer.calculator.ene_partition.max_en_auto(
                 dof_info['n_atoms']['TS'], ene_bw, ref_ene=energy_dct[prods]))
-            max_ene.append(mechanalyzer.calculator.statmodels.max_en_auto(
+            max_ene.append(mechanalyzer.calculator.ene_partition.max_en_auto(
                 dof_info['n_atoms']['TS'], ene_bw))
         micro_limit = max(max_ene_ped)
         return max_ene, micro_limit
@@ -248,18 +264,6 @@ def _prompt_dissociation_ktp_dct(pes_grp_rlst,
     for path in all_mess_paths:
         print(f'{path}')
 
-    # # Get the PES info objects for the PED and Hot surface
-    # all_pes_inf = tuple(pes_grp_rlst.keys())
-    # # Obtain the strings that are needed
-    # all_mess_path = [mess_paths_dct[all_i]['base-v1']
-    #                  for all_i in all_pes_inf]
-    # list_strs_dct = [rate_strs_dct[all_i]['base-v1']
-    #                  for all_i in all_pes_inf]
-    # print('Fitting rates from\n'
-    #       f'  - paths: {all_mess_path}\n'
-    #       )
-    # return the final ktp dictionary
-
-    return mechanalyzer.calculator.multipes_prompt_dissociation_ktp_dct(
+    return mechanalyzer.builder.multipes_prompt_dissociation_ktp_dct(
         strs_dct_lst,
         pes_param_dct['modeltype'], pes_param_dct['bf_threshold'])
