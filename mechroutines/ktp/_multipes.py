@@ -107,7 +107,6 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
 
     return ped_spc_lst, micro_out_params, pes_param_dct
 
-
 def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
                  chnl_enes, pes_param_dct):
     """ Determine what hot energies should be for the requested
@@ -152,7 +151,6 @@ def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
 
     return hot_enes_dct
 
-
 def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
                                 rate_paths_dct, pes_param_dct,
                                 pes_mod_dct, pes_mod,
@@ -180,7 +178,6 @@ def obtain_multipes_rxn_ktp_dct(pes_grp_rlst,
         )
 
     return rxn_ktp_dct
-
 
 def _single_pes_ktp_dct(pes_grp_rlst,
                         tsk_key_dct, rate_strs_dct, mess_paths_dct,
@@ -230,7 +227,6 @@ def _single_pes_ktp_dct(pes_grp_rlst,
         print(f'No MESS output found at {mess_path}')
 
     return rxn_ktp_dct
-
 
 def _prompt_dissociation_ktp_dct(pes_grp_rlst,
                                  tsk_key_dct, spc_dct,
