@@ -103,7 +103,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
 def _umbrella_factor(rotors, geo, grxn=None):
     """ check to see if this torsion has umbrella floppies
     """
-    gra = automol.graph.dominant_resonance(automol.geom.graph(geo))
+    gra = automol.graph.kekule(automol.geom.graph(geo))
     rad_atms = automol.graph.radical_atom_keys(gra)
     # dih check
     adj_atms_dct = automol.graph.atoms_neighbor_atom_keys(gra)
