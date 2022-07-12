@@ -166,9 +166,23 @@ def _correction_pot_data(ts_dct, scan_inf_dct,
                     es_keyword_dct, runfs_dct, savefs_dct)
 
     # Obtain the energy at infinite separation
-    inf_sep_ene = rpath.inf_sep_ene(
-        ts_dct, thy_inf_dct, thy_method_dct, mref_params,
-        savefs_dct, runfs_dct, es_keyword_dct)
+    cscn_save_fs = savefs_dct['vscnlvl_cscn']
+    # Get the layer above coordinates, which is where the inf_sep.ene might be 
+    branch2_locs = next(iter(cscn_save_fs[-1].existing()))[:-1]
+    # If a user-defined value exists in the save FS, use that
+    if cscn_save_fs[-2].file.inf_sep_ene.exists(branch2_locs):
+        info_message('User-defined infinite separation energy found at ' \
+                     f'{cscn_save_fs[0].path()}', newline=1)
+        inf_sep_ene = cscn_save_fs[-2].file.inf_sep_ene.read(branch2_locs)
+        info_message(f'Infinite separation energy: {inf_sep_ene}')
+    # Otherwise, estimate the inf. sep. ene. using a SR method
+    else:
+        info_message('No user-defined infinite separation energy found at ' \
+                     f'{cscn_save_fs[0].path()}', newline=1)
+        info_message('Estimating using the single-ref trick...', newline=1)
+        inf_sep_ene = rpath.inf_sep_ene(
+            ts_dct, thy_inf_dct, thy_method_dct, mref_params,
+            savefs_dct, runfs_dct, es_keyword_dct)
 
     # Read the values for the correction potential from filesystem
     potentials, pot_labels, zma_for_inp = _read_potentials(
@@ -295,11 +309,6 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
             else:
                 locs = [constraint_dct, [coord_name], [grid_val]]
             sp_ene = filesys.read.energy(scn_fs, locs, thy_info)
-            print('scn_fs: ', scn_fs)
-            print('locs: ', locs)
-            print('thy_info: ', thy_info)
-            print('sp_ene: ', sp_ene)
-
             # Store the energy in a lst
             if idx == 0:
                 smp_pot.append(sp_ene)
