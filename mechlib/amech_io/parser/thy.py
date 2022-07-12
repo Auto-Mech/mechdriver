@@ -20,7 +20,7 @@ THY_VAL_DCT = {
     'program': ((str,), (), None),
     'method': ((str,), (), None),
     'basis': ((str,), (), None),
-    'orb_res': ((str,), ('RR', 'UU', 'RU'), None),
+    'orb_res': ((str, tuple), (), None),
     'mem': ((float,), (), None),
     'nprocs': ((int,), (), None),
     'econv': ((float,), (), None),

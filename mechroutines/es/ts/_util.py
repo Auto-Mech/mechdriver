@@ -74,7 +74,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     vscnlvl_cscn_save_fs = None
     vrctst_save_fs = None
 
-    if es_keyword_dct.get('inplvl', None) is not None:
+    if es_keyword_dct.get('inplvl') is not None:
 
         ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
         ini_thy_info = tinfo.from_dct(ini_method_dct)
@@ -97,7 +97,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 ts_zma, ts_info, hs_info,
                 aspace, mod_ini_thy_info, rxn_info=rxn_info)
 
-    if es_keyword_dct.get('runlvl', None) is not None:
+    if es_keyword_dct.get('runlvl') is not None:
 
         run_method_dct = thy_dct.get(es_keyword_dct['runlvl'])
         thy_info = tinfo.from_dct(run_method_dct)
@@ -138,7 +138,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 ts_zma, ts_info, hs_info,
                 aspace, mod_thy_info, rxn_info=rxn_info)
 
-    if es_keyword_dct.get('var_scnlvl', None) is not None:
+    if es_keyword_dct.get('var_scnlvl') is not None:
 
         vscn_method_dct = thy_dct.get(es_keyword_dct['var_scnlvl'])
         vscnlvl_thy_info = tinfo.from_dct(vscn_method_dct)
@@ -167,7 +167,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 ts_zma, ts_info, hs_info,
                 aspace, mod_vscnlvl_thy_info, rxn_info=rxn_info)
 
-    if es_keyword_dct.get('var_splvl1', None) is not None:
+    if es_keyword_dct.get('var_splvl1') is not None:
 
         vsp1_method_dct = thy_dct.get(es_keyword_dct['var_splvl1'])
         vsp1lvl_thy_info = tinfo.from_dct(vsp1_method_dct)
@@ -181,7 +181,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 ts_zma, ts_info, hs_info,
                 aspace, mod_vsp1lvl_thy_info, rxn_info=rxn_info)
 
-    if es_keyword_dct.get('var_splvl2', None) is not None:
+    if es_keyword_dct.get('var_splvl2') is not None:
 
         vsp2_method_dct = thy_dct.get(es_keyword_dct['var_splvl2'])
         vsp2lvl_thy_info = tinfo.from_dct(vsp2_method_dct)
