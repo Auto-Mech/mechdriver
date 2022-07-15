@@ -121,14 +121,6 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
             well_extend = None
         is_abstraction = False
 
-    # Assume if that hot_enes are being passed, don't use chem eig max keywrd
-    if hot_enes_dct is not None:
-        chem_eig_max = None
-    else:
-        chem_eig_max = 0.2
-        ioprinter.debug_message(
-            'No Hot Energies Given. Setting ChemicalEigenvalueMax to 0.2')
-
     globkey_str = mess_io.writer.global_rates_input_v1(
         temps, pressures,
         calculation_method='direct',
@@ -136,7 +128,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         ene_stepover_temp=0.2, excess_ene_temp=None,
         well_extension=well_extend,
         well_reduction_thresh=10.0,
-        chem_eig_max=chem_eig_max,
+        chem_eig_max=0.2,
         ped_spc_lst=ped_spc_lst,
         hot_enes_dct=hot_enes_dct,
         micro_out_params=micro_out_params,
