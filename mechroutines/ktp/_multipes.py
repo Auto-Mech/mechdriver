@@ -40,9 +40,9 @@ def relabel_ped_spc_lst(ped_spc_lst):
             ped_spc_lst_new.append('='.join([reacs, reacs]))
         else:
             ped_spc_lst_new.append(ped)
-            
+
     return ped_spc_lst_new
-            
+
 def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
     """ set values to determine input parameters for handling
         energy distributions in MESS calculations
