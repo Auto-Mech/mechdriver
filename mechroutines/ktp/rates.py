@@ -111,15 +111,13 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         'CalculationMethod, WellCutoff, ' +
         'ReductionMethod, AtomDistanceMin')
 
-    if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
-        well_extend, is_abstraction = None, True
+    is_abstraction = is_abstraction_pes(spc_dct, rxn_lst, pes_idx)
+    if is_abstraction and tsk_key_dct['well_extension']:
+        well_extend = None # overwrite
+    elif not is_abstraction and tsk_key_dct['well_extension']:
+        well_extend = 0.001
     else:
-        if tsk_key_dct['well_extension']:
-            well_extend = 0.001
-            ioprinter.debug_message('Including WellExtend in MESS input')
-        else:
-            well_extend = None
-        is_abstraction = False
+        well_extend = None
 
     globkey_str = mess_io.writer.global_rates_input_v1(
         temps, pressures,
@@ -144,7 +142,9 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         energy_trans_str=energy_trans_str,
         well_lump_str=None,
         use_short_names=True)
-
+    # comment line of wellext
+    mess_inp_str = mess_inp_str.replace('WellExtension', '!WellExtension')
+    
     # print('rate_paths_dct test\n', rate_paths_dct)
     base_mess_path = rate_paths_dct[pes_inf]['base-v1']
     ioprinter.obj('line_plus')
@@ -153,6 +153,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
     autorun.write_input(
         base_mess_path, mess_inp_str,
         aux_dct=dats, input_name='mess.inp')
+
 
     # Write the second MESS string (well extended), if needed
     if not is_abstraction and tsk_key_dct['well_extension']:
@@ -172,7 +173,30 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         wext_p = pes_mod_dct_i['well_extension_pressure']
         wext_t = pes_mod_dct_i['well_extension_temp']
 
-        print('  - Setting up the well-extended MESSRATE input with.')
+        print('  - Setting up the well-extended MESSRATE input')
+        wext_mess_inp_str_nolump = mess_io.well_lumped_input_file(
+            rate_strs_dct[pes_inf]['base-v1']['inp'],
+            rate_strs_dct[pes_inf]['base-v1']['ktp_out'],
+            rate_strs_dct[pes_inf]['base-v1']['aux'],
+            rate_strs_dct[pes_inf]['base-v1']['log'],
+            wext_p,
+            wext_t, lump = False)
+
+        base_mess_path = rate_paths_dct[pes_inf]['base-v1']
+        ioprinter.obj('line_plus')
+        ioprinter.writing('New Well-Extended MESS input file '
+                          f'at path {base_mess_path}')
+        print('  - Warning, old base input overwritten.')
+        ioprinter.debug_message('MESS Input:\n\n'+wext_mess_inp_str_nolump)
+        autorun.write_input(
+            base_mess_path, wext_mess_inp_str_nolump,
+            aux_dct=dats, input_name='mess.inp')
+        
+        print(f'  - Running MESS base job at path {base_mess_path}')
+        print('  - Warning, old base results overwritten.')
+        autorun.run_script(autorun.SCRIPT_DCT['messrate-v1'], base_mess_path)
+        
+        print('  - Setting up the well-extended MESSRATE input with')
         print(f'   lumping/extension Scheme for P={wext_p} atm, T={wext_t} K')
         wext_mess_inp_str = mess_io.well_lumped_input_file(
             rate_strs_dct[pes_inf]['base-v1']['inp'],
@@ -190,7 +214,6 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         autorun.write_input(
             wext_mess_path, wext_mess_inp_str,
             aux_dct=dats, input_name='mess.inp')
-
 
 def _full_mess_v2(energy_trans_str, rxn_chan_str, dats,
                   temps, pressures,
