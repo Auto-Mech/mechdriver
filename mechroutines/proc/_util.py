@@ -225,6 +225,9 @@ def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
     if 'geo' in tsk:
         all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
+    if 'sidata' in tsk:
+        all_data = '\n'.join(spc_data for spc_data in csv_data.values())
+        io.write_file(filelabel, all_data)
     if 'molden' in tsk:
         all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
@@ -321,6 +324,14 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
         filelabel += '.csv'
     elif 'geo' in tsk:
         filelabel = 'geo'
+        geolvl = proc_keyword_dct.get('geolvl')
+        if geolvl is not None:
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
+        else:
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
+        filelabel += '.txt'
+    elif 'sidata' in tsk:
+        filelabel = 'si'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
             filelabel += f'_{proc_keyword_dct["geolvl"]}'

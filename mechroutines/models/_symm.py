@@ -24,7 +24,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
         :param grxn:
         :rtype: float
     """
-
+  
     symm_factor = spc_dct_i.get('symm_factor')
     if symm_factor is not None:
         ioprinter.info_message(
@@ -94,7 +94,9 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 int_symm, rotor_symms)
 
             ext_symm *= _umbrella_factor(rotors, geo)
-
+        # if spc_dct_i['smiles'] in ['CC(OO)C[CH2]', '[CH2]CCCOO','CC(OO)CC[CH2]','[CH2]CCCCOO','CC(C[CH2])COO','OOCC([CH2])(C)C','OOCC([CH2])C','OOCCC(C)(C)[CH2]','OOC(C([CH2])(C)C)C','OOCC(C([CH2])C)C','CCC(COO)([CH2])C','OOC(C([CH2])C)C(C)C','OOC(CC(C)C)([CH2])C','OOC(CC([CH2])(C)C)(C)C','OOC(C(C)(C)C)C(C)[CH2]','OOCC(CC(C)C)([CH2])C','OOC(CC(C)(C)C)([CH2])C','OOC(C([CH2])(C)C)C(C)C']:
+        #     print('divide ext sym by two')
+        #     ext_symm /= 2
         symm_factor = ext_symm * int_symm
 
     return symm_factor
@@ -157,4 +159,3 @@ def _umbrella_factor(rotors, geo, grxn=None):
     #                 #        'Umbrella mode identified for torsion about', torsion.axis)
     # return 2 if umb_inv else 1
     return 2 if planarity < .29 and planarity > .09 else 1
-

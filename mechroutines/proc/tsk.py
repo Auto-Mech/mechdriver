@@ -110,7 +110,13 @@ def run_tsk(tsk, obj_queue,
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     print(csv_data_i)
                     csv_data[label] = csv_data_i
-
+                elif 'si' in tsk:
+                    csv_data_i, miss_data_i = collect.sidata(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        proc_keyword_dct, thy_dct,
+                        cnf_fs, locs, locs_path, run_prefix, save_prefix, mod_thy_info)
+                    print(csv_data_i)
+                    csv_data[label] = csv_data_i
                 elif 'molden' in tsk:
                     csv_data_i, miss_data_i = collect.molden(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)

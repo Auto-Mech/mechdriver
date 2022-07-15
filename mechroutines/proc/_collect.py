@@ -436,3 +436,87 @@ def messpf_input(
     messpf_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
 
     return (messpf_inp_str, dat_str_dct, miss_data)
+
+
+def sidata(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        proc_keyword_dct, thy_dct,
+        cnf_fs, locs, locs_path, run_prefix, save_prefix,
+        mod_thy_info):
+    """collect a geometry
+    """
+    # Initialize the data objects to None
+    freqs = None
+    imag = None
+    zpe = None
+    sfactor = None
+    torsfreqs = None
+    all_freqs = None
+    disps = None
+
+    # Initialize a miss_data object that will be overwritten if data found
+    #if spc_mod_dct_i is not None:
+    #    mod_thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    #else:
+    #    mod_thy_info = tinfo.from_dct(thy_dct.get(
+    #        proc_keyword_dct['proplvl']))
+
+    miss_data = (spc_name, mod_thy_info, 'frequencies')
+
+    # # Get flags to to ID spc as a transiion state
+    # zrxn = spc_dct_i.get('zrxn', None)
+    # saddle = bool(zrxn)
+
+    # # Get vibrational frequencies
+    # if spc_mod_dct_i is not None:
+    #     pf_filesystems = filesys.models.pf_filesys(
+    #         spc_dct_i, spc_mod_dct_i,
+    #         run_prefix, save_prefix,
+    #         name=spc_name, saddle=saddle)
+
+    #     ret = vib.full_vib_analysis(
+    #         spc_dct_i, pf_filesystems, spc_mod_dct_i,
+    #         run_prefix, zrxn=zrxn)
+    #     if ret is not None:
+    #         freqs, imag, zpe, sfactor, _, torsfreqs, all_freqs, disps = ret
+    #         if saddle:
+    #             print(f'Imaginary Frequencies[cm-1]: {imag}')
+    #             freqs = (-1*imag,) + freqs
+    #         miss_data = None
+
+    #     # Do a TED check
+    #     if zrxn is not None:
+    #         vib.ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+    #                 run_prefix, zrxn=zrxn)
+    # else:
+    #     es_levels = util.freq_es_levels(proc_keyword_dct)
+    #     spc_mod_dct_i = util.generate_spc_model_dct(es_levels, thy_dct)
+    #     ret = vib.read_locs_harmonic_freqs(
+    #         cnf_fs, locs, run_prefix, zrxn=zrxn)
+    #     if ret is not None:
+    #         freqs, imag, zpe, disps = ret
+
+    if cnf_fs[-1].file.geometry.exists(locs):
+        geo = cnf_fs[-1].file.geometry.read(locs)
+        sp_fs = autofile.fs.single_point(locs_path)
+        if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+            comment = f'energy: {_ene:>15.10f}'
+            xyz_str = automol.geom.xyz_string(geo, comment=comment)
+            miss_data = None
+        else:
+            comment = 'no energy found'
+            xyz_str = automol.geom.xyz_string(geo, comment=comment)
+            miss_data = (spc_name, mod_thy_info, 'energy')
+    else:
+        xyz_str = '\t -- Missing --'
+        miss_data = (spc_name, mod_thy_info, 'geometry')
+
+    smi = spc_dct_i['smiles']
+    loci = locs[1]
+    spc_data = f'\n\nSMILES: {smi}\tConf: {loci}\n'
+    spc_data += 'Geometry [Angstrom]\n'
+    spc_data += xyz_str
+    if freqs is not None:
+        spc_data += '\nHarmonic Frequencies [cm-1]:\n' + '\t'.join(['{:5.2f}'.format(freq) for freq in freqs])
+    return spc_data, miss_data
