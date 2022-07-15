@@ -23,7 +23,7 @@ dependencies:
     - auto-mech::thermp
     # - auto-mech::varecof
     - cantera::cantera
-    - psi4::psi4
+    - psi4::psi4-dev
     - rdkit::rdkit=2020.09.1.0
     - openbabel::openbabel
     - conda-forge::python=3.7
@@ -48,6 +48,7 @@ dependencies:
     - conda-forge::gxx_linux-64=7.5.0
     - conda-forge::gfortran_linux-64=7.5.0
     - conda-forge::gsl=2.7
+    - conda-forge::llvm-openmp
     # - conda-forge::blas
     # - conda-forge::openblas # [linux]
     # - conda-forge::mpich

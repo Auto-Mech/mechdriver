@@ -285,8 +285,8 @@ def _psi4(method_dct, prog, job=None, geo=None, spc_info=None):
                 # 'set dft_radial_points 99',
                 'set dft_basis_tolerance 1.0E-11',
                 # 'set dft_pruning_scheme robust'
-                'set opt_coordinates delocalized',  # for scan
-                'set ensure_bt_convergence true'
+                # 'set opt_coordinates delocalized',  # for scan
+                # 'set ensure_bt_convergence true'
             ]})
 
     return script_str, kwargs
