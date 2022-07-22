@@ -3,7 +3,8 @@
 
 import copy
 import itertools
-import mechanalyzer.builder
+from mechanalyzer.builder import strip_ste
+from mechanalyzer.builder import _names as names
 
 
 # Overall run lst for both reactions and species
@@ -176,15 +177,15 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
     # if only one stereoisomer is present, we get a list of 1
     mech_spc_dct_no_ts = {spc: dct.copy() for spc, dct in mech_spc_dct.items()
                           if 'ts_' not in spc}
-    mech_spc_dct_strpd, _ = mechanalyzer.builder.strip_ste.strip_mech_spc_dct(
-        mech_spc_dct_no_ts)
-    iso_grps = mechanalyzer.builder.strip_ste.find_iso_sets(
-        mech_spc_dct_strpd)
+    mech_spc_dct_strpd, _ = strip_ste.strip_mech_spc_dct(mech_spc_dct_no_ts)
+    iso_grps = strip_ste.find_iso_sets(mech_spc_dct_strpd)
 
     print('iso grp test')
     for grp in iso_grps:
         print(grp)
     print('---')
+
+    new_iso_grp_names = make_new_names(iso_grps, mech_spc_dct_strpd)
 
     spc_in_iso_grps = ()
     for idx, iso_grp in enumerate(iso_grps, start=1):
@@ -194,9 +195,11 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
             spc_in_iso_grps += tuple(iso_grp)
 
             # Rename and add group to master group list
-            niso = len(iso_grp)
-            spc_grps.update({f's{niso}-{iso_grp[0]}': tuple(iso_grp)})
-            # iso_name = mechanalyzer.builder.remove_stereo_name_suffix(
+            new_name = new_iso_grp_names[idx - 1]  # -1 b/c starting with 1
+            spc_grps.update({new_name: tuple(iso_grp)})
+            #niso = len(iso_grp)
+            #spc_grps.update({f's{niso}-{iso_grp[0]}': tuple(iso_grp)})
+            # iso_name = remove_stereo_name_suffix(
             #     iso_grp[0])
             # spc_grps.update({f'combined-{iso_name}': tuple(iso_grp)})
 
@@ -236,3 +239,20 @@ def spc_queue(runlst, fml):
                        if i not in _ini_queue[:n])
 
     return _queue
+
+
+def make_new_names(iso_grps, mech_spc_dct_strpd):
+    """ Generates new stereo-free species names for each iso_grp
+    """
+
+    map_dct = names.functional_group_name_dct(mech_spc_dct_strpd)
+    new_iso_grp_names = []
+    for iso_grp in iso_grps:
+        iso = iso_grp[0]  # grab first one; inchis are same for all isos
+        new_iso_grp_names.append(map_dct[iso])
+
+    print('new_iso_grp_names:\n', new_iso_grp_names)
+        
+    return new_iso_grp_names    
+
+

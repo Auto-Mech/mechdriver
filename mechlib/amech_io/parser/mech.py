@@ -19,7 +19,8 @@ def pes_dictionary(mech_str, mech_type, spc_dct, printlog=True):
     pes_dct = pes.pes_dictionary(
         mech_str, mech_type, spc_dct, printlog=printlog)
 
-    if pes_dct is None:
+    # Note: if mech_str is None (i.e., no mechanism file), don't resort
+    if pes_dct is None and mech_str is not None:
         print('No # pes.subpes.channel comment type found in mech: resorting ...')
         rxn_param_dct = parse_mechanism(mech_str, mech_type)
         if rxn_param_dct is not None:
