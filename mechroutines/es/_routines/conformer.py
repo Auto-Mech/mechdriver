@@ -854,6 +854,8 @@ def _init_geom_is_running(cnf_run_fs):
     for locs in cnf_run_fs[-1].existing():
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
+        if not run_fs[-1].file.info.exists([job]):
+            continue
         inf_obj = run_fs[-1].file.info.read([job])
         status = inf_obj.status
         if status == autofile.schema.RunStatus.RUNNING:

@@ -9,6 +9,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models import typ
 from mechroutines.models import _vib as vib
+from mechroutines.es.ts import ts_zma_locs
 
 
 # Functions to hand reading and formatting energies of single species
@@ -111,7 +112,7 @@ def zero_point_energy(spc_dct_i,
     if is_atom:
         zpe = 0.0
     else:
-        _, _, zpe, _, _, _, _, _ = vib.full_vib_analysis(
+        _, _, zpe, _, _, _, _, _, _ = vib.full_vib_analysis(
             spc_dct_i, pf_filesystems, spc_model_dct_i,
             run_prefix, zrxn=(None if not saddle else 'placeholder'))
 
@@ -125,7 +126,8 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
 
     # Set up the filesystem
     zma_fs = autofile.fs.zmatrix(scn_prefix)
-    zma_path = zma_fs[-1].path([0])
+    zma_locs = ts_zma_locs(None, None, zma_fs, ts_dct)
+    zma_path = zma_fs[-1].path(zma_locs)
     scn_fs = autofile.fs.scan(zma_path)
 
     ene_info1 = ene_info1[1][0][1]

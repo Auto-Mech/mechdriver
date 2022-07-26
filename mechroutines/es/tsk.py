@@ -17,6 +17,7 @@ from mechroutines.es._routines import conformer
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
 from mechroutines.es.ts import findts
+from mechroutines.es.ts import ts_zma_locs
 
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
@@ -225,11 +226,14 @@ def conformer_tsk(job, spc_dct, spc_name,
 
             # Read the geometry and zma from the ini file system
             geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-            zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
+            zma_locs = (0,)
+            if saddle:
+                zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+            zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
             # Read the torsions from the ini file sys
-            if ini_zma_save_fs[-1].file.torsions.exists([0]):
-                tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+            if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
+                tors_dct = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
                 rotors = automol.rotor.from_data(zma, tors_dct)
                 tors_names = automol.rotor.names(rotors, flat=True)
             else:
@@ -286,11 +290,14 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Read the geometry and zma from the ini file system
         geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
-        zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
+        zma_locs = (0,)
+        if saddle:
+            zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+        zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
         # Read the torsions from the ini file sys
-        if ini_zma_save_fs[-1].file.ring_torsions.exists([0]):
-            ring_tors_dct = ini_zma_save_fs[-1].file.ring_torsions.read([0])
+        if ini_zma_save_fs[-1].file.ring_torsions.exists(zma_locs):
+            ring_tors_dct = ini_zma_save_fs[-1].file.ring_torsions.read(zma_locs)
         else:
             ring_tors_dct = {}
 
@@ -342,7 +349,10 @@ def conformer_tsk(job, spc_dct, spc_name,
             # Obtain the zma from ini loc
             ini_cnf_save_path = ini_cnf_save_fs[-1].path(locs)
             ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-            zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+            zma_locs = (0,)
+            if saddle:
+                zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+            zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
             # Make the ring filesystem
             conformer.single_conformer(
@@ -358,7 +368,10 @@ def conformer_tsk(job, spc_dct, spc_name,
             # Obtain the zma from ini loc
             ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-            zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+            zma_locs = (0,)
+            if saddle:
+                zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+            zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
             # obtain conformer filesys associated with ring at the runlevel
             cid = autofile.schema.generate_new_conformer_id()
             conformer.single_conformer(
@@ -428,7 +441,10 @@ def conformer_tsk(job, spc_dct, spc_name,
                 ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
                 print('Running task for geometry at ', geo_save_path)
                 geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-                zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+                zma_locs = (0,)
+                if saddle:
+                    zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+                zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
                 script_str, kwargs = qchem_params(
                     method_dct, geo=geo, spc_info=spc_info)
@@ -499,7 +515,8 @@ def tau_tsk(job, spc_dct, spc_name,
 
     ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
     geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
-    zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+    zma_locs = (0,)
+    zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
     ini_sp_save_fs = autofile.fs.single_point(ini_min_cnf_path)
     if ini_sp_save_fs[-1].file.energy.exists(mod_ini_thy_info[1:4]):
         ref_ene = ini_sp_save_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
@@ -507,9 +524,8 @@ def tau_tsk(job, spc_dct, spc_name,
         ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
 
     # Get the tors names
-    ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
-    if ini_zma_save_fs[-1].file.torsions.exists([0]):
-        tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+    if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
+        tors_dct = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
         torsions = automol.rotor.from_data(zma, tors_dct)
     else:
         torsions = ()
@@ -782,9 +798,12 @@ def hr_tsk(job, spc_dct, spc_name,
         # 5) Read properties for input geometry
         ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
         geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
-        zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-        if ini_zma_save_fs[-1].file.torsions.exists([0]):
-            tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+        zma_locs = (0,)
+        if saddle:
+            zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+        zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
+        if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
+            tors_dct = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
             rotors = automol.rotor.from_data(
                 zma, tors_dct, multi='md' in tors_model)
         else:
@@ -856,9 +875,12 @@ def hr_tsk(job, spc_dct, spc_name,
             # scan) Get the runlvl zma and torsion info
             zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
-            zma = zma_save_fs[-1].file.zmatrix.read((0,))
-            if zma_save_fs[-1].file.torsions.exists([0]):
-                tors_dct = zma_save_fs[-1].file.torsions.read([0])
+            zma_locs = (0,)
+            if saddle:
+                zma_locs = ts_zma_locs(spc_dct, spc_name, zma_save_fs)
+            zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
+            if zma_save_fs[-1].file.torsions.exists(zma_locs):
+                tors_dct = zma_save_fs[-1].file.torsions.read(zma_locs)
                 rotors = automol.rotor.from_data(
                     zma, tors_dct, multi='md' in tors_model)
             else:
@@ -874,7 +896,7 @@ def hr_tsk(job, spc_dct, spc_name,
                 scn = 'SCAN'
             scn_run_fs, scn_save_fs = build_fs(
                 cnf_run_path, cnf_save_path, scn,
-                zma_locs=(0,))
+                zma_locs=zma_locs)
 
             increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
             hr.hindered_rotor_scans(
@@ -959,7 +981,7 @@ def hr_tsk(job, spc_dct, spc_name,
             ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
             ini_scn_run_fs, ini_scn_save_fs = build_fs(
                 ini_cnf_run_path, ini_cnf_save_path, scn,
-                zma_locs=(0,))
+                zma_locs=zma_locs)
             run_tors_names = automol.rotor.names(rotors, flat=True)
             for tors_names in run_tors_names:
 

@@ -27,8 +27,8 @@ def full_vib_analysis(
     pot_scalef = 1.0
     tors_freqs = []
     harm_freqs = []
-
-    rotors, mdhr_dct = tors.build_rotors(
+    
+    rotors, mdhr_dct, zma_locs = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     # Squash the rotor potentials as necessary
     if rotors is not None:
@@ -43,7 +43,7 @@ def full_vib_analysis(
         tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
         [_, hr_str, _, prot_str, _] = tors_strs
         ret = tors_projected_freqs(
-            pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
+            pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn, zma_locs=zma_locs)
 
         if ret is not None:
             proj_freqs, harm_freqs, tors_freqs, imag, disps = ret
@@ -104,7 +104,7 @@ def full_vib_analysis(
         zpe = proj_tors_zpe
     print('what is zpe', zpe)
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
-            harm_freqs, disps)
+            harm_freqs, disps, rotors)
 
 
 # Read the Frequencies from the filesystem using the fs objs
@@ -200,7 +200,7 @@ def read_anharmon_matrix(pf_filesystems):
 
 
 def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
-                         prefix, zrxn=None, conf=None):
+                         prefix, zrxn=None, conf=None, zma_locs=None):
     """ Get the projected frequencies from harmonic frequencies,
         which requires projrot run
 
@@ -218,7 +218,10 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     hess = harm_cnf_fs[-1].file.hessian.read(harm_min_locs)
     tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_locs)
     ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
-
+   
+    harm_geo, hess, tors_geo = _morph(
+        harm_geo, hess, tors_geo,
+        pf_filesystems, zrxn, zma_locs)
     fml_str = automol.geom.formula_string(harm_geo)
     vib_path = job_path(prefix, 'PROJROT', 'FREQ', fml_str, print_path=True)
     # print('proj test:', vib_path)
@@ -247,12 +250,13 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
 
 
 def tors_projected_scaled_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             prefix, spc_mod_dct_i, zrxn=None, conf=None):
+                             prefix, spc_mod_dct_i, zrxn=None, conf=None,
+                             zma_locs=None):
     """ Get frequencies from one version of ProjRot
     """
     ret = tors_projected_freqs(
         pf_filesystems, mess_hr_str, projrot_hr_str,
-        prefix, zrxn=zrxn, conf=conf)
+        prefix, zrxn=zrxn, conf=conf, zma_locs=zma_locs)
     _, _, tors_freqs, _, _ = ret
     scaled_tors_freqs, scaled_tors_zpe = scale_frequencies(
         tors_freqs, 0.0,
@@ -340,3 +344,41 @@ def ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
         script_str = autorun.SCRIPT_DCT['intder']
         _ = autorun.intder.reaction_coordinate_check_idxs(
             script_str, ted_path, geo, zma, hess, zrxn)
+
+
+def _morph(hess_geo, hess, tors_geo, zrxn, pf_filesystem, zma_locs):
+    ret = hess_geo, hess, tors_geo
+    if zma_locs not in [(0,), [0]]:
+        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+        zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
+        zma = zma_fs.file.zmatrix.read(zma_locs)
+        zma_gra = automol.zmat.graph(zma_gra)
+        hess_gra = automol.geom.graph(hess_geo)
+        tors_gra = automol.geom.graph(tors_geo)
+        hess_iso_dct = rxn_util.zmatrix_conversion_keys(hess_gra, zma_gra)
+        tors_iso_dct = rxn_util.zmatrix_conversion_keys(tors_gra, zma_gra)
+        zma_hess_geo = automol.geom.reorder(hess_geo, hess_iso_dct)
+        zma_tors_geo = automol.geom.reorder(tors_geo, tors_iso_dct)
+        zma_hess = _reorder_hessian(hess, hess_iso_dct)
+        ret = zma_hess_geo, zma_hess, zma_tors_geo
+    return ret
+
+
+def _reorder_hessian(hess, idx_dct):
+    """ Reorder the atoms of a hessian using
+        the mapping of an input dictionary.
+
+        :param hess: tuple of tuples of the hessian
+        :param idx_dct: The new order of the atoms, by index
+        :type idx_dct: dict
+        :rtype: tuple of tuples for hessiane
+    """
+
+    update_hess = deepcopy(hess)
+    for orig_i, new_i in idxs.items():
+        for orig_j, new_j in idxs.items():
+            update_hess[new_i][new_j] = hess[orig_i][orig_j]
+            update_hess[new_i + 1][new_j + 1] = hess[orig_i + 1][orig_j + 1]
+            update_hess[new_i + 2][new_j + 2] = hess[orig_i + 2][orig_j + 2]
+
+    return update_hess

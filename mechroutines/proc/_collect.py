@@ -23,6 +23,7 @@ from mechroutines.models import ene
 from mechroutines.models import blocks
 from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
+from mechroutines.es.ts import ts_zma_locs
 
 
 def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
@@ -134,7 +135,7 @@ def frequencies(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             run_prefix, zrxn=zrxn)
         if ret is not None:
-            freqs, imag, zpe, sfactor, _, torsfreqs, all_freqs, disps = ret
+            freqs, imag, zpe, sfactor, _, torsfreqs, all_freqs, disps, rotors = ret
             if saddle:
                 print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
@@ -199,10 +200,13 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
     if pf_filesystems['tors'] is not None:
         [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['tors']
         zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
-        zma_path = zma_fs[-1].path([0])
+        zma_locs = (0,)
+        if saddle:
+            zma_locs = ts_zma_locs(None, None, zma_fs, spc_dct_i)
+        zma_path = zma_fs[-1].path(zma_locs)
         print(f'Checking for torsions at {zma_path}')
-        if zma_fs[-1].file.torsions.exists([0]):
-            rotors, _ = tors.build_rotors(
+        if zma_fs[-1].file.torsions.exists(zma_locs):
+            rotors, _, _ = tors.build_rotors(
                 spc_dct_i, pf_filesystems, spc_mod_dct_i)
             names = automol.rotor.names(rotors, flat=True)
             pots = automol.rotor.potentials(rotors, flat=True)
@@ -391,9 +395,7 @@ def messpf_input(
         run_prefix, save_prefix,
         name=spc_name, saddle=saddle, spc_locs=locs)
     geom = rot.read_geom(pf_filesystems)
-    rotors, _ = tors.build_rotors(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i)
-    freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
+    freqs, imag, zpe, _, tors_strs, _, _, _, rotors = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
     allr_str = tors_strs[0]

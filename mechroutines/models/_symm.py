@@ -110,6 +110,7 @@ def _umbrella_factor(rotors, geo, grxn=None):
     # dih check
     adj_atms_dct = automol.graph.atoms_neighbor_atom_keys(gra)
     planarity = 100.
+    umb_inv = False
     for rad_atm in rad_atms:
         adj_atms = adj_atms_dct[rad_atm]
         if len(adj_atms) == 3:
@@ -119,43 +120,46 @@ def _umbrella_factor(rotors, geo, grxn=None):
             planarity = min([
                 abs(dih_ang + x - numpy.pi)
                 for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]])
-            # offset = [
-            #     x for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]
-            #     if abs(abs(dih_ang + x - numpy.pi) - planarity) < .01]
-            # start_inversion = dih_ang + offset - numpy.pi
-            # print(
-            #     'checking for umbrella inversion around atom',
-            #     rad_atm, start_inversion)
-    # if rad_atms:
-    #     dont_dbl = ()
-    #     umb_inv = False
-    #     for rotor in rotors:
-    #         for torsion in rotor:
-    #             if umb_inv:
-    #                 break
-    #             if any([ax_atm in dont_dbl for ax_atm in torsion.axis]):
-    #                 continue
-    #             if any([rad_atm in torsion.axis for rad_atm in rad_atms]):
-    #                 for scan_geo in torsion.scan_geos.values():
-    #                     dih_ang = automol.geom.dihedral_angle(
-    #                         scan_geo, dih_a, rad_atm, dih_b, dih_c)
-    #                     planarity = min([
-    #                         abs(dih_ang + x - numpy.pi)
-    #                         for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]])
-    #                     offset = [
-    #                         x for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]
-    #                         if abs(abs(dih_ang + x - numpy.pi) - planarity) < .01]
-    #                     inversion = dih_ang + offset - numpy.pi
-    #                     if start_inversion * inversion < 0:
-    #                         print(
-    #                             'umbrella inversion occured',
-    #                             start_inversion, inversion)
-    #                         umb_inv = True
-    #                         break
-    #                 #if automol.pot.is_symmetric(torsion.pot):
-    #                 #    dont_dbl += tuple([rad_atm for rad_atm in torsion.axis if rad_atm in rad_atms])
-    #                 #    umb_fact *= 2
-    #                 #    ioprinter.info_message(
-    #                 #        'Umbrella mode identified for torsion about', torsion.axis)
-    # return 2 if umb_inv else 1
+            offset = [
+                x for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]
+                if abs(abs(dih_ang + x - numpy.pi) - planarity) < .01]
+            start_inversion = dih_ang + offset - numpy.pi
+            print(
+                'checking for umbrella inversion around atom',
+                rad_atm, start_inversion)
+        #dont_dbl = ()
+        #for rotor in rotors:
+        #    for torsion in rotor:
+        #        if umb_inv:
+        #            break
+        #        if any([ax_atm in dont_dbl for ax_atm in torsion.axis]):
+        #            continue
+        #        if any([rad_atm in torsion.axis for rad_atm in rad_atms]):
+        #            for scan_geo in torsion.scan_geos.values():
+        #                if scan_geo is None:
+        #                    print('missing geo')
+        #                    continue
+        #                dih_ang = automol.geom.dihedral_angle(
+        #                    scan_geo, dih_a, rad_atm, dih_b, dih_c)
+        #                planarity = min([
+        #                    abs(dih_ang + x - numpy.pi)
+        #                    for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]])
+        #                offset = [
+        #                    x for x in [-2*numpy.pi, 0, 2*numpy.pi, 4*numpy.pi]
+        #                    if abs(abs(dih_ang + x - numpy.pi) - planarity) < .01]
+        #                inversion = dih_ang + offset - numpy.pi
+        #                print(
+        #                    'checking umbrella inversion d',
+        #                    start_inversion, inversion)
+        #                if start_inversion * inversion < 0:
+        #                    #print(
+        #                    #    'umbrella inversion occured',
+        #                    #    start_inversion, inversion)
+        #                    umb_inv = True
+        #                    # break
+        #            #if automol.pot.is_symmetric(torsion.pot):
+        #            #    dont_dbl += tuple([rad_atm for rad_atm in torsion.axis if rad_atm in rad_atms])
+        #            #    umb_fact *= 2
+        #            #    ioprinter.info_message(
+        #            #        'Umbrella mode identified for torsion about', torsion.axis)
     return 2 if planarity < .29 and planarity > .09 else 1

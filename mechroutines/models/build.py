@@ -26,6 +26,7 @@ from mechroutines.models import _symm as symm
 from mechroutines.models import _vib as vib
 from mechroutines.models import _util as util
 from mechroutines.thermo import basis
+from mechroutines.es.ts import ts_zma_locs
 # import thermfit
 
 
@@ -184,7 +185,8 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
             cnf_path = cnf_fs[-1].path(min_cnf_locs)
             zma_fs = autofile.fs.zmatrix(cnf_path)
-            zrxn = zma_fs[-1].file.reaction.read((0,))
+            zma_locs = ts_zma_locs(spc_dct, tsname, zma_fs)
+            zrxn = zma_fs[-1].file.reaction.read(zma_locs)
             print('-----')
 
             inf_dct, chn_basis_ene_dct = mol_data(
@@ -346,11 +348,9 @@ def mol_data(spc_name, spc_dct,
     ioprinter.info_message(
         'Preparing internal rotor info building partition functions...',
         newline=1)
-    rotors, _ = tors.build_rotors(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i)
     ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
-    freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
+    freqs, imag, zpe, _, tors_strs, _, _, _, rotors = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
 
@@ -367,12 +367,14 @@ def mol_data(spc_name, spc_dct,
         'Determining the symmetry factor...', newline=1)
 
     zma = None
+    zma_locs = (0,)
     if zrxn:
         [_, cnf_save_path, _, _, _] = pf_filesystems['harm']
         # Build the rotors
         if cnf_save_path:
             zma_fs = autofile.fs.zmatrix(cnf_save_path)
-            zma = zma_fs[-1].file.zmatrix.read([0])
+            zma_locs = ts_zma_locs(spc_dct, spc_name, zma_fs)
+            zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
     sym_factor = symm.symmetry_factor(
         pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma)
@@ -835,12 +837,10 @@ def tau_data(spc_dct_i,
     [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
 
     # Obtain all values from initial reference conformer
-    rotors, _ = tors.build_rotors(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i, read_potentials=False)
     vib_info = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=None)
-    freqs, _, zpe, _, tors_strs, _, harm_freqs, _ = vib_info
+    freqs, _, zpe, _, tors_strs, _, harm_freqs, _, rotors = vib_info
     harm_zpve = 0.5 * sum(harm_freqs) * phycon.WAVEN2EH
 
     ioprinter.info_message('Determining the symmetry factor...', newline=1)

@@ -12,6 +12,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import spc as sinfo
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import job_path
+from mechroutines.es.ts import ts_zma_locs
 from mechlib import filesys
 
 
@@ -42,14 +43,17 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
         # Build the rotors
         ref_ene = filesys.read.energy(cnf_fs, min_cnf_locs, mod_tors_ene_info)
         zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
+        zma_locs = (0,)
+        if 'zrxn' in spc_dct_i:
+            zma_locs = ts_zma_locs(None, None, zma_fs, spc_dct_i)
         if (
-            zma_fs[-1].file.torsions.exists([0]) and
-            zma_fs[-1].file.zmatrix.exists([0]) and
+            zma_fs[-1].file.torsions.exists(zma_locs) and
+            zma_fs[-1].file.zmatrix.exists(zma_locs) and
             tors_model != 'rigid'
         ):
             rotors = automol.rotor.from_data(
-                zma=zma_fs[-1].file.zmatrix.read([0]),
-                tors_inf_dct=zma_fs[-1].file.torsions.read([0]),
+                zma=zma_fs[-1].file.zmatrix.read(zma_locs),
+                tors_inf_dct=zma_fs[-1].file.torsions.read(zma_locs),
                 tors_names=(
                     spc_dct_i.get('tors_names', None)
                     if 'md' in tors_model else None),
@@ -61,7 +65,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                 ref_ene, mod_tors_ene_info,
                 tors_model)
 
-    return rotors, mdhr_dct
+    return rotors, mdhr_dct, zma_locs
 
 
 def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
