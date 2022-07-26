@@ -15,7 +15,7 @@ from mechroutines.es.ts import _rpath as rpath
 
 
 # Functions to assess the status of existing saddle point structures in SAVE
-def read_existing_saddle_points(spc_dct, tsname, savefs_dct):
+def read_existing_saddle_points(spc_dct, tsname, savefs_dct, zma_locs=None):
     """ Searches for and reads out, if present, the Z-matrix for a
         conformer of the saddle-point in the SAVE filesystem for
         the electronic structure method specified in the
@@ -26,11 +26,7 @@ def read_existing_saddle_points(spc_dct, tsname, savefs_dct):
         :type savefs_dct: dict[str: autofile.fs objects]
         :rtype: tuple(automol.zmat object)
     """
-
-    # Set zma information for reading
-    zma_locs = (spc_dct[tsname].get('zma_idx', 0),)
-
-    zmas = [None, None]
+    zmas = [[], None]
     for idx, _fs in enumerate(('runlvl_cnf_tuple', 'inplvl_cnf_tuple')):
         lvl = 'runlvl' if idx == 0 else 'inplvl'
         ioprinter.info_message(
@@ -39,14 +35,18 @@ def read_existing_saddle_points(spc_dct, tsname, savefs_dct):
         cnf_fs, cnf_locs = savefs_dct[_fs]
         if any(cnf_locs):
             zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
-            if zma_fs[-1].file.zmatrix.exists(zma_locs):
+            for zma_locs in zma_fs[-1].existing():
                 geo_path = zma_fs[-1].file.zmatrix.path(zma_locs)
                 ioprinter.info_message(
                     ' - Z-Matrix found.')
                 ioprinter.info_message(
                     f' - Reading Z-Matrix from path {geo_path}')
-                zmas[idx] = zma_fs[-1].file.zmatrix.read(zma_locs)
-
+                if idx == 1:
+                    zmas[idx] = zma_fs[-1].file.zmatrix.read(zma_locs)
+                else:
+                    zmas[idx].append((
+                        cnf_fs, cnf_locs, zma_locs,
+                        zma_fs[-1].file.zmatrix.read(zma_locs),))
     return tuple(zmas)
 
 
@@ -65,7 +65,7 @@ def search_required(runlvl_zma, es_keyword_dct):
 
     overwrite = es_keyword_dct['overwrite']
 
-    if runlvl_zma is None:
+    if runlvl_zma is []:
         ioprinter.info_message(
             '\nSince no transition state found in filesys',
             f'at {es_keyword_dct["runlvl"]} level',
@@ -140,6 +140,25 @@ def search(ini_zma, spc_dct, tsname,
             # print the saddle point
 
     return success
+
+
+def save_reversed_zma(
+        spc_dct, tsname,
+        cnf_fs, cnf_locs, orig_zma_locs, zma):
+    """
+    """
+    ts_dct = spc_dct[tsname]
+    # Pull info from the dictionaries to save
+    zrxn = ts_dct['zrxn']
+    zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
+    zma_locs = [zma_fs[-1].existing()[-1][0] + 1]
+    inf_obj = zma_fs[-1].file.geometry_info.read(orig_zma_locs)
+    inp_str = zma_fs[-1].file.geometry_input.read(orig_zma_locs)
+
+    filesys.save._save_zmatrix_parsed(zma, inf_obj, inp_str, zma_fs, zma_locs)
+    filesys.save._conformer_aux_info(zma_fs, zma_locs, zrxn=zrxn)
+    # # Save initial saddle point conformer
+
 
 
 def save_opt_from_run(spc_dct, tsname,
@@ -410,6 +429,18 @@ def _ted_coordinate_check(ted_names, zrxn, zma):
         success = True
 
     return success
+
+
+def ts_zma_locs(spc_dct, tsname, zma_fs, spc_dct_i=None):
+    if spc_dct_i is None:
+        spc_dct_i = spc_dct[tsname]
+    zma_locs = None
+    for zma_locs_i in zma_fs[-1].existing():
+        if zma_fs[-1].file.zmatrix.exists(zma_locs_i):
+            zma_i = zma_fs[-1].file.zmatrix.read(zma_locs_i)
+            if automol.zmat.vmatrix(zma_i) == automol.zmat.vmatrix(spc_dct_i['zma']):
+                zma_locs = zma_locs_i
+    return zma_locs
 
 
 # Save the saddle point

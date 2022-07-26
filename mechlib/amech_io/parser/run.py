@@ -96,6 +96,7 @@ TSK_KEY_DCT = {
     'energy': (('spc', 'ts'), PRNT),
     'geo': (('spc', 'ts'), PRNT),
     'molden': (('spc', 'ts'), PRNT),
+    'sidata': (('spc', 'ts'), PRNT),
     'zmatrix': (('spc', 'ts'), PRNT),
     'torsions': (('spc', 'ts'), PRNT),
     'enthalpy': (('spc', 'ts'), PRNT),

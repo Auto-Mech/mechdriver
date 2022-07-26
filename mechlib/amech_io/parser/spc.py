@@ -9,10 +9,10 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from phydat import symm, eleclvl, phycon
 from mechlib.reaction import rxnid
+from mechlib.reaction import _util as rxn_util
 from mechlib.filesys import reaction_fs
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import check_dct1
-
 
 # DCTS
 SPC_REQ = ('inchi', 'mult', 'charge', 'elec_levels', 'mc_nsamp')
@@ -334,13 +334,13 @@ def ts_dct_sing_chnl(pes_idx, reaction,
           f'{rct_str} = {prd_str}')
 
     # Set the reacs and prods for the desired direction
-    reacs, prods = rxnid.set_reaction_direction(
+    reacs_forw, prods_forw = rxnid.set_reaction_direction(
         reacs, prods, rxn_info,
         thy_info, ini_thy_info, save_prefix, direction='forw')
 
-    # Obtain the reaction object for the reaction
     zma_locs = (0,)
-    # is there a better way to get this hbond param out of spc_dct and does
+     
+    # Obtain the reaction object for the reaction
     # it matter in getting the mincofs to build the reaction if we bother
     # to include it?
     # hbond_cutoffs = spc_dct[reacs[0]]['hbond_cutoffs']
@@ -354,7 +354,9 @@ def ts_dct_sing_chnl(pes_idx, reaction,
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
-            ts_dct[tsname] = {
+            ts_reac_ichs = automol.reac.reaction_inchis(zrxn, stereo=True)
+            reac_ichs = [spc_dct[reac]['inchi'] for reac in reacs]
+            forw_dct = {
                 'zrxn': zrxn,
                 'zma': zma,
                 'reacs': reacs,
@@ -369,6 +371,45 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }
+            back_zrxn, back_zma = rxn_util.reverse_ts_zmatrix(zrxn)
+            back_dct = {
+                'zrxn': back_zrxn,
+                'zma': back_zma,
+                'reacs': reacs,
+                'prods': prods,
+                'rxn_info': rxn_info,
+                'inchi': '',
+                'charge': rinfo.ts_chg(rxn_info),
+                'mult': rinfo.value(rxn_info, 'tsmult'),
+                'elec_levels': ((0.0, rinfo.value(rxn_info, 'tsmult')),),
+                'hind_inc': 30.0*phycon.DEG2RAD,
+                'hbond_cutoffs': (4.55, 1.92),
+                'class': cls,
+                'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info),
+            }
+            if sorted(ts_reac_ichs[0]) == sorted(reac_ichs):
+                iso_dct = rxn_util.zmatrix_conversion_keys(
+                    automol.graph.standard_keys(
+                        automol.graph.without_dummy_atoms(
+                            back_zrxn.forward_ts_graph)),
+                    automol.graph.standard_keys(
+                        automol.graph.without_dummy_atoms(
+                            zrxn.forward_ts_graph)))
+                ts_dct[tsname] = forw_dct
+                ts_dct[tsname]['rev_dct'] = back_dct
+                ts_dct[tsname]['iso_dct'] = iso_dct
+            elif sorted(ts_reac_ichs[1]) == sorted(reac_ichs):
+                print('User requested backward direction of expected reaction for:', tsname)
+                iso_dct = rxn_util.zmatrix_conversion_keys(
+                    automol.graph.standard_keys(
+                        automol.graph.without_dummy_atoms(
+                            zrxn.forward_ts_graph)),
+                    automol.graph.standard_keys(
+                        automol.graph.without_dummy_atoms(
+                            back_zrxn.forward_ts_graph)))
+                ts_dct[tsname] = back_dct
+                ts_dct[tsname]['rev_dct'] = forw_dct
+                ts_dct[tsname]['iso_dct'] = iso_dct
     elif status == 'MISSING-ADD':
         tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_0'
         ts_dct = {}
