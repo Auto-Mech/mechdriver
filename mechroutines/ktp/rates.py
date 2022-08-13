@@ -25,7 +25,6 @@ from mechroutines.ktp._ene import sum_channel_enes
 from mechroutines.ktp._multipes import energy_dist_params
 from mechroutines.ktp._multipes import set_prod_density_param
 from mechroutines.ktp._multipes import set_hot_enes
-from mechroutines.ktp._multipes import relabel_ped_spc_lst
 
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
@@ -61,8 +60,6 @@ def make_full_str(energy_trans_str, rxn_chan_str, dats,
     # Need the PES number to pull the correct params out of lists
     ped_spc_lst, micro_out_params, pes_param_dct = energy_dist_params(
         pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str)
-    # relabel ped_spc_lst if needed
-    ped_spc_lst = relabel_ped_spc_lst(ped_spc_lst)
     
     ioprinter.messpf('global_header')
 

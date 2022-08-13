@@ -1,4 +1,4 @@
-""" functinos for new stuff like non-thermal and prompyt dissoc.
+""" functions for new stuff like non-thermal and prompyt dissoc.
 """
 
 import numpy
@@ -65,20 +65,30 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
             reacs, prods = ped.split('=')
             print('ene dct test')
             print(energy_dct)
-            ene_bw = energy_dct[reacs] - energy_dct[prods]
+            try:
+                ene_bw = energy_dct[reacs] - energy_dct[prods]
+            except KeyError as keyerr:
+                print('species not in pes:', keyerr.args[0])
+                print('probably unstable- setting default max_en as 300')
+                max_ene.append(300.1)
+                max_ene_ped.append(300.1)
+                continue
+            
             dof_info = mechanalyzer.calculator.ene_partition.get_dof_info(
                 spc_blocks_ped[prods])
             max_ene_ped.append(mechanalyzer.calculator.ene_util.max_en_auto(
                 dof_info['n_atoms']['TS'], ene_bw, ref_ene=energy_dct[prods]))
             max_ene.append(mechanalyzer.calculator.ene_util.max_en_auto(
                 dof_info['n_atoms']['TS'], ene_bw))
+            
         micro_limit = max(max_ene_ped)
+        
         return max_ene, micro_limit
 
     if pes_param_dct is not None:
 
         # Grab the desired PED and hot enes for the PES in the group
-        # Currenly just printing them, may need to move
+        # Currently just printing them, may need to move
         all_peds = pes_param_dct['peds']
         pes_peds = all_peds[pesgrp_num]
 
@@ -90,7 +100,7 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
             max_ene, micro_limit = get_ped_ene_info(pes_peds, rxn_chan_str)
             pes_param_dct['en_limit'][pesgrp_num] = max_ene
         else:
-            ped_spc_lst = []
+            ped_spc_lst = None
 
         # Set the Hot Energies section
         if hot_enes_dct is not None:
@@ -103,8 +113,11 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
         micro_out_params = (0.1, micro_limit, 0.1)
         print(f'Ranges for k(E) calculations: {micro_out_params}')
     else:
-        ped_spc_lst, micro_out_params = [], None
-
+        ped_spc_lst, micro_out_params = None, None
+    # relabel ped_spc_lst if needed
+    if ped_spc_lst is not None:
+        ped_spc_lst = relabel_ped_spc_lst(ped_spc_lst)
+        
     return ped_spc_lst, micro_out_params, pes_param_dct
 
 def set_hot_enes(hot_enes_dct, pesgrp_num, reacs, prods,
