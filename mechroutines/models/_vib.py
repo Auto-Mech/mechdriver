@@ -36,7 +36,6 @@ def full_vib_analysis(
             for rotor in rotors:
                 for torsion in rotor:
                     torsion.pot = automol.pot.relax_scale(torsion.pot)
-
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
