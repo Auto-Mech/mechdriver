@@ -63,7 +63,8 @@ TS_VAL_DCT.update(SPC_VAL_DCT)
 
 
 # Build spc
-def species_dictionary(spc_str, dat_str, geo_dct, act_dct, spc_type):
+def species_dictionary(
+        spc_str, dat_str, geo_dct, act_dct, run_dct, spc_type):
     """ Read each of the species input files:
             (1) species.csv: CSV file with basic info like names,inchis,mults
             (2) species.dat:
@@ -76,7 +77,8 @@ def species_dictionary(spc_str, dat_str, geo_dct, act_dct, spc_type):
 
     # Parse out the dcts from the strings
     # spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
-    spc_dct = mechanalyzer.parser.new_spc.parse_mech_spc_dct(spc_str)
+    spc_dct = mechanalyzer.parser.new_spc.parse_mech_spc_dct(
+        spc_str, canon_ent=run_dct['canonical'])
     dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 

@@ -40,7 +40,8 @@ INP_KEY_DCT = ioparser.run.input_dictionary(INPUT['run'])
 PES_IDX_DCT, SPC_IDX_DCT = ioparser.run.chem_idxs(INPUT['run'])
 TSK_LST_DCT = ioparser.run.tasks(INPUT['run'], THY_DCT)
 SPC_DCT, GLOB_DCT = ioparser.spc.species_dictionary(
-    INPUT['spc'], INPUT['dat'], INPUT['geo'], INPUT['act'], 'csv')
+    INPUT['spc'], INPUT['dat'], INPUT['geo'],
+    INPUT['act'], INP_KEY_DCT, 'csv')
 PES_DCT = ioparser.mech.pes_dictionary(
     INPUT['mech'], 'chemkin', SPC_DCT)
 PES_RLST, SPC_RLST = ioparser.rlst.run_lst(
