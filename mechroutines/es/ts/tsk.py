@@ -84,7 +84,6 @@ def _findts(spc_dct, tsname,
 
     # Determine the TS finding algorithm to use
     search_method = _ts_search_method(spc_dct[tsname])
-
     # Calculate all required transition state information
     if search_method == 'sadpt':
         success = run_sadpt(
@@ -117,6 +116,7 @@ def run_sadpt(spc_dct, tsname,
               runfs_dct, savefs_dct):
     """ Find the saddle-point for a reaction
     """
+    success = False
 
     # Check save filesystem for existing zmatrixes
     run_zmas, ini_zma = sadpt.read_existing_saddle_points(
@@ -133,22 +133,20 @@ def run_sadpt(spc_dct, tsname,
                                    es_keyword_dct,
                                    runfs_dct, savefs_dct)
     else:
-        print('checking to see if zma is in right form')
+        print('checking to see if previously saved zma is in right form')
         zma_idx = None
         for (cnf_fs, cnf_locs, zma_locs, run_zma) in run_zmas: 
             if automol.zmat.vmatrix(run_zma) == automol.zmat.vmatrix(spc_dct[tsname]['zma']):
-                print('vmat in right form')
+                print('... it is, proceeding to next task')
                 zma_idx = zma_locs
                 success = True
         if zma_idx is None:
             if 'rev_dct' in spc_dct[tsname]:
                 for (cnf_fs, cnf_locs, zma_locs, run_zma) in run_zmas: 
                     if automol.zmat.vmatrix(run_zma) == automol.zmat.vmatrix(spc_dct[tsname]['rev_dct']['zma']):
-                        print('ya its the backward zmat')
+                        print('... the zma is for the backward direction, reversing and saving in new directory')
                         run_geo = automol.zmat.geometry(run_zma)
-                        print(automol.geom.string(run_geo))
                         forw_run_geo = automol.geom.reorder(run_geo, spc_dct[tsname]['iso_dct'])
-                        print(automol.geom.string(forw_run_geo))
                         forw_run_zma = rebuild_zma_from_opt_geo(spc_dct[tsname]['zma'], forw_run_geo)
                         sadpt.save_reversed_zma(spc_dct, tsname, cnf_fs, cnf_locs, zma_locs, forw_run_zma)  
                         success = True
@@ -314,7 +312,7 @@ def rpath_tsk(job, spc_dct, spc_name,
 
     # Get dct for specific species task is run for
     ts_dct = spc_dct[spc_name]
-    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+    ts_info = rinfo.ts_info(ts_dct['canon_rxn_info'])
 
     # # Build various thy and filesystem objects
     # thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(

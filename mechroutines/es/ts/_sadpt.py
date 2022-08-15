@@ -64,8 +64,7 @@ def search_required(runlvl_zma, es_keyword_dct):
     """
 
     overwrite = es_keyword_dct['overwrite']
-
-    if runlvl_zma is []:
+    if runlvl_zma == []:
         ioprinter.info_message(
             '\nSince no transition state found in filesys',
             f'at {es_keyword_dct["runlvl"]} level',
@@ -108,7 +107,7 @@ def search(ini_zma, spc_dct, tsname,
         guess_zmas = rpath.internal_coordinates_scan(
             ts_zma=ts_dct['zma'],
             zrxn=ts_dct['zrxn'],
-            ts_info=rinfo.ts_info(ts_dct['rxn_info']),
+            ts_info=rinfo.ts_info(ts_dct['canon_rxn_info']),
             rxn_class=ts_dct['class'],
             method_dct=thy_method_dct['runlvl'],
             mref_params=mref_dct['runlvl'],
@@ -225,11 +224,11 @@ def optimize_saddle_point(guess_zmas, ts_dct,
     """
 
     # Get info (move later)
-    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+    ts_info = rinfo.ts_info(ts_dct['canon_rxn_info'])
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
 
     overwrite = es_keyword_dct['overwrite']
-    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+    ts_info = rinfo.ts_info(ts_dct['canon_rxn_info'])
 
     # Set the run filesystem for the job
     runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
@@ -454,7 +453,7 @@ def save_saddle_point(opt_ret, hess_ret,
     # Pull info from the dictionaries to save
     zrxn = ts_dct['zrxn']
     runlvl_cnf_save_fs, _ = savefs_dct['runlvl_cnf_tuple']
-    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+    ts_info = rinfo.ts_info(ts_dct['canon_rxn_info'])
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
 
     # Save initial saddle point conformer

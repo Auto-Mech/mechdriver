@@ -273,7 +273,7 @@ def energy(spc_name, spc_dct_i,
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             conf=(locs, locs_path, cnf_fs))
     else:
-        spc_info = sinfo.from_dct(spc_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
         thy_info = tinfo.from_dct(thy_dct.get(
             proc_keyword_dct['proplvl']))
         mod_thy_info = tinfo.modify_orb_label(

@@ -19,7 +19,7 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     aspace = ts_dct['active']
 
     # Set reaction info
-    rxn_info = ts_dct['rxn_info']
+    rxn_info = ts_dct['canon_rxn_info']
     ts_info = rinfo.ts_info(rxn_info)
     rct_info = rinfo.rgt_info(rxn_info, 'reacs')
     rxn_info_sort = rinfo.sort(rxn_info)

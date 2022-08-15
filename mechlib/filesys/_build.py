@@ -15,12 +15,12 @@ def root_locs(spc_dct_i, saddle=False, name=None):
     """
 
     if not saddle:
-        spc_info = sinfo.from_dct(spc_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
         rxn_info = None
         ts_info = None
     else:
         spc_info = None
-        rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
+        rxn_info = rinfo.sort(spc_dct_i['canon_rxn_info'])
         if name is not None:
             ts_info = (int(name.split('_')[-1]),)
         else:

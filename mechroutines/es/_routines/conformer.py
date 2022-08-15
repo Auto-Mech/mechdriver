@@ -157,7 +157,7 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
                 'Getting initial geometry from geom dictionary')
 
     if geo_init is None:
-        geo_init = automol.chi.geometry(spc_dct_i['inchi'])
+        geo_init = automol.chi.geometry(spc_dct_i['canon_enant_ich'])
         info_message('Getting initial geometry from inchi')
 
     # Check if the init geometry is connected
@@ -288,12 +288,26 @@ def single_conformer(zma, spc_info, mod_thy_info,
                      cnf_run_fs, cnf_save_fs,
                      script_str, overwrite,
                      retryfail=True, zrxn=None,
-                     use_locs=None,
+                     use_locs=None, resave=False,
                      **kwargs):
     """ generate single optimized geometry to be saved into a
         filesystem
     """
     skip_job = False
+
+    if resave:
+        _presamp_save(
+            spc_info, cnf_run_fs, cnf_save_fs,
+            mod_thy_info, zrxn=zrxn, rid=None)
+        if use_locs is None:
+            print('getting rid')
+            rid = rng_loc_for_geo(
+                automol.zmat.geometry(zma), cnf_save_fs)
+            if rid is not None:
+                cid = autofile.schema.generate_new_conformer_id()
+                locs = (rid, cid)
+                
+
     if this_conformer_is_running(zma, cnf_run_fs):
         skip_job = True
     elif this_conformer_was_run_in_save(zma, cnf_save_fs):
@@ -312,6 +326,8 @@ def single_conformer(zma, spc_info, mod_thy_info,
             locs = (rid, cid)
         else:
             locs = use_locs
+            rid = locs[0]
+
         cnf_run_fs[-1].create(locs)
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
@@ -729,7 +745,8 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
 
         # Update the conformer trajectory file
         print('')
-        filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
+        for rloc in cnf_save_fs[-2].existing():
+            filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rloc[0])
 
 
 def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
@@ -812,6 +829,7 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info, orig_locs=None):
     found_saved_enes = []
     for idx, locs in enumerate(saved_locs):
         path = cnf_save_fs[-1].path(locs)
+        print('saved cnf path', path)
         sp_save_fs = autofile.fs.single_point(path)
         if sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
             found_saved_enes.append(sp_save_fs[-1].file.energy.read(
@@ -850,25 +868,26 @@ def _init_geom_is_running(cnf_run_fs):
     """ Check the RUN filesystem for currently running initial geometry submissions
     """
     running = False
-    job = elstruct.Job.OPTIMIZATION
+    jobs = [elstruct.Job.OPTIMIZATION, elstruct.Job.HESSIAN]
     for locs in cnf_run_fs[-1].existing():
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
-        if not run_fs[-1].file.info.exists([job]):
-            continue
-        inf_obj = run_fs[-1].file.info.read([job])
-        status = inf_obj.status
-        if status == autofile.schema.RunStatus.RUNNING:
-            start_time = inf_obj.utc_start_time
-            current_time = autofile.schema.utc_time()
-            _time = (current_time - start_time).total_seconds()
-            if _time < 3000000:
-                path = cnf_run_fs[-1].path(locs)
-                info_message(
-                    'init_geom was started in the last '
-                    f'{_time/3600:3.4f} hours in {path}.')
-                running = True
-                break
+        for job in jobs:
+            if not run_fs[-1].file.info.exists([job]):
+                continue
+            inf_obj = run_fs[-1].file.info.read([job])
+            status = inf_obj.status
+            if status == autofile.schema.RunStatus.RUNNING:
+                start_time = inf_obj.utc_start_time
+                current_time = autofile.schema.utc_time()
+                _time = (current_time - start_time).total_seconds()
+                if _time < 3000000:
+                    path = cnf_run_fs[-1].path(locs)
+                    info_message(
+                        'init_geom was started in the last '
+                        f'{_time/3600:3.4f} hours in {path}.')
+                    running = True
+                    break
     return running
 
 
@@ -879,7 +898,6 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
     for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
         cnf_path = cnf_fs[-1].path(locs)
         if cnf_fs[-1].file.geometry_input.exists(locs):
-            print('checking input at ', cnf_path)
             inp_str = cnf_fs[-1].file.geometry_input.read(locs)
             inp_str = inp_str.replace('=', '')
             inf_obj = cnf_fs[-1].file.geometry_info.read(locs)
