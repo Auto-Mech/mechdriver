@@ -129,7 +129,7 @@ def conformer_list(
     hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     # thy_info build
     thy_info = tinfo.from_dct(thy_dct.get(print_keyword_dct.get('geolvl')))
-    spc_info = sinfo.from_dct(spc_dct_i)
+    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     sort_info_lst = _set_sort_info_lst(
         print_keyword_dct['sort'], thy_dct, spc_info)
@@ -163,7 +163,7 @@ def conformer_list_from_models(
 
     # thy_info build
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
-    spc_info = sinfo.from_dct(spc_dct_i)
+    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     sort_info_lst = _set_sort_info_lst(
         print_keyword_dct['sort'], thy_dct, spc_info)
@@ -499,7 +499,7 @@ def remove_radrad_ts(obj_queue, spc_dct):
     new_queue = ()
     for obj in obj_queue:
         if 'ts_' in obj:
-            rxn_info = spc_dct[obj]['rxn_info']
+            rxn_info = spc_dct[obj]['canon_rxn_info']
             ts_mul = rinfo.value(rxn_info, 'tsmult')
             high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
             if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:

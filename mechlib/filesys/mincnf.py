@@ -80,7 +80,6 @@ def conformer_locators(
             nprocs=1):
 
         fin_locs_lst, fin_paths_lst = (), ()
-
         cnf_locs_lst = cnf_save_fs[-1].existing()
         if cnf_locs_lst:
             cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
@@ -733,7 +732,6 @@ def collect_rrho_params(
             freq_locs = locs
         else:
             freq_fs, freq_locs = get_freq_location(cnf_save_fs, geo, freq_info[1:4], locs)
-
         if freq_locs is not None:
             if freq_fs[-1].file.harmonic_frequencies.exists(freq_locs):
                 freqs = freq_fs[-1].file.harmonic_frequencies.read(freq_locs)
@@ -769,8 +767,8 @@ def get_freq_location(cnf_fs, geo, freq_thy_locs, cnf_locs):
             freq_locs.append(freq_cnf_locs)
     match_dct = fs_confs_dict(
         freq_cnf_fs, freq_locs, cnf_fs, [cnf_locs])
+    print('match dct', match_dct)
     if match_dct[tuple(cnf_locs)] is None:
-
         match_freqs_locs = None
         # Check TS filesystem
         ts_path_prefix = autofile.fs.path_prefix(

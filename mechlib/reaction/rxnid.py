@@ -90,7 +90,7 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
         for i, path in enumerate(prd_paths):
             print(f'     - product {i+1}: {path}')
         zrxn_objs = automol.reac.rxn_objs_from_geometry(
-            rct_geos, prd_geos, indexing='zma', stereo=False)
+            rct_geos, prd_geos, indexing='zma', stereo=True)
             # rct_geos, prd_geos, indexing='zma', stereo=True)
     else:
         print('    Reaction ID from geometries from input InChIs')
@@ -98,7 +98,7 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
         rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
         zrxn_objs = automol.reac.rxn_objs_from_inchi(
-            rct_ichs, prd_ichs, indexing='zma', stereo=False)
+            rct_ichs, prd_ichs, indexing='zma', stereo=True)
             # rct_ichs, prd_ichs, indexing='zma', stereo=True)
 
     # Loop over the found reaction objects
@@ -193,12 +193,23 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
         :type rxn_info: mechanalyzer.inf.rxn object
         :rtype: (tuple(automol.Reaction object), tuple(automol.zmat object))
     """
+    def _canonical(rgt_info):
+        canon_rgt_info = ()
+        for spc_info in rgt_info:
+            canon_ich = automol.chi.canonical_enantiomer(spc_info[0])
+            canon_rgt_info += ((canon_ich, spc_info[1], spc_info[2]),)
+        # canon_ichs = rgt_info[0]
+        return canon_rgt_info
 
     # Check the save filesystem for the reactant and product geometries
     rct_info = rinfo.rgt_info(rxn_info, 'reacs')
+    canon_enant_rct_info = _canonical(rct_info)
     prd_info = rinfo.rgt_info(rxn_info, 'prods')
-    _rcts_cnf_fs = filesys.rcts_cnf_fs(rct_info, thy_info, None, save_prefix)
-    _prds_cnf_fs = filesys.rcts_cnf_fs(prd_info, thy_info, None, save_prefix)
+    canon_enant_prd_info = _canonical(prd_info)
+    _rcts_cnf_fs = filesys.rcts_cnf_fs(
+        canon_enant_rct_info, thy_info, None, save_prefix)
+    _prds_cnf_fs = filesys.rcts_cnf_fs(
+        canon_enant_prd_info, thy_info, None, save_prefix)
 
     # If min cnfs found for all rcts and prds, read the geometries
     rct_geos, prd_geos = (), ()
@@ -206,13 +217,17 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
     if (
         _rcts_cnf_fs.count(None) == 0 and _prds_cnf_fs.count(None) == 0
     ):
-        for (_, cnf_save_fs, min_locs, _) in _rcts_cnf_fs:
+        for idx, (_, cnf_save_fs, min_locs, _) in enumerate(_rcts_cnf_fs):
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            if rct_info[idx] != canon_enant_rct_info[idx]:
+                geo = automol.geom.reflect_coordinates(geo)
             path = cnf_save_fs[-1].file.geometry.path(min_locs)
             rct_geos += (geo,)
             rct_paths += (path,)
-        for (_, cnf_save_fs, min_locs, _) in _prds_cnf_fs:
+        for idx, (_, cnf_save_fs, min_locs, _) in enumerate(_prds_cnf_fs):
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            if prd_info[idx] != canon_enant_prd_info[idx]:
+                geo = automol.geom.reflect_coordinates(geo)
             path = cnf_save_fs[-1].file.geometry.path(min_locs)
             prd_geos += (geo,)
             prd_paths += (path,)

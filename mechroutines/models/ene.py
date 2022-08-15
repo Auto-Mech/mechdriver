@@ -53,11 +53,11 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
     ioprinter.info_message('- Calculating electronic energy')
 
     # spc_dct_i = spc_dct[spc_name]
-    rxn_info = spc_dct_i.get('rxn_info', None)
+    rxn_info = spc_dct_i.get('canon_rxn_info', None)
     if rxn_info is not None:
         spc_info = rinfo.ts_info(rxn_info)
     else:
-        spc_info = sinfo.from_dct(spc_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
 
     # Get the harmonic filesys information
     if conf:

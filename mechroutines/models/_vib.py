@@ -345,7 +345,7 @@ def ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
             script_str, ted_path, geo, zma, hess, zrxn)
 
 
-def _morph(hess_geo, hess, tors_geo, zrxn, pf_filesystem, zma_locs):
+def _morph(hess_geo, hess, tors_geo, zrxn, pf_filesystems, zma_locs):
     ret = hess_geo, hess, tors_geo
     if zma_locs not in [(0,), [0]]:
         [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']

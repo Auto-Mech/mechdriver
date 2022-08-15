@@ -115,11 +115,11 @@ def set_model_filesys(spc_dct_i, level,
 
     # Set the spc_info
     if saddle:
-        rxn_info = spc_dct_i['rxn_info']
+        rxn_info = spc_dct_i['canon_rxn_info']
         spc_info = rinfo.ts_info(rxn_info)
     else:
-        spc_info = sinfo.from_dct(spc_dct_i)
-
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
+        
     levelp = tinfo.modify_orb_label(level, spc_info)
 
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
@@ -258,10 +258,10 @@ def _get_prop_fs(
     """ Get filesystem info for a property in the spc model dct
     """
     if saddle:
-        rxn_info = spc_dct_i['rxn_info']
+        rxn_info = spc_dct_i['canon_rxn_info']
         spc_info = rinfo.ts_info(rxn_info)
     else:
-        spc_info = sinfo.from_dct(spc_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
 
     level = spc_model_dct_i[prop]['geolvl'][1][1]
     levelp = tinfo.modify_orb_label(level, spc_info)

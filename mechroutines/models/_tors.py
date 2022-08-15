@@ -23,7 +23,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
     """
 
     run_prefix = pf_filesystems['run_prefix']
-    spc_info = sinfo.from_dct(spc_dct_i)
+    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
     spc_fml = automol.chi.formula_string(spc_info[0])
     if spc_fml is None:
         spc_fml = 'TS'
@@ -33,10 +33,10 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
     tors_model = spc_mod_dct_i['tors']['mod']
     tors_ene_info = spc_mod_dct_i['tors']['enelvl'][1][1]
     mod_tors_ene_info = tinfo.modify_orb_label(
-        tors_ene_info, sinfo.from_dct(spc_dct_i))
+        tors_ene_info, spc_info)
 
     rotors, mdhr_dct = None, None
-    print('tors_model', tors_model)
+    zma_locs = None
     if pf_filesystems['tors'] is not None:
         [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 

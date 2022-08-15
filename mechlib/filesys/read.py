@@ -353,7 +353,7 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
     """ see if a species and unstable and handle task management
     """
 
-    spc_info = sinfo.from_dct(spc_dct[spc_name])
+    spc_info = sinfo.from_dct(spc_dct[spc_name], canonical=True)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
     _, cnf_save_fs = build_fs(

@@ -113,8 +113,8 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     """
 
     spc_dct_i = spc_dct[spc_name]
-    spc_info = sinfo.from_dct(spc_dct_i)
-
+    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
+    
     # Get the theory info
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
@@ -172,9 +172,9 @@ def conformer_tsk(job, spc_dct, spc_name,
 
     # Set the spc_info
     if not saddle:
-        spc_info = sinfo.from_dct(spc_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
     else:
-        spc_info = rinfo.ts_info(spc_dct_i['rxn_info'])
+        spc_info = rinfo.ts_info(spc_dct_i['canon_rxn_info'])
     zrxn = spc_dct_i.get('zrxn', None)
 
     overwrite = es_keyword_dct['overwrite']
@@ -320,6 +320,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         hbond_cutoffs = spc_dct_i['hbond_cutoffs']
         cnf_sort_info_lst = _sort_info_lst(
             es_keyword_dct['sort'], thy_dct, spc_info)
+        resave = es_keyword_dct['resave']
 
         # Set up the run scripts
         script_str, kwargs = qchem_params(
@@ -345,7 +346,6 @@ def conformer_tsk(job, spc_dct, spc_name,
         #    'uni lst that has similar ring', uni_cnf_locs_lst)
 
         for locs in uni_rng_locs_lst:
-            rid, cid = locs
             # Obtain the zma from ini loc
             ini_cnf_save_path = ini_cnf_save_fs[-1].path(locs)
             ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
@@ -360,7 +360,7 @@ def conformer_tsk(job, spc_dct, spc_name,
                 cnf_run_fs, cnf_save_fs,
                 script_str, overwrite,
                 retryfail=retryfail, zrxn=zrxn,
-                use_locs=locs,
+                use_locs=locs, resave=resave,
                 **kwargs)
 
         for locs in uni_cnf_locs_lst:
@@ -379,7 +379,7 @@ def conformer_tsk(job, spc_dct, spc_name,
                 cnf_run_fs, cnf_save_fs,
                 script_str, overwrite,
                 retryfail=retryfail, zrxn=zrxn,
-                use_locs=(rid, cid),
+                use_locs=(rid, cid), resave=resave,
                 **kwargs)
 
         # print all geometres within cnfrange
@@ -484,7 +484,7 @@ def tau_tsk(job, spc_dct, spc_name,
     spc_dct_i = spc_dct[spc_name]
 
     # Set the spc_info
-    spc_info = sinfo.from_dct(spc_dct_i)
+    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -735,9 +735,9 @@ def hr_tsk(job, spc_dct, spc_name,
     spc_dct_i = spc_dct[spc_name]
     saddle = bool('ts_' in spc_name)
     if not saddle:
-        spc_info = sinfo.from_dct(spc_dct_i)
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
     else:
-        spc_info = rinfo.ts_info(spc_dct_i['rxn_info'])
+        spc_info = rinfo.ts_info(spc_dct_i['canon_rxn_info'])
 
     # 1b) Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
@@ -1031,7 +1031,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
         # Skip all tasks except find_ts
         # if rad-rad TS
         if tsk not in ('find_ts', 'rpath_scan'):  # generalize to other rpath
-            rxn_info = spc_dct[spc_name]['rxn_info']
+            rxn_info = spc_dct[spc_name]['canon_rxn_info']
             ts_mul = rinfo.value(rxn_info, 'tsmult')
             high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
             if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:

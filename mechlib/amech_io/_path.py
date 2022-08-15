@@ -51,7 +51,7 @@ def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix, spc_grp_dct):
     thm_path_dct = {}
     for spc_name in spc_locs_dct:
         spc_thm_path_dct = {}
-        spc_info = sinfo.from_dct(spc_dct[spc_name])
+        spc_info = sinfo.from_dct(spc_dct[spc_name], canonical=True)
         spc_formula = automol.chi.formula_string(spc_info[0])
         thm_prefix = [spc_formula, automol.chi.inchi_key(spc_info[0])]
         spc_locs_lst = spc_locs_dct[spc_name]

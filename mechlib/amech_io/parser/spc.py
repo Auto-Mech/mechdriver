@@ -21,6 +21,7 @@ SPC_VAL_DCT = {
     'mult': ((int,), (), None),
     'charge': ((int,), (), None),
     'inchi': ((str,), (), None),
+    'canon_enant_ich': ((str,), (), None),
     'inchikey': ((str,), (), None),
     'smiles': ((str,), (), None),
     'exc_flag': ((int,), (), 0),
@@ -329,13 +330,19 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     chnl_idx, (reacs, prods) = reaction
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
+    canon_rxn_info = rxn_info
+    if not automol.chi.is_canonical_enantiomer_reaction(
+            rxn_info[0][0], rxn_info[0][1]):
+        print('flipping enantiomer reaction to canonical form...')
+        canon_rxn_info = (automol.chi.canonical_enantiomer_reaction(
+            rxn_info[0][0], rxn_info[0][1]), rxn_info[1], rxn_info[2], rxn_info[3])
     rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
     print(f'\n  Preparing TS for PES-Channel {pes_idx+1}-{chnl_idx+1} : '
           f'{rct_str} = {prd_str}')
 
     # Set the reacs and prods for the desired direction
     reacs_forw, prods_forw = rxnid.set_reaction_direction(
-        reacs, prods, rxn_info,
+        reacs, prods, canon_rxn_info,
         thy_info, ini_thy_info, save_prefix, direction='forw')
 
     zma_locs = (0,)
@@ -345,7 +352,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     # to include it?
     # hbond_cutoffs = spc_dct[reacs[0]]['hbond_cutoffs']
     zrxns, zmas, rclasses, status = rxnid.build_reaction(
-        rxn_info, ini_thy_info, zma_locs, save_prefix,
+        canon_rxn_info, ini_thy_info, zma_locs, save_prefix,
         id_missing=id_missing, re_id=re_id)
     # , hbond_cutoffs=hbond_cutoffs)
 
@@ -355,13 +362,14 @@ def ts_dct_sing_chnl(pes_idx, reaction,
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
             ts_reac_ichs = automol.reac.reaction_inchis(zrxn, stereo=True)
-            reac_ichs = [spc_dct[reac]['inchi'] for reac in reacs]
+            reac_ichs = canon_rxn_info[0][0]
             forw_dct = {
                 'zrxn': zrxn,
                 'zma': zma,
                 'reacs': reacs,
                 'prods': prods,
                 'rxn_info': rxn_info,
+                'canon_rxn_info': canon_rxn_info,
                 'inchi': '',
                 'charge': rinfo.ts_chg(rxn_info),
                 'mult': rinfo.value(rxn_info, 'tsmult'),
@@ -378,6 +386,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'reacs': reacs,
                 'prods': prods,
                 'rxn_info': rxn_info,
+                'canon_rxn_info': canon_rxn_info,
                 'inchi': '',
                 'charge': rinfo.ts_chg(rxn_info),
                 'mult': rinfo.value(rxn_info, 'tsmult'),
@@ -388,25 +397,31 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info),
             }
             if sorted(ts_reac_ichs[0]) == sorted(reac_ichs):
-                iso_dct = rxn_util.zmatrix_conversion_keys(
-                    automol.graph.standard_keys(
-                        automol.graph.without_dummy_atoms(
-                            back_zrxn.forward_ts_graph)),
-                    automol.graph.standard_keys(
-                        automol.graph.without_dummy_atoms(
-                            zrxn.forward_ts_graph)))
                 ts_dct[tsname] = forw_dct
+                if back_zrxn is None:
+                    iso_dct = None
+                else: 
+                    iso_dct = rxn_util.zmatrix_conversion_keys(
+                        automol.graph.standard_keys(
+                            automol.graph.without_dummy_atoms(
+                                back_zrxn.forward_ts_graph)),
+                        automol.graph.standard_keys(
+                            automol.graph.without_dummy_atoms(
+                                zrxn.forward_ts_graph)))
                 ts_dct[tsname]['rev_dct'] = back_dct
                 ts_dct[tsname]['iso_dct'] = iso_dct
             elif sorted(ts_reac_ichs[1]) == sorted(reac_ichs):
                 print('User requested backward direction of expected reaction for:', tsname)
-                iso_dct = rxn_util.zmatrix_conversion_keys(
-                    automol.graph.standard_keys(
-                        automol.graph.without_dummy_atoms(
-                            zrxn.forward_ts_graph)),
-                    automol.graph.standard_keys(
-                        automol.graph.without_dummy_atoms(
-                            back_zrxn.forward_ts_graph)))
+                if back_zrxn is None:
+                    iso_dct = None
+                else: 
+                    iso_dct = rxn_util.zmatrix_conversion_keys(
+                        automol.graph.standard_keys(
+                            automol.graph.without_dummy_atoms(
+                                zrxn.forward_ts_graph)),
+                        automol.graph.standard_keys(
+                            automol.graph.without_dummy_atoms(
+                                back_zrxn.forward_ts_graph)))
                 ts_dct[tsname] = back_dct
                 ts_dct[tsname]['rev_dct'] = forw_dct
                 ts_dct[tsname]['iso_dct'] = iso_dct

@@ -255,7 +255,7 @@ def set_etrans_well(rxn_lst, spc_dct):
             well_dct = rct2_dct
             well_name = reacs[1]
 
-    well_info = sinfo.from_dct(well_dct)
+    well_info = sinfo.from_dct(well_dct, canonical=True)
     ioprinter.info_message(
         f'  - Using {well_name} for global collision target for PES')
 

@@ -71,7 +71,7 @@ TSK_KEY_DCT = {
     'conf_hess': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
     'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
     'conf_prop': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
-    'conf_opt': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_opt': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
     'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min',
                                        'cnf_range', 'sort',)),
     'hr_grad': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),

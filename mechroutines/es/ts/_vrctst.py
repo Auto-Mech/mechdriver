@@ -53,7 +53,7 @@ def calc_vrctst_flux(ts_dct,
         len(potentials), scan_inf_dct['rxn_bond_keys'],
         vrc_dct, machine_dct=None)
 
-    rxn_info = ts_dct['rxn_info']
+    rxn_info = ts_dct['canon_rxn_info']
     ts_info = rinfo.ts_info(rxn_info)
     mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
     cas_kwargs = mref_params['var_scnlvl']
@@ -155,7 +155,7 @@ def _correction_pot_data(ts_dct, scan_inf_dct,
                          runfs_dct, savefs_dct):
     """  use the MEP potentials to compile the correction potential .so file
     """
-    rxn_info = ts_dct['rxn_info']
+    rxn_info = ts_dct['canon_rxn_info']
     ts_info = rinfo.ts_info(rxn_info)
     ts_geo = automol.zmat.geometry(ts_dct['zma'])
 
