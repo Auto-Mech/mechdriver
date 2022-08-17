@@ -398,6 +398,15 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info),
             }
+
+            if sorted(ts_reac_ichs[0]) != sorted(reac_ichs) and sorted(ts_reac_ichs[1]) != sorted(reac_ichs):
+                print('Warning: no stereo saved in filesys. Checking rxn direction w/o stereo ... ')
+                ts_reac_ichs = list(ts_reac_ichs)
+                ts_reac_ichs[0] = tuple([automol.chi.without_stereo(ich) for ich in ts_reac_ichs[0]])
+                ts_reac_ichs[1] = tuple([automol.chi.without_stereo(ich) for ich in ts_reac_ichs[1]])
+                reac_ichs = list(reac_ichs)
+                reac_ichs = tuple([automol.chi.without_stereo(ich) for ich in reac_ichs])
+                
             if sorted(ts_reac_ichs[0]) == sorted(reac_ichs):
                 ts_dct[tsname] = forw_dct
                 if back_zrxn is None:
@@ -427,6 +436,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 ts_dct[tsname] = back_dct
                 ts_dct[tsname]['rev_dct'] = forw_dct
                 ts_dct[tsname]['iso_dct'] = iso_dct
+                
     elif status == 'MISSING-ADD':
         tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_0'
         ts_dct = {}
