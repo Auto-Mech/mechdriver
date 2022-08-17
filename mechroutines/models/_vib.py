@@ -3,11 +3,13 @@
 """
 
 import os
+from copy import deepcopy
 import autorun
 import automol.pot
 import automol.geom
 import autofile.fs
 from phydat import phycon
+from mechlib.reaction import _util as rxn_util
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io._path import job_path
 from mechroutines.models import typ
@@ -217,10 +219,11 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     hess = harm_cnf_fs[-1].file.hessian.read(harm_min_locs)
     tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_locs)
     ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
-   
+    """
     harm_geo, hess, tors_geo = _morph(
         harm_geo, hess, tors_geo,
         pf_filesystems, zrxn, zma_locs)
+    """
     fml_str = automol.geom.formula_string(harm_geo)
     vib_path = job_path(prefix, 'PROJROT', 'FREQ', fml_str, print_path=True)
     # print('proj test:', vib_path)
@@ -349,7 +352,7 @@ def _morph(hess_geo, hess, tors_geo, zrxn, pf_filesystems, zma_locs):
     ret = hess_geo, hess, tors_geo
     if zma_locs not in [(0,), [0]]:
         [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
-        zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
+        zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
         zma = zma_fs.file.zmatrix.read(zma_locs)
         zma_gra = automol.zmat.graph(zma_gra)
         hess_gra = automol.geom.graph(hess_geo)
