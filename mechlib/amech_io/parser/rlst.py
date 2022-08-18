@@ -5,7 +5,7 @@ import copy
 import itertools
 from mechanalyzer.builder import strip_ste
 from mechanalyzer.builder import _names as names
-
+import sys
 
 # Overall run lst for both reactions and species
 def combine(pes_rlst, spc_rlst):
@@ -112,10 +112,19 @@ def pes_groups(pes_dct, pes_grp_dct):
         pes_grp_idxs, flat_pes_grp_idxs = (), ()
 
     # Get all of the PESs not grouped, then add the ones grouped by user
+
     grp_lst = tuple(((x, y),) for (x, y) in run_pes_idxs
                     if (x, y) not in flat_pes_grp_idxs)
     grp_lst_sort = tuple(sorted(grp_lst, key=lambda x: x[0]))
-    grp_lst_sort += pes_grp_idxs
+
+    pes_grp_idxs_eff = []
+    for grp in pes_grp_idxs:
+        toappend = [subpes for subpes in grp
+                        if subpes in run_pes_idxs]
+        pes_grp_idxs_eff.append(tuple(toappend))
+    pes_grp_idxs_eff= tuple(pes_grp_idxs_eff)
+    # grp_lst_sort += pes_grp_idxs
+    grp_lst_sort += pes_grp_idxs_eff # only add grps you asked for
 
     # Need to build a group for PESs
     pes_grps = ()
@@ -128,10 +137,24 @@ def pes_groups(pes_dct, pes_grp_dct):
         if pes_grp_dct is None:
             pes_grps += ((pes_grp, None),)
         else:
-            pes_grps += ((pes_grp, pes_grp_dct.get(grp_idxs)),)
+            if grp_idxs in pes_grp_dct.keys():
+                pes_grps += ((pes_grp, pes_grp_dct.get(grp_idxs)),) # maybe prob is here
+            else:
+                # check for each set of indices if grp_idxs are a subset
+                for pes_lst, grp_dct in pes_grp_dct.items():
+                    if all([idx in pes_lst for idx in grp_idxs]):
+                        # recreate grp
+                        new_pes_grp_dct = {k: [] for k in ['peds', 'hot', 'en_limit']}
+                        for idx in grp_idxs:
+                            i = list(pes_lst).index(idx)
+                            [new_pes_grp_dct[k].append(grp_dct[k][i]) for k in new_pes_grp_dct.keys()]
+                        # now add modeltype and bf threshold
+                        new_pes_grp_dct['modeltype'] = grp_dct['modeltype']
+                        new_pes_grp_dct['bf_threshold'] = grp_dct['bf_threshold']
+                        pes_grps += ((pes_grp, new_pes_grp_dct,),)
+                        break
 
     return pes_grps
-
 
 def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
     """ Group the species that the user requested to run (given in the
