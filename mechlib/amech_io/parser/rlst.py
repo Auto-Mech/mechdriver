@@ -138,20 +138,43 @@ def pes_groups(pes_dct, pes_grp_dct):
             pes_grps += ((pes_grp, None),)
         else:
             if grp_idxs in pes_grp_dct.keys():
-                pes_grps += ((pes_grp, pes_grp_dct.get(grp_idxs)),) # maybe prob is here
+                pes_grps += ((pes_grp, pes_grp_dct.get(grp_idxs)),) 
             else:
                 # check for each set of indices if grp_idxs are a subset
+                new_pes_grp_dct = None
                 for pes_lst, grp_dct in pes_grp_dct.items():
-                    if all([idx in pes_lst for idx in grp_idxs]):
+                    if all([idx in pes_lst for idx in grp_idxs]) and len(grp_idxs) >= 2:
                         # recreate grp
                         new_pes_grp_dct = {k: [] for k in ['peds', 'hot', 'en_limit']}
                         for idx in grp_idxs:
                             i = list(pes_lst).index(idx)
-                            [new_pes_grp_dct[k].append(grp_dct[k][i]) for k in new_pes_grp_dct.keys()]
+                            [new_pes_grp_dct[k].append(grp_dct[k][i]) for k in ['hot', 'en_limit']]
                         # now add modeltype and bf threshold
                         new_pes_grp_dct['modeltype'] = grp_dct['modeltype']
                         new_pes_grp_dct['bf_threshold'] = grp_dct['bf_threshold']
-                        pes_grps += ((pes_grp, new_pes_grp_dct,),)
+                        # add ped only if corresponding hot species is present
+                        hots = list(itertools.chain(*new_pes_grp_dct['hot']))
+                        for idx in grp_idxs:
+                            i = list(pes_lst).index(idx)
+                            ped_i = grp_dct['peds'][i]
+                            ped_new = []
+                            for ped_j in ped_i:
+                                frags = ped_j.split('=')[1].split('+')
+                                if any([fr in hots for fr in frags]):
+                                    ped_new.append(ped_j)
+                            new_pes_grp_dct['peds'].append(tuple(ped_new))
+
+                        # check that all hot species are produced
+                        ped_prds = list(itertools.chain(*new_pes_grp_dct['peds']))
+                        ped_frags = list(itertools.chain(*[[frags.split('=')[1].split('+')] for frags in ped_prds]))
+                        ped_frags = list(itertools.chain(*ped_frags))
+
+                        if not all([hot in ped_frags for hot in hots]):
+                            # back to single pess
+                            for key, val in pes_grp.items():
+                                pes_grps += (({key: val}, None,),)
+                        else:
+                            pes_grps += ((pes_grp, new_pes_grp_dct,),)
                         break
 
     return pes_grps
