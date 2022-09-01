@@ -646,11 +646,11 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                 inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
                 # if automol.zmat.almost_equal(inp_zma, zma,
                 #                              dist_rtol=0.018, ang_atol=.2)
-                automol.zmat.almost_equal(inp_zma, zma,
-                                          dist_rtol=0.018, ang_atol=.2)
-                ioprinter.info_message(
-                    'This conformer was already run ' +
-                    f'in {run_path}.')
+                if automol.zmat.almost_equal(inp_zma, zma,
+                                          dist_rtol=0.018, ang_atol=.2):
+                    ioprinter.info_message(
+                        'This conformer was already run ' +
+                        f'in {run_path}.')
                 locs_idx = idx
                 # Except:
                 #     ioprinter.info_message(
