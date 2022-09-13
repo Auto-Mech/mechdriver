@@ -80,7 +80,6 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
     # Check the save filesystem for the reactant and product geometries
     rct_geos, prd_geos, rct_paths, prd_paths = reagent_geometries(
         rxn_info, thy_info, save_prefix)
-
     # Identify reactants and products from geoms or InChIs, depending
     # We automatically assess and add stereo to the reaction object, as needed
     if any(rct_geos) and any(prd_geos):
@@ -197,6 +196,7 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
         canon_rgt_info = ()
         for spc_info in rgt_info:
             canon_ich = automol.chi.canonical_enantiomer(spc_info[0])
+            # canon_ich = spc_info[0]
             canon_rgt_info += ((canon_ich, spc_info[1], spc_info[2]),)
         # canon_ichs = rgt_info[0]
         return canon_rgt_info
@@ -231,6 +231,24 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
             path = cnf_save_fs[-1].file.geometry.path(min_locs)
             prd_geos += (geo,)
             prd_paths += (path,)
+    else:
+        _rcts_cnf_fs = filesys.rcts_cnf_fs(
+            rct_info, thy_info, None, save_prefix)
+        _prds_cnf_fs = filesys.rcts_cnf_fs(
+            prd_info, thy_info, None, save_prefix)
+        if (
+            _rcts_cnf_fs.count(None) == 0 and _prds_cnf_fs.count(None) == 0
+        ):
+            for idx, (_, cnf_save_fs, min_locs, _) in enumerate(_rcts_cnf_fs):
+                geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+                path = cnf_save_fs[-1].file.geometry.path(min_locs)
+                rct_geos += (geo,)
+                rct_paths += (path,)
+            for idx, (_, cnf_save_fs, min_locs, _) in enumerate(_prds_cnf_fs):
+                geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+                path = cnf_save_fs[-1].file.geometry.path(min_locs)
+                prd_geos += (geo,)
+                prd_paths += (path,)
 
     return rct_geos, prd_geos, rct_paths, prd_paths
 

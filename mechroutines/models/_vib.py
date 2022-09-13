@@ -11,9 +11,11 @@ import autofile.fs
 from phydat import phycon
 from mechlib.reaction import _util as rxn_util
 from mechlib.amech_io import printer as ioprinter
+from mechlib.reaction import _util as rxn_util
 from mechlib.amech_io._path import job_path
 from mechroutines.models import typ
 from mechroutines.models import _tors as tors
+from copy import deepcopy
 
 
 def full_vib_analysis(
@@ -80,7 +82,7 @@ def full_vib_analysis(
                 # print('tors string after scaling',tors_strs)
                 tors_zpe = tors_projected_scaled_zpe(
                     pf_filesystems, hr_str, prot_str, run_prefix,
-                    spc_mod_dct_i, zrxn=zrxn)
+                    spc_mod_dct_i, zrxn=zrxn, zma_locs=zma_locs)
             freqs = ret[0]  # freqs equal to proj_freqs
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
@@ -219,11 +221,9 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     hess = harm_cnf_fs[-1].file.hessian.read(harm_min_locs)
     tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_locs)
     ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
-    """
     harm_geo, hess, tors_geo = _morph(
         harm_geo, hess, tors_geo,
-        pf_filesystems, zrxn, zma_locs)
-    """
+        zrxn, pf_filesystems, zma_locs)
     fml_str = automol.geom.formula_string(harm_geo)
     vib_path = job_path(prefix, 'PROJROT', 'FREQ', fml_str, print_path=True)
     # print('proj test:', vib_path)
@@ -351,10 +351,11 @@ def ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
 def _morph(hess_geo, hess, tors_geo, zrxn, pf_filesystems, zma_locs):
     ret = hess_geo, hess, tors_geo
     if zma_locs not in [(0,), [0]]:
-        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+        [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['tors']
         zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
-        zma = zma_fs.file.zmatrix.read(zma_locs)
-        zma_gra = automol.zmat.graph(zma_gra)
+        print('zma path', zma_fs[0].path(), zma_locs)
+        zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+        zma_gra = automol.zmat.graph(zma)
         hess_gra = automol.geom.graph(hess_geo)
         tors_gra = automol.geom.graph(tors_geo)
         hess_iso_dct = rxn_util.zmatrix_conversion_keys(hess_gra, zma_gra)
@@ -377,8 +378,8 @@ def _reorder_hessian(hess, idx_dct):
     """
 
     update_hess = deepcopy(hess)
-    for orig_i, new_i in idxs.items():
-        for orig_j, new_j in idxs.items():
+    for orig_i, new_i in idx_dct.items():
+        for orig_j, new_j in idx_dct.items():
             update_hess[new_i][new_j] = hess[orig_i][orig_j]
             update_hess[new_i + 1][new_j + 1] = hess[orig_i + 1][orig_j + 1]
             update_hess[new_i + 2][new_j + 2] = hess[orig_i + 2][orig_j + 2]

@@ -41,7 +41,11 @@ def internal_coordinates_scan(ts_zma, zrxn,
         _scn_run_fs, _scn_save_fs = scn_run_fs, scn_save_fs
     else:
         _scn_run_fs, _scn_save_fs = cscn_run_fs, cscn_save_fs
-
+        # these lines are to help ring forming scissions, coudl be a bad idea
+        for key, val in constraint_dct.items():
+            if abs(val - 1.57) < .05:
+                val = val - .25
+                constraint_dct[key] = val
     # Set up script string and kwargs
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(

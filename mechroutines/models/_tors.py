@@ -24,7 +24,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
 
     run_prefix = pf_filesystems['run_prefix']
     spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
-    if 'zrxn' not in spc_dct_i:
+    if 'rxn_info' not in spc_dct_i:
         spc_fml = automol.chi.formula_string(spc_info[0])
     else:
         spc_fml = 'TS'
@@ -37,7 +37,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
         tors_ene_info, spc_info)
 
     rotors, mdhr_dct = None, None
-    zma_locs = None
+    zma_locs = (0,)
     if pf_filesystems['tors'] is not None:
         [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
@@ -65,7 +65,6 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                 rotors, spc_dct_i, run_path, cnf_save_path,
                 ref_ene, mod_tors_ene_info,
                 tors_model)
-
     return rotors, mdhr_dct, zma_locs
 
 

@@ -363,8 +363,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
-            print('mechlib/parser spc.py line 366',automol.reac.string(zrxn), '\n' , automol.reac.string(automol.reac.without_dummy_atoms(zrxn)))
-            ts_reac_ichs = automol.reac.reaction_inchis(automol.reac.without_dummy_atoms(zrxn), stereo=True)
+            ts_reac_ichs = automol.reac.reaction_inchis(
+                automol.reac.without_dummy_atoms(zrxn), stereo=True)
             reac_ichs = canon_rxn_info[0][0]
             forw_dct = {
                 'zrxn': zrxn,
@@ -399,7 +399,6 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info),
             }
-
             if sorted(ts_reac_ichs[0]) != sorted(reac_ichs) and sorted(ts_reac_ichs[1]) != sorted(reac_ichs):
                 print('Warning: no stereo saved in filesys. Checking rxn direction w/o stereo ... ')
                 ts_reac_ichs = list(ts_reac_ichs)
@@ -407,7 +406,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 ts_reac_ichs[1] = tuple([automol.chi.without_stereo(ich) for ich in ts_reac_ichs[1]])
                 reac_ichs = list(reac_ichs)
                 reac_ichs = tuple([automol.chi.without_stereo(ich) for ich in reac_ichs])
-                
+
             if sorted(ts_reac_ichs[0]) == sorted(reac_ichs):
                 ts_dct[tsname] = forw_dct
                 if back_zrxn is None:
