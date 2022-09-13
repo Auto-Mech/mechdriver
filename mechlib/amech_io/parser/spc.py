@@ -363,7 +363,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
-            ts_reac_ichs = automol.reac.reaction_inchis(automol.reac.without_dummy_atoms(zrxn), stereo=True)
+            ts_reac_ichs = automol.reac.reaction_inchis(
+                automol.reac.without_dummy_atoms(zrxn), stereo=True)
             reac_ichs = canon_rxn_info[0][0]
             forw_dct = {
                 'zrxn': zrxn,
