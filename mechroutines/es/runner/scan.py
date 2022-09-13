@@ -78,6 +78,7 @@ def run_scan(zma, spc_info, mod_thy_info,
     scn_save_fs[1].create([coord_locs])
     inf_obj = autofile.schema.info_objects.scan_branch(
         dict(zip(coord_names, coord_grids)))
+    print('coord grids in run scan', coord_grids)
     scn_save_fs[1].file.info.write(inf_obj, [coord_locs])
     # Build the grid of values
     mixed_grid_vals = automol.pot.coords(coord_grids)
@@ -365,11 +366,15 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
             # Create the filesys
             scn_run_fs[-1].create(locs)
             run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
-
+            
             # Build the zma
             zma = automol.zmat.set_values_by_name(
                 guess_zma, dict(zip(coord_names, vals)),
                 angstrom=False, degree=False)
+            if constraint_dct is not None:
+                zma = automol.zmat.set_values_by_name(
+                    zma, constraint_dct,
+                    angstrom=False, degree=False)
 
             # Run an optimization or energy job, as needed.
             geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
