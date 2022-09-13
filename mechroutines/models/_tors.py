@@ -24,7 +24,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
 
     run_prefix = pf_filesystems['run_prefix']
     spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
-    if 'zrxn' not in spc_dct_i:
+    if 'rxn_info' not in spc_dct_i:
         spc_fml = automol.chi.formula_string(spc_info[0])
     else:
         spc_fml = 'TS'
