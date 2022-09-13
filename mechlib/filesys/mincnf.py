@@ -622,6 +622,7 @@ def zpe_from_harmonic_frequencies(
     return zpe
 
 
+#def this_conformer_was_run_in_run(zma, cnf_fs, save_cnf_fs):
 def this_conformer_was_run_in_run(zma, cnf_fs):
     """ Assess if this conformer was run in RUN.
     """
@@ -642,16 +643,15 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                 inp_str = run_fs[-1].file.input.read([job])
                 inp_str = inp_str.replace('=', '')
                 prog = inf_obj.prog
+                method = inf_obj.method
                 # try:
                 inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                # if automol.zmat.almost_equal(inp_zma, zma,
-                #                              dist_rtol=0.018, ang_atol=.2)
                 if automol.zmat.almost_equal(inp_zma, zma,
-                                          dist_rtol=0.018, ang_atol=.2):
+                                             dist_rtol=0.018, ang_atol=.2):
                     ioprinter.info_message(
                         'This conformer was already run ' +
                         f'in {run_path}.')
-                locs_idx = idx
+                    locs_idx = idx
                 # Except:
                 #     ioprinter.info_message(
                 #        f'Program {prog} lacks inp ZMA reader for check')
@@ -662,6 +662,7 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
     if locs_idx is not None:
         out_enes = []
         out_geos = []
+        #for idx, locs in enumerate(save_locs_lst):
         for idx, locs in enumerate(run_locs_lst):
             cnf_path = cnf_fs[-1].path(locs)
             run_fs = autofile.fs.run(cnf_path)
@@ -683,6 +684,19 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                     # else:
                     out_enes.append(idx_ene)
                     out_geos.append(idx_geo)
+            #cnf_path = cnf_fs[-1].path(locs)
+            #sp_fs = autofile.fs.single_point(cnf_path)
+            #if save_cnf_fs[-1].file.geometry.exists(locs):
+            #        idx_ene = elstruct.reader.energy(prog, method, out_str)
+            #        idx_geo = elstruct.reader.opt_geometry(prog, out_str)
+            #        if idx == locs_idx:
+            #            # out_enes.append(10000)
+            #            # out_geos.append(None)
+            #            ran_ene = idx_ene
+            #            ran_geo = idx_geo
+            #        # else:
+            #        out_enes.append(idx_ene)
+            #        out_geos.append(idx_geo)
             else:
                 out_enes.append(10000)
                 out_geos.append(None)
