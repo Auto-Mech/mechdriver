@@ -333,11 +333,11 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     canon_rxn_info = rxn_info
-    if not automol.chi.is_canonical_enantiomer_reaction(
-            rxn_info[0][0], rxn_info[0][1]):
-        print('flipping enantiomer reaction to canonical form...')
-        canon_rxn_info = (automol.chi.canonical_enantiomer_reaction(
-            rxn_info[0][0], rxn_info[0][1]), rxn_info[1], rxn_info[2], rxn_info[3])
+    # if not automol.chi.is_canonical_enantiomer_reaction(
+            # rxn_info[0][0], rxn_info[0][1]):
+        # print('flipping enantiomer reaction to canonical form...')
+        # canon_rxn_info = (automol.chi.canonical_enantiomer_reaction(
+            # rxn_info[0][0], rxn_info[0][1]), rxn_info[1], rxn_info[2], rxn_info[3])
     rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
     print(f'\n  Preparing TS for PES-Channel {pes_idx+1}-{chnl_idx+1} : '
           f'{rct_str} = {prd_str}')
@@ -443,6 +443,12 @@ def ts_dct_sing_chnl(pes_idx, reaction,
         ts_dct[tsname] = {'missdata': ini_thy_info}
     elif status == 'MISSING-SKIP':
         ts_dct = {}
+        if len(rxn_info[2][0]) == 2:
+            if rxn_info[2][0][0] > 1 and rxn_info[2][0][1] > 1:
+                tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_0'
+                ts_dct = {}
+                ts_dct[tsname] = {'missdata': ini_thy_info}
+                print('RXN UNIDENTIFIABLE BUT ASSUMING IT IS R+O2: BUT GOING AHEAD')
         print('Skipping reaction as class not given/identified')
 
     return ts_dct

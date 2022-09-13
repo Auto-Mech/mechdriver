@@ -90,7 +90,6 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
             print(f'     - product {i+1}: {path}')
         zrxn_objs = automol.reac.rxn_objs_from_geometry(
             rct_geos, prd_geos, indexing='zma', stereo=True)
-            # rct_geos, prd_geos, indexing='zma', stereo=True)
     else:
         print('    Reaction ID from geometries from input InChIs')
         rxn_ichs = rinfo.value(rxn_info, 'inchi')
@@ -99,6 +98,12 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
         zrxn_objs = automol.reac.rxn_objs_from_inchi(
             rct_ichs, prd_ichs, indexing='zma', stereo=True)
             # rct_ichs, prd_ichs, indexing='zma', stereo=True)
+
+        if zrxn_objs is None and len(rxn_info[2][0]) == 2:
+            if rxn_info[2][0][0] > 1 and rxn_info[2][0][1] > 1:
+                zrxn_objs = automol.reac.rxn_objs_from_inchi(
+                    rct_ichs, prd_ichs, indexing='zma', stereo=False)
+                print('RXN UNIDENTIFIABLE BUT ASSUMING IT IS R+O2: BUT GOING AHEAD')
 
     # Loop over the found reaction objects
     if zrxn_objs is not None:
