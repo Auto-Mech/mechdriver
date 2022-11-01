@@ -349,7 +349,7 @@ def reaction(
 
 
 def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
-                               zma_locs=(0,)):
+                               zma_locs=(0,), nprocs=1):
     """ see if a species and unstable and handle task management
     """
 
@@ -362,9 +362,9 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
         thy_locs=mod_thy_info[1:])
 
     # Check if any locs exist first?
-    hbond_cutoffs=spc_dct[spc_name]['hbond_cutoffs']
+    hbond_cutoffs = spc_dct[spc_name]['hbond_cutoffs']
     ini_loc_info = min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs)
+        cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
     _, min_cnf_path = ini_loc_info
 
     zma_save_fs = autofile.fs.zmatrix(min_cnf_path)

@@ -9,7 +9,7 @@ from mechlib.amech_io import printer as ioprinter
 
 # Handle reaction lst
 def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
-                        spc_model_dct_i, save_prefix):
+                        spc_model_dct_i, save_prefix, nprocs=1):
     """ Loop over the pes reaction list and break up the unstable species
     """
 
@@ -18,7 +18,7 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
     if pes_rlst is not None:
         for _, rxn_lst in pes_rlst.items():
             split_rxn_lst, _ = split_unstable_pes(
-                rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
+                rxn_lst, spc_dct, spc_model_dct_i, save_prefix, nprocs=nprocs)
             for split_rxn in split_rxn_lst:
                 _, (new_rcts, new_prds) = split_rxn
                 _split_rxn_names += new_rcts
@@ -28,7 +28,7 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
     _split_spc_names = ()
     if spc_rlst is not None:
         _split_spc_names = split_unstable_spc(
-             spc_rlst, spc_dct, spc_model_dct_i, save_prefix)
+             spc_rlst, spc_dct, spc_model_dct_i, save_prefix, nprocs=nprocs)
         _split_spc_names = tuple(_split_spc_names.values())[0]
 
     # Combine both and remove duplicates
@@ -39,7 +39,8 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
     return {('SPC', 0, 0): split_names}
 
 
-def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
+def split_unstable_pes(
+        rxn_lst, spc_dct, spc_model_dct_i, save_prefix, nprocs=1):
     """ Build a new list of reactions for a given PES where all of the
         reactant and product species of the channels are assessed for
         instability and broken up.
@@ -66,7 +67,8 @@ def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
         # Build the mapping dictionary for the rxn species
         rxn_names = rcts + prds
         split_map = _split_mapping(spc_dct, thy_info, save_prefix,
-                                   spc_names=rxn_names, zma_locs=(0,))
+                                   spc_names=rxn_names, zma_locs=(0,),
+                                   nprocs=nprocs)
 
         # Assess and split the reactants and products for unstable species
         new_rcts = ()
@@ -95,7 +97,8 @@ def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
     return new_rxn_lst, unstable_chnl_idxs
 
 
-def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
+def split_unstable_spc(
+            spc_rlst, spc_dct, spc_model_dct_i, save_prefix, nprocs=1):
     """ Build a new list of species where each species of the input list
         has been assessed for instability and broken up.
 
@@ -116,7 +119,7 @@ def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
     _split_spc_names = ()
     for spc in list(spc_rlst.values())[0]:
         split_names = _split_species(
-            spc_dct, spc, thy_info, save_prefix, zma_locs=(0,))
+            spc_dct, spc, thy_info, save_prefix, zma_locs=(0,), nprocs=nprocs)
         if split_names:
             _split_spc_names += split_names
         else:
@@ -128,7 +131,7 @@ def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
 
 
 def _split_mapping(spc_dct, thy_info, save_prefix,
-                   spc_names=None, zma_locs=(0,)):
+                   spc_names=None, zma_locs=(0,), nprocs=1):
     """ Build a dictionary that describes how species decomposes into
         smaller species via some radical stability. Dictionary maps the
         species name to the names of the decomposition products.
@@ -154,7 +157,8 @@ def _split_mapping(spc_dct, thy_info, save_prefix,
     split_map = {}
     for spc_name in spc_names:
         split_names = _split_species(
-            spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
+            spc_dct, spc_name, thy_info,
+            save_prefix, zma_locs=zma_locs, nprocs=nprocs)
         if split_names:
             split_map[spc_name] = split_names
         else:
@@ -164,7 +168,7 @@ def _split_mapping(spc_dct, thy_info, save_prefix,
 
 
 def _split_species(spc_dct, spc_name, thy_info, save_prefix,
-                   zma_locs=(0,)):
+                   zma_locs=(0,), nprocs=1):
     """ Assess if a given species has an instability transformation
         file located in the save filesystem within a Z-Matrix layer:
         SPC/THY/CONFS/Z/ which are specified by the provided info.
@@ -191,7 +195,8 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     # Attempt to read the graph of the instability trans
     # Get the product graphs and inchis
     tra, path = filesys.read.instability_transformation(
-        spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
+        spc_dct, spc_name, thy_info,
+        save_prefix, zma_locs=zma_locs, nprocs=nprocs)
 
     if tra is not None:
         ioprinter.info_message('\nFound instability files at path:')

@@ -24,6 +24,7 @@ from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import thermo_paths
 from mechlib.reaction import split_unstable_full
+from autorun import execute_function_in_parallel
 
 
 def run(pes_rlst, spc_rlst,
@@ -76,18 +77,21 @@ def run(pes_rlst, spc_rlst,
     if write_messpf_tsk is not None:
         cnf_range = write_messpf_tsk[-1]['cnf_range']
         sort_str = write_messpf_tsk[-1]['sort']
+        nprocs = write_messpf_tsk[-1]['nprocs']
     elif run_fit_tsk is not None:
         cnf_range = run_fit_tsk[-1]['cnf_range']
         sort_str = run_fit_tsk[-1]['sort']
+        nprocs = run_fit_tsk[-1]['nprocs']
     else:
         cnf_range = run_messpf_tsk[-1]['cnf_range']
         sort_str = run_messpf_tsk[-1]['sort']
+        nprocs = run_messpf_tsk[-1]['nprocs']
     spc_grp_dct, spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst,
         run_fit_tsk,
         spc_dct, thy_dct,
         save_prefix, run_prefix,
-        cnf_range, sort_str)
+        cnf_range, sort_str, nprocs=nprocs)
 
     # ----------------------------------- #
     # RUN THE REQUESTED THERMDRIVER TASKS #
@@ -152,7 +156,8 @@ def _set_spc_queue(
         run_fit_tsk,
         spc_dct, thy_dct,
         save_prefix, run_prefix,
-        cnf_range='min', sort_str=None, spc_grp_dct=None):
+        cnf_range='min', sort_str=None, spc_grp_dct=None,
+        nprocs=1):
     """ Determine the list of species to do thermo on
     """
     # Build various species lists
@@ -160,7 +165,7 @@ def _set_spc_queue(
     spc_mod_dct_i = spc_mod_dct[spc_mods[0]]
     sort_info_lst = filesys.mincnf.sort_info_lst(sort_str, thy_dct)
     split_rlst = split_unstable_full(
-        pes_rlst, spc_rlst, spc_dct, spc_mod_dct_i, save_prefix)
+        pes_rlst, spc_rlst, spc_dct, spc_mod_dct_i, save_prefix, nprocs=nprocs)
 
     # Dict for run_fits task
     spc_grp_dct = None
@@ -177,7 +182,7 @@ def _set_spc_queue(
     # Set locs and paths to species we will be doing calcs for
     spc_locs_dct = _set_spc_locs_dct(
         spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
-        cnf_range, sort_info_lst)
+        cnf_range, sort_info_lst, nprocs=nprocs)
     thm_paths = thermo_paths(
         spc_dct, spc_locs_dct, spc_mods, run_prefix,
         spc_grp_dct)
@@ -187,14 +192,34 @@ def _set_spc_queue(
 
 def _set_spc_locs_dct(
         spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
-        cnf_range='min', sort_info_lst=None, saddle=False):
+        cnf_range='min', sort_info_lst=None, saddle=False, nprocs=1):
     """ get a dictionary of locs
     """
+    def _par_spc_locs_dct_setter(
+            spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
+            cnf_range, sort_info_lst, saddle, nlocs_procs,
+            spc_queue, output_queue=None):
+        spc_locs_dct = {}
+ 
+        for spc_name in spc_queue:
+            spc_locs_lst = filesys.models.get_spc_locs_lst(
+                spc_dct[spc_name], spc_mod_dct_i,
+                run_prefix, save_prefix, saddle=saddle,
+                cnf_range=cnf_range, sort_info_lst=sort_info_lst, nprocs=nlocs_procs)
+            spc_locs_dct[spc_name] = spc_locs_lst
+        output_queue.put((spc_locs_dct,))
+    nspc_procs = 1
+    nlocs_procs = 1
+    if len(spc_queue) >= nprocs:
+        nspc_procs = nprocs
+    else:
+        nlocs_procs = nprocs
+    args = (
+        spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
+        cnf_range, sort_info_lst, saddle, nlocs_procs)
+    sub_spc_locs_dct_lst = execute_function_in_parallel(
+        _par_spc_locs_dct_setter, spc_queue, args, nprocs=nspc_procs)
     spc_locs_dct = {}
-    for spc_name in spc_queue:
-        spc_locs_lst = filesys.models.get_spc_locs_lst(
-            spc_dct[spc_name], spc_mod_dct_i,
-            run_prefix, save_prefix, saddle=saddle,
-            cnf_range=cnf_range, sort_info_lst=sort_info_lst)
-        spc_locs_dct[spc_name] = spc_locs_lst
+    for sub_spc_locs_dct in sub_spc_locs_dct_lst:
+        spc_locs_dct.update(sub_spc_locs_dct)
     return spc_locs_dct

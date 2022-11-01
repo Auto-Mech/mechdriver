@@ -327,7 +327,8 @@ def get_matching_tors_locs(
             cnf_zma_save_fs = autofile.fs.zmatrix(cnf_path)
             zma = cnf_zma_save_fs[-1].file.zmatrix.read((0,))
             save_locs = tors_save_fs[-1].existing()
-            _, sym_locs_lst = this_conformer_was_run_in_run(zma, tors_run_fs)
+            _, sym_locs_lst = this_conformer_was_run_in_run(
+                zma, tors_run_fs, tors_save_fs, spc_model_dct_i['tors']['geolvl'])
             for sym_locs in sym_locs_lst:
                 if sym_locs in save_locs:
                     match_tors_locs = sym_locs
