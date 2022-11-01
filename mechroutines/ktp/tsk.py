@@ -22,7 +22,8 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
                         spc_dct,
                         thy_dct, pes_model_dct, spc_model_dct,
                         unstab_chnls, label_dct,
-                        rate_paths_dct, run_prefix, save_prefix):
+                        rate_paths_dct, run_prefix, save_prefix,
+                        nprocs=1):
     """ Reads and processes all information in the save filesys for
         all species on the PES that are required for MESS rate calculations,
         as specified by the model dictionaries built from user input.
@@ -51,7 +52,8 @@ def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
         spc_dct, rxn_lst, pes_idx, pesgrp_num, unstab_chnls,
         run_prefix, save_prefix, label_dct,
         tsk_key_dct, pes_param_dct,
-        thy_dct, pes_model_dct_i, spc_model_dct_i, spc_mod)
+        thy_dct, pes_model_dct_i, spc_model_dct_i, spc_mod,
+        nprocs=nprocs)
 
     # Write the energy transfer section strings for MESS file
     energy_trans_str = make_global_etrans_str(

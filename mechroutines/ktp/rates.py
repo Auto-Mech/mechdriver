@@ -295,7 +295,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
                       run_prefix, save_prefix, label_dct,
                       tsk_key_dct, pes_param_dct,
                       thy_dct, pes_model_dct_i, spc_model_dct_i,
-                      spc_model):
+                      spc_model, nprocs=1):
     """ Write all the MESS input file strings for the reaction channels
     """
 
@@ -338,7 +338,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
             spc_dct, tsk_key_dct,
             basis_energy_dct[spc_model],
             thy_dct, pes_model_dct_i, spc_model_dct_i,
-            run_prefix, save_prefix)
+            run_prefix, save_prefix, nprocs=nprocs)
 
         basis_energy_dct[spc_model].update(chn_basis_ene_dct)
 
@@ -764,7 +764,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
                      spc_dct, tsk_key_dct,
                      model_basis_energy_dct,
                      thy_dct, pes_model_dct_i, spc_model_dct_i,
-                     run_prefix, save_prefix):
+                     run_prefix, save_prefix, nprocs=1):
     """ For all species and transition state for the channel and
         read all required data from the save filesys, then process and
         format it to be able to write it into a MESS filesystem.
@@ -793,7 +793,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
                 spc_dct[rgt], spc_model_dct_i,
                 run_prefix, save_prefix, saddle=False,
                 cnf_range=cnf_range, sort_info_lst=sort_info_lst,
-                name=rgt)
+                name=rgt, nprocs=nprocs)
             chnl_infs_i, model_basis_energy_dct = build.read_spc_data(
                 spc_dct, rgt,
                 pes_model_dct_i, spc_model_dct_i,
@@ -809,7 +809,7 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
             spc_dct[name], spc_model_dct_i,
             run_prefix, save_prefix, saddle=True,
             cnf_range=cnf_range, sort_info_lst=sort_info_lst,
-            name=name)
+            name=name, nprocs=nprocs)
         spc_locs = spc_locs_lst[0] if spc_locs_lst else None
         inf_dct, model_basis_energy_dct = build.read_ts_data(
             spc_dct, name, reacs, prods,

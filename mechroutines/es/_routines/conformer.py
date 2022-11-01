@@ -3,6 +3,8 @@
 
 import shutil
 import time
+import random
+
 import automol
 import elstruct
 import autofile
@@ -307,14 +309,13 @@ def single_conformer(zma, spc_info, mod_thy_info,
                 cid = autofile.schema.generate_new_conformer_id()
                 locs = (rid, cid)
                 
-
     if this_conformer_is_running(zma, cnf_run_fs):
         skip_job = True
     elif this_conformer_was_run_in_save(zma, cnf_save_fs):
         skip_job = True
     if not skip_job:
         run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
-            zma, cnf_run_fs)
+            zma, cnf_run_fs, cnf_save_fs, mod_thy_info)
         if run_in_run:
             skip_job = True
 
@@ -790,16 +791,16 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                     ret, None, cnf_save_fs, thy_info[1:],
                     init_zma=init_zma,  zrxn=zrxn,
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
-            else:
-                sym_locs = saved_locs[sym_id]
-                filesys.save.sym_indistinct_conformer(
-                    geo, cnf_save_fs, locs, sym_locs)
-                if cnf_save_fs[-1].exists(locs):
-                    cnf_save_path = cnf_save_fs[-1].path(locs)
-                    shutil.rmtree(cnf_save_path)
-                if cnf_run_fs[-1].exists(locs):
-                    cnf_run_path = cnf_run_fs[-1].path(locs)
-                    shutil.rmtree(cnf_run_path)
+            # else:
+            #     sym_locs = saved_locs[sym_id]
+            #     filesys.save.sym_indistinct_conformer(
+            #         geo, cnf_save_fs, locs, sym_locs)
+            #     if cnf_save_fs[-1].exists(locs):
+            #         cnf_save_path = cnf_save_fs[-1].path(locs)
+            #         shutil.rmtree(cnf_save_path)
+            #     if cnf_run_fs[-1].exists(locs):
+            #         cnf_run_path = cnf_run_fs[-1].path(locs)
+            #         shutil.rmtree(cnf_run_path)
         else:
             if cnf_save_fs[-1].exists(locs):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
@@ -869,18 +870,29 @@ def _init_geom_is_running(cnf_run_fs):
     """
     running = False
     jobs = [elstruct.Job.OPTIMIZATION, elstruct.Job.HESSIAN]
+    locs = cnf_run_fs[-1].existing()
+    if not locs:
+        wait_time = random.randint(10, 60)
+        print('lets wait a bit', wait_time)
+        time.sleep(wait_time)
+        locs = cnf_run_fs[-1].existing()
+    print('im going to check locs',  cnf_run_fs[-1].existing())
     for locs in cnf_run_fs[-1].existing():
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
+        print('im going to check here',  cnf_run_path)
         for job in jobs:
             if not run_fs[-1].file.info.exists([job]):
                 continue
+            print('im going to check it job',  job)
             inf_obj = run_fs[-1].file.info.read([job])
             status = inf_obj.status
+            print('its job status is', status)
             if status == autofile.schema.RunStatus.RUNNING:
                 start_time = inf_obj.utc_start_time
                 current_time = autofile.schema.utc_time()
                 _time = (current_time - start_time).total_seconds()
+                print('its jtime is', _time)
                 if _time < 3000000:
                     path = cnf_run_fs[-1].path(locs)
                     info_message(
@@ -912,6 +924,22 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
                     break
             except:
                 info_message(f'Program {prog} lacks inp ZMA reader for check')
+            sym_fs = autofile.fs.symmetry(cnf_path)
+            for sym_locs in sym_fs[-1].existing(ignore_bad_formats=True):
+                if sym_fs[-1].file.geometry.exists(sym_locs):
+                    sym_geo = sym_fs[-1].file.geometry.read(sym_locs)
+                    try:
+                        sym_zma = filesys.save.rebuild_zma_from_opt_geo(
+                            inp_zma, sym_geo)
+                        if automol.zmat.almost_equal(
+                                sym_zma, zma,
+                                dist_rtol=0.018, ang_atol=.2):
+                            info_message(
+                                f'This conformer was already run in sym of {cnf_path}.')
+                            running = True
+                        break
+                    except:
+                        print('zmat in different format')
     return running
 
 

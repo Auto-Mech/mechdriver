@@ -257,7 +257,7 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
                         spc_model_dct,
-                        spc_dct, run_prefix, save_prefix):
+                        spc_dct, run_prefix, save_prefix, nprocs=1):
     """ Build ts dct from ktp tsks
     """
 

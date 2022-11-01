@@ -19,7 +19,7 @@ from mechlib.amech_io import printer as ioprinter
 
 
 def min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info, hbond_cutoffs=None):
+        cnf_save_fs, mod_thy_info, hbond_cutoffs=None, nprocs=1):
     """ Obtain the (ring-id, tors-id) filesystem locator pair and
         path for the conformer of a species with the lowest energy
         for the specified electronic structure method that currently
@@ -34,7 +34,7 @@ def min_energy_conformer_locators(
 
     locs, paths = conformer_locators(
         cnf_save_fs, mod_thy_info,
-        cnf_range='min', hbond_cutoffs=hbond_cutoffs)
+        cnf_range='min', hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
     if locs and paths:
         ret = locs[0], paths[0]
     else:
@@ -207,6 +207,7 @@ def _sorted_cnf_lsts(
             output_queue=None):
         locs_enes_dct = {}
         first_enes = None
+        # print('locs on proc', os.getpid(),  cnf_locs_lst)
         for locs in cnf_locs_lst:
             sort_ene, first_enes = _sort_energy_parameter(
                 locs, cnf_save_fs, mod_thy_info, freq_info,
@@ -229,7 +230,7 @@ def _sorted_cnf_lsts(
                 )
         locs_enes_dct_lst = execute_function_in_parallel(
             _parallel_get_sort_energy_parameters, cnf_locs_lst,
-            args, nprocs=1)
+            args, nprocs=nprocs)
         first_ene = None
         for locs_enes_dct in locs_enes_dct_lst:
             for locs in locs_enes_dct:
@@ -622,17 +623,18 @@ def zpe_from_harmonic_frequencies(
     return zpe
 
 
-#def this_conformer_was_run_in_run(zma, cnf_fs, save_cnf_fs):
-def this_conformer_was_run_in_run(zma, cnf_fs):
+#def this_conformer_was_run_in_run(zma, cnf_fs):
+def this_conformer_was_run_in_run(zma, cnf_fs, save_cnf_fs, thy_info):
     """ Assess if this conformer was run in RUN.
     """
-    locs_idx = None
+    match_locs = None
     job = elstruct.Job.OPTIMIZATION
     sym_locs = []
     run_locs_lst = cnf_fs[-1].existing(ignore_bad_formats=True)
+    save_locs_lst = save_cnf_fs[-1].existing(ignore_bad_formats=True)
     # This is to check if it was not found because the geometry 
     # changed so much during the optimization
-    for idx, locs in enumerate(run_locs_lst):
+    for locs in run_locs_lst:
         cnf_path = cnf_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_path)
         run_path = run_fs[-1].path([job])
@@ -644,6 +646,9 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                 inp_str = inp_str.replace('=', '')
                 prog = inf_obj.prog
                 method = inf_obj.method
+                out_str = run_fs[-1].file.output.read([job])
+                ran_ene = elstruct.reader.energy(prog, method, out_str)
+                ran_geo = elstruct.reader.opt_geometry(prog, out_str)
                 # try:
                 inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
                 if automol.zmat.almost_equal(inp_zma, zma,
@@ -651,42 +656,29 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                     ioprinter.info_message(
                         'This conformer was already run ' +
                         f'in {run_path}.')
-                    locs_idx = idx
+                    match_locs = locs
                 # Except:
                 #     ioprinter.info_message(
                 #        f'Program {prog} lacks inp ZMA reader for check')
-                if locs_idx is not None:
+                if match_locs is not None:
                     break
     # This is to find if it was not saved becaue its equivalent
     # to other conformers
-    if locs_idx is not None:
+    if match_locs is not None:
         out_enes = []
         out_geos = []
-        #for idx, locs in enumerate(save_locs_lst):
-        for idx, locs in enumerate(run_locs_lst):
-            cnf_path = cnf_fs[-1].path(locs)
-            run_fs = autofile.fs.run(cnf_path)
-            run_path = run_fs[-1].path([job])
-            if run_fs[-1].file.info.exists([job]):
-                inf_obj = run_fs[-1].file.info.read([job])
-                status = inf_obj.status
-                if status == autofile.schema.RunStatus.SUCCESS:
-                    method = inf_obj.method
-                    prog = inf_obj.prog
-                    out_str = run_fs[-1].file.output.read([job])
-                    idx_ene = elstruct.reader.energy(prog, method, out_str)
-                    idx_geo = elstruct.reader.opt_geometry(prog, out_str)
-                    if idx == locs_idx:
-                        # out_enes.append(10000)
-                        # out_geos.append(None)
-                        ran_ene = idx_ene
-                        ran_geo = idx_geo
-                    # else:
-                    out_enes.append(idx_ene)
-                    out_geos.append(idx_geo)
+        #for idx, locs in enumerate(run_locs_lst):
+        for locs in save_locs_lst:
             #cnf_path = cnf_fs[-1].path(locs)
-            #sp_fs = autofile.fs.single_point(cnf_path)
-            #if save_cnf_fs[-1].file.geometry.exists(locs):
+            #run_fs = autofile.fs.run(cnf_path)
+            #run_path = run_fs[-1].path([job])
+            #if run_fs[-1].file.info.exists([job]):
+            #    inf_obj = run_fs[-1].file.info.read([job])
+            #    status = inf_obj.status
+            #    if status == autofile.schema.RunStatus.SUCCESS:
+            #        method = inf_obj.method
+            #        prog = inf_obj.prog
+            #        out_str = run_fs[-1].file.output.read([job])
             #        idx_ene = elstruct.reader.energy(prog, method, out_str)
             #        idx_geo = elstruct.reader.opt_geometry(prog, out_str)
             #        if idx == locs_idx:
@@ -697,6 +689,14 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
             #        # else:
             #        out_enes.append(idx_ene)
             #        out_geos.append(idx_geo)
+            cnf_path = save_cnf_fs[-1].path(locs)
+            sp_fs = autofile.fs.single_point(cnf_path)
+            if save_cnf_fs[-1].file.geometry.exists(locs):
+                idx_ene = sp_fs[-1].file.energy.read(thy_info[1:4])
+                idx_geo = save_cnf_fs[-1].file.geometry.read(locs)
+                if not ran_geo == idx_geo:
+                    out_enes.append(idx_ene)
+                    out_geos.append(idx_geo)
             else:
                 out_enes.append(10000)
                 out_geos.append(None)
@@ -705,8 +705,9 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                 ran_geo, ran_ene,
                 [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
             if sym_idx is not None:
-                sym_locs.append(run_locs_lst[idx])
-    return locs_idx is not None, sym_locs
+                sym_locs.append(save_locs_lst[idx])
+                 
+    return match_locs is not None, sym_locs
 
 
 def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
@@ -781,7 +782,6 @@ def get_freq_location(cnf_fs, geo, freq_thy_locs, cnf_locs):
             freq_locs.append(freq_cnf_locs)
     match_dct = fs_confs_dict(
         freq_cnf_fs, freq_locs, cnf_fs, [cnf_locs])
-    print('match dct', match_dct)
     if match_dct[tuple(cnf_locs)] is None:
         match_freqs_locs = None
         # Check TS filesystem
@@ -903,7 +903,10 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
         for sym_locs in ini_sym_fs[-1].existing():
             geo = ini_sym_fs[-1].file.geometry.read(sym_locs)
             geo_wdummy = automol.geom.insert_dummies(geo, dummy_key_dct)
-            inizmas.append(automol.zmat.from_geometry(inizmas[0], geo_wdummy))
+            try:
+                inizmas.append(automol.zmat.from_geometry(inizmas[0], geo_wdummy))
+            except:
+                print('some structures have a different zmatrix')
         for inizma in inizmas:
             for locs in cnf_save_locs_lst:
                 # geo = cnf_save_fs[-1].file.geometry.read(locs)
@@ -925,9 +928,12 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                         geo = sym_fs[-1].file.geometry.read(sym_locs)
                         geo_wdummy = automol.geom.insert_dummies(
                             geo, dummy_key_dct)
-                        sym_zma = automol.zmat.from_geometry(zma, geo_wdummy)
-                        if automol.zmat.almost_equal(
-                                inizma, sym_zma, dist_rtol=0.1, ang_atol=.4):
-                            match_dct[tuple(ini_locs)] = tuple(locs)
-                            break
+                        try:
+                            sym_zma = automol.zmat.from_geometry(zma, geo_wdummy)
+                            if automol.zmat.almost_equal(
+                                    inizma, sym_zma, dist_rtol=0.1, ang_atol=.4):
+                                match_dct[tuple(ini_locs)] = tuple(locs)
+                                break
+                        except:
+                            print('some symmetry structures have a different zmatrix')
     return match_dct

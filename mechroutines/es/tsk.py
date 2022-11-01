@@ -179,7 +179,6 @@ def conformer_tsk(job, spc_dct, spc_name,
 
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
-    nprocs = 1
     # Modify the theory
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
@@ -188,7 +187,7 @@ def conformer_tsk(job, spc_dct, spc_name,
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     mod_ini_thy_info = tinfo.modify_orb_label(
         ini_thy_info, spc_info)
-
+    nprocs = method_dct['nprocs']
     # New filesystem objects
     _root = root_locs(spc_dct_i, saddle=saddle, name=spc_name)
     ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
@@ -206,7 +205,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         user_conf_ids = spc_dct_i.get('conf_id')
         if user_conf_ids is None:
             ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-                ini_cnf_save_fs, mod_ini_thy_info)
+                ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
             ini_locs, ini_min_cnf_path = ini_loc_info
         else:
             print(f'Using user specified conformer IDs: {user_conf_ids}')
@@ -276,7 +275,7 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Build the ini zma filesys
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
+            ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
         ini_min_locs, ini_min_cnf_path = ini_loc_info
         ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
@@ -858,7 +857,7 @@ def hr_tsk(job, spc_dct, spc_name,
                     save_locs = cnf_save_fs[-1].existing()
                     if min_locs not in save_locs:
                         locinf = filesys.mincnf.this_conformer_was_run_in_run(
-                            zma, cnf_run_fs)
+                            zma, cnf_run_fs, cnf_save_fs, mod_thy_info)
                         _, sym_locs_lst = locinf
                         for sym_locs in sym_locs_lst:
                             if sym_locs in save_locs:

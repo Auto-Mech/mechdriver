@@ -108,14 +108,14 @@ TSK_KEY_DCT = {
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
                         'well_extension', 'mess_version',
                         'float_precision',
-                        'cnf_range', 'sort')),
+                        'cnf_range', 'sort', 'nprocs')),
     'run_mess': ((), ('kin_model', 'spc_model', 'nprocs',
                       'well_extension', 'mess_version',
                       'cnf_range', 'sort')),
     'run_fits': ((), ('kin_model',
                       'well_extension', 'mess_version',
                       'combine',
-                      'cnf_range', 'sort')),
+                      'cnf_range', 'sort', 'nprocs',)),
 }
 
 # tsk: (object types, (allowed values), default)  # use functions for weird
@@ -156,7 +156,7 @@ TSK_VAL_DCT = {
     # KTP/Therm
     'kin_model': ((str,), (), None),
     'spc_model': ((str,), (), None),
-    'nprocs': ((int,), (), 10),
+    'nprocs': ((int,), (), 9),
     'mess_version': ((str,), ('v1', 'v2'), 'v1'),
     'well_extension': ((bool,), (), False),
     'combine': ((str,), ('stereo',), None),
