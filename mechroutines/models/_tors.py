@@ -177,13 +177,23 @@ def scale_rotor_pots(rotors, scale_factor=((), None), scale_override=None):
     
     if nscale > 0:
         if scale_override is not None:
-            sfactor = scale_override
+            sfactor = factor**(2.0/nscale)
             ioprinter.debug_message(
                 'scale_coeff override test:', factor, nscale, sfactor)
         else:
             sfactor = factor**(2.0/nscale)
+            sfacmax = 1.3
+            sfacmin = 0.7
+            if nscale > 4:
+                sfacmax = 0.1*(nscale-4) + 1.3
             ioprinter.debug_message(
-                'scale_coeff test:', factor, nscale, sfactor)
+                'scale_coeff test:', factor, nscale, sfactor, sfacmax)
+            if sfactor > sfacmax:
+                print ('value of sfactor is greater than sfacmax')
+                sfactor = sfacmax
+            elif sfactor < sfacmin:
+                sfactor = sfacmin
+                print ('value of sfactor is less than sfacmin')
 
         # test
         # sfactor = 1

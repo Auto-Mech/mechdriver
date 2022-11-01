@@ -448,7 +448,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_0'
                 ts_dct = {}
                 ts_dct[tsname] = {'missdata': ini_thy_info}
-                print('RXN UNIDENTIFIABLE BUT ASSUMING IT IS R+O2: BUT GOING AHEAD')
+                print('RXN ID MISSING BUT ASSUMING IT IS R+O2: BUT GOING AHEAD')
         print('Skipping reaction as class not given/identified')
 
     return ts_dct

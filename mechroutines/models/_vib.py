@@ -50,6 +50,7 @@ def full_vib_analysis(
 
         if ret is not None:
             proj_freqs, harm_freqs, tors_freqs, imag, disps = ret
+            # print('scaling in test:', harm_freqs, proj_freqs, tors_freqs, imag, disps)
 
             # Make final hindered rotor strings and get corrected tors zpe
             if typ.scale_1d(spc_mod_dct_i):
@@ -62,7 +63,7 @@ def full_vib_analysis(
                     scale_method='c3_harm')
 
                 # print('scaling test:', scaled_harm_freqs,
-                #       scaled_proj_freqs, tors_freqs)
+                      # scaled_proj_freqs, tors_freqs)
                 # print('tors string before scaling',tors_strs)
                 pot_scalef = potential_scale_factor(
                     scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
