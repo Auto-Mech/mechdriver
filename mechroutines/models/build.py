@@ -401,7 +401,7 @@ def mol_data(spc_name, spc_dct,
     ene_reflvl = None
 
     #  Build the energy transfer section strings
-    if zrxn is None:
+    if calc_ene_trans and zrxn is None:
         ioprinter.info_message(
             'Determining energy transfer parameters...', newline=1)
         etrans_dct = etrans.etrans_dct_for_species(

@@ -25,13 +25,17 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
                       es_keyword_dct):
     """ Assess if a conformer layer with a geometry exists in the save
         filesys for the given species.
+
         If not, attempt to generate some guess structure using InChI strings
         or input geom from user.
+
         and optimize
         it with input method. Then assess if the optimized structure
         corresponds to genuine minimum on the PES via a frequency calculation.
+
         If a minimum is found, save the conformer geometry, zmatrix, energy,
         and torsions to the save filesys.
+
         Also, the function assessess if the species is unstable and will
         save the appropriate information.
     """
@@ -304,7 +308,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
             if rid is not None:
                 cid = autofile.schema.generate_new_conformer_id()
                 locs = (rid, cid)
-
+                
     if this_conformer_is_running(zma, cnf_run_fs):
         skip_job = True
     elif this_conformer_was_run_in_save(zma, cnf_save_fs):
@@ -1003,6 +1007,7 @@ def _geo_connected(geo, rxn):
 
 def _geo_unique(geo, ene, seen_geos, seen_enes, zrxn=None):
     """ Assess if a geometry is unique to saved geos
+
         Need to pass the torsions
     """
 
@@ -1246,4 +1251,3 @@ def rng_loc_for_geo(geo, cnf_save_fs):
             break
 
     return rid
-

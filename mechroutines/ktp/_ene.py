@@ -97,12 +97,12 @@ def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
 
     # Calculate energies for fake entrance- and exit-channel wells
     if 'fake_vdwr' in channel_infs:
-        vdwr_ene = reac_ene - (1.0 * phycon.KCAL2EH)
+        vdwr_ene = reac_ene - (3.0 * phycon.KCAL2EH)
         sum_ene.update(
             {'fake_vdwr': vdwr_ene, 'fake_vdwr_ts': reac_ene}
         )
     if 'fake_vdwp' in channel_infs:
-        vdwp_ene = prod_ene - (1.0 * phycon.KCAL2EH)
+        vdwp_ene = prod_ene - (3.0 * phycon.KCAL2EH)
         sum_ene.update(
             {'fake_vdwp': vdwp_ene, 'fake_vdwp_ts': prod_ene}
         )

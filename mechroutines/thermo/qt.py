@@ -35,6 +35,7 @@ def make_messpf_str(temps, spc_dct, spc_name, spc_locs,
         spc_dct, spc_name,
         pes_mod_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix, {}, calc_chn_ene=False,
+        calc_ene_trans=False,
         spc_locs=spc_locs)
 
     # Write the header string for the MESS input file

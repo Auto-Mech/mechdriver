@@ -121,8 +121,8 @@ def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
             hincts.append(hinct)
             entts.append(entt)
             cpts.append(cpt)
-        info_message(
-            f'{spc_name}   ' + f'  {hf0:>9.2f}{hf298:>9.2f}' + fstr.format(*hincts) + fstr.format(*entts) + fstr.format(*cpts))
+        # info_message(
+        #    f'{spc_name}   ' + f'  {hf0:>9.2f}{hf298:>9.2f}' + fstr.format(*hincts) + fstr.format(*entts) + fstr.format(*cpts))
         
-        #    info_message(
-        #        f'{temp:>8.2f}{hinct:>9.2f}{entt:>9.2f}{cpt:>9.2f}')
+            info_message(
+                f'{temp:>8.2f}{hinct:>9.2f}{entt:>9.2f}{cpt:>9.2f}')
