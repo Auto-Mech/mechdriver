@@ -69,12 +69,12 @@ def run(pes_rlst, pes_grp_dct,
         rate_paths_dct = rate_paths(pes_grp_rlst, run_prefix)
 
         # Process info required ro run all of the PESs
-        if write_messpf_tsk is not None:
-            nprocs = write_messpf_tsk[-1]['nprocs']
+        if write_rate_tsk is not None:
+            nprocs = write_rate_tsk[-1]['nprocs']
         elif run_fit_tsk is not None:
             nprocs = run_fit_tsk[-1]['nprocs']
         else:
-            nprocs = run_messpf_tsk[-1]['nprocs']
+            nprocs = run_rate_tsk[-1]['nprocs']
         if write_rate_tsk is not None:
             proc_tsk = write_rate_tsk
         else:
@@ -94,7 +94,7 @@ def run(pes_rlst, pes_grp_dct,
 
             # Write the MESS file
             if write_rate_tsk is not None:
-                nprocs = write_messpf_tsk[-1]['nprocs']
+                nprocs = write_rate_tsk[-1]['nprocs']
                 tsk_key_dct = write_rate_tsk[-1]
                 pes_param_dct = ktp_tasks.write_messrate_task(
                     pesgrp_num, pes_inf, all_rxn_lst[pesgrp_num],
@@ -106,7 +106,7 @@ def run(pes_rlst, pes_grp_dct,
 
             # Run mess to produce rates (currently nothing from tsk lst used)
             if run_rate_tsk is not None:
-                nprocs = run_messpf_tsk[-1]['nprocs']
+                nprocs = run_rate_tsk[-1]['nprocs']
                 tsk_key_dct = run_rate_tsk[-1]
                 ktp_tasks.run_messrate_task(
                     pes_inf, all_rxn_lst[pesgrp_num],
