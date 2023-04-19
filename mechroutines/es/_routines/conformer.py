@@ -296,7 +296,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
     if resave:
         _presamp_save(
             spc_info, cnf_run_fs, cnf_save_fs,
-            mod_thy_info, zrxn=zrxn, rid=None)
+            mod_thy_info, zrxn=zrxn, rid=None, ref_zma=zma)
         if use_locs is None:
             print('getting rid')
             rid = rng_loc_for_geo(
@@ -356,57 +356,71 @@ def single_conformer(zma, spc_info, mod_thy_info,
             saved_locs, saved_geos, saved_enes = _saved_cnf_info(
                 cnf_save_fs, mod_thy_info)
 
-            if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn=zrxn):
-                sym_id = _sym_unique(
-                    geo, ene, saved_geos, saved_enes)
-                if sym_id is None:
-                    if cnf_save_fs[0].file.info.exists():
-                        debug_message(
-                            'inf_obj path', cnf_save_fs[0].path())
-                        rinf_obj = cnf_save_fs[0].file.info.read()
-                        rinf = rinf_obj
-                        debug_message(
-                            'inf_obj for r', rinf)
-                        rnsampd = rinf_obj.nsamp
-                        rnsampd += 1
-                        rinf.nsamp = rnsampd
-                    else:
-                        rinf = autofile.schema.info_objects.conformer_trunk(0)
-                        rinf.nsamp = 1
-                    if cnf_save_fs[1].file.info.exists([locs[0]]):
-                        cinf_obj_s = cnf_save_fs[1].file.info.read([locs[0]])
-                        cinf = cinf_obj_s
-                        cnsampd = cinf_obj_s.nsamp
-                        cnsampd += 1
-                        cinf.nsamp = cnsampd
-                    else:
-                        cinf = autofile.schema.info_objects.conformer_branch(0)
-                        cinf.nsamp = 1
-                    cnf_save_fs[1].create([locs[0]])
-                    cnf_save_fs[0].file.info.write(rinf)
-                    cnf_save_fs[1].file.info.write(cinf, [locs[0]])
-                    filesys.save.conformer(
-                        ret, None, cnf_save_fs, mod_thy_info[1:],
-                        zrxn=zrxn, init_zma=zma,
-                        rng_locs=(locs[0],), tors_locs=(locs[1],))
-                    saved_geos.append(geo)
-                    saved_enes.append(ene)
-                    saved_locs.append(locs)
-
-                    # Update the conformer trajectory file
-                    obj('vspace')
-                    filesys.mincnf.traj_sort(
-                        cnf_save_fs, mod_thy_info)
-                    filesys.mincnf.traj_sort(
-                        cnf_save_fs, mod_thy_info, locs[0])
+            opt_zma = None
+            if zma is not None:
+                opt_zma = filesys.save.read_zma_from_geo(zma, geo)
+            if zma is None:
+                opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
+            viable = _geo_connected(geo, zrxn)
+            if viable:
+                if zrxn:
+                    viable = _ts_geo_viable(
+                        opt_zma, zrxn, cnf_save_fs, mod_thy_info, ref_zma=zma)
                 else:
-                    sym_locs = saved_locs[sym_id]
-                    filesys.save.sym_indistinct_conformer(
-                        geo, cnf_save_fs, locs, sym_locs)
-                    if cnf_save_fs[-1].exists(locs):
-                        cnf_save_path = cnf_save_fs[-1].path(locs)
-                    if cnf_run_fs[-1].exists(locs):
-                        cnf_run_path = cnf_run_fs[-1].path(locs)
+                    viable = _inchi_are_same(spc_info[0], geo)
+
+            if viable:
+                if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn=zrxn):
+                    sym_id = _sym_unique(
+                        geo, ene, saved_geos, saved_enes)
+                    if sym_id is None:
+                        if cnf_save_fs[0].file.info.exists():
+                            debug_message(
+                                'inf_obj path', cnf_save_fs[0].path())
+                            rinf_obj = cnf_save_fs[0].file.info.read()
+                            rinf = rinf_obj
+                            debug_message(
+                                'inf_obj for r', rinf)
+                            rnsampd = rinf_obj.nsamp
+                            rnsampd += 1
+                            rinf.nsamp = rnsampd
+                        else:
+                            rinf = autofile.schema.info_objects.conformer_trunk(0)
+                            rinf.nsamp = 1
+                        if cnf_save_fs[1].file.info.exists([locs[0]]):
+                            cinf_obj_s = cnf_save_fs[1].file.info.read([locs[0]])
+                            cinf = cinf_obj_s
+                            cnsampd = cinf_obj_s.nsamp
+                            cnsampd += 1
+                            cinf.nsamp = cnsampd
+                        else:
+                            cinf = autofile.schema.info_objects.conformer_branch(0)
+                            cinf.nsamp = 1
+                        cnf_save_fs[1].create([locs[0]])
+                        cnf_save_fs[0].file.info.write(rinf)
+                        cnf_save_fs[1].file.info.write(cinf, [locs[0]])
+                        filesys.save.conformer(
+                            ret, None, cnf_save_fs, mod_thy_info[1:],
+                            zrxn=zrxn, init_zma=zma,
+                            rng_locs=(locs[0],), tors_locs=(locs[1],))
+                        saved_geos.append(geo)
+                        saved_enes.append(ene)
+                        saved_locs.append(locs)
+
+                        # Update the conformer trajectory file
+                        obj('vspace')
+                        filesys.mincnf.traj_sort(
+                            cnf_save_fs, mod_thy_info)
+                        filesys.mincnf.traj_sort(
+                            cnf_save_fs, mod_thy_info, locs[0])
+                    else:
+                        sym_locs = saved_locs[sym_id]
+                        filesys.save.sym_indistinct_conformer(
+                            geo, cnf_save_fs, locs, sym_locs)
+                        if cnf_save_fs[-1].exists(locs):
+                            cnf_save_path = cnf_save_fs[-1].path(locs)
+                        if cnf_run_fs[-1].exists(locs):
+                            cnf_run_path = cnf_run_fs[-1].path(locs)
 
 
 def conformer_sampling(zma, spc_info, thy_info,
@@ -425,7 +439,7 @@ def conformer_sampling(zma, spc_info, thy_info,
     cnf_run_fs[1].create([rid])
     if resave:
         _presamp_save(
-            spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn, rid=rid)
+            spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn, rid=rid, ref_zma=zma)
 
     # Build filesys
     cnf_save_fs[1].create([rid])
@@ -708,7 +722,7 @@ def ring_conformer_sampling(
 
 
 def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
-                  thy_info, zrxn=None, rid=None):
+                  thy_info, zrxn=None, rid=None, ref_zma=None):
     """ Loop over the RUN filesys and save conformers
     """
 
@@ -738,7 +752,7 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
                         save_conformer(
                             ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                             zrxn=zrxn, orig_ich=spc_info[0],
-                            init_zma=init_zma)
+                            init_zma=init_zma, ref_zma=ref_zma)
 
         # Update the conformer trajectory file
         print('')
@@ -747,7 +761,7 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
 
 
 def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
-                   orig_ich='', rid_traj=False, init_zma=None):
+                   orig_ich='', rid_traj=False, init_zma=None, ref_zma=None):
     """ save the conformers that have been found so far
           # Only go through save procedure if conf not in save
           # may need to get geo, ene, etc; maybe make function
@@ -772,7 +786,7 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
     if viable:
         if zrxn:
             viable = _ts_geo_viable(
-                zma, zrxn, cnf_save_fs, thy_info)
+                zma, zrxn, cnf_save_fs, thy_info, ref_zma=ref_zma)
         else:
             viable = _inchi_are_same(orig_ich, geo)
 
@@ -910,15 +924,15 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
             inp_str = inp_str.replace('=', '')
             inf_obj = cnf_fs[-1].file.geometry_info.read(locs)
             prog = inf_obj.prog
-            try:
-                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+            inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+            if inp_zma is not None:
                 if automol.zmat.almost_equal(inp_zma, zma,
                                              dist_rtol=0.018, ang_atol=.2):
                     info_message(
                         f'This conformer was already run in {cnf_path}.')
                     running = True
                     break
-            except:
+            else:
                 info_message(f'Program {prog} lacks inp ZMA reader for check')
             sym_fs = autofile.fs.symmetry(cnf_path)
             for sym_locs in sym_fs[-1].existing(ignore_bad_formats=True):
@@ -1080,18 +1094,27 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
     return sym_idx
 
 
-def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
+def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,), ref_zma=None):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
     """
 
     # Obtain the min-ene zma and bond keys
-    _, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info)
-    zma_save_fs = fs.zmatrix(cnf_save_path)
-    ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
-
-    return automol.reac.similar_saddle_point_structure(zma, ref_zma, zrxn)
+    viable = False
+    if ref_zma is not None:
+        sens = 2.
+    else:
+        _, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
+            cnf_save_fs, mod_thy_info)
+        if cnf_save_path:
+            zma_save_fs = fs.zmatrix(cnf_save_path)
+            ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
+            sens = 100.
+    if ref_zma is not None:
+        viable =  automol.reac.similar_saddle_point_structure(zma, ref_zma, zrxn, sens)
+    else:
+        print('nothing to compares zmat to')
+    return viable
 
 
 def unique_fs_ring_confs(
