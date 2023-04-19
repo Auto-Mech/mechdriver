@@ -192,7 +192,7 @@ def run_backsteps(
         conv_grid_vals = (grid_vals[0] * phycon.RAD2DEG,)
         conv_pot[conv_grid_vals] = ene
 
-    bad_grid_vals = (filesys.read.identify_bad_point(conv_pot, thresh=0.018),)
+    bad_grid_vals = (filesys.read.identify_bad_point(conv_pot, thresh=0.0165),)
     if bad_grid_vals[0] is not None:
         print('Akima spline identified potential hysteresis at ',
               bad_grid_vals[0]*phycon.DEG2RAD)
