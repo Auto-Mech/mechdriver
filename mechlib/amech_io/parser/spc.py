@@ -50,7 +50,7 @@ SPC_VAL_DCT = {
 }
 TS_VAL_DCT = {
     'rxndirn': ((str,), (), 'forw'),
-    'kt_pst': ((float,), (), 4.0e-10),
+    'kt_pst': ((float,), (), 4.0e-12),
     'temp_pst': ((float,), (), 300.0),
     'n_pst': ((float,), (), 6.0),
     'active': ((str,), (), None),
@@ -333,11 +333,11 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     canon_rxn_info = rxn_info
-    # if not automol.chi.is_canonical_enantiomer_reaction(
-            # rxn_info[0][0], rxn_info[0][1]):
-        # print('flipping enantiomer reaction to canonical form...')
-        # canon_rxn_info = (automol.chi.canonical_enantiomer_reaction(
-            # rxn_info[0][0], rxn_info[0][1]), rxn_info[1], rxn_info[2], rxn_info[3])
+    if not automol.chi.is_canonical_enantiomer_reaction(
+            rxn_info[0][0], rxn_info[0][1]):
+        print('flipping enantiomer reaction to canonical form...')
+        canon_rxn_info = (automol.chi.canonical_enantiomer_reaction(
+            rxn_info[0][0], rxn_info[0][1]), rxn_info[1], rxn_info[2], rxn_info[3])
     rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
     print(f'\n  Preparing TS for PES-Channel {pes_idx+1}-{chnl_idx+1} : '
           f'{rct_str} = {prd_str}')
@@ -362,6 +362,15 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     if status not in ('MISSING-SKIP', 'MISSING-ADD'):
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
+            # Leaving these hacky lines here to remember to solve issue
+            # when there are multiple channels automol expects for 
+            # a reaction, but one of them is not findable - Sarah
+            # if pes_idx == 4 and chnl_idx == [79, 80] and idx == 1:
+            #     print('skipping weird case 5_57_1')
+            #     continue
+            # if pes_idx == 4 and chnl_idx in [84, 85] and idx == 1:
+            #     print('skipping weird case 5_57_1')
+            #     continue
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
             ts_reac_ichs = automol.reac.reaction_inchis(
                 automol.reac.without_dummy_atoms(zrxn), stereo=True)
