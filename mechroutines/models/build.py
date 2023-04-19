@@ -132,14 +132,12 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
 
     ioprinter.obj('line_plus')
     ioprinter.reading(f'Reading filesystem info for {tsname}', newline=1)
-
     ts_dct = spc_dct[tsname]
     reac_dcts = [spc_dct[name] for name in rcts]
     prod_dcts = [spc_dct[name] for name in prds]
 
     ts_mod = spc_mod_dct_i['ts']
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
-
     # Override the models specification with species.dat, if avail
     search = ts_dct.get('ts_search')
     if search is not None:
@@ -156,17 +154,22 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     if not automol.par.is_radrad(ts_dct['class']):
 
         # Set up the saddle point keyword
-        search = ts_dct.get('ts_search')
         if search is not None:
             if 'vtst' in search:
                 ts_sadpt = False
 
         # Build MESS string for TS at a saddle point
         if ts_sadpt == 'pst':
-            inf_dct = pst_data(
-                ts_dct, reac_dcts,
-                spc_mod_dct_i,
-                run_prefix, save_prefix)
+            if len(rcts) == 2:
+                inf_dct = pst_data(
+                    ts_dct, reac_dcts,
+                    spc_mod_dct_i,
+                    run_prefix, save_prefix)
+            else:
+                inf_dct = pst_data(
+                    ts_dct, prod_dcts,
+                    spc_mod_dct_i,
+                    run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
             inf_dct, chn_basis_ene_dct = rpvtst_sadpt(
@@ -223,8 +226,6 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             inf_dct = flux_data(
                 ts_dct, spc_mod_dct_i)
             writer = 'vrctst_block'
-    print('here I am!')
-
     # Add writer to inf dct
     inf_dct['writer'] = writer
 
@@ -376,8 +377,10 @@ def mol_data(spc_name, spc_dct,
             zma_locs = ts_zma_locs(spc_dct, spc_name, zma_fs)
             zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
+    racemic=False
+    ioprinter.info_message('Setting symmetry factors as racemic=', racemic)
     sym_factor = symm.symmetry_factor(
-        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma)
+        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma, racemic=racemic)
 
     # Obtain electronic energy levels
     elec_levels = spc_dct_i['elec_levels']
@@ -800,9 +803,11 @@ def pst_data(ts_dct, reac_dcts,
     ioprinter.info_message(
         'Reading reactant geometries to obtain reduced mass...', newline=1)
     geoms = []
+
     for dct in reac_dcts:
+        pst_mod_dct_i = {'vib': spc_mod_dct_i['vib']}
         pf_filesystems = filesys.models.pf_filesys(
-            dct, spc_mod_dct_i, run_prefix, save_prefix, False)
+            dct, pst_mod_dct_i, run_prefix, save_prefix, False)
         geoms.append(rot.read_geom(pf_filesystems))
     mred = automol.geom.reduced_mass(geoms[0], geoms[1])
 
