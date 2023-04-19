@@ -142,7 +142,8 @@ def conformer_locators(
         cnf_range)
     freq_info, sp_info, sort_prop_dct = _process_sort_info(sort_info_lst)
     union_locs_lst, union_paths_lst = (), ()
-
+    # print('i set nprocs to 1 on line 146 of mincnf.py')
+    # nprocs = 1
     if cnf_range_hb is not None:
         tmp_locs_lst, tmp_paths_lst = _conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range=cnf_range_hb,
@@ -651,17 +652,18 @@ def this_conformer_was_run_in_run(zma, cnf_fs, save_cnf_fs, thy_info):
                 ran_geo = elstruct.reader.opt_geometry(prog, out_str)
                 # try:
                 inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                if automol.zmat.almost_equal(inp_zma, zma,
-                                             dist_rtol=0.018, ang_atol=.2):
-                    ioprinter.info_message(
-                        'This conformer was already run ' +
-                        f'in {run_path}.')
-                    match_locs = locs
-                # Except:
-                #     ioprinter.info_message(
-                #        f'Program {prog} lacks inp ZMA reader for check')
-                if match_locs is not None:
-                    break
+                if inp_zma is not None:
+                    if automol.zmat.almost_equal(inp_zma, zma,
+                                                 dist_rtol=0.018, ang_atol=.2):
+                        ioprinter.info_message(
+                            'This conformer was already run ' +
+                            f'in {run_path}.')
+                        match_locs = locs
+                    # Except:
+                    #     ioprinter.info_message(
+                    #        f'Program {prog} lacks inp ZMA reader for check')
+                    if match_locs is not None:
+                        break
     # This is to find if it was not saved becaue its equivalent
     # to other conformers
     if match_locs is not None:
@@ -881,12 +883,15 @@ def _sort_energy_parameter(
 
 
 def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
-                  ini_cnf_save_fs, ini_cnf_save_locs_lst):
+                  ini_cnf_save_fs, ini_cnf_save_locs_lst, saddle=False):
     """ Assess which structures from the cnf_save_fs currently exist
         within the ini_cnf_save_fs. Generate a dictionary to connect
         the two
     """
     match_dct = {}
+    dist_tol = 0.1
+    if saddle:
+        dist_tol = 0.25
     for ini_locs in ini_cnf_save_locs_lst:
 
         match_dct[tuple(ini_locs)] = None
@@ -915,7 +920,7 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                 zma = zma_save_fs[-1].file.zmatrix.read((0,))
                 if automol.zmat.almost_equal(
                         inizma, zma,
-                        dist_rtol=0.1, ang_atol=.4):
+                        dist_rtol=dist_tol, ang_atol=.4):
                     # cnf_save_path = cnf_save_fs[-1].path(locs)
                     # ioprinter.info_message(
                     #     f'- Similar structure found at {cnf_save_path}')
@@ -931,7 +936,7 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                         try:
                             sym_zma = automol.zmat.from_geometry(zma, geo_wdummy)
                             if automol.zmat.almost_equal(
-                                    inizma, sym_zma, dist_rtol=0.1, ang_atol=.4):
+                                    inizma, sym_zma, dist_rtol=dist_tol, ang_atol=.4):
                                 match_dct[tuple(ini_locs)] = tuple(locs)
                                 break
                         except:
