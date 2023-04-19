@@ -87,10 +87,13 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
                 scan_locs = get_matching_tors_locs(
                     spc_model_dct_i, spc_dct_i, pf_filesystems['harm'],
                     run_prefix, save_prefix, saddle=saddle, name=name)
-                pf_filesystems['tors'] = set_model_filesys(
-                    spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
-                    run_prefix, save_prefix, saddle, name=name,
-                    cnf_range='specified', spc_locs=scan_locs)
+                if scan_locs is not None:
+                    pf_filesystems['tors'] = set_model_filesys(
+                        spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
+                        run_prefix, save_prefix, saddle, name=name,
+                        cnf_range='specified', spc_locs=scan_locs)
+                else:
+                    pf_filesystems['tors'] = None
     if 'vib' in spc_model_dct_i:
         if spc_model_dct_i['vib']['mod'] == 'vpt2':
             pf_filesystems['vpt2'] = set_model_filesys(
@@ -130,9 +133,12 @@ def set_model_filesys(spc_dct_i, level,
 
     hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     if cnf_range == 'specified':
-        min_rngs_locs = spc_locs
-        min_rngs_path = cnf_save_fs[-1].path(min_rngs_locs)
-        cnf_run_fs[-1].create(min_rngs_locs)
+        if spc_locs is not None:
+            min_rngs_locs = spc_locs
+            min_rngs_path = cnf_save_fs[-1].path(min_rngs_locs)
+            cnf_run_fs[-1].create(min_rngs_locs)
+        else:
+            print('requested specific location', spc_locs, ' is not accessible at', cnf_save_fs[0].path())
     elif cnf_range == 'min':
         min_rngs_locs, min_rngs_path = min_energy_conformer_locators(
             cnf_save_fs, levelp, hbond_cutoffs=hbond_cutoffs)
@@ -308,6 +314,7 @@ def get_matching_tors_locs(
          that match the conformer
        locations at the vib level filesystem
     """
+    match_tors_locs = None
     cnf_save_fs, cnf_path, cnf_locs, _, _ = harm_filesys
     if spc_model_dct_i['tors']['geolvl'] != spc_model_dct_i['vib']['geolvl']:
         tors_run_fs, tors_save_fs, tors_locs_lst = get_all_tors_locs_lst(
@@ -315,7 +322,7 @@ def get_matching_tors_locs(
             saddle, name,
             nprocs=nprocs)
         match_dct = fs_confs_dict(
-            tors_save_fs, tors_locs_lst, cnf_save_fs, [cnf_locs])
+            tors_save_fs, tors_locs_lst, cnf_save_fs, [cnf_locs], saddle=saddle)
         if match_dct[tuple(cnf_locs)] is not None:
             match_tors_locs = tuple(match_dct[tuple(cnf_locs)])
             match_path = tors_save_fs[-1].path(match_tors_locs)
@@ -327,8 +334,15 @@ def get_matching_tors_locs(
             cnf_zma_save_fs = autofile.fs.zmatrix(cnf_path)
             zma = cnf_zma_save_fs[-1].file.zmatrix.read((0,))
             save_locs = tors_save_fs[-1].existing()
+            if saddle:
+                rxn_info = spc_dct_i['canon_rxn_info']
+                spc_info = rinfo.ts_info(rxn_info)
+            else:
+                spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
+            level = spc_model_dct_i['tors']['geolvl'][1][1]
+            levelp = tinfo.modify_orb_label(level, spc_info)
             _, sym_locs_lst = this_conformer_was_run_in_run(
-                zma, tors_run_fs, tors_save_fs, spc_model_dct_i['tors']['geolvl'])
+                zma, tors_run_fs, tors_save_fs, levelp)
             for sym_locs in sym_locs_lst:
                 if sym_locs in save_locs:
                     match_tors_locs = sym_locs
