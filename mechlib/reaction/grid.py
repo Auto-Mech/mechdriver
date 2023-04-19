@@ -103,10 +103,9 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
                 max_coord, max_val = max_locs[1][0], max_locs[2][0]
             print('  - Found max at '
                   f'{max_coord} = {max_val*phycon.BOHR2ANG:.2f}')
-
+            
             # Get zma at maximum
             max_zmas = (scn_save_fs[-1].file.zmatrix.read(locs_lst[max_idx]),)
-
             # Add second guess zma for migrations:
             # ZMA = original guess zma with val of scan coord at max
             if typ == automol.par.ReactionClass.Typ.HYDROGEN_MIGRATION:
@@ -206,6 +205,7 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
 
     # Use the max locs to determine the max_zma, ret as tuple
     max_locs = locs
+    print('max point on scan', max_locs)
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
 
     return (max_zma,)
