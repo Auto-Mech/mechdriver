@@ -232,7 +232,8 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     mess_script_str = autorun.SCRIPT_DCT['messpf']
     projrot_script_str = autorun.SCRIPT_DCT['projrot']
     dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}
-    dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459,
+    # dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459,
+    dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 3.023,
                         ('C', 'O'): 3.7807}
     proj_inf = autorun.projected_frequencies(
         mess_script_str, projrot_script_str, vib_path,
