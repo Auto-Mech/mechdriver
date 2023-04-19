@@ -18,16 +18,21 @@ def reverse_ts_zmatrix(zrxn):
     if zrxn.class_ not in nonreversible:
         back_zrxn = automol.reac.reverse(zrxn)
     if back_zrxn is not None:
-        rct_gras = automol.reac.reactant_graphs(back_zrxn)
-        rct_geos = tuple([automol.graph.geometry(rgra) for rgra in rct_gras])
-        rct_idxs, _ = back_zrxn.sort_order()
-        back_zrxn = automol.reac.standard_keys(back_zrxn)
-        rct_geos = tuple(map(rct_geos.__getitem__, rct_idxs))
-        ts_geo = automol.reac.ts_geometry(back_zrxn, rct_geos, log=False)
-        back_zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(
-            back_zrxn, ts_geo)
-        back_zrxn = automol.reac.relabel_for_zmatrix(
-            back_zrxn, zma_keys, dummy_key_dct)
+        try:
+            rct_gras = automol.reac.reactant_graphs(back_zrxn)
+            rct_geos = tuple(
+                [automol.graph.geometry(rgra) for rgra in rct_gras])
+            rct_idxs, _ = back_zrxn.sort_order()
+            back_zrxn = automol.reac.standard_keys(back_zrxn)
+            rct_geos = tuple(map(rct_geos.__getitem__, rct_idxs))
+            ts_geo = automol.reac.ts_geometry(back_zrxn, rct_geos, log=False)
+            back_zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(
+                back_zrxn, ts_geo)
+            back_zrxn = automol.reac.relabel_for_zmatrix(
+                back_zrxn, zma_keys, dummy_key_dct)
+        except:
+            back_zma = None
+            back_zrxn = None
     return back_zrxn, back_zma
 
 
