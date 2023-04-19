@@ -72,6 +72,10 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
     # Initialize ich name dct to noe
     ich_name_dct = {}
+    # leaving this here beause it would be nice to allow
+    # reference energies from a different filesystem
+    # save_prefix = '/lcrc/project/PACC/AutoMech/data/save'
+    # run_prefix = '/lcrc/project/PACC/AutoMech/data/run'
     for ich in spc_basis:
         if isinstance(ich, str):
             ich_name_dct[ich] = None
