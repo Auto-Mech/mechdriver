@@ -265,6 +265,7 @@ def energy(spc_name, spc_dct_i,
 
     _ene = None
     if spc_mod_dct_i:
+        sp_save_fs = autofile.fs.single_point(locs_path)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix,
@@ -272,6 +273,7 @@ def energy(spc_name, spc_dct_i,
         _ene = ene.electronic_energy(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             conf=(locs, locs_path, cnf_fs))
+        mod_thy_info = None
     else:
         spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
         thy_info = tinfo.from_dct(thy_dct.get(
