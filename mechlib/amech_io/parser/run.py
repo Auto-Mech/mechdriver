@@ -53,7 +53,7 @@ RUN_INP_VAL_DCT = {
 BASE = ('runlvl', 'inplvl', 'retryfail', 'overwrite')
 MREF = ('var_splvl1', 'var_splvl2', 'var_scnlvl')
 TRANS = ('njobs', 'nsamp', 'conf', 'cnf_range', 'sort')
-PRNT = ('geolvl', 'proplvl', 'cnf_range', 'sort')
+PRNT = ('geolvl', 'proplvl', 'cnf_range', 'sort', 'nprocs')
 
 # Supported object types for task (useful if task requestes 'all')
 SUPP_OBJS = ('spc', 'ts')
