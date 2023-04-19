@@ -23,7 +23,10 @@ def make_pes_label_dct(pes_label_dct, rxn_lst, pes_idx,
         # Get thhe name and class
         chnl_idx, (reacs, prods) = rxn
         tsname = base_tsname(pes_idx, chnl_idx)
-        rclass = spc_dct[tsname+'_0']['class']
+        if tsname + '_0' in spc_dct:
+            rclass = spc_dct[tsname+'_0']['class']
+        else:
+            rclass = spc_dct[tsname+'_1']['class']
 
         # Build labels
         pes_label_dct.update(
