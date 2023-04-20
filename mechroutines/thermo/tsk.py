@@ -171,8 +171,10 @@ def multi_species_pf(
         spc_fml = fstring(spc_dct[grp_name]['inchi'])
 
         # Combine the PFs and H0K for all confs of all species
-        final_combo_pf = thermfit.pf.combine_pfs_additively(
-            locs_pfs_arrays_lst)
+        # final_combo_pf = thermfit.pf.combine_pfs_additively(
+        #     locs_pfs_arrays_lst)
+        final_combo_pf = thermfit.pf.stereo_pf_combination(
+            locs_pfs_arrays_lst, hf_array_lst)
 
         # Write MESSPF file for combined PFs
         print('mess output at', thm_paths_dct[grp_name]['spc_group'][0])

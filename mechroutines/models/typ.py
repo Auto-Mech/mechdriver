@@ -42,7 +42,11 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
                        'tau-1dhr', 'tau-1dhrf', 'tau-1dhrfa')
     )
     tau_hr_model = bool('tau' in tors_model and vib_model != 'vib')
-
+    if has_tors:
+        if any([len(pot)<1 for pot in automol.rotor.potentials(rotors, flat=True)]):
+            print('WARNING: empty potential will crash MESS so using rigid model instead')
+            has_tors = False
+        
     return has_tors and (tors_hr_model or tau_hr_model)
 
 
@@ -124,7 +128,7 @@ def need_fake_wells(rxn_class, well_model):
     return (well_model == 'fake' and automol.par.need_wells(rxn_class))
 
 
-def treat_tunnel(ts_mod, rxn_class):
+def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
     """ Determine if master equation treatments of a reaction channel
         should include treatments of quantum tunneling treatments.
 
@@ -140,6 +144,9 @@ def treat_tunnel(ts_mod, rxn_class):
 
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
     tunnel_model = ts_mod['tunnel']
+    if ts_inf_dct:
+        if ts_inf_dct['writer'] == 'pst_block':
+            treat = False
     if tunnel_model is not None:
         if automol.par.is_radrad(rxn_class):
             if ts_nobar in ('pst', 'rpvtst', 'vrctst'):
@@ -147,7 +154,6 @@ def treat_tunnel(ts_mod, rxn_class):
         else:
             if ts_sadpt == ('pst', 'vrctst'):
                 treat = False
-
     return treat
 
 
@@ -159,7 +165,8 @@ def is_atom(spc_dct_i):
         :type spc_dct_i:
         :rtype: bool
     """
-    return automol.geom.is_atom(automol.chi.geometry(spc_dct_i['inchi']))
+    # return automol.geom.is_atom(automol.chi.geometry(spc_dct_i['inchi']))
+    return sum(automol.chi.formula(spc_dct_i['inchi']).values()) < 2
 
 
 def is_abstraction_pes(spc_dct, rxn_lst, pes_idx):

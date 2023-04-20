@@ -314,7 +314,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
         rxn_lst, spc_dct, tsk_key_dct,
         basis_energy_dct[spc_model],
         thy_dct, pes_model_dct_i, spc_model_dct_i,
-        run_prefix, save_prefix, ref_idx=0)
+        run_prefix, save_prefix, ref_idx=0, nprocs=nprocs)
     basis_energy_dct[spc_model].update(model_basis_energy_dct)
 
     # Loop over all the channels and write the MESS strings
@@ -330,8 +330,15 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
 
         # Get the names for all of the configurations of the TS
         tsname = base_tsname(pes_idx, chnl_idx)
+        # if pes_idx == 9 and chnl_idx in [141, 142]:
+        #     continue
         tsname_allconfigs = tsnames_in_dct(pes_idx, chnl_idx, spc_dct)
-
+        # if pes_idx == 9 and chnl_idx == 3:
+        #     print('yell at sarah if she didnt remove this yet')
+        #     tsname_allconfigs += ('ts_10_142_0',)
+        # elif pes_idx == 9 and chnl_idx == 19:
+        #     print('yell at sarah if she didnt remove this yet')
+        #     tsname_allconfigs += ('ts_10_143_0',)
         # Pass in full ts class
         chnl_infs, chn_basis_ene_dct = get_channel_data(
             reacs, prods, tsname_allconfigs,

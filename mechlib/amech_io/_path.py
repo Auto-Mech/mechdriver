@@ -88,8 +88,8 @@ def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix, spc_grp_dct):
     if spc_grp_dct is not None:
         for grp_name in spc_grp_dct:
             spc_info = sinfo.from_dct(spc_dct[spc_grp_dct[grp_name][0]])
-            spc_formula = automol.inchi.formula_string(spc_info[0])
-            thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
+            spc_formula = automol.chi.formula_string(spc_info[0])
+            thm_prefix = [spc_formula, automol.chi.inchi_key(spc_info[0])]
             spc_thm_path_dct = {'spc_group': (
                 job_path(
                     run_prefix, 'MESS', 'PF',

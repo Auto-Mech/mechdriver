@@ -221,22 +221,22 @@ def species_groups(pes_rlst, spc_rlst, mech_spc_dct):
     # Keep all of the groups composed of species in the spc_rlst
     # iso groups returns all species that COULD have stereoisomers
     # if only one stereoisomer is present, we get a list of 1
+    spc_flat_lst = [spc for group in spc_rlst.values() for spc in group]
     mech_spc_dct_no_ts = {spc: dct.copy() for spc, dct in mech_spc_dct.items()
-                          if 'ts_' not in spc}
+                          if 'ts_' not in spc and spc in spc_flat_lst}
     mech_spc_dct_strpd, _ = strip_ste.strip_mech_spc_dct(mech_spc_dct_no_ts)
     iso_grps = strip_ste.find_iso_sets(mech_spc_dct_strpd)
 
-    print('iso grp test')
-    for grp in iso_grps:
-        print(grp)
-    print('---')
+    # print('iso grp test')
+    # for grp in iso_grps:
+    #     print(grp)
+    # print('---')
 
     new_iso_grp_names = make_new_names(iso_grps, mech_spc_dct_strpd)
 
     spc_in_iso_grps = ()
     for idx, iso_grp in enumerate(iso_grps, start=1):
         if set(iso_grp) <= spc_lst_set:
-
             # Add to generic list to be used in next step
             spc_in_iso_grps += tuple(iso_grp)
 

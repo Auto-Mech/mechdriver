@@ -11,7 +11,7 @@ from mechlib import filesys
 def set_reference_ene(rxn_lst, spc_dct, tsk_key_dct,
                       model_basis_energy_dct,
                       thy_dct, pes_model_dct_i, spc_model_dct_i,
-                      run_prefix, save_prefix, ref_idx=0):
+                      run_prefix, save_prefix, ref_idx=0, nprocs=1):
     """ Sets the reference species for the PES for which all energies
         are scaled relative to.
     """
@@ -38,12 +38,12 @@ def set_reference_ene(rxn_lst, spc_dct, tsk_key_dct,
             spc_dct[rgt], spc_model_dct_i,
             run_prefix, save_prefix, saddle=False,
             cnf_range=cnf_range, sort_info_lst=sort_info_lst,
-            name=rgt)
+            name=rgt, nprocs=nprocs)
         chnl_infs_i, model_basis_energy_dct = build.read_spc_data(
             spc_dct, rgt,
             pes_model_dct_i, spc_model_dct_i,
             run_prefix, save_prefix, model_basis_energy_dct,
-            spc_locs=spc_locs_lst[0])
+            spc_locs=spc_locs_lst[0] if len(spc_locs_lst)> 0 else None)
 
         hf0k += chnl_infs_i['ene_chnlvl']
         # hf0k += chnl_infs_i['ene_tsref']

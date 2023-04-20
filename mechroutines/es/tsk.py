@@ -844,6 +844,14 @@ def hr_tsk(job, spc_dct, spc_name,
                         use_locs=(new_rid, new_cid),
                         **kwargs)
                     min_locs = (new_rid, new_cid)
+                    save_locs = cnf_save_fs[-1].existing()
+                    if min_locs not in save_locs:
+                        locinf = filesys.mincnf.this_conformer_was_run_in_run(
+                            zma, cnf_run_fs, cnf_save_fs, mod_thy_info)
+                        _, sym_locs_lst = locinf
+                        for sym_locs in sym_locs_lst:
+                            if sym_locs in save_locs:
+                                min_locs = sym_locs
                 else:
                     new_cid = autofile.schema.generate_new_conformer_id()
                     conformer.single_conformer(

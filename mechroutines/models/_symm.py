@@ -8,7 +8,7 @@ from autofile import fs
 from mechlib.amech_io import printer as ioprinter
 
 def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
-                    grxn=None, zma=None):
+                    grxn=None, zma=None, racemic=True):
     """ Determines the the overall (internal and external) symmetry factor for
         a species or saddle point.
 
@@ -76,7 +76,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             else:
                 [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
                 geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-            ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo, grxn)
+            ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo, grxn, racemic=racemic)
             int_symm, ext_symm = ret
 
         else:

@@ -29,7 +29,7 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_enes,
     """
 
     tunnel_str, sct_dat = '', {}
-    if treat_tunnel(ts_model, ts_class):
+    if treat_tunnel(ts_model, ts_class, ts_inf_dct):
         tunnel_model = ts_model['tunnel']
         if tunnel_model == 'eckart':
             tunnel_str = write_mess_eckart_str(

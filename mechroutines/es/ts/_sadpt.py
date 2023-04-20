@@ -129,14 +129,28 @@ def search(ini_zma, spc_dct, tsname,
             runfs_dct, es_keyword_dct,
             cnf_locs)
 
-        status = assess_saddle_point(opt_ret, hess_ret,
-                                     runfs_dct, cnf_locs)
-        if status == 'save':
-            save_saddle_point(opt_ret, hess_ret,
-                              ts_dct, thy_method_dct['runlvl'],
-                              savefs_dct, cnf_locs)
-            success = True
-            # print the saddle point
+        opt_inf_obj, _, opt_out_str = opt_ret
+        opt_prog = opt_inf_obj.prog
+        geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
+        opt_zma = None
+        ts_zma = ts_dct['zma']
+        if ts_zma is not None:
+            opt_zma = filesys.save.read_zma_from_geo(ts_zma, geo)
+        else:
+            opt_zma = filesys.save.read_job_zma(opt_ret, init_zma=ts_zma)
+        viable = automol.reac.similar_saddle_point_structure(
+            opt_zma, ts_zma, ts_dct['zrxn'], sens=6.)
+        if not viable:
+            print('transition state does not have viable structure')
+        else:
+            status = assess_saddle_point(opt_ret, hess_ret,
+                                         runfs_dct, cnf_locs)
+            if status == 'save':
+                save_saddle_point(opt_ret, hess_ret,
+                                  ts_dct, thy_method_dct['runlvl'],
+                                  savefs_dct, cnf_locs)
+                success = True
+                # print the saddle point
 
     return success
 
@@ -198,16 +212,30 @@ def save_opt_from_run(spc_dct, tsname,
             run_fs=run_fs)
 
         if opt_success and hess_success:
-            ioprinter.info_message(
-                'Saving geometry and hessian of TS conformer from RUN filesys '
-                f'at path {run_fs[0].path()}')
-            status = assess_saddle_point(opt_ret, hess_ret,
-                                         runfs_dct, cnf_locs)
-            if status == 'save':
-                save_saddle_point(opt_ret, hess_ret,
-                                  ts_dct, thy_method_dct['runlvl'],
-                                  savefs_dct, cnf_locs)
-                success = True
+            opt_inf_obj, _, opt_out_str = opt_ret
+            opt_prog = opt_inf_obj.prog
+            geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
+            opt_zma = None
+            ts_zma = ts_dct['zma']
+            if ts_zma is not None:
+                opt_zma = filesys.save.read_zma_from_geo(ts_zma, geo)
+            else:
+                opt_zma = filesys.save.read_job_zma(opt_ret, init_zma=ts_zma)
+            viable = automol.reac.similar_saddle_point_structure(
+                opt_zma, ts_zma, ts_dct['zrxn'], sens=12.)
+            if not viable:
+                print('ran transition state does not have viable structure')
+            else:
+                status = assess_saddle_point(opt_ret, hess_ret,
+                                             runfs_dct, cnf_locs)
+                if status == 'save':
+                    ioprinter.info_message(
+                        'Saving geometry and hessian of TS conformer from RUN filesys '
+                        f'at path {run_fs[0].path()}')
+                    save_saddle_point(opt_ret, hess_ret,
+                                      ts_dct, thy_method_dct['runlvl'],
+                                      savefs_dct, cnf_locs)
+                    success = True
     else:
         ioprinter.info_message(
             '\nNo optimization job of TS conformer found in '
