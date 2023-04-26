@@ -19,10 +19,10 @@ Each AutoMech package is also available on `GitHub`_.
 .. _Conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
 
 
-.. button: Up next: execution
+.. button:: Up next: execution
    :class: btn-large-square fa fa-graduation-hat btn-hover-green
    :link: #
 
-.. button: Return to manual
+.. button:: Return to manual
    :link: #
 

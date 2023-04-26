@@ -36,15 +36,15 @@ Currently, no multicore parallelilization is utilized directly by MechDriver, an
 
 As a Python code, individual modules and functions can be imported for use in other codes; however, this may not be the best use of this code. Most functionality of interest to import will likely exist in the lower-level libraries of the AutoMech suite.
 
-.. button: Lets backtrack: install
+.. button:: Lets backtrack: install
    :class: btn-large-square fa fa-history btn-hover-red
    :link: :ref:`install`
 
-.. button: Up next: execution
+.. button:: Up next: execution
    :class: btn-large-square fa fa-graduation-hat btn-hover-green
    :link: :ref:`execution`
 
-.. button: Return to manual
+.. button:: Return to manual
    :class: btn-large-square fa fa-home btn-hover-blue
    :link: :ref:`../manual`
 
