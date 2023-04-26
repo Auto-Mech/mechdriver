@@ -8,8 +8,8 @@ Getting Started
 .. toctree::
     :maxdepth: 2
 
-    install/
-    install/
+    install/install
+    install/execution
 
 
 
