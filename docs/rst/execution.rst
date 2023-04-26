@@ -14,7 +14,7 @@ Execution of the code is very simple; the user only needs to run the mechdriver 
 
 .. code-block:: console
     
-   mdriver -i <path/to/input_directory> -o <name of output file>
+   automech -i <path/to/input_directory> -o <name of output file>
 
 It should be emphasized that not only do all of the AutoMech dependencies need to be handled (by Conda or direct install), but any electronic structure package that will be used in the calculations
 
