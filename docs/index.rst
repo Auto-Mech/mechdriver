@@ -99,7 +99,7 @@ suite auto-mech-env.  Then activate your environment and install the autoio pack
 For users new to conda, we have :ref:`conda-instructions`.
 Each AutoMech package is also available on `GitHub`_.
 
-.. _GitHub: https://github.com/Auto-Mech/autoio
+.. _GitHub: https://github.com/Auto-Mech/mechdriver
 
 
 

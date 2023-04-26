@@ -5,7 +5,12 @@ User's manual
 
 Getting Started
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:ref:`ts-tutorial-doc`
+.. toctree::
+    :maxdepth: 2
+
+    install/
+    install/
+
 
 
 Input Files
@@ -14,7 +19,6 @@ Input Files
 
 .. toctree::
     :maxdepth: 2
-    :caption: Contents:
 
     input/intro
     input/run
