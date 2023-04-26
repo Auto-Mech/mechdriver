@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'MechDriver'
-copyright = '2021, Kevin Moore'
-author = 'Kevin Moore'
+copyright = '2023, Sarah Elliott'
+author = 'Sarah Elliott'
 
 
 # -- General configuration ---------------------------------------------------

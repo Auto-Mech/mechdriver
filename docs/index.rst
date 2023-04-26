@@ -26,7 +26,7 @@ instructions are described below:
     :maxdepth: 2
     :caption: Contents:
 
-    rst/usersmanual
+    rst/manual
 
 
 --------------------------------------------------------------------------------------
