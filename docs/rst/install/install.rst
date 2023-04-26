@@ -12,6 +12,7 @@ suite auto-mech-env.  Then activate your environment and install the autoio pack
     >>> conda activate auto-mech-env
 
 For users new to conda  `Conda`_.
+
 Each AutoMech package is also available on `GitHub`_.
 
 .. _GitHub: https://github.com/Auto-Mech/mechdriver
@@ -20,9 +21,8 @@ Each AutoMech package is also available on `GitHub`_.
 
 .. button: Up next: execution
    :class: btn-large-square fa fa-graduation-hat btn-hover-green
-   :link: :ref:`execution`
+   :link: #
 
 .. button: Return to manual
-   :class: btn-large-square fa fa-home btn-hover-blue
-   :link: :ref:`../manual`
+   :link: #
 
