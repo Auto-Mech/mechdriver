@@ -3,34 +3,26 @@
 User's manual
 =======================
 
-autofile filesystem managers
+Getting Started
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:ref:`ts-tutorial-doc`
+
+
+Input Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:ref:`spc-tutorial-doc`
-
-:ref:`thy-tutorial-doc`
-
-:ref:`cnf-tutorial-doc`
-
-:ref:`zmat-tutorial-doc`
-
-:ref:`scn-tutorial-doc`
-
-:ref:`rxn-tutorial-doc`
-
-:ref:`ts-tutorial-doc`
 
 .. toctree::
     :maxdepth: 2
     :caption: Contents:
 
-    intro
-    run
-    thy
-    mod
-    spc
-    mech
-    aux
-    examples/index
-    glossary
+    input/intro
+    input/run
+    input/thy
+    input/mod
+    input/spc
+    input/mech
+    input/aux
+    input/examples/index
+    input/glossary
 
