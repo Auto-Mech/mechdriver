@@ -290,8 +290,16 @@ p.admonition-title{
   font-size:0px;
 }
 
+
 div.admonition.note p{
     color: white;
+}
+
+div.admonition.note p a{
+    color: white;
+    padding: 100px;
+    margin: -100px;
+
 }
 div.toctree-wrapper.compound{
     background: GhostWhite;

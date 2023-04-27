@@ -4,7 +4,7 @@ Installation
 =============
 We have conda packages on the anaconda cloud for all of our packages. To install them,
 set up an environment for AutoMech.  You can use the environment we have prepared for the
-suite auto-mech-env.  Then activate your environment and install the autoio packages.
+suite auto-mech-env.  Then activate your environment to get started
 
 .. code-block:: python
 
@@ -20,8 +20,10 @@ Each AutoMech package is also available on `GitHub`_.
 
 
 .. note:: 
-    Up next: ref:`execution`
+    Up next: :ref:`execution`
+
+
 
 .. note:: 
-    Return to manual ref:`../manual`
+    Return to manual :ref:`../manual`
 
