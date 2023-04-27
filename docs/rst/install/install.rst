@@ -22,8 +22,6 @@ Each AutoMech package is also available on `GitHub`_.
 .. note::
     Up next: 
     :ref:`execution`.
-
-===
 .. note::
    Return to:
    :ref:`manual`.
