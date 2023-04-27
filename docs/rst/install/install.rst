@@ -26,5 +26,6 @@ Each AutoMech package is also available on `GitHub`_.
     :shadow:
 
 
+
 .. button-link::  Return to: :ref:`manual`.
 
