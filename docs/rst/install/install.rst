@@ -19,6 +19,7 @@ Each AutoMech package is also available on `GitHub`_.
 .. _Conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
 
 .. admonition:: links
+
     Up next:
     
     .. button-ref:: execution
