@@ -284,6 +284,7 @@ div.admonition.note{
      line-height: 18px;
      overflow: hidden;
      padding: 10px 40px;
+     margin: 20px;
 }
 
 p.admonition-title{
