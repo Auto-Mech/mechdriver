@@ -20,7 +20,8 @@ Each AutoMech package is also available on `GitHub`_.
 
 
 .. note:: 
-    Up next: ref`execution`
+    Up next: ref:`execution`
+
 .. note:: 
-    Return to manual ref`../manual`
+    Return to manual ref:`../manual`
 
