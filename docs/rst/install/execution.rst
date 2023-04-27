@@ -37,16 +37,32 @@ Currently, no multicore parallelilization is utilized directly by MechDriver, an
 As a Python code, individual modules and functions can be imported for use in other codes; however, this may not be the best use of this code. Most functionality of interest to import will likely exist in the lower-level libraries of the AutoMech suite.
 
 .. note::
+
     Up next: 
     :ref:`execution`.
 
-..
-    afeawf
-efea
-aefawe
-wegae
-awegaw
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .. note::
+
    Return to:
    :ref:`manual`.
 
