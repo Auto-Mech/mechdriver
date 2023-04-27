@@ -18,7 +18,7 @@ Each AutoMech package is also available on `GitHub`_.
 .. _GitHub: https://github.com/Auto-Mech/mechdriver
 .. _Conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
 
-.. admonition::
+.. admonition:: links
     Up next:
     
     .. button-ref:: execution
@@ -28,6 +28,6 @@ Each AutoMech package is also available on `GitHub`_.
     
     Return to:
     
-    .. button-link::  manual
+    .. button-ref::  manual
         :color: primary
         :shadow:

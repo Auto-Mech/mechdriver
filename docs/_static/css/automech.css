@@ -287,6 +287,22 @@ div.admonition.note{
      margin: 20px;
 }
 
+div.admonition.links{
+     -moz-border-radius: 6px;
+     -webkit-border-radius: 6px;
+     background-color: none;
+     background-position: 9px 0px;
+     background-repeat: no-repeat;
+     border: solid 1px black;
+     box-shadow: 0 3px 10px rgb(0 0 0 / 60%);
+     border-radius: 6px;
+     line-height: 18px;
+     overflow: hidden;
+     padding: 10px 40px;
+     margin: 20px;
+}
+
+
 p.admonition-title{
   font-size:0px;
 }
