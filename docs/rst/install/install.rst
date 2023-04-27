@@ -22,12 +22,12 @@ Each AutoMech package is also available on `GitHub`_.
     Up next:
     
     .. button-ref:: execution
-        :color: primary
+        :color: success
         :shadow:
     
     
     Return to:
     
     .. button-ref::  manual
-        :color: primary
+        :color: danger
         :shadow:
