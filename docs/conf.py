@@ -29,7 +29,8 @@ author = 'Sarah Elliott'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinxcontrib.bibtex'  # Needs pip install sphinxcontrib-bibtex
+    'sphinxcontrib.bibtex',  # Needs pip install sphinxcontrib-bibtex
+    'sphinx_design'
 ]
 master_doc = 'index'
 autodoc_member_order = 'bysource'
