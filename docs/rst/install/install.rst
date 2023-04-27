@@ -23,6 +23,16 @@ Up next:
     :color: primary
     :shadow:
 
+Up next:
+.. button-ref:: `execution`
+    running
+    :color: primary
+    :shadow:
+
+.. button-ref:: ref::`execution`
+    running
+    :color: primary
+    :shadow:
 
 Return to:
 .. button-link::  manual
