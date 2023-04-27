@@ -19,6 +19,6 @@ Each AutoMech package is also available on `GitHub`_.
 .. _Conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
 
 
-.. html:: <button type='button'>  <a href=https://sne-mechdriver.readthedocs.io/en/latest/rst/install/execution.html> Up next: execution </a> </button>
-.. html:: <button type='button'>  <a href=https://sne-mechdriver.readthedocs.io/en/latest/rst/install/execution.html> Return to manual </a> </button>
+.. highlight:: Up next: ref`execution`
+.. highlight:: Return to manual ref`../manual`
 
