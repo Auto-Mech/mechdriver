@@ -87,8 +87,8 @@ assert(cbh2_refs == OPEN_CBH2)
 # abs_prd_smis = ['CC(C)CO[O]', 'CCC']
 # abs_rct_ichs = [automol.smiles.chi(smi) for smi in abs_rct_smis]
 # abs_prd_ichs = [automol.smiles.chi(smi) for smi in abs_prd_smis]
-# zrxn = automol.reac.rxn_objs_from_inchi(
-#     abs_rct_ichs, abs_prd_ichs, indexing='zma')[0][0]
+# zrxn = automol.reac.with_structures_from_chi(
+#     abs_rct_ichs, abs_prd_ichs, zmat=True)[0][0]
 # 
 # print(zrxn)
 
@@ -234,8 +234,8 @@ assert(cbh1_refs == ABS_CBH1_REFS)
 # bs_prd_smis = ['CCC=C', '[OH]']
 # bs_rct_ichs = [automol.smiles.chi(smi) for smi in bs_rct_smis]
 # bs_prd_ichs = [automol.smiles.chi(smi) for smi in bs_prd_smis]
-# zrxn = automol.reac.rxn_objs_from_inchi(
-#     bs_rct_ichs, bs_prd_ichs, indexing='zma')[0][0]
+# zrxn = automol.reac.with_structures_from_chi(
+#     bs_rct_ichs, bs_prd_ichs, zmat=True)[0][0]
 # 
 # print(zrxn)
 
