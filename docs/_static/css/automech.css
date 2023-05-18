@@ -287,7 +287,7 @@ div.admonition.note{
      margin: 20px;
 }
 
-div.admonition.links{
+div.admonition-links.admonition{
      -moz-border-radius: 6px;
      -webkit-border-radius: 6px;
      background-color: none;
@@ -300,6 +300,7 @@ div.admonition.links{
      overflow: hidden;
      padding: 10px 40px;
      margin: 20px;
+     padding-top: 0px;
 }
 
 
