@@ -365,7 +365,7 @@ def choose_beta_qh_cutoff_distance(geo):
             continue
         unconn_bnds = []
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i)
             double_bnd_atms_i = [atm for atm in vals if vals[atm] == 1]
             if len(double_bnd_atms_i) == 2:
                 double_bnd_atms = double_bnd_atms_i
@@ -396,7 +396,7 @@ def choose_beta_qh_cutoff_distance(geo):
                     good_ts_gra, {forming_bond: 2})
                 chosen_ts_gra = automol.graph.add_bonds(
                     chosen_ts_gra, [breaking_bond])
-                vals = automol.graph.atom_unsaturations(chosen_ts_gra, bond_order=True)
+                vals = automol.graph.atom_unpaired_electrons(chosen_ts_gra, bond_order=True)
                 oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
                 if len(oversaturated_atoms) == 1:
                     chosen_oversaturated_atom = oversaturated_atoms[0]
@@ -420,7 +420,7 @@ def choose_beta_cutoff_distance(geo):
             continue
         unconn_bnds = []
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i)
             double_bnd_atms = [atm for atm in vals if vals[atm] == 1]
             unconn_bnds.extend(list(automol.graph.bond_keys(ts_gra_i)))
     chosen_ts_gra = []
@@ -441,7 +441,7 @@ def choose_beta_cutoff_distance(geo):
                     ts_gra_i, {frozenset(double_bnd_atms): 2})
                 breaking_bond = list(breaking_bond_lst)[0]
                 forming_bond = frozenset(double_bnd_atms)
-            vals = automol.graph.atom_unsaturations(ts_gra_i, bond_order=True)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i, bond_order=True)
             oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
             if len(oversaturated_atoms) == 1:
                 chosen_ts_gra = ts_gras[0]
@@ -466,7 +466,7 @@ def choose_heavy_cutoff_distance(geo):
         if len(ts_gras) != 1:
             continue
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i, bond_order=True)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i, bond_order=True)
             oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
             if len(oversaturated_atoms) == 1:
                 chosen_ts_gra = ts_gras[0]
@@ -489,7 +489,7 @@ def choose_cutoff_distance(geo):
         if len(ts_gras) != 1:
             continue
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i, bond_order=True)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i, bond_order=True)
             oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
             if len(oversaturated_atoms) == 1:
                 chosen_ts_gra = ts_gras[0]
@@ -631,11 +631,9 @@ def all_reaction_graphs(
     print(back_bnd_ord_dct)
     forward_gra = automol.graph.set_bond_orders(ts_gra, forw_bnd_ord_dct)
     backward_gra = automol.graph.set_bond_orders(ts_gra, back_bnd_ord_dct)
-    reactant_gras = automol.graph.without_dummy_bonds(
-        automol.graph.without_fractional_bonds(forward_gra))
+    reactant_gras = automol.graph.ts.reactants_graph(forward_gra)
     reactant_gras = automol.graph.connected_components(reactant_gras)
-    product_gras = automol.graph.without_dummy_bonds(
-        automol.graph.without_fractional_bonds(backward_gra))
+    product_gras = automol.graph.ts.reactants_graph(backward_gra)
     print(automol.graph.string(forward_gra))
     print(automol.graph.string(backward_gra))
     product_gras = automol.graph.connected_components(product_gras)
