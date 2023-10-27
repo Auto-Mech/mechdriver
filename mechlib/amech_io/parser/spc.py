@@ -372,8 +372,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
             #     print('skipping weird case 5_57_1')
             #     continue
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
-            ts_reac_ichs = automol.reac.chi(
-                automol.reac.without_dummy_atoms(zrxn), stereo=True)
+            ts_reac_ichs = automol.reac.chis(
+                automol.reac.undo_zmatrix_conversion(zrxn), stereo=True)
             reac_ichs = canon_rxn_info[0][0]
             forw_dct = {
                 'zrxn': zrxn,
@@ -424,10 +424,10 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                     iso_dct = rxn_util.zmatrix_conversion_keys(
                         automol.graph.standard_keys(
                             automol.graph.without_dummy_atoms(
-                                back_zrxn.forward_ts_graph)),
+                                automol.reac.ts_graph(back_zrxn))),
                         automol.graph.standard_keys(
                             automol.graph.without_dummy_atoms(
-                                zrxn.forward_ts_graph)))
+                                automol.reac.ts_graph(zrxn))))
                 ts_dct[tsname]['rev_dct'] = back_dct
                 ts_dct[tsname]['iso_dct'] = iso_dct
             elif sorted(ts_reac_ichs[1]) == sorted(reac_ichs):
@@ -438,10 +438,10 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                     iso_dct = rxn_util.zmatrix_conversion_keys(
                         automol.graph.standard_keys(
                             automol.graph.without_dummy_atoms(
-                                zrxn.forward_ts_graph)),
+                                automol.reac.ts_graph(zrxn))),
                         automol.graph.standard_keys(
                             automol.graph.without_dummy_atoms(
-                                back_zrxn.forward_ts_graph)))
+                                automol.reac.ts_graph(back_zrxn))))
                 ts_dct[tsname] = back_dct
                 ts_dct[tsname]['rev_dct'] = forw_dct
                 ts_dct[tsname]['iso_dct'] = iso_dct

@@ -34,7 +34,7 @@ def grid_maximum_zmatrices(typ, ts_zma, scan_grids, scan_names, scn_save_fs,
     """
 
     print('Assessing scan for a potential maxima...')
-    if typ != automol.par.ReactionClass.Typ.ELIMINATION:
+    if typ != automol.ReactionClass.ELIMINATION:
         grid, name = scan_grids[0], scan_names[0]
         max_zmas = _find_max_1d(typ, grid, ts_zma, name,
                                 mod_thy_info, scn_save_fs, constraint_dct,
@@ -91,7 +91,7 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
     if series == 'sadpt-maxima':
 
         # Get the index where the max energy is found
-        max_idx = automol.pot.find_max1d(
+        max_idx = automol._deprecated.find_max1d(
             enes_lst, 'sadpt-global', include_endpts=include_endpts)
 
         if max_idx is not None:
@@ -108,7 +108,7 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
             max_zmas = (scn_save_fs[-1].file.zmatrix.read(locs_lst[max_idx]),)
             # Add second guess zma for migrations:
             # ZMA = original guess zma with val of scan coord at max
-            if typ == automol.par.ReactionClass.Typ.HYDROGEN_MIGRATION:
+            if typ == automol.ReactionClass.HYDROGEN_MIGRATION:
                 max_grid_val = grid[max_idx]
                 mig_zma = automol.zmat.set_values_by_name(
                     ts_zma, {scan_name: max_grid_val})
@@ -120,7 +120,7 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
     elif series == 'full-n1':
 
         # Get the index where the max energy is found
-        max_idx = automol.pot.find_max1d(
+        max_idx = automol._deprecated.find_max1d(
             enes_lst, 'full-global', include_endpts=include_endpts)
 
         # idxs and flip list to proceed from max(R) in decreasing order
@@ -189,7 +189,7 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
         max_loc = ''
         # Search for the maximum along each idx (coord) to find the max
         # that precludes the endpts (maybe we just find the innermost?)
-        max_idx = automol.pot.find_max1d(
+        max_idx = automol._deprecated.find_max1d(
            enes, 'sadpt-innermost', include_endpts=True)
         max_ene = enes[max_idx]
         max_loc = locs_lst_lst[idx_j][max_idx]

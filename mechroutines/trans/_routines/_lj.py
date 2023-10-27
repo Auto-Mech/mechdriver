@@ -122,8 +122,8 @@ def _runlj(nsamp_needed,
     charge = sinfo.value(lj_info, 'charge')
     mult = sinfo.value(lj_info, 'mult')
     ich1, ich2 = sinfo.value(lj_info, 'inchi')
-    fml_str = automol.formula.string(
-        automol.formula.join(
+    fml_str = automol.form.string(
+        automol.form.join(
             automol.chi.formula(ich1),
             automol.chi.formula(ich2)))
 

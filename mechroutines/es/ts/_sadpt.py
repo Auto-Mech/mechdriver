@@ -427,35 +427,35 @@ def _check_freqs(imags):
 
     return status
 
+# # this function is not used
+# def _ted_coordinate_check(ted_names, zrxn, zma):
+#     """ Assess if the coordinate check can be performed
+#     """
 
-def _ted_coordinate_check(ted_names, zrxn, zma):
-    """ Assess if the coordinate check can be performed
-    """
+#     if ted_names is not None:
 
-    if ted_names is not None:
+#         # Get the zmat names corresponding to frm/brk keys; remove Nones
+#         rxn_names = automol.reac.zmatrix_coordinate_names(zrxn, zma)
+#         rxn_names = (tuple(x for x in rxn_names[0] if x is not None) +
+#                      tuple(x for x in rxn_names[1] if x is not None))
 
-        # Get the zmat names corresponding to frm/brk keys; remove Nones
-        rxn_names = automol.reac.zmatrix_coordinate_names(zrxn, zma)
-        rxn_names = (tuple(x for x in rxn_names[0] if x is not None) +
-                     tuple(x for x in rxn_names[1] if x is not None))
+#         print('Comparing Z-Matrix Coordinates.')
+#         tedname_str = ' '.join(ted_names)
+#         print(f'- TED: {tedname_str}'.format(tedname_str))
+#         rname_str = ' '.join(rxn_names)
+#         print(f'- Forming/Breaking Bonds: {rname_str}')
 
-        print('Comparing Z-Matrix Coordinates.')
-        tedname_str = ' '.join(ted_names)
-        print(f'- TED: {tedname_str}'.format(tedname_str))
-        rname_str = ' '.join(rxn_names)
-        print(f'- Forming/Breaking Bonds: {rname_str}')
+#         if set(ted_names) & set(rxn_names):
+#             print('Overlap of coordinates found, possible success')
+#             success = True
+#         else:
+#             print('No similarity of coords, likely something is wrong')
+#             success = False
+#     else:
+#         print('INTDER had some error, skipping TED check')
+#         success = True
 
-        if set(ted_names) & set(rxn_names):
-            print('Overlap of coordinates found, possible success')
-            success = True
-        else:
-            print('No similarity of coords, likely something is wrong')
-            success = False
-    else:
-        print('INTDER had some error, skipping TED check')
-        success = True
-
-    return success
+#     return success
 
 
 def ts_zma_locs(spc_dct, tsname, zma_fs, spc_dct_i=None):

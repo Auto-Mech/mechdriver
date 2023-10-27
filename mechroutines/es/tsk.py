@@ -232,9 +232,9 @@ def conformer_tsk(job, spc_dct, spc_name,
 
             # Read the torsions from the ini file sys
             if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
-                tors_dct = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
-                rotors = automol.rotor.from_data(zma, tors_dct)
-                tors_names = automol.rotor.names(rotors, flat=True)
+                tors_lst = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
+                rotors = automol.data.rotor.rotors_from_data(zma, tors_lst)
+                tors_names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
             else:
                 tors_names = ()
 
@@ -524,8 +524,8 @@ def tau_tsk(job, spc_dct, spc_name,
 
     # Get the tors names
     if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
-        tors_dct = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
-        torsions = automol.rotor.from_data(zma, tors_dct)
+        tors_lst = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
+        torsions = automol.data.rotor.rotors_from_data(zma, tors_lst)
     else:
         torsions = ()
 
@@ -608,7 +608,7 @@ def tau_tsk(job, spc_dct, spc_name,
             script_str, kwargs = qchem_params(
                 method_dct, elstruct.Job.OPTIMIZATION)
 
-            tors_names = automol.rotor.names(torsions, flat=True)
+            tors_names = automol.data.rotor.rotors_torsion_names(torsions, flat=True)
             resave = es_keyword_dct['resave']
 
             tau.tau_sampling(
@@ -619,7 +619,6 @@ def tau_tsk(job, spc_dct, spc_name,
                 db_style=db_style,
                 nsamp_par=nsamp_par,
                 tors_names=tors_names,
-                repulsion_thresh=40.0,
                 zrxn=zrxn, resave=resave,
                 **kwargs)
 
@@ -802,9 +801,9 @@ def hr_tsk(job, spc_dct, spc_name,
             zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
         zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
         if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
-            tors_dct = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
-            rotors = automol.rotor.from_data(
-                zma, tors_dct, multi='md' in tors_model)
+            tors_lst = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
+            rotors = automol.data.rotor.rotors_from_data(
+                zma, tors_lst, multi='md' in tors_model)
         else:
             rotors = ()
         zrxn = spc_dct_i.get('zrxn', None)
@@ -887,9 +886,9 @@ def hr_tsk(job, spc_dct, spc_name,
                 zma_locs = ts_zma_locs(spc_dct, spc_name, zma_save_fs)
             zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
             if zma_save_fs[-1].file.torsions.exists(zma_locs):
-                tors_dct = zma_save_fs[-1].file.torsions.read(zma_locs)
-                rotors = automol.rotor.from_data(
-                    zma, tors_dct, multi='md' in tors_model)
+                tors_lst = zma_save_fs[-1].file.torsions.read(zma_locs)
+                rotors = automol.data.rotor.rotors_from_data(
+                    zma, tors_lst, multi='md' in tors_model)
             else:
                 rotors = ()
             if 'fa' in tors_model:
@@ -927,8 +926,8 @@ def hr_tsk(job, spc_dct, spc_name,
 
             zrxn = spc_dct_i.get('zrxn', None)
 
-            run_tors_names = automol.rotor.names(rotors)
-            run_tors_grids = automol.rotor.grids(
+            run_tors_names = automol.data.rotor.rotors_torsion_names(rotors)
+            run_tors_grids = automol.data.rotor.rotors_torsion_grids(
                 rotors, increment=increment)
 
             # Set constraints
@@ -942,7 +941,7 @@ def hr_tsk(job, spc_dct, spc_name,
             tors_pots, tors_zmas, tors_paths = {}, {}, {}
             for tors_names, tors_grids in zip(
                     run_tors_names, run_tors_grids):
-                constraint_dct = automol.zmat.constraint_dct(
+                constraint_dct = automol.zmat.constraint_dict(
                     zma, const_names, tors_names)
                 pot, _, _, _, zmas, paths = filesys.read.potential(
                     tors_names, tors_grids,
@@ -989,13 +988,13 @@ def hr_tsk(job, spc_dct, spc_name,
             ini_scn_run_fs, ini_scn_save_fs = build_fs(
                 ini_cnf_run_path, ini_cnf_save_path, scn,
                 zma_locs=zma_locs)
-            run_tors_names = automol.rotor.names(rotors, flat=True)
+            run_tors_names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
             for tors_names in run_tors_names:
 
                 # Set the constraint dct and filesys for the scan
                 const_names = automol.zmat.set_constraint_names(
                     zma, [run_tors_names], tors_model)
-                constraint_dct = automol.zmat.constraint_dct(
+                constraint_dct = automol.zmat.constraint_dict(
                     zma, const_names, tors_names)
 
                 # get the scn_locs, maybe get a function?

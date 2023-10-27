@@ -59,10 +59,10 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
     # Build a tuple with the full description of the reaction class, if ID'd
     if status not in ('MISSING-SKIP', 'MISSING-ADD'):
         for zrxn in zrxns:
-            rclasses += (_mod_class(zrxn.class_, rxn_info),)
+            rclasses += (_mod_class(automol.reac.class_(zrxn), rxn_info),)
 
         print('    Reaction class identified as: '
-              f'{automol.par.string(rclasses[0])}')
+              f'{automol.ReactionInfo.string(rclasses[0])}')
         print(f'    There are {len(zrxns)} '
               'configuration(s) of transition state')
 
@@ -88,13 +88,13 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
             print(f'     - reactant {i+1}: {path}')
         for i, path in enumerate(prd_paths):
             print(f'     - product {i+1}: {path}')
-        zrxn_objs = automol.reac.with_structures_from_geometry(
-            rct_geos, prd_geos, zmat=True, stereo=True)
+        zrxn_objs = automol.reac.from_geometries(
+            rct_geos, prd_geos, struc_typ="zmat", stereo=True)
 
-        if zrxn_objs is None and len(rxn_info[2][0]) == 2:
+        if not zrxn_objs and len(rxn_info[2][0]) == 2:
             if rxn_info[2][0][0] > 1 and rxn_info[2][0][1] > 1:
-                zrxn_objs = automol.reac.with_structures_from_geometry(
-                    rct_geos, prd_geos, zmat=True, stereo=False)
+                zrxn_objs = automol.reac.from_geometries(
+                    rct_geos, prd_geos, struc_typ="zmat", stereo=False)
                 print('RXN UNIDENTIFIABLE FROM GEOS BUT ASSUMING IT IS R+O2: BUT GOING AHEAD')
 
     else:
@@ -102,20 +102,21 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
         rxn_ichs = rinfo.value(rxn_info, 'inchi')
         rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
-        zrxn_objs = automol.reac.with_structures_from_chi(
-            rct_ichs, prd_ichs, zmat=True, stereo=True)
+        zrxn_objs = automol.reac.from_chis(
+            rct_ichs, prd_ichs, struc_typ='zmat', stereo=True)
 
-        if zrxn_objs is None and len(rxn_info[2][0]) == 2:
+        if not zrxn_objs and len(rxn_info[2][0]) == 2:
             if rxn_info[2][0][0] > 1 and rxn_info[2][0][1] > 1:
-                zrxn_objs = automol.reac.with_structures_from_chi(
-                    rct_ichs, prd_ichs, zmat=True, stereo=False)
+                zrxn_objs = automol.reac.from_chis(
+                    rct_ichs, prd_ichs, struc_typ='zmat', stereo=False)
                 print('RXN UNIDENTIFIABLE FROM ICHS BUT ASSUMING IT IS R+O2 AND GOING AHEAD')
 
     # Loop over the found reaction objects
     if zrxn_objs is not None:
         zrxns, zmas = (), ()
-        for obj_set in zrxn_objs:
-            zrxn, zma, _, _ = obj_set
+        for zrxn_obj in zrxn_objs:
+            zrxn = zrxn_obj
+            zma = automol.reac.ts_structure(zrxn_obj)
             zrxns += (zrxn,)
             zmas += (zma,)
     else:
@@ -137,7 +138,7 @@ def _mod_class(class_typ, rxn_info):
 
     # Set the spin of the reaction to high/low
     _fake_class = (class_typ, '', '', False)
-    if automol.par.need_spin_designation(_fake_class):
+    if automol.ReactionInfo.requires_spin_designation(_fake_class):
         ts_mul = rinfo.value(rxn_info, 'tsmult')
         high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
         _spin = 'high-spin' if ts_mul == high_mul else 'low-spin'
@@ -148,8 +149,9 @@ def _mod_class(class_typ, rxn_info):
     # rxn_muls = rinfo.value(rxn_info, 'mult')
     # is_isc = automol.reac.intersystem_crossing(rxn_muls)
 
-    return automol.par.reaction_class_from_data(
-        class_typ, _spin, rinfo.radrad(rxn_info), False)
+    return automol.ReactionInfo(
+        class_=class_typ, spin=_spin, is_rad_rad=rinfo.radrad(rxn_info), is_isc=False
+    )
 
 
 # from direction (loop over the reactions around split)

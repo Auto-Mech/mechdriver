@@ -112,7 +112,7 @@ def _scan_inf_dct(ts_dct, savefs_dct):
     cls = ts_dct['class']
     scan_inf = automol.reac.build_scan_info(
         zrxn, ts_zma,
-        var=(automol.par.is_radrad(cls) and automol.par.is_low_spin(cls)))
+        var=(automol.ReactionInfo.is_radical_radical(cls) and automol.ReactionInfo.is_low_spin(cls)))
     coord_names, _, coord_grids, update_guess = scan_inf
 
     # Get fol constraint dct
@@ -125,7 +125,8 @@ def _scan_inf_dct(ts_dct, savefs_dct):
         ts_zma, rct_zmas)
 
     # Get indices for potentials and input
-    frm_bnd_key, = automol.graph.ts.forming_bond_keys(zrxn.forward_ts_graph)
+    tsg = automol.reac.ts_graph(zrxn)
+    frm_bnd_key, = automol.graph.ts.ts_forming_bond_keys(tsg)
 
     # Set up zma for the scan
     inf_sep_zma = automol.zmat.set_values_by_name(
