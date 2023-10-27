@@ -137,7 +137,7 @@ def _mod_class(class_typ, rxn_info):
     """
 
     # Set the spin of the reaction to high/low
-    _fake_class = (class_typ, '', '', False)
+    _fake_class = automol.ReactionInfo(class_typ)
     if automol.ReactionInfo.requires_spin_designation(_fake_class):
         ts_mul = rinfo.value(rxn_info, 'tsmult')
         high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
