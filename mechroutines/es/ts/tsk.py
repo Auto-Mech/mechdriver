@@ -5,7 +5,7 @@
 """
 
 import importlib
-import automol.par
+import automol.const
 # from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
@@ -411,11 +411,11 @@ def _ts_search_method(ts_dct):
         print('No TS finding algorithm requested by the user.')
 
         # ID search algorithm if user did not specify one (wrong)
-        if automol.par.isc(ts_dct['class']):
+        if automol.ReactionInfo.is_intersystem_crossing(ts_dct['class']):
             _search_method = 'isc'
             print('Reactant and Product spins differ...')
             print('Using intersystem crossing search sceme')
-        elif automol.par.has_nobarrier(ts_dct['class']):
+        elif automol.ReactionInfo.is_barrierless(ts_dct['class']):
             _search_method = 'pst'
             print()
             print('Reaction is low-spin, radical-radical reaction')
