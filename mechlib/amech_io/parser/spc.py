@@ -372,8 +372,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
             #     print('skipping weird case 5_57_1')
             #     continue
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
-            ts_reac_ichs = automol.reac.chis(
-                automol.reac.undo_zmatrix_conversion(zrxn), stereo=True)
+            ts_reac_ichs = automol.reac.chis(zrxn, stereo=True)
             reac_ichs = canon_rxn_info[0][0]
             forw_dct = {
                 'zrxn': zrxn,
