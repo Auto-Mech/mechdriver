@@ -43,7 +43,7 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
     )
     tau_hr_model = bool('tau' in tors_model and vib_model != 'vib')
     if has_tors:
-        if any([len(pot)<1 for pot in automol.rotor.potentials(rotors, flat=True)]):
+        if not all(map(automol.data.potent.has_defined_values, automol.data.rotor.rotors_potentials(rotors))):
             print('WARNING: empty potential will crash MESS so using rigid model instead')
             has_tors = False
         
@@ -101,7 +101,7 @@ def pst_ts(rxn_class, ts_sadpt, ts_nobarrier):
     """
 
     pst = False
-    if not automol.par.is_radrad(rxn_class):
+    if not automol.ReactionInfo.is_radical_radical(rxn_class):
         if ts_sadpt == 'pst':
             pst = True
     else:
@@ -125,7 +125,7 @@ def need_fake_wells(rxn_class, well_model):
         :type well_model:
         :rtype: bool
     """
-    return (well_model == 'fake' and automol.par.need_wells(rxn_class))
+    return (well_model == 'fake' and automol.ReactionInfo.requires_well_description(rxn_class))
 
 
 def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
@@ -148,7 +148,7 @@ def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
         if ts_inf_dct['writer'] == 'pst_block':
             treat = False
     if tunnel_model is not None:
-        if automol.par.is_radrad(rxn_class):
+        if automol.ReactionInfo.is_radical_radical(rxn_class):
             if ts_nobar in ('pst', 'rpvtst', 'vrctst'):
                 treat = False
         else:
@@ -183,8 +183,8 @@ def is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         tsname = f'ts_{pes_idx+1:g}_{chnl_idx+1:g}_0'
 
         rxn_class = spc_dct[tsname]['class']
-        if (automol.par.typ(rxn_class) ==
-           automol.par.ReactionClass.Typ.HYDROGEN_ABSTRACTION):
+        if (automol.ReactionInfo.reaction_class(rxn_class) ==
+           automol.ReactionClass.HYDROGEN_ABSTRACTION):
             _abstraction = True
 
     return _abstraction

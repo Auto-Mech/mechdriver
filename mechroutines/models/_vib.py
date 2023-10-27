@@ -5,7 +5,7 @@
 import os
 from copy import deepcopy
 import autorun
-import automol.pot
+import automol._deprecated
 import automol.geom
 import autofile.fs
 from phydat import phycon
@@ -38,8 +38,9 @@ def full_vib_analysis(
     if rotors is not None:
         if typ.squash_tors_pot(spc_mod_dct_i):
             for rotor in rotors:
-                for torsion in rotor:
-                    torsion.pot = automol.pot.relax_scale(torsion.pot)
+                pot = automol.data.rotor.potential(rotor)
+                pot = automol.data.potent.squash(pot)
+                automol.data.rotor.set_potential(rotor, pot, in_place=True)
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info

@@ -21,7 +21,6 @@ def tau_sampling(zma, ref_ene, spc_info,
                  db_style='directory',
                  nsamp_par=(False, 3, 3, 1, 50, 50),
                  tors_names=(),
-                 repulsion_thresh=40.0,
                  zrxn=None, resave=False,
                  **kwargs):
     """ Sample over torsions optimizing all other coordinates
@@ -45,7 +44,6 @@ def tau_sampling(zma, ref_ene, spc_info,
         overwrite=overwrite,
         nsamp_par=nsamp_par,
         tors_names=tors_names,
-        repulsion_thresh=repulsion_thresh,
         zrxn=zrxn,
         **kwargs,
     )
@@ -66,7 +64,6 @@ def run_tau(zma, spc_info, thy_info,
             tau_run_fs, tau_save_fs, script_str, overwrite,
             nsamp_par=(False, 3, 3, 1, 50, 50),
             tors_names=(),
-            repulsion_thresh=40.0,
             zrxn=None, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
@@ -121,11 +118,7 @@ def run_tau(zma, spc_info, thy_info,
         info_message(
             'Generating sample Z-Matrix that does not have',
             'high intramolecular repulsion...')
-        ref_pot = automol.pot.intramol_interaction_potential_sum(
-            automol.zmat.geometry(zma))
-        samp_pot = automol.pot.intramol_interaction_potential_sum(
-            automol.zmat.geometry(samp_zma))
-        if samp_pot-ref_pot < repulsion_thresh:
+        if automol.zmat.has_low_relative_repulsion_energy(samp_zma, zma):
             debug_message('ZMA fine.')
             es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
