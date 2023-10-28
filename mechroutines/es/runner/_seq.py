@@ -143,9 +143,9 @@ def options_matrix_optimization(script_str, prefix,
                         gra = automol.reac.ts_graph(grxn)
                     else:
                         gra = None
-                    dtt = automol.zmat.conversion_info(step_geo)
+                    zc_ = automol.zmat.conversion_info(step_geo)
                     geo_wdum = automol.geom.apply_zmatrix_conversion(
-                        geo, dtt,
+                        geo, zc_,
                         gra=gra)
                     geo = automol.zmat.from_geometry(step_geo, geo_wdum)
                 if geo is not None:
