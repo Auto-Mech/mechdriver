@@ -35,7 +35,7 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path,
     # Generate forumula
     print('in build poly', spc_name)
     spc_dct_i = spc_dct[spc_name]
-    formula_str = automol.chi.formula_string(spc_dct_i['inchi'])
+    formula_str = automol.chi.formula_layer(spc_dct_i['inchi'])
     formula_dct = automol.chi.formula(spc_dct_i['inchi'])
 
     if spc_locs_idx == 'final':
