@@ -21,16 +21,16 @@ from mechroutines.es.ts import ts_zma_locs
 
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
+from mechroutines.es._routines import sp as sp_module
 
 
 # Dictionary of Electronic Structure Calculators
-SP_MODULE = importlib.import_module('mechroutines.es._routines.sp')
 ES_TSKS = {
-    'energy': SP_MODULE.run_energy,
-    'grad': SP_MODULE.run_gradient,
-    'hess': SP_MODULE.run_hessian,
-    'vpt2': SP_MODULE.run_vpt2,
-    'prop': SP_MODULE.run_prop
+    'energy': sp_module.run_energy,
+    'grad': sp_module.run_gradient,
+    'hess': sp_module.run_hessian,
+    'vpt2': sp_module.run_vpt2,
+    'prop': sp_module.run_prop
 }
 
 
