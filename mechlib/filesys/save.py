@@ -473,11 +473,12 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     # print(zrxn)
     gra = None if zrxn is None else automol.reac.ts_graph(zrxn)
     rotors = automol.data.rotor.rotors_from_zmatrix(zma, gra=gra)
-    tors_lst = automol.data.rotor.rotors_torsions(rotors, sort=True)
-    zma_path = zma_fs[-1].path(zma_locs)
-    print(f" - Rotors identified from Z-Matrix at {zma_path}")
-    print(" - Saving rotor information at same location.")
-    zma_fs[-1].file.torsions.write(tors_lst, zma_locs)
+    if rotors:
+        tors_lst = automol.data.rotor.rotors_torsions(rotors, sort=True)
+        zma_path = zma_fs[-1].path(zma_locs)
+        print(f" - Rotors identified from Z-Matrix at {zma_path}")
+        print(" - Saving rotor information at same location.")
+        zma_fs[-1].file.torsions.write(tors_lst, zma_locs)
 
 
 def _save_rings(zma_fs, zma_locs, zrxn=None):
