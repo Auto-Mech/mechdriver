@@ -33,6 +33,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
 
         zrxn = spc_dct_i.get('zrxn', None)
         if zrxn is not None:
+            zrxn = automol.reac.without_structures(zrxn)
             grxn = automol.reac.undo_zmatrix_conversion(zrxn)
         else:
             grxn = None
