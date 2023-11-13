@@ -126,7 +126,7 @@ def _scan_inf_dct(ts_dct, savefs_dct):
 
     # Get indices for potentials and input
     tsg = automol.reac.ts_graph(zrxn)
-    frm_bnd_key, = automol.graph.ts.ts_forming_bond_keys(tsg)
+    frm_bnd_key, = automol.graph.ts.forming_bond_keys(tsg)
 
     # Set up zma for the scan
     inf_sep_zma = automol.zmat.set_values_by_name(
