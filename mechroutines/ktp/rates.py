@@ -130,7 +130,7 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         float_type=float_type,
         ktp_outname='rate.out',
         ke_outname='ke.out',
-        ped_outname='ped.out'
+        ped_outname='ped.out',
     )
 
     # Write base MESS input string into the RUN filesystem
@@ -244,7 +244,7 @@ def _full_mess_v2(energy_trans_str, rxn_chan_str, dats,
             float_type=float_type,
             ktp_outname='rate.out',
             ke_outname='ke.out',
-            ped_outname='ped.out'
+            ped_outname='ped.out',
     )
 
     # Write base MESS input string into the RUN filesystem

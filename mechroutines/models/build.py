@@ -65,7 +65,6 @@ def read_spc_data(spc_dct, spc_name,
 
     ioprinter.obj('line_plus')
     ioprinter.reading(f'filesystem info for {spc_name}', newline=1)
-
     vib_model = spc_mod_dct_i['vib']['mod']
     tors_model = spc_mod_dct_i['tors']['mod']
     spc_dct_i = spc_dct[spc_name]
@@ -377,10 +376,11 @@ def mol_data(spc_name, spc_dct,
             zma_locs = ts_zma_locs(spc_dct, spc_name, zma_fs)
             zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
-    racemic=False
+    racemic = True
     ioprinter.info_message('Setting symmetry factors as racemic=', racemic)
     sym_factor = symm.symmetry_factor(
-        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma, racemic=racemic)
+        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma,
+        racemic=racemic)
 
     # Obtain electronic energy levels
     elec_levels = spc_dct_i['elec_levels']

@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'MechDriver'
-copyright = '2021, Kevin Moore'
-author = 'Kevin Moore'
+copyright = '2023, Sarah Elliott'
+author = 'Sarah Elliott'
 
 
 # -- General configuration ---------------------------------------------------
@@ -29,7 +29,8 @@ author = 'Kevin Moore'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinxcontrib.bibtex'  # Needs pip install sphinxcontrib-bibtex
+    'sphinxcontrib.bibtex',  # Needs pip install sphinxcontrib-bibtex
+    'sphinx_design'
 ]
 master_doc = 'index'
 autodoc_member_order = 'bysource'

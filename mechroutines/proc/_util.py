@@ -3,6 +3,7 @@
 
 import os
 import pandas
+import json
 import ioformat
 import automol
 from autofile import io_ as io
@@ -228,6 +229,16 @@ def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
     if 'sidata' in tsk:
         all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
+    if 'json' in tsk:
+        all_data = {}
+        for label in csv_data:
+            for ich in csv_data[label]:
+                for cid in csv_data[label][ich]:
+                    if ich not in all_data:
+                        all_data[ich] = csv_data[label][ich]
+                    else:
+                        all_data[ich][cid] = csv_data[label][ich][cid]
+        io.write_file(filelabel, json.dumps(all_data))
     if 'molden' in tsk:
         all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
@@ -249,6 +260,12 @@ def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
                 *col_array])
         dframe.to_csv(filelabel, float_format='%.6f')
     if 'coeffs' in tsk:
+        dframe = pandas.DataFrame.from_dict(
+            csv_data, orient='index',
+            columns=[
+                *col_array])
+        dframe.to_csv(filelabel, float_format='%.2f')
+    if 'date' in tsk:
         dframe = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=[
@@ -311,6 +328,14 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
     if 'coeffs' in tsk:
         filelabel = 'coeffs'
         filelabel += f'_{model_dct["therm_fit"]["ref_scheme"]}'
+        filelabel += '.csv'
+    elif 'date' in tsk:
+        filelabel = 'date'
+        geolvl = proc_keyword_dct.get('geolvl')
+        if geolvl is not None:
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
+        else:
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
         filelabel += '.csv'
     elif 'freq' in tsk:
         filelabel = 'freq'
@@ -386,6 +411,11 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
     elif 'messpf_inp' in tsk:
         filelabel = 'messpf_input_global'
         filelabel += '.txt'
+    elif 'hess_json' in tsk:
+        filelabel = 'hess'
+        filelabel += f'_m{spc_mod_dct_i["tors"]["mod"][0]}'
+        filelabel += f'_m{spc_mod_dct_i["tors"]["geolvl"][0]}'
+        filelabel += '.json'
     elif 'pf' in tsk:
         filelabel = 'pf_global'
         filelabel += '.csv'
@@ -397,8 +427,8 @@ def choose_theory(proc_keyword_dct, spc_mod_dct_i):
     """ choose between theories set in models.dat and in run.dat
     """
     if proc_keyword_dct['geolvl']:
-        # thy_info = tinfo.from_dct(thy_dct.get(
-        #    proc_keyword_dct['geolvl']))
+        #thy_info = tinfo.from_dct(thy_dct.get(
+        #   proc_keyword_dct['geolvl']))
         spc_mod_dct_i = None
     # else:
     #    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]

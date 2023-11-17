@@ -24,6 +24,7 @@ from mechroutines.models import blocks
 from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
 from mechroutines.es.ts import ts_zma_locs
+from phydat import phycon
 
 
 def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
@@ -195,7 +196,6 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
         spc_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
         name=spc_name, saddle=saddle, spc_locs=locs)
-
     # Do initial check to see if a torsions file exists
     if pf_filesystems['tors'] is not None:
         [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['tors']
@@ -214,9 +214,11 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
             miss_data = None
             for name, pot in zip(names, pots):
                 if pot:
-                    # pot_str = ' '.join((f'{0:.1f}' for val in pot))
-                    # print(f'Rotor {name}: {pot_str}')
-                    print(f'Rotor {name}: {pot}')
+                    pot_steps_str = ','.join('{:.2f}'.format(step[0]) for step in pot.keys())
+                    pot_vals_str = ','.join('{:.2f}'.format(val) for val in pot.values())
+                    print(f'Rotor {name}: {pot_steps_str}')
+                    print(f'Rotor {name}: {pot_vals_str}')
+                    #print(f'Rotor {name}: {pot}')
                 else:
                     print(f'Rotor {name}: MISSING POTENIAL')
                     miss_data = (spc_name, mod_thy_info, 'torsions')
@@ -310,36 +312,42 @@ def enthalpy(
 
     zrxn = spc_dct_i.get('zrxn')
     saddle = bool(zrxn)
+    miss_data = None
+    ene_abs = 0
+    hf0k = 0
+    coeff_array = []
 
-    # print('spc_mod_dct_i', spc_mod_dct_i)
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
         name=spc_name, saddle=saddle, spc_locs=locs)
-    # print(pf_filesystems)
-    ene_abs = ene.read_energy(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        run_prefix, conf=(locs, locs_path, cnf_fs),
-        read_ene=True, read_zpe=True, saddle=saddle)
-    hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
-        spc_dct, spc_name, ene_abs,
-        chn_basis_ene_dct, model_dct, spc_mod_dct_i,
-        run_prefix, save_prefix, pforktp='pf', zrxn=zrxn)
-    spc_basis, coeff_basis = hbasis[spc_name]
-    coeff_array = []
-    for spc_i in spc_basis:
-        if spc_i not in spc_array:
-            spc_array.append(spc_i)
-    for spc_i in spc_array:
-        if spc_i in spc_basis:
-            coeff_array.append(
-                coeff_basis[spc_basis.index(spc_i)])
-        else:
-            coeff_array.append(0)
+    if cnf_fs[-1].file.hessian.exists(locs):
+        # print(pf_filesystems)
+        ene_abs = ene.read_energy(
+            spc_dct_i, pf_filesystems, spc_mod_dct_i,
+            run_prefix, conf=(locs, locs_path, cnf_fs),
+            read_ene=True, read_zpe=True, saddle=saddle)
+        hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
+            spc_dct, spc_name, ene_abs,
+            chn_basis_ene_dct, model_dct, spc_mod_dct_i,
+            run_prefix, save_prefix, pforktp='pf', zrxn=zrxn)
+        spc_basis, coeff_basis = hbasis[spc_name]
+        coeff_array = []
+        for spc_i in spc_basis:
+            if spc_i not in spc_array:
+                spc_array.append(spc_i)
+        for spc_i in spc_array:
+            if spc_i in spc_basis:
+                coeff_array.append(
+                    coeff_basis[spc_basis.index(spc_i)])
+            else:
+                coeff_array.append(0)
+    else:
+        miss_data = (spc_name, 'harm', 'frequencies')
     return (
         [locs_path, ene_abs, hf0k, *coeff_array],
         chn_basis_ene_dct,
-        spc_array
+        spc_array, miss_data
     )
 
 
@@ -447,17 +455,67 @@ def sidata(
         proc_keyword_dct, thy_dct,
         cnf_fs, locs, locs_path, run_prefix, save_prefix,
         mod_thy_info):
-    """collect a geometry
+    """collect supplementary info text
+    """
+    # Initialize the data objects to None
+    data_dct, miss_data = _sidata(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        proc_keyword_dct, thy_dct,
+        cnf_fs, locs, locs_path, run_prefix, save_prefix,
+        mod_thy_info)
+    smi = data_dct['smi']
+    loci = data_dct['cid']
+    xyz_str = data_dct['xyz_str']
+    freqs = data_dct['freqs']
+    spc_data = f'\n\nSMILES: {smi}\tConf: {loci}\n'
+    spc_data += 'Geometry [Angstrom]\n'
+    spc_data += xyz_str
+    if freqs is not None:
+        spc_data += '\nHarmonic Frequencies [cm-1]:\n' + '\t'.join(['{:5.2f}'.format(freq) for freq in freqs])
+    return spc_data, miss_data
+
+
+def hess_json(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        proc_keyword_dct, thy_dct,
+        cnf_fs, locs, locs_path, run_prefix, save_prefix,
+        mod_thy_info):
+    """collect json info
+    """
+    data_dct, miss_data = _sidata(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        proc_keyword_dct, thy_dct,
+        cnf_fs, locs, locs_path, run_prefix, save_prefix,
+        mod_thy_info)
+    json_dct = {
+        data_dct['ich']:
+            {data_dct['cid']: {
+                'geometry': data_dct['xyz_str'], 
+                'e_elec': data_dct['e_elec'],
+                'hessian': data_dct['hessian'],
+                'freqs': data_dct['freqs'],
+                'zpe': data_dct['zpe']}}}
+    return (json_dct, miss_data)
+
+
+def _sidata(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        proc_keyword_dct, thy_dct,
+        cnf_fs, locs, locs_path, run_prefix, save_prefix,
+        mod_thy_info):
+    """collect a dictionary of data
     """
     # Initialize the data objects to None
     freqs = None
     imag = None
     zpe = None
     sfactor = None
+    ene = None
     torsfreqs = None
     all_freqs = None
     disps = None
-
+    hess = None
+    data_dct = {}
     # Initialize a miss_data object that will be overwritten if data found
     #if spc_mod_dct_i is not None:
     #    mod_thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
@@ -471,12 +529,12 @@ def sidata(
     # zrxn = spc_dct_i.get('zrxn', None)
     # saddle = bool(zrxn)
 
-    # # Get vibrational frequencies
+    # Get vibrational frequencies
     # if spc_mod_dct_i is not None:
     #     pf_filesystems = filesys.models.pf_filesys(
     #         spc_dct_i, spc_mod_dct_i,
     #         run_prefix, save_prefix,
-    #         name=spc_name, saddle=saddle)
+    #         name=spc_name, saddle=saddle, spc_locs=locs)
 
     #     ret = vib.full_vib_analysis(
     #         spc_dct_i, pf_filesystems, spc_mod_dct_i,
@@ -504,8 +562,8 @@ def sidata(
         geo = cnf_fs[-1].file.geometry.read(locs)
         sp_fs = autofile.fs.single_point(locs_path)
         if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
-            _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-            comment = f'energy: {_ene:>15.10f}'
+            ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+            comment = f'energy: {ene:>15.10f}'
             xyz_str = automol.geom.xyz_string(geo, comment=comment)
             miss_data = None
         else:
@@ -516,11 +574,44 @@ def sidata(
         xyz_str = '\t -- Missing --'
         miss_data = (spc_name, mod_thy_info, 'geometry')
 
-    smi = spc_dct_i['smiles']
-    loci = locs[1]
-    spc_data = f'\n\nSMILES: {smi}\tConf: {loci}\n'
-    spc_data += 'Geometry [Angstrom]\n'
-    spc_data += xyz_str
-    if freqs is not None:
-        spc_data += '\nHarmonic Frequencies [cm-1]:\n' + '\t'.join(['{:5.2f}'.format(freq) for freq in freqs])
-    return spc_data, miss_data
+    if cnf_fs[-1].file.hessian.exists(locs):
+        hess = cnf_fs[-1].file.hessian.read(locs)
+        fml_str = automol.geom.formula_string(geo)
+        vib_path = os.path.join(run_prefix, 'PROJROT')
+        vib_path = os.path.join(vib_path, 'FREQ')
+        vib_path = os.path.join(vib_path, fml_str)
+
+        # Obtain the frequencies
+        ioprinter.info_message(
+            'Calling ProjRot to diagonalize Hessian and get freqs...')
+        script_str = autorun.SCRIPT_DCT['projrot']
+        freqs, _, imag_freqs, _ = autorun.projrot.frequencies(
+            script_str, vib_path, [geo], [[]], [hess])
+
+        zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
+
+    data_dct['smi'] = spc_dct_i['smiles']
+    data_dct['ich'] = spc_dct_i['inchi']
+    data_dct['cid'] = locs[1]
+    data_dct['freqs'] = freqs
+    data_dct['zpe'] = zpe
+    data_dct['e_elec'] = ene
+    data_dct['hessian'] = hess
+    data_dct['xyz_str'] = xyz_str
+    return (data_dct, miss_data)
+
+def time_stamp(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
+    """collect the time stamp for when this conformer was first found
+    """
+    if cnf_fs[-1].file.geometry.exists(locs):
+        inf_obj = cnf_fs[-1].file.geometry_info.read(locs)
+        end_time = inf_obj.utc_end_time
+        current_time = autofile.schema.utc_time()
+        time = (current_time - end_time).total_seconds() / 3600
+        miss_data = None
+    else:
+        end_time = '\t -- Missing --'
+        miss_data = (spc_name, mod_thy_info, 'timestamp')
+
+    spc_data = (spc_name, locs, time,)
+    return spc_data, ('spc', 'locs', 'time'), miss_data

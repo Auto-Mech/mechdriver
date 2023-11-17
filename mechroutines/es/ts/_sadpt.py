@@ -104,6 +104,7 @@ def search(ini_zma, spc_dct, tsname,
         guess_zmas = (ini_zma,)
     else:
         # Generate a guess zma by scanning along rxncoord and finding max
+        print('zma in search\n', automol.zmat.string(ts_dct['zma']))
         guess_zmas = rpath.internal_coordinates_scan(
             ts_zma=ts_dct['zma'],
             zrxn=ts_dct['zrxn'],
@@ -139,7 +140,7 @@ def search(ini_zma, spc_dct, tsname,
         else:
             opt_zma = filesys.save.read_job_zma(opt_ret, init_zma=ts_zma)
         viable = automol.reac.similar_saddle_point_structure(
-            opt_zma, ts_zma, ts_dct['zrxn'], sens=6.)
+            opt_zma, ts_zma, ts_dct['zrxn'], sens=60.)
         if not viable:
             print('transition state does not have viable structure')
         else:

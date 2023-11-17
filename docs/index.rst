@@ -6,23 +6,9 @@ MechDriver
 
 *A Package of the AutoMech Suite*
 
-Andreas V. Copan, Kevin B. Moore III, Sarah N. Elliott,
+Sarah N. Elliott, Kevin B. Moore III, Andreas V. Copan 
 Clayton Mulvihill, Luna Pratali Maffei, and Stephen J. Klippenstein
 
---------------------------------------------------------------------------------------
-
-.. toctree::
-    :maxdepth: 2
-    :caption: Contents:
-
-    rst/intro
-    rst/execution
-    rst/input/index
-    rst/workflow
-    rst/codedoc/index
-
-
---------------------------------------------------------------------------------------
 
 Overview
 ~~~~~~~~
@@ -34,19 +20,26 @@ in the simulation of reaction mechanism models.  Follow these links for descript
 input files, a glossary of the keywords, and for example input files. The code structure and install
 instructions are described below:
 
+--------------------------------------------------------------------------------------
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Contents:
+
+    rst/manual
+
+
+--------------------------------------------------------------------------------------
+
 mechdrivers
 ^^^^^
 The main automech.py code will drive any of the five drivers of the code, dependent on the user's input,
 on a provided mechanism.  These drivers are:
 
 * ESDriver: carries out electronic structure tasks for requested species and theories
-
 * ThermoDriver: carries out partition function calculations and tranformations for requested species and models
-
 * kTPDriver: carries out T,P-dependent rate calculations and fitting for multichannel potential energy surfaces 
-
 * TransDriver: carries out energy transfer calculations for a given mechanism
-
 * ProcDriver: post-processing module to format data
 
 mechroutines
@@ -54,15 +47,10 @@ mechroutines
 To fascilitate the drivers, we have created subsets of routines
 
 * es: modules to set up and run electronic structure jobs like geometry optimization, frequency analaysis, conformer searching, angle scanning, single point calculations, 
-
 * ktp: organizes reaction, species, and transition state info to construct indepndent PESes 
-
 * models: gathers the partition function parameters for each stationary point in the mechanism, and applies any user requested scaling routines
-
 * proc:  querries the database for user requested properties
-
 * thermo: produces the partition functions and transfroms it into thermchemical properties and NASA polynomials 
-
 * trans:
 
 
@@ -111,7 +99,7 @@ suite auto-mech-env.  Then activate your environment and install the autoio pack
 For users new to conda, we have :ref:`conda-instructions`.
 Each AutoMech package is also available on `GitHub`_.
 
-.. _GitHub: https://github.com/Auto-Mech/autoio
+.. _GitHub: https://github.com/Auto-Mech/mechdriver
 
 
 

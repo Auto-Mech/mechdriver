@@ -31,7 +31,7 @@ def full_vib_analysis(
     pot_scalef = 1.0
     tors_freqs = []
     harm_freqs = []
-    
+
     rotors, mdhr_dct, zma_locs = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     # Squash the rotor potentials as necessary
@@ -46,11 +46,11 @@ def full_vib_analysis(
         tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
         [_, hr_str, _, prot_str, _] = tors_strs
         ret = tors_projected_freqs(
-            pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn, zma_locs=zma_locs)
+            pf_filesystems, hr_str, prot_str, run_prefix,
+            zrxn=zrxn, zma_locs=zma_locs)
 
         if ret is not None:
             proj_freqs, harm_freqs, tors_freqs, imag, disps = ret
-            # print('scaling in test:', harm_freqs, proj_freqs, tors_freqs, imag, disps)
 
             # Make final hindered rotor strings and get corrected tors zpe
             if typ.scale_1d(spc_mod_dct_i):
@@ -62,25 +62,13 @@ def full_vib_analysis(
                     harm_freqs, None, spc_mod_dct_i,
                     scale_method='c3_harm')
 
-                # print('scaling test:', scaled_harm_freqs,
-                      # scaled_proj_freqs, tors_freqs)
-                # print('tors string before scaling',tors_strs)
                 pot_scalef = potential_scale_factor(
                     scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
-                # print('pot_scalef:', pot_scalef)
-                # get the pot scale factor
-                # print('before scaling')
-                # for rotor in rotors:
-                #     for _tors in rotor:
-                #         print(_tors.pot)
-                rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef, scale_override=None)
-                # print('after scaling')
-                # for rotor in rotors:
-                #     for _tors in rotor:
-                #         print(_tors.pot)
+                rotors = tors.scale_rotor_pots(
+                    rotors, scale_factor=pot_scalef,
+                    scale_override=None)
                 tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
                 [_, hr_str, _, prot_str, _] = tors_strs
-                # print('tors string after scaling',tors_strs)
                 tors_zpe = tors_projected_scaled_zpe(
                     pf_filesystems, hr_str, prot_str, run_prefix,
                     spc_mod_dct_i, zrxn=zrxn, zma_locs=zma_locs)
@@ -94,19 +82,17 @@ def full_vib_analysis(
             pf_filesystems, run_prefix, zrxn=zrxn)
         freqs, imag, zpe, disps = ret
         harm_freqs = freqs
-    print('what is freqs', freqs)
     if freqs:
         freqs, proj_tors_zpe = scale_frequencies(
             freqs, tors_zpe,
             spc_mod_dct_i, scale_method='c3')
-    
+
         harm_freqs, harm_sc_zpe = scale_frequencies(
             harm_freqs, 0,
             spc_mod_dct_i, scale_method='c3')
 
         # zpe = harm_sc_zpe
         zpe = proj_tors_zpe
-    print('what is zpe', zpe)
     return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
             harm_freqs, disps, rotors)
 

@@ -235,6 +235,7 @@ div.body {
   padding: 0px 10px;
   padding-left: 20%;
   padding-right: 20%;
+  background-color:ghostwhite;
 }
 
 div.footer {
@@ -274,17 +275,59 @@ table{
 div.admonition.note{
      -moz-border-radius: 6px;
      -webkit-border-radius: 6px;
-     background-color: #c4e8d4;
-     background-image: url('https://css.gg/notes.css');
+     background-color: MediumSeaGreen;
      background-position: 9px 0px;
      background-repeat: no-repeat;
-     border: solid 1px MediumSeaGreen;
+     border: solid 1px black;
+     box-shadow: 0 3px 10px rgb(0 0 0 / 60%);
      border-radius: 6px;
      line-height: 18px;
      overflow: hidden;
      padding: 10px 40px;
+     margin: 20px;
 }
 
+div.admonition-links.admonition{
+     -moz-border-radius: 6px;
+     -webkit-border-radius: 6px;
+     background-color: none;
+     background-position: 9px 0px;
+     background-repeat: no-repeat;
+     border: solid 1px black;
+     box-shadow: 0 3px 10px rgb(0 0 0 / 60%);
+     border-radius: 6px;
+     line-height: 18px;
+     overflow: hidden;
+     padding: 10px 40px;
+     margin: 20px;
+     padding-top: 0px;
+}
+
+
+p.admonition-title{
+  font-size:0px;
+}
+
+
+div.admonition.note p{
+    color: white;
+}
+
+div.admonition.note p a{
+    color: white;
+    padding: 100px;
+    margin: -100px;
+
+}
 div.toctree-wrapper.compound{
     background: GhostWhite;
+}
+
+.sd-btn-primary, .sd-btn-outline-primary:hover, .sd-btn-outline-primary:focus {
+    color: white; 
+    background-color: MediumSeaGreen;
+    border-color: black; 
+    border-width: 1px !important;
+    border-style: solid !important;
+     box-shadow: 0 3px 10px rgb(0 0 0 / 60%);
 }

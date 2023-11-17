@@ -115,7 +115,7 @@ def set_model_filesys(spc_dct_i, level,
                       cnf_range='min', spc_locs=None, nprocs=1):
     """ Gets filesystem objects for reading many calculations
     """
-
+    ret = None
     # Set the spc_info
     if saddle:
         rxn_info = spc_dct_i['canon_rxn_info']
@@ -142,7 +142,10 @@ def set_model_filesys(spc_dct_i, level,
     elif cnf_range == 'min':
         min_rngs_locs, min_rngs_path = min_energy_conformer_locators(
             cnf_save_fs, levelp, hbond_cutoffs=hbond_cutoffs)
-        cnf_run_fs[-1].create(min_rngs_locs)
+        if min_rngs_locs:
+            cnf_run_fs[-1].create(min_rngs_locs)
+        else:
+            ioprinter.warning_message("Unable to locate filesystem for requested species")
     else:
         min_rngs_locs_lst, min_rngs_path_lst = conformer_locators(
             cnf_save_fs, levelp,
@@ -154,9 +157,9 @@ def set_model_filesys(spc_dct_i, level,
         min_rngs_path = min_rngs_path_lst[0]
         ioprinter.warning_message('Only returning first location in this list')
     # Create run fs if that directory has been deleted to run the jobs
-
-    return [cnf_save_fs, min_rngs_path, min_rngs_locs, '', cnf_run_fs]
-    # return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
+    if min_rngs_locs:
+        ret = [cnf_save_fs, min_rngs_path, min_rngs_locs, '', cnf_run_fs]
+    return ret 
 
 
 def set_rpath_filesys(ts_dct, level):
