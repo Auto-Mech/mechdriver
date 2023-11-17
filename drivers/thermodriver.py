@@ -86,12 +86,13 @@ def run(pes_rlst, spc_rlst,
         cnf_range = run_messpf_tsk[-1]['cnf_range']
         sort_str = run_messpf_tsk[-1]['sort']
         nprocs = run_messpf_tsk[-1]['nprocs']
-    spc_grp_dct, spc_locs_dct, thm_paths_dct, sort_info_lst = _set_spc_queue(
+    ret = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst,
         run_fit_tsk,
         spc_dct, thy_dct,
         save_prefix, run_prefix,
         cnf_range, sort_str, nprocs=nprocs)
+    spc_grp_dct, spc_locs_dct, thm_paths_dct, sort_info_lst = ret
 
     # ----------------------------------- #
     # RUN THE REQUESTED THERMDRIVER TASKS #
@@ -200,12 +201,13 @@ def _set_spc_locs_dct(
             cnf_range, sort_info_lst, saddle, nlocs_procs,
             spc_queue, output_queue=None):
         spc_locs_dct = {}
- 
+
         for spc_name in spc_queue:
             spc_locs_lst = filesys.models.get_spc_locs_lst(
                 spc_dct[spc_name], spc_mod_dct_i,
                 run_prefix, save_prefix, saddle=saddle,
-                cnf_range=cnf_range, sort_info_lst=sort_info_lst, nprocs=nlocs_procs)
+                cnf_range=cnf_range, sort_info_lst=sort_info_lst,
+                nprocs=nlocs_procs)
             spc_locs_dct[spc_name] = spc_locs_lst
         output_queue.put((spc_locs_dct,))
     nspc_procs = 1
@@ -219,7 +221,11 @@ def _set_spc_locs_dct(
         cnf_range, sort_info_lst, saddle, nlocs_procs)
     sub_spc_locs_dct_lst = execute_function_in_parallel(
         _par_spc_locs_dct_setter, spc_queue, args, nprocs=nspc_procs)
+    # fill dictionary in order
     spc_locs_dct = {}
-    for sub_spc_locs_dct in sub_spc_locs_dct_lst:
-        spc_locs_dct.update(sub_spc_locs_dct)
+    for spc in spc_queue:
+        for sub_spc_locs_dct in sub_spc_locs_dct_lst:
+            if spc in sub_spc_locs_dct:
+                spc_locs_dct[spc] = sub_spc_locs_dct[spc]
+                break
     return spc_locs_dct

@@ -32,19 +32,13 @@ def run_tsk(tsk, obj_queue,
 
     # Exclude unstable species
     # These species break certain checks (e.g. no ene exists for geo collect)
-    print(1)
-    print(obj_queue)
     obj_queue = util.remove_unstable(
         obj_queue, spc_dct, thy_dct, spc_mod_dct_i,
         proc_keyword_dct, save_prefix)
-    print(2)
-    print(obj_queue)
     obj_queue, ts_miss_data = util.remove_ts_missing(
         obj_queue, spc_dct)
     # obj_queue = util.remove_radrad_ts(
     #     obj_queue, spc_dct)
-    print(3)
-    print(obj_queue)
 
 
     # Set up lists for reporting missing data
@@ -86,7 +80,7 @@ def run_tsk(tsk, obj_queue,
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
 
                 miss_data_i = None
-                label = spc_name + ':' + '_'.join(locs)
+                label = spc_name + ':' + ':'.join(locs)
                 print(label)
 
                 if 'freq' in tsk and not _skip(spc_name, spc_dct_i):
@@ -110,13 +104,11 @@ def run_tsk(tsk, obj_queue,
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     print(csv_data_i)
                     csv_data[label] = csv_data_i
-                elif 'si' in tsk:
-                    csv_data_i, miss_data_i = collect.sidata(
-                        spc_name, spc_dct_i, spc_mod_dct_i,
-                        proc_keyword_dct, thy_dct,
-                        cnf_fs, locs, locs_path, run_prefix, save_prefix, mod_thy_info)
-                    print(csv_data_i)
+                elif 'date' in tsk:
+                    csv_data_i, date_headers, miss_data_i = collect.time_stamp(
+                        spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
+                    col_array = date_headers
                 elif 'molden' in tsk:
                     csv_data_i, miss_data_i = collect.molden(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
@@ -133,6 +125,13 @@ def run_tsk(tsk, obj_queue,
                         spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
                         mod_thy_info, run_prefix, save_prefix)
 
+                elif 'hess_json' in tsk:
+                    csv_data_i, miss_data_i = collect.hess_json(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        proc_keyword_dct, thy_dct,
+                        cnf_fs, locs, locs_path, run_prefix, save_prefix, mod_thy_info)
+                    csv_data[label] = csv_data_i
+
                 elif 'ene' in tsk:
                     csv_data_i, miss_data_i = collect.energy(
                         spc_name, spc_dct_i, spc_mod_dct_i,
@@ -145,7 +144,7 @@ def run_tsk(tsk, obj_queue,
                         spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
                         pes_mod_dct_i, chn_basis_ene_dct, spc_array,
                         locs, locs_path, cnf_fs, run_prefix, save_prefix)
-                    csv_data_i, chn_basis_ene_dct, spc_array = ret
+                    csv_data_i, chn_basis_ene_dct, spc_array, miss_data_i = ret
                     csv_data[label] = csv_data_i
                     col_array = spc_array
 
@@ -182,6 +181,13 @@ def run_tsk(tsk, obj_queue,
                     csv_data_i, miss_data_i = ret
                     csv_data[label] = csv_data_i[1]
                     col_array = csv_data_i[0]
+                elif 'si' in tsk:
+                    csv_data_i, miss_data_i = collect.sidata(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        proc_keyword_dct, thy_dct,
+                        cnf_fs, locs, locs_path, run_prefix, save_prefix, mod_thy_info)
+                    print(csv_data_i)
+                    csv_data[label] = csv_data_i
 
                 if miss_data_i is not None:
                     miss_data += (miss_data_i,)

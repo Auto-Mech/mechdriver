@@ -93,11 +93,13 @@ TSK_KEY_DCT = {
     'onedmin': (('spc',), (BASE + TRANS)),
     'write_transport': (('spc',), (BASE + TRANS)),
     # Process Driver Tasks
+    'date': (('spc', 'ts', 'vdw'), PRNT),
     'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
     'energy': (('spc', 'ts'), PRNT),
     'geo': (('spc', 'ts'), PRNT),
     'molden': (('spc', 'ts'), PRNT),
     'sidata': (('spc', 'ts'), PRNT),
+    'hess_json': (('spc', 'ts'), PRNT),
     'zmatrix': (('spc', 'ts'), PRNT),
     'torsions': (('spc', 'ts'), PRNT),
     'enthalpy': (('spc', 'ts'), PRNT),
