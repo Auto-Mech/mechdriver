@@ -22,7 +22,7 @@ def calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
             gra = automol.reac.ts_graph(zrxn)
 
         ntaudof = len(automol.graph.rotational_bond_keys(
-            gra, with_chx_rotors=False))
+            gra, with_ch_rotors=False))
         nsamp = nsamp_init(nsamp_par, ntaudof)
 
         tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)

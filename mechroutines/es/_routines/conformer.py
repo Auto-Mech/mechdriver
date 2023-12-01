@@ -160,7 +160,7 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
 
     # Check if the init geometry is connected
     if geo_init is not None:
-        if not automol.geom.connected(geo_init):
+        if not automol.geom.is_connected(geo_init):
             geo_init = None
 
     return geo_init
@@ -238,7 +238,7 @@ def _optimize_molecule(spc_info, zma_init,
         zma = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
         if zma is None:
             zma = automol.geom.zmatrix(geo)
-        geo_conn = bool(automol.geom.connected(geo))
+        geo_conn = bool(automol.geom.is_connected(geo))
 
     # If connected, check for imaginary modes and fix them if possible
     if geo_conn:
@@ -253,7 +253,7 @@ def _optimize_molecule(spc_info, zma_init,
         # Recheck connectivity for imag-checked geometry
         if geo is not None:
             conf_found = True
-            conn = automol.geom.connected(geo)
+            conn = automol.geom.is_connected(geo)
             proper_stereo = _inchi_are_same(spc_info[0], geo)
             if conn and proper_stereo:
                 info_message(
