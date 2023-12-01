@@ -55,7 +55,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
             rotors = automol.data.rotor.rotors_from_data(
                 zma=zma_fs[-1].file.zmatrix.read(zma_locs),
                 tor_lst=zma_fs[-1].file.torsions.read(zma_locs),
-                tors_names=(
+                tor_names_lst=(
                     spc_dct_i.get('tors_names', None)
                     if 'md' in tors_model else None),
                 multi='md' in tors_model)
@@ -91,17 +91,19 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
 
     multi_idx = None
     for ridx, rotor in enumerate(rotors):
-        if len(rotor) > 1:
+        tor_lst = automol.data.rotor.torsions(rotor)
+        tor_grids = automol.data.rotor.torsion_grids(rotor)
+
+        if len(tor_lst) > 1:
             multi_idx = ridx
 
-        for tidx, torsion in enumerate(rotor):
+        for tidx, (tor, tor_grid) in enumerate(zip(tor_lst, tor_grids)):
             # Read and spline-fit potential
-            tors_grid = rotor_grids[ridx][tidx]
-            tors_name = automol.data.tors.name(torsion)
+            tor_name = automol.data.tors.name(tor)
             constraint_dct = automol.zmat.constraint_dict(
-                rotor_zma, const_names, (tors_name,))
+                rotor_zma, const_names, (tor_name,))
             pot, scan_geos, _, _, _, _ = filesys.read.potential(
-                (tors_name,), (tors_grid,),
+                (tor_name,), (tor_grid,),
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct,
@@ -110,12 +112,12 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 read_geom=True)
 
             if pot:
-                pot_obj = automol.potent.from_dict(
+                pot_obj = automol.data.potent.from_dict(
                     pot, aux_dct_dct={"geom": scan_geos}
                 )
-                pot_obj = automol.potent.clean(pot_obj)
-                pot_obj = automol.potent.zero_coordinates_values(pot_obj)
-                automol.rotor.set_potential(rotor, pot_obj, in_place=True)
+                pot_obj = automol.data.potent.clean(pot_obj)
+                pot_obj = automol.data.potent.zero_coordinates_values(pot_obj)
+                automol.data.rotor.set_potential(rotor, pot_obj, in_place=True)
 
     if multi_idx is not None:
         is_mdhrv = 'v' in tors_model
