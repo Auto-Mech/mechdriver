@@ -246,12 +246,14 @@ def make_hr_strings(rotors, mdhr_dct=None):
 def _tors_strs(torsion, rotor, geo):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
+    pot = automol.data.rotor.potential(rotor)
+    pot_dct = automol.data.potent.dict_(pot)
 
     mess_hr_str = mess_io.writer.rotor_hindered(
         group=automol.data.tors.groups(torsion)[0],
         axis=automol.data.tors.axis(torsion),
         symmetry=automol.data.tors.symmetry(torsion),
-        potential=automol.data.rotor.potential(rotor),
+        potential=pot_dct,
         hmin=None,
         hmax=None,
         lvl_ene_max=None,
