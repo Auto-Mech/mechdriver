@@ -60,6 +60,7 @@ MODPF_VAL_DCT = {
         'mod': ((str,), ('harm', 'vpt2', 'tau'), 'harm'),
         'geolvl': ((str,), (), None),
         'vpt2lvl': ((str,), (), None),
+        'scale': ((str,), (), 'on'),
     },
     'tors': {
         'mod': (

@@ -281,6 +281,8 @@ def scale_frequencies(freqs, tors_zpe,
     """
 
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    if spc_mod_dct_i['vib']['scale']=='off':
+        scale_method = 'no_scale'
     method, basis = thy_info[1], thy_info[2]
     if tors_zpe is None:
         ret = automol.prop.freq.scale_frequencies(

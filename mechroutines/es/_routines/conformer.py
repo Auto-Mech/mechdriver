@@ -241,7 +241,7 @@ def _optimize_molecule(spc_info, zma_init,
         geo_conn = bool(automol.geom.connected(geo))
 
     # If connected, check for imaginary modes and fix them if possible
-    if geo_conn:
+    if geo_conn and success:
 
         # Remove the imaginary mode
         geo, ret = remove_imag(
@@ -272,7 +272,7 @@ def _optimize_molecule(spc_info, zma_init,
         else:
             warning_message('No geom found...', newline=1)
             conf_found = False
-    else:
+    elif success:
         info_message('Saving disconnected species...')
         conf_found = False
         filesys.save.instability(
