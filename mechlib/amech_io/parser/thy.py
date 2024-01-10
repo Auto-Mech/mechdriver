@@ -27,6 +27,7 @@ THY_VAL_DCT = {
     'gconv': ((float,), (), None),
     'mppx': ((bool,), (), False),
     'tight_integral': ((bool,), (), False),
+    'grid': ((str,), (), 'ultrafine'),
 }
 
 

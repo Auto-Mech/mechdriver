@@ -1047,7 +1047,8 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
                     f'Skipping task because {spc_name}',
                     'is a low-spin radical radical reaction')
     else:
-        spc_natoms = len(automol.chi.geometry(spc_dct[spc_name]['inchi']))
+        spc_natoms = automol.graph.atom_count(
+            automol.chi.graph(spc_dct[spc_name]['inchi']))
         if spc_natoms == 1:
             # Skip all tasks except init_geom and conf_energy
             # if species is an atom

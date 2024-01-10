@@ -69,7 +69,8 @@ def _gaussian(method_dct, prog, job=None, geo=None, spc_info=None):
     gen_lines = method_dct.get('gen_lines', {})
     if not gen_lines:
         if elstruct.par.Method.is_dft(method):
-            gen_lines = {1: ['# int=ultrafine']}
+            # gen_lines = {1: ['# int=superfine']}
+            gen_lines = {1: ['# int='+ method_dct.get('grid')]}
 
     if job == 'tightfreq':
         gen_lines = {1: ['# int=superfine']}
