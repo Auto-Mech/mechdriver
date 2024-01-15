@@ -96,6 +96,8 @@ TSK_KEY_DCT = {
     'date': (('spc', 'ts', 'vdw'), PRNT),
     'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
     'energy': (('spc', 'ts'), PRNT),
+    'weight': (('spc', 'ts'), PRNT),
+    'gibbs': (('spc', 'ts'), PRNT),
     'geo': (('spc', 'ts'), PRNT),
     'molden': (('spc', 'ts'), PRNT),
     'sidata': (('spc', 'ts'), PRNT),

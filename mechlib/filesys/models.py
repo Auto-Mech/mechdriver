@@ -95,7 +95,7 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
                 else:
                     pf_filesystems['tors'] = None
     if 'vib' in spc_model_dct_i:
-        if spc_model_dct_i['vib']['mod'] == 'vpt2':
+        if spc_model_dct_i['vib']['mod'] in ['vpt2', 'fund']:
             pf_filesystems['vpt2'] = set_model_filesys(
                 spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
                 run_prefix, save_prefix, saddle, name=name,

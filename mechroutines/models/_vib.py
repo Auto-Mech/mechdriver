@@ -15,7 +15,10 @@ from mechlib.reaction import _util as rxn_util
 from mechlib.amech_io._path import job_path
 from mechroutines.models import typ
 from mechroutines.models import _tors as tors
+from mechroutines.models import _rot as rot
 from copy import deepcopy
+import numpy
+import itertools
 
 
 def full_vib_analysis(
@@ -25,23 +28,24 @@ def full_vib_analysis(
     """
     # Pack into big object to pass into functions and return
     tors_strs = ['', '', '', '', '']
-    freqs = []
-    imag = []
-    tors_zpe = 0.0
-    pot_scalef = 1.0
-    tors_freqs = []
-    harm_freqs = []
+    imag = []           # harmonic imaginary frequency
+    pot_scalef = 1.0    # scaling applied to torsional potentials
+    unproj_hfreqs = []  # all vibrational and torsional harmonic freqs
+    proj_hfreqs = []    # only vibrational  harmonic frequencies
+    proj_ffreqs = []    # all vibrational and torsional vpt2/scaled freqs
+    unproj_ffreqs = []  # only vibrational vpt2/scaled frequencies
+    tors_freqs = []     # torsional oscillator frequencies
+    total_zpe = None    # vibrational + torsional zero point
+    tors_zpe = 0.0      # torsional zero point
+    disps = []
+    xmat = None
+    rovib_mat = None
+    rot_dists = None
 
     rotors, mdhr_dct, zma_locs = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
-    # Squash the rotor potentials as necessary
-    if rotors is not None:
-        if typ.squash_tors_pot(spc_mod_dct_i):
-            for rotor in rotors:
-                for torsion in rotor:
-                    torsion.pot = automol.pot.relax_scale(torsion.pot)
-    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
+    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
         tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
         [_, hr_str, _, prot_str, _] = tors_strs
@@ -50,51 +54,83 @@ def full_vib_analysis(
             zrxn=zrxn, zma_locs=zma_locs)
 
         if ret is not None:
-            proj_freqs, harm_freqs, tors_freqs, imag, disps = ret
+            proj_hfreqs, unproj_hfreqs, tors_freqs, imag, disps = ret
 
             # Make final hindered rotor strings and get corrected tors zpe
             if typ.scale_1d(spc_mod_dct_i):
 
-                scaled_proj_freqs, _ = scale_frequencies(
-                   proj_freqs, None, spc_mod_dct_i,
+                # scale harmonic from low-level to high-level estimation
+                scaled_proj_hfreqs, _ = scale_frequencies(
+                   proj_hfreqs, None, spc_mod_dct_i,
                    scale_method='c3_harm')
-                scaled_harm_freqs, _ = scale_frequencies(
-                    harm_freqs, None, spc_mod_dct_i,
+                scaled_unproj_hfreqs, _ = scale_frequencies(
+                    unproj_hfreqs, None, spc_mod_dct_i,
                     scale_method='c3_harm')
 
+                # use harmonic frequencies to determine torsional scaling
                 pot_scalef = potential_scale_factor(
-                    scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
+                    scaled_unproj_hfreqs, scaled_proj_hfreqs, tors_freqs)
                 rotors = tors.scale_rotor_pots(
                     rotors, scale_factor=pot_scalef,
                     scale_override=None)
                 tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
-                [_, hr_str, _, prot_str, _] = tors_strs
-                tors_zpe = tors_projected_scaled_zpe(
-                    pf_filesystems, hr_str, prot_str, run_prefix,
-                    spc_mod_dct_i, zrxn=zrxn, zma_locs=zma_locs)
-            freqs = ret[0]  # freqs equal to proj_freqs
+
+                # The lines commented below are to use torsional oscillator
+                # frequencies from projrot for the ZPVE
+                # [_, hr_str, _, prot_str, _] = tors_strs
+                # tors_zpe = tors_projected_scaled_zpe(
+                #     pf_filesystems, hr_str, prot_str, run_prefix,
+                #     spc_mod_dct_i, zrxn=zrxn, zma_locs=zma_locs)
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
         if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
-            freqs = ()
+            proj_ffreqs = ()
+            unproj_ffreqs = ()
     else:
         ret = read_harmonic_freqs(
             pf_filesystems, run_prefix, zrxn=zrxn)
-        freqs, imag, zpe, disps = ret
-        harm_freqs = freqs
-    if freqs:
-        freqs, proj_tors_zpe = scale_frequencies(
-            freqs, tors_zpe,
-            spc_mod_dct_i, scale_method='c3')
+        if ret is not None:
+            proj_hfreqs, imag, _, disps = ret
+            unproj_hfreqs = proj_hfreqs
 
-        harm_freqs, harm_sc_zpe = scale_frequencies(
-            harm_freqs, 0,
-            spc_mod_dct_i, scale_method='c3')
+    # get fundamental/scaled vibrational frequecies and zpe
+    if proj_hfreqs:
+        if typ.anharm_vib(spc_mod_dct_i):
+            ret = fund_frequencies(
+                proj_hfreqs, unproj_hfreqs,
+                pf_filesystems)
+            proj_ffreqs, unproj_ffreqs, total_zpe, mats = ret
+            xmat, rovib_mat, rot_dists = mats
 
-        # zpe = harm_sc_zpe
-        zpe = proj_tors_zpe
-    return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
-            harm_freqs, disps, rotors)
+        else:
+            proj_ffreqs, total_zpe = scale_frequencies(
+                proj_hfreqs, tors_zpe,
+                spc_mod_dct_i, scale_method='c3')
+
+            unproj_ffreqs, total_zpe = scale_frequencies(
+                unproj_hfreqs, 0,
+                spc_mod_dct_i, scale_method='c3')
+
+            # Note order of previous functions determines whether
+            # torsional zpe is based on unprojected frequencies
+            # or on projected frequecies + torsional zpe
+            # but lines 79--82 need to be uncommented as well
+    vib_anal_dct = {
+        'fund_proj_RTimag': unproj_ffreqs,
+        'harm_proj_RTimag': unproj_hfreqs,
+        'fund_proj_RTimagTors': proj_ffreqs,
+        'harm_proj_RTimagTors': proj_hfreqs,
+        'harm_tors': tors_freqs,
+        'harm_imag': imag,
+        'rotors': rotors,
+        'anharm_zpe': total_zpe,
+        'x_mat': xmat,
+        'rovib_mat': rovib_mat,
+        'rot_dists': rot_dists,
+        'disps': disps,
+        'pot_scale_fact': pot_scalef,
+        'mess_tors_strs': tors_strs}
+    return vib_anal_dct
 
 
 # Read the Frequencies from the filesystem using the fs objs
@@ -175,6 +211,7 @@ def read_anharmon_matrix(pf_filesystems):
     """ Read a anharmonicity matrix from the SAVE filesystem for a
         species or transition state.
     """
+    xmat = None
 
     # Set up vpt2 level filesystem for rotational values
     [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
@@ -239,9 +276,10 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     return proj_freqs, harm_freqs, tors_freqs, proj_imag, harm_disps
 
 
-def tors_projected_scaled_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             prefix, spc_mod_dct_i, zrxn=None, conf=None,
-                             zma_locs=None):
+def tors_projected_scaled_zpe(
+        pf_filesystems, mess_hr_str, projrot_hr_str,
+        prefix, spc_mod_dct_i, zrxn=None, conf=None,
+        zma_locs=None):
     """ Get frequencies from one version of ProjRot
     """
     ret = tors_projected_freqs(
@@ -375,3 +413,202 @@ def _reorder_hessian(hess, idx_dct):
             update_hess[new_i + 2][new_j + 2] = hess[orig_i + 2][orig_j + 2]
 
     return update_hess
+
+
+def predict_hind_modes(proj_freqs, unproj_freqs):
+    """
+    determine which modes are projected out by minimizing overlap
+    between projected and unprojected frequencies
+    INPUTS:
+    :param proj_freqs:  frequencies after projection
+    :param unproj_freqs:  unprojected frequencies
+    :rtype proj_modes: list of idxes of modes
+    """
+    best_overlap = 100000
+    best_combo = None
+    num_high_modes = sum(i > 1000 for i in unproj_freqs)
+    red_proj_freqs = proj_freqs[:-num_high_modes]
+    red_unproj_freqs = unproj_freqs[:-num_high_modes]
+    for combo in itertools.permutations(red_unproj_freqs, len(red_proj_freqs)):
+        curr_overlap = 0
+        for mode, freq in enumerate(combo):
+            curr_overlap += abs(freq - red_proj_freqs[mode])
+        if curr_overlap < best_overlap:
+            best_overlap = curr_overlap
+            best_combo = combo
+    if best_combo is None:
+        proj_modes = []
+    else:
+        nonproj_modes = [red_unproj_freqs.index(freq) for freq in best_combo]
+        proj_modes = list(set(range(len(red_unproj_freqs))) - set(nonproj_modes))
+        # next statement checks if procedure failed bc of duplicate freqs
+        if len(proj_modes) > len(red_unproj_freqs) - len(red_proj_freqs):
+            for idx, val in enumerate(nonproj_modes):
+                if idx > 0:
+                    if val == nonproj_modes[idx - 1]:
+                        if abs(best_combo[idx] - best_combo[idx - 1]) < .1:
+                            nonproj_modes[idx] = val + 1
+        
+            proj_modes = list(set(range(len(red_unproj_freqs))) - set(nonproj_modes))
+    return proj_modes
+
+
+def remove_modes_from_mat(mat, modes, dim=1):
+    """
+    Removes specified modes from anharmonic constant matrix or vibrot matrix
+    INPUTS:
+    :param xmat: anharmonic constant matrix
+    :param modes: the modes to delete from the matrix
+    :xmat  - anharmonic constant matrix with columns and rows deleted
+    """
+    modes.sort()
+    mat = numpy.array(mat)
+    for index in modes[::-1]:
+        mat = numpy.delete(mat, index, 0)
+        if dim > 1:
+            mat = numpy.delete(mat, index, 1)
+    mat = tuple([tuple(row) for row in mat])
+    return mat
+
+
+def zero_out_modes(mat, modes):
+    """
+    """
+    mat = numpy.array(mat)
+    for mode in modes:
+        mat[mode, :] = numpy.zeros(len(mat))
+        mat[:, mode] = numpy.zeros(len(mat))
+    mat = tuple([tuple(row) for row in mat])
+    return mat
+
+
+def compute_lambda(freqs, xmat, temp=298.15):
+    """
+    Finds perturbation parameters, lambda, for all modes
+    INPUT:
+    xmat - anharmonic x constant matrix
+    freqs - harmonic frequencies
+    temp    - temperature (in K)
+    OUTPUT:
+    lambda_mat  - matrix of lambda_ij values
+    """
+    def _lambda_ij(w_i, w_j, x_ij, temp):
+        return (
+            0.69503476*float(temp)*float(x_ij)) / (float(w_i)*float(w_j))
+
+    length = min(len(freqs), len(xmat))
+    lambda_mat = numpy.zeros((length, length))
+    for i in range(length):
+        for j in range(length):
+            lambda_mat[i][j] = _lambda_ij(
+                freqs[i], freqs[j], xmat[i][j], temp)
+    return lambda_mat
+
+
+def evaluate_lambda(lambda_mat, freqs, thresh=0.01):
+    """
+    Determines which modes cause bad lambda values
+    """
+    bad_modes = []
+    for i, _ in enumerate(lambda_mat):
+        if abs(lambda_mat[i][i]) > thresh:
+            print(
+               'lambda value of {:.4f} is greater than thresh of {:.4f}. Mode v_{:d}={:.2f} is flagged'.format(
+                   lambda_mat[i][i], thresh, i, freqs[i]))
+            bad_modes.append(i)
+
+    for _ in range(len(lambda_mat)):
+        largest = 0
+        index = None
+        for i, lambda_row in enumerate(lambda_mat):
+            if i in bad_modes:
+                continue
+            for j, lam in enumerate(lambda_row):
+                if j in bad_modes:
+                    continue
+                if abs(lam) < thresh or abs(lam) < largest:
+                    continue
+                largest = abs(lam)
+                lambda_mat[i][j] = 0
+                index = j
+                if abs(lambda_mat[i][i]) > abs(lambda_mat[j][j]):
+                    index = i
+        if index is not None:
+            print(
+               'lambda value of {:.4f} is greater than thresh of {:.4f}. Mode v_{:d}={:.2f} is flagged'.format(
+                   largest, thresh, index, freqs[index]))
+            bad_modes.append(index)
+    for i in range(len(freqs)):
+        for j in range(i):
+            if abs(freqs[i] - freqs[j]) < .05:
+                if i in bad_modes and not j in bad_modes:
+                    bad_modes.append(j)
+                    print('Mode v_{:d}={:.2f} is flagged because it is degenerate to flagged mode'.format(j, freqs[j]))
+                if j in bad_modes and not i in bad_modes:
+                    bad_modes.append(i)
+                    print('Mode v_{:d}={:.2f} is flagged because it is degenerate to flagged mode'.format(i, freqs[i]))
+    return list(set(bad_modes))
+
+
+def anharm_freqs(freqs, xmat):
+    """
+    Uses anharmonic frequency matrix and harmonic frequencies to compute VPT2 anharmonic frequencies
+    INPUT:
+    freqs   - harmonic frequencies
+    xmat    - anharmonic constant matrix
+    OUTPUT:
+    anharms - VPT2 anharmonic frequencies
+    """
+    anharms = numpy.zeros(len(freqs))
+    for i, freq in enumerate(freqs):
+        anharms[i] = freq
+        anharms[i] += 2. * xmat[i][i]
+        tmp = 0
+        for j in range(len(freqs)):
+            if j != i:
+                tmp += xmat[i][j]
+        anharms[i] += 1./2 * tmp
+    return tuple(anharms)
+
+
+def anharm_zpe(freqs, xmat):
+    xmat = numpy.array(xmat)
+    freqs = numpy.array(freqs)
+    zpe = 1/2. * numpy.sum(freqs)
+    zpe += 1/4. * numpy.sum(numpy.triu(xmat, k=0))
+    return zpe * phycon.WAVEN2EH
+
+
+def fund_frequencies(
+        proj_hfreqs, unproj_hfreqs, pf_filesystems):
+    """
+    """
+    # read in mats
+    xmat = read_anharmon_matrix(pf_filesystems)
+    rovib_mat, rot_dists = rot.read_rotational_values(pf_filesystems)
+
+    # zero out values that blow up vpt2, often umbrella modes
+    lambda_mat = compute_lambda(unproj_hfreqs, xmat)
+    high_lambda_modes = evaluate_lambda(lambda_mat, unproj_hfreqs)
+    xmat = zero_out_modes(xmat, high_lambda_modes)
+
+    # get unprojected fundamental freqs and zpve
+    unproj_ffreqs = anharm_freqs(unproj_hfreqs, xmat)
+    total_zpe = anharm_zpe(unproj_hfreqs, xmat)
+    print('total (unprojected) anharmonic zpve', total_zpe)
+    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
+    if cnf_path:
+        print(
+            'anharm zpve with G0 from elec. output',
+            cnf_fs[-1].file.anharmonic_zpve.read(
+                min_cnf_locs))
+    # delete out projected hindered rotor modes from
+    # xmat and rovib mat to getprojected fund. freqs
+    tors_proj_modes = predict_hind_modes(proj_hfreqs, unproj_hfreqs)
+    xmat = remove_modes_from_mat(xmat, tors_proj_modes, dim=2)
+    rovib_mat = remove_modes_from_mat(rovib_mat, tors_proj_modes)
+    proj_ffreqs = anharm_freqs(proj_hfreqs, xmat)
+
+    return (
+        proj_ffreqs, unproj_ffreqs, total_zpe,
+        (xmat, rovib_mat, rot_dists,))
