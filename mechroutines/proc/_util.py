@@ -193,6 +193,13 @@ def set_csv_data(tsk):
         csv_data['tfreq'] = {}
         csv_data['allfreq'] = {}
         csv_data['scalefactor'] = {}
+    elif 'weight' in tsk:
+        csv_data['hf_array'] = []
+        csv_data['pf_array'] = []
+        csv_data['locs_lst'] = []
+    elif 'gibbs' in tsk:
+        csv_data['hf_array'] = []
+        csv_data['locs_lst'] = []
 
     return csv_data
 
@@ -251,6 +258,16 @@ def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
         dframe = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=['Path', 'Energy [A.U.]'])
+        dframe.to_csv(filelabel, float_format='%.8f')
+    if 'weight' in tsk:
+        dframe = pandas.DataFrame.from_dict(
+            csv_data, orient='index',
+            columns=['weight'])
+        dframe.to_csv(filelabel, float_format='%.8f')
+    if 'gibbs' in tsk:
+        dframe = pandas.DataFrame.from_dict(
+            csv_data, orient='index',
+            columns=['rel gibbs'])
         dframe.to_csv(filelabel, float_format='%.8f')
     if 'enthalpy' in tsk:
         dframe = pandas.DataFrame.from_dict(
@@ -381,6 +398,26 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
         filelabel += '.txt'
     elif 'ene' in tsk:
         filelabel = 'ene'
+        geolvl = proc_keyword_dct.get('geolvl')
+        if geolvl is not None:
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
+            filelabel += f'_{proc_keyword_dct["proplvl"]}'
+        else:
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
+            filelabel += f'_m{spc_mod_dct_i["ene"]["lvl1"][0]}'
+        filelabel += '.csv'
+    elif 'weight' in tsk:
+        filelabel = 'weight'
+        geolvl = proc_keyword_dct.get('geolvl')
+        if geolvl is not None:
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
+            filelabel += f'_{proc_keyword_dct["proplvl"]}'
+        else:
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
+            filelabel += f'_m{spc_mod_dct_i["ene"]["lvl1"][0]}'
+        filelabel += '.csv'
+    elif 'gibbs' in tsk:
+        filelabel = 'gibbs'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
             filelabel += f'_{proc_keyword_dct["geolvl"]}'

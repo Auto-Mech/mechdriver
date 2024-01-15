@@ -86,7 +86,11 @@ def species_block(inf_dct):
         core_str = mess_io.writer.core_rigidrotor(
             geo=inf_dct['geom'],
             sym_factor=inf_dct['sym_factor'],
-            interp_emax=None
+            interp_emax=None,
+            freqs=inf_dct['freqs'],
+            xmat=inf_dct['xmat'],
+            rovib_coups=inf_dct['rovib_coups'],
+            rot_dists=inf_dct['rot_dists'],
         )
         hind_rot_str = inf_dct['mess_hr_str']
 

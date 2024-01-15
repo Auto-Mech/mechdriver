@@ -12,8 +12,9 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import spc as sinfo
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import job_path
-from mechroutines.es.ts import ts_zma_locs
 from mechlib import filesys
+from mechroutines.es.ts import ts_zma_locs
+from mechroutines.models import typ
 
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
@@ -65,6 +66,13 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                 rotors, spc_dct_i, run_path, cnf_save_path,
                 ref_ene, mod_tors_ene_info,
                 tors_model)
+
+    # Squash the rotor potentials as necessary
+    if rotors is not None:
+        if typ.squash_tors_pot(spc_mod_dct_i):
+            for rotor in rotors:
+                for torsion in rotor:
+                    torsion.pot = automol.pot.relax_scale(torsion.pot)
     return rotors, mdhr_dct, zma_locs
 
 
@@ -183,14 +191,16 @@ def scale_rotor_pots(rotors, scale_factor=((), None), scale_override=None):
         else:
             sfactor = factor**(2.0/nscale)
             sfacmax = 1.3
-            sfacmin = 0.7
+            sfacmin = 0.8
             if nscale > 4:
                 sfacmax = 0.1*(nscale-4) + 1.3
+                # sfacmin = -0.04*(nscale-4) + 1.22
             ioprinter.debug_message(
-                'scale_coeff test:', factor, nscale, sfactor, sfacmax)
+                'scale_coeff test:', factor, nscale, sfactor, sfacmax, sfacmin)
             if sfactor > sfacmax:
                 print ('value of sfactor is greater than sfacmax')
                 sfactor = sfacmax
+                #elif sfactor < sfacmin:
             elif sfactor < sfacmin:
                 sfactor = sfacmin
                 print ('value of sfactor is less than sfacmin')

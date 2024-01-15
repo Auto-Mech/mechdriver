@@ -36,6 +36,8 @@ def grid_maximum_zmatrices(typ, ts_zma, scan_grids, scan_names, scn_save_fs,
     print('Assessing scan for a potential maxima...')
     if typ != automol.par.ReactionClass.Typ.ELIMINATION:
         grid, name = scan_grids[0], scan_names[0]
+        if typ == automol.par.ReactionClass.Typ.BETA_SCISSION:
+            series = 'sadpt-inner-maxima'
         max_zmas = _find_max_1d(typ, grid, ts_zma, name,
                                 mod_thy_info, scn_save_fs, constraint_dct,
                                 series=series, include_endpts=include_endpts)
@@ -88,11 +90,15 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
         mod_thy_info, constraint_dct)
 
     # Grab the maxima based on what is desired
-    if series == 'sadpt-maxima':
+    if 'sadpt' in series:
+        if series == 'sadpt-maxima':
 
-        # Get the index where the max energy is found
-        max_idx = automol.pot.find_max1d(
-            enes_lst, 'sadpt-global', include_endpts=include_endpts)
+            # Get the index where the max energy is found
+            max_idx = automol.pot.find_max1d(
+                enes_lst, 'sadpt-global', include_endpts=include_endpts)
+        if series == 'sadpt-inner-maxima':
+            max_idx = automol.pot.find_max1d(
+                enes_lst, 'sadpt-innermost', include_endpts=include_endpts)
 
         if max_idx is not None:
             # Get max locs and coord info (len==2 scn; len==3 cscn)

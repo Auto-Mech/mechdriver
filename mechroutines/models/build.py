@@ -341,26 +341,30 @@ def mol_data(spc_name, spc_dct,
         'Obtaining info for rotation partition function...', newline=1)
     geom = rot.read_geom(pf_filesystems)
 
-    if typ.nonrigid_rotations(spc_mod_dct_i):
-        rovib_coups, rot_dists = rot.read_rotational_values(pf_filesystems)
-
     # Obtain vibration partition function information
     ioprinter.info_message(
         'Preparing internal rotor info building partition functions...',
         newline=1)
     ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
-    freqs, imag, zpe, _, tors_strs, _, _, _, rotors = vib.full_vib_analysis(
+    vib_anal_dct = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
+
+    freqs = vib_anal_dct['fund_proj_RTimagTors']
+    imag = vib_anal_dct['harm_imag']
+    zpe = vib_anal_dct['anharm_zpe']
+    tors_strs = vib_anal_dct['mess_tors_strs']
+    rotors = vib_anal_dct['rotors']
+    if typ.anharm_core(spc_mod_dct_i):
+        xmat = vib_anal_dct['x_mat']
+    if typ.nonrigid_rotations(spc_mod_dct_i):
+        rovib_coups = vib_anal_dct['rovib_mat']
+        rot_dists = vib_anal_dct['rot_dists']
 
     # Get the torsion strings
     allr_str = tors_strs[0]
     mdhr_dat = tors_strs[4]
-
-    # ioprinter.info_message('zpe in mol_data test:', zpe)
-    if typ.anharm_vib(spc_mod_dct_i):
-        xmat = vib.read_anharmon_matrix(pf_filesystems)
 
     # Obtain symmetry factor
     ioprinter.info_message(
@@ -842,10 +846,16 @@ def tau_data(spc_dct_i,
     [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
 
     # Obtain all values from initial reference conformer
-    vib_info = vib.full_vib_analysis(
+    vib_anal_dct = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=None)
-    freqs, _, zpe, _, tors_strs, _, harm_freqs, _, rotors = vib_info
+    freqs = vib_anal_dct['fund_proj_RTimagTors']
+    # imag = vib_anal_dct['harm_imag']
+    zpe = vib_anal_dct['anharm_zpe']
+    tors_strs = vib_anal_dct['mess_tors_strs']
+    rotors = vib_anal_dct['rotors']
+    harm_freqs = vib_anal_dct['harm_proj_RTimag']
+
     harm_zpve = 0.5 * sum(harm_freqs) * phycon.WAVEN2EH
 
     ioprinter.info_message('Determining the symmetry factor...', newline=1)

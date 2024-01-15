@@ -104,8 +104,8 @@ def frequencies(
     """
 
     # Initialize the data objects to None
-    freqs = None
-    imag = None
+    freqs = []
+    imag = []
     zpe = None
     sfactor = None
     torsfreqs = None
@@ -132,27 +132,35 @@ def frequencies(
             run_prefix, save_prefix,
             name=spc_name, saddle=saddle)
 
-        ret = vib.full_vib_analysis(
+        vib_anal_dct = vib.full_vib_analysis(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             run_prefix, zrxn=zrxn)
-        if ret is not None:
-            freqs, imag, zpe, sfactor, _, torsfreqs, all_freqs, disps, rotors = ret
+        freqs = vib_anal_dct['fund_proj_RTimagTors']
+        imag = vib_anal_dct['harm_imag']
+        zpe = vib_anal_dct['anharm_zpe']
+        sfactor = vib_anal_dct['pot_scale_fact']
+        torsfreqs = vib_anal_dct['harm_tors']
+        all_freqs = vib_anal_dct['fund_proj_RTimag']
+        disps = vib_anal_dct['disps']
+        rotors = vib_anal_dct['rotors']
+
+        if freqs or imag:
             if saddle:
                 print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
             miss_data = None
 
-        # Do a TED check
-        if zrxn is not None:
-            vib.ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
-                    run_prefix, zrxn=zrxn)
+            # Do a TED check
+            if zrxn is not None:
+                vib.ted(spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                        run_prefix, zrxn=zrxn)
     else:
         es_levels = util.freq_es_levels(proc_keyword_dct)
         spc_mod_dct_i = util.generate_spc_model_dct(es_levels, thy_dct)
         ret = vib.read_locs_harmonic_freqs(
             cnf_fs, locs, run_prefix, zrxn=zrxn)
-        if ret is not None:
-            freqs, imag, zpe, disps = ret
+        freqs, imag, zpe, disps = ret
+        if freqs or imag:
             if freqs and proc_keyword_dct['scale'] is not None:
                 freqs, zpe = vib.scale_frequencies(
                     freqs, 0.0, spc_mod_dct_i,
@@ -173,7 +181,7 @@ def frequencies(
                     run_prefix, zrxn=zrxn)
 
     # Package up the frequencies data
-    if freqs is not None:
+    if freqs or imag:
         spc_data = [locs_path, zpe, *freqs]
         fxn_ret = spc_data, (torsfreqs, all_freqs, sfactor), disps
     else:
@@ -351,6 +359,39 @@ def enthalpy(
     )
 
 
+def relative_gibbs(
+    cnf_fs, mod_thy_info, locs, cnf_path,
+    locs_0, cnf_path_0, temp=700.):
+    """ relative gibbs of conformers
+    """
+    ret = None
+    if cnf_fs[-1].file.harmonic_frequencies.exists(locs):
+
+        freqs = cnf_fs[-1].file.harmonic_frequencies.read(locs_0)
+        if freqs is not None:
+            freqs = [freq for freq in freqs if freq > 0.]
+        zpe_0 = 0.5 * sum(freqs) * phycon.WAVEN2EH
+        zpe_0 = (zpe_0) * phycon.EH2KCAL
+        sp_fs = autofile.fs.single_point(cnf_path_0)
+        spe_0 = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+        spe_0 = spe_0 * phycon.EH2KCAL
+
+        freqs = cnf_fs[-1].file.harmonic_frequencies.read(locs)
+        if freqs is not None:
+            freqs = [freq for freq in freqs if freq > 0.]
+        zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
+        zpe = (zpe) * phycon.EH2KCAL
+        sp_fs = autofile.fs.single_point(cnf_path)
+        spe = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+        spe = spe * phycon.EH2KCAL
+
+        geo = cnf_fs[-1].file.geometry.read(locs)
+        ret = thermfit.pf.rrho_gibbs_factor(
+            geo, freqs, zpe-zpe_0, temp)
+        ret += spe - spe_0 
+    return ret
+ 
+
 def partition_function(
         spc_name, spc_dct_i, spc_mod_dct_i,
         pes_mod_dct_i,
@@ -358,31 +399,52 @@ def partition_function(
         cnf_fs, run_prefix, save_prefix):
     """ collect enthalpies
     """
-
+    pf_arrays = []
     messpf_inp_str, dat_str_dct, miss_data = messpf_input(
         spc_name, spc_dct_i, spc_mod_dct_i,
         pes_mod_dct_i,
         locs, locs_path,
         cnf_fs, run_prefix, save_prefix)
-
-    # Combine the strings together to create full MESS input file string
-    # tempfile.tempdir = "./messpf_temp"
-    # file_path = (
-    # '/home/elliott/projects/AutoMech/RO2QOOH/all_conformers/all/temp')
-    with tempfile.TemporaryDirectory() as file_path:
-        autorun.write_input(
-            file_path,
-            messpf_inp_str,
-            aux_dct=dat_str_dct,
-            input_name='pf.inp')
-        autorun.run_script(
-            autorun.SCRIPT_DCT['messpf'],
-            file_path)
-        pf_arrays = reader.mess.messpf(
-            file_path)
+    if messpf_inp_str is not None:
+        # Combine the strings together to create full MESS input file string
+        # tempfile.tempdir = "./messpf_temp"
+        # file_path = (
+        # '/home/elliott/projects/AutoMech/RO2QOOH/all_conformers/all/temp')
+        with tempfile.TemporaryDirectory() as file_path:
+            autorun.write_input(
+                file_path,
+                messpf_inp_str,
+                aux_dct=dat_str_dct,
+                input_name='pf.inp')
+            autorun.run_script(
+                autorun.SCRIPT_DCT['messpf'],
+                file_path)
+            pf_arrays = reader.mess.messpf(
+                file_path)
     return (
         pf_arrays, miss_data
     )
+
+
+def pf_weights(
+    locs_lst, hf_lst, ln_pf_arrays_lst, temp=700.):
+    """ Calculate the weights of each conformer
+    """    
+    pf_arrays_lst = []
+    hf_lst = [hf * phycon.KCAL2EH for hf in hf_lst]
+    hf_lst = [hf for hf, ln_pf_array in zip(hf_lst, ln_pf_arrays_lst) if ln_pf_array]
+    locs_lst = [locs for locs, ln_pf_array in zip(locs_lst, ln_pf_arrays_lst) if ln_pf_array]
+    ln_pf_arrays_lst = [ln_pf_array for ln_pf_array in  ln_pf_arrays_lst if ln_pf_array]
+    for ln_pf_array in ln_pf_arrays_lst:
+        temps, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple = ln_pf_array
+        pf_arrays_lst.append(
+            thermfit.pf.from_ln_partition_function(
+                lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple))
+    for idx, temp_i in enumerate(temps):
+        if abs(temp_i - temp) < 1.:
+            weight_lst = thermfit.pf.weights_at_temp(
+                pf_arrays_lst, hf_lst, temps, idx)
+    return locs_lst, weight_lst
 
 
 def messpf_input(
@@ -398,6 +460,8 @@ def messpf_input(
     zrxn = spc_dct_i.get('zrxn')
     saddle = bool(zrxn)
     miss_data = None
+    messpf_inp_str = None
+    dat_str_dct = None
 
     # print('spc_mod_dct_i', spc_mod_dct_i)
     pf_filesystems = filesys.models.pf_filesys(
@@ -405,47 +469,49 @@ def messpf_input(
         run_prefix, save_prefix,
         name=spc_name, saddle=saddle, spc_locs=locs)
     geom = rot.read_geom(pf_filesystems)
-    freqs, imag, zpe, _, tors_strs, _, _, _, rotors = vib.full_vib_analysis(
+    ret = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
-    allr_str = tors_strs[0]
+    freqs, imag, zpe, _, tors_strs, _, _, _, rotors = ret 
+    if freqs or imag:
+        allr_str = tors_strs[0]
 
-    zma = None
-    sym_factor = symm.symmetry_factor(
-        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma)
-    elec_levels = spc_dct_i['elec_levels']
+        zma = None
+        sym_factor = symm.symmetry_factor(
+            pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma)
+        elec_levels = spc_dct_i['elec_levels']
 
-    keys = ['writer', 'geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
-            'mess_hr_str', 'mdhr_dat',
-            'xmat', 'rovib_coups', 'rot_dists',
-            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl', 'ene_tsref',
-            'edown_str', 'collid_freq_str']
-    vals = ['species_block', geom, sym_factor, freqs, imag, elec_levels,
-            allr_str, None,
-            None, None, None,
-            None, None, zpe, None,
-            None, None]
-    inf_dct = dict(zip(keys, vals))
+        keys = ['writer', 'geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
+                'mess_hr_str', 'mdhr_dat',
+                'xmat', 'rovib_coups', 'rot_dists',
+                'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl', 'ene_tsref',
+                'edown_str', 'collid_freq_str']
+        vals = ['species_block', geom, sym_factor, freqs, imag, elec_levels,
+                allr_str, None,
+                None, None, None,
+                None, None, zpe, None,
+                None, None]
+        inf_dct = dict(zip(keys, vals))
 
-    temps = pes_mod_dct_i['therm_temps']
-    globkey_str = mess_io.writer.global_pf_input(
-        temperatures=temps,
-        rel_temp_inc=0.001,
-        atom_dist_min=0.6
-    )
-    mess_writer = getattr(blocks, inf_dct['writer'])
-    mess_block, dat_str_dct = mess_writer(inf_dct)
-    if inf_dct['writer'] == 'tau_block':
-        zero_energy = None
-    else:
-        zero_energy = inf_dct['zpe_chnlvl']
+        temps = pes_mod_dct_i['therm_temps']
+        globkey_str = mess_io.writer.global_pf_input(
+            temperatures=temps,
+            rel_temp_inc=0.001,
+            atom_dist_min=0.6
+        )
+        mess_writer = getattr(blocks, inf_dct['writer'])
+        mess_block, dat_str_dct = mess_writer(inf_dct)
+        if inf_dct['writer'] == 'tau_block':
+            zero_energy = None
+        else:
+            zero_energy = inf_dct['zpe_chnlvl']
 
-    spc_str = mess_io.writer.species(
-        spc_label=spc_name,
-        spc_data=mess_block,
-        zero_ene=zero_energy
-    )
-    messpf_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
+        spc_str = mess_io.writer.species(
+            spc_label=spc_name,
+            spc_data=mess_block,
+            zero_ene=zero_energy
+        )
+        messpf_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
 
     return (messpf_inp_str, dat_str_dct, miss_data)
 

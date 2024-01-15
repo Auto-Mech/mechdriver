@@ -54,7 +54,14 @@ def anharm_vib(spc_mod_dct_i):
     """ a
     """
     vib_model = spc_mod_dct_i['vib']['mod']
-    return bool(vib_model == 'vpt2')
+    return bool(vib_model in ('vpt2', 'fund',))
+
+
+def anharm_core(spc_mod_dct_i):
+    """ a
+    """
+    vib_model = spc_mod_dct_i['vib']['mod']
+    return bool(vib_model in ('vpt2',))
 
 
 def tau_pf(spc_mod_dct_i):
@@ -86,7 +93,9 @@ def squash_tors_pot(spc_mod_dct_i):
     """
     ioprinter.debug_message(
         'tors model in scale set', spc_mod_dct_i['tors']['mod'])
-    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', 'tau-1dhrfa'))
+    return (
+        bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', 'tau-1dhrfa'))
+        and spc_mod_dct_i['tors']['scale'] == 'on')
 
 
 def vib_tau(spc_mod_dct_i):

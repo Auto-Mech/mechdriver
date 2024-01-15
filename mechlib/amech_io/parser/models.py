@@ -57,7 +57,7 @@ MODPF_VAL_DCT = {
         'vpt2lvl': ((str,), (), None)
     },
     'vib': {
-        'mod': ((str,), ('harm', 'vpt2', 'tau'), 'harm'),
+        'mod': ((str,), ('harm', 'fund', 'vpt2', 'tau'), 'harm'),
         'geolvl': ((str,), (), None),
         'vpt2lvl': ((str,), (), None),
         'scale': ((str,), (), 'on'),
