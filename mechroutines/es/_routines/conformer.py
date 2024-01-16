@@ -35,7 +35,6 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
         Also, the function assessess if the species is unstable and will
         save the appropriate information.
     """
-
     ini_thy_info = tinfo.from_dct(ini_method_dct)
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(
@@ -149,8 +148,8 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
             shutil.rmtree(cnf_save_path)
 
     if geo_init is None:
-        if 'geo_inp' in spc_dct_i:
-            geo_init = spc_dct_i['geo_inp']
+        if 'geo' in spc_dct_i:
+            geo_init = spc_dct_i['geo']
             info_message(
                 'Getting initial geometry from geom dictionary')
 

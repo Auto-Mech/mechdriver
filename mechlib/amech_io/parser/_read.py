@@ -176,15 +176,14 @@ def _geometry_dictionary(job_path):
     _inp_paths = _inp_file_paths(job_path)
     if _inp_paths:
         for file_path, file_name in _inp_paths:
-            if file_path.endswith('.xyz'):
+            if file_name.endswith('.xyz'):
                 xyz_str = ioformat.pathtools.read_file(file_path, file_name)
-                spc_name = automol.geom.comment_from_xyz_string(xyz_str)
+                spc_name = automol.geom.xyz_string_comment(xyz_str)
                 geo = automol.geom.from_xyz_string(xyz_str)
                 if spc_name in geo_dct:
                     warning_message(f'Dupilicate xyz geometry for {spc_name}')
                 geo_dct[spc_name] = geo
                 path_dct[spc_name] = file_name
-
     return geo_dct, path_dct
 
 
@@ -235,9 +234,9 @@ def _inp_file_paths(job_path):
 
     file_paths = ()
 
-    geom_path = os.path.join(job_path, 'data')
+    geom_path = os.path.join(job_path, 'inp')
     for dir_path, _, file_names in os.walk(geom_path):
-        for file_name in file_names:
+    	for file_name in file_names:
             file_paths += ((dir_path, file_name),)
 
     return file_paths
