@@ -25,7 +25,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
         :rtype: float
     """
   
-    symm_factor = spc_dct_i.get('symm_factor')
+    symm_factor = spc_dct_i.get('sym_factor')
     if symm_factor is not None:
         ioprinter.info_message(
             ' - Reading symmetry number input by user:', symm_factor)
