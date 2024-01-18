@@ -282,6 +282,19 @@ def get_heats_of_formation(
         chn_basis_ene_dct[spc_mod] = {}
         basis_dct = thermfit.prepare_basis(
             ref_scheme, spc_dct, (*spc_locs_dct.keys(),))
+        for spc in basis_dct:
+            print(spc, spc_dct[spc])
+            if spc_dct[spc]['basis_ichs'] is not None:
+                print(f'replacing references for {spc}')
+                print('original: ', basis_dct[spc])
+                basis_dct[spc] = (
+                    spc_dct[spc]['basis_ichs'],
+                    spc_dct[spc]['basis_coeffs'])
+                # basis_dct[spc] =  dict(map(
+                #     lambda i,j : (i,j),
+                #     spc_dct[spc]['basis_ichs'], 
+                #     spc_dct[spc]['basis_coeffs']))
+                print('new: ', basis_dct[spc])
         uniref_dct = thermfit.unique_basis_species(basis_dct, spc_dct)
         # uniich_lst = [uniref_dct[key]['inchi'] for key in uniref_dct]
         basis_ichs = []
