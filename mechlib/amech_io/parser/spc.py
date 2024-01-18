@@ -46,6 +46,8 @@ SPC_VAL_DCT = {
     'edown': ((tuple, str), (), 'estimate'),
     'active': ((tuple,), (), None),
     'zma_idx': ((int,), (), 0),
+    'basis_ichs': ((tuple,), (), None),
+    'basis_coeffs': ((tuple,),  (), None),
     'conf_id': ((tuple, list), (), None)
 }
 TS_VAL_DCT = {
@@ -80,7 +82,9 @@ def species_dictionary(
     spc_dct = mechanalyzer.parser.new_spc.parse_mech_spc_dct(
         spc_str, canon_ent=run_dct['canonical'])
     dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
+    print('dat blocks', dat_blocks)
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
+    print('dat dct', dat_dct)
 
     # Merge all of the species inputs into a dictionary
     mod_spc_dct, glob_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct, act_dct)
