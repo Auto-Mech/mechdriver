@@ -36,7 +36,7 @@ def grid_maximum_zmatrices(typ, ts_zma, scan_grids, scan_names, scn_save_fs,
     print('Assessing scan for a potential maxima...')
     if typ != automol.ReactionClass.ELIMINATION:
         grid, name = scan_grids[0], scan_names[0]
-        if typ == automol.par.ReactionClass.Typ.BETA_SCISSION:
+        if typ == automol.ReactionClass.BETA_SCISSION:
             series = 'sadpt-inner-maxima'
         max_zmas = _find_max_1d(typ, grid, ts_zma, name,
                                 mod_thy_info, scn_save_fs, constraint_dct,
