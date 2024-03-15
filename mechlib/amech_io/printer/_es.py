@@ -25,7 +25,7 @@ def geometry(geom):
 def gradient(grad):
     """ a
     """
-    grad_str = automol.util.mat.string(grad)
+    grad_str = automol.util.matrix.string(grad)
     info_message(f'Gradient [au]:\n{grad_str}', newline=1)
 
 
@@ -33,7 +33,7 @@ def frequencies(freqs):
     """ Print out the Harmonic frequencies and ZPVE
     """
     if freqs is not None:
-        freq_str = automol.util.vec.string(
+        freq_str = automol.util.vector.string(
             freqs, num_per_row=6, val_format='{0:>12.3f}')
         harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2KCAL
         info_message(f'\nHarmonic frequencies [cm-1]:\n{freq_str}')
@@ -44,8 +44,8 @@ def molecular_properties(dmom, polar):
     """ a
     """
     if dmom is not None and polar is not None:
-        dmom_str = automol.util.vec.string(dmom)
-        polar_str = automol.util.mat.string(polar)
+        dmom_str = automol.util.vector.string(dmom)
+        polar_str = automol.util.matrix.string(polar)
         info_message(f'Dipole Moment [Debye]:\n{dmom_str}', newline=1)
         info_message(f'Polarizability []: {polar_str}')
 

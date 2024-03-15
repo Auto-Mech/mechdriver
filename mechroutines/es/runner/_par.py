@@ -206,7 +206,7 @@ def _molpro(method_dct, prog, job=None, geo=None, spc_info=None):
     else:
         # Get the nelectrons, spins, and orbitals for the wf card
         formula = automol.geom.formula(geo)
-        elec_count = automol.formula.electron_count(formula)
+        elec_count = automol.form.electron_count(formula)
         two_spin = spc_info[2] - 1
         num_act_elc = two_spin
         num_act_orb = num_act_elc

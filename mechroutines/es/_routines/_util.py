@@ -18,11 +18,11 @@ def calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
     else:
         if zrxn is None:
             gra = automol.zmat.graph(zma)
-            ntaudof = len(automol.graph.rotational_bond_keys(
-               gra, with_chx_rotors=False))
         else:
-            ntaudof = len(automol.reac.rotational_bond_keys(
-                zrxn, zma, with_chx_rotors=False))
+            gra = automol.reac.ts_graph(zrxn)
+
+        ntaudof = len(automol.graph.rotational_bond_keys(
+            gra, with_ch_rotors=False))
         nsamp = nsamp_init(nsamp_par, ntaudof)
 
         tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)

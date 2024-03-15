@@ -11,7 +11,7 @@ import thermfit
 from phydat import phycon
 import automol.zmat
 import automol.geom
-from automol.reac import relabel_for_geometry
+from automol.reac import undo_zmatrix_conversion
 from automol.geom import hydrogen_bonded_structure
 from autorun import execute_function_in_parallel
 from mechanalyzer.inf import thy as tinfo
@@ -508,16 +508,17 @@ def _remove_hbonded_structures(
             zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
-                grxn = relabel_for_geometry(zrxn)
+                grxn = undo_zmatrix_conversion(zrxn)
             else:
                 grxn = None
 
+            tsg = automol.reac.ts_graph(grxn)
             if hbond_cutoffs is not None:
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
-                    geo, *hbond_cutoffs, grxn=grxn)
+                    geo, *hbond_cutoffs, tsg=tsg)
             else:
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
-                    geo, grxn=grxn)
+                    geo, tsg=tsg)
             if not hydrogen_bonded_structure_:
                 fin_locs_lst += (locs,)
                 fin_enes_lst += (enes,)
@@ -541,16 +542,17 @@ def _remove_nonhbonded_structures(
             zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
-                grxn = relabel_for_geometry(zrxn)
+                grxn = undo_zmatrix_conversion(zrxn)
             else:
                 grxn = None
 
+            tsg = automol.reac.ts_graph(grxn)
             if hbond_cutoffs is not None:
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
-                    geo, *hbond_cutoffs, grxn=grxn)
+                    geo, *hbond_cutoffs, tsg=tsg)
             else:
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
-                    geo, grxn=grxn)
+                    geo, tsg=tsg)
             if hydrogen_bonded_structure_:
                 fin_locs_lst += (locs,)
                 fin_enes_lst += (enes,)
@@ -904,10 +906,10 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
         ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
         inizmas = [ini_zma_save_fs[-1].file.zmatrix.read((0,))]
         ini_sym_fs = autofile.fs.symmetry(ini_cnf_save_path)
-        dummy_key_dct = automol.zmat.dummy_key_dictionary(inizmas[0])
+        dtt = automol.zmat.conversion_info(inizmas[0])
         for sym_locs in ini_sym_fs[-1].existing():
             geo = ini_sym_fs[-1].file.geometry.read(sym_locs)
-            geo_wdummy = automol.geom.insert_dummies(geo, dummy_key_dct)
+            geo_wdummy = automol.geom.apply_zmatrix_conversion(geo, dtt)
             try:
                 inizmas.append(automol.zmat.from_geometry(inizmas[0], geo_wdummy))
             except:
@@ -928,11 +930,10 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                     break
                 else:
                     sym_fs = autofile.fs.symmetry(cnf_save_fs[-1].path(locs))
-                    dummy_key_dct = automol.zmat.dummy_key_dictionary(zma)
+                    dtt = automol.zmat.conversion_info(zma)
                     for sym_locs in sym_fs[-1].existing():
                         geo = sym_fs[-1].file.geometry.read(sym_locs)
-                        geo_wdummy = automol.geom.insert_dummies(
-                            geo, dummy_key_dct)
+                        geo_wdummy = automol.geom.apply_zmatrix_conversion(geo, dtt)
                         try:
                             sym_zma = automol.zmat.from_geometry(zma, geo_wdummy)
                             if automol.zmat.almost_equal(

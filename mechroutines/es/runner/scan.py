@@ -4,6 +4,7 @@
 """
 
 import numpy
+import itertools
 
 import automol
 import autofile
@@ -81,7 +82,7 @@ def run_scan(zma, spc_info, mod_thy_info,
     print('coord grids in run scan', coord_grids)
     scn_save_fs[1].file.info.write(inf_obj, [coord_locs])
     # Build the grid of values
-    mixed_grid_vals = automol.pot.coords(coord_grids)
+    mixed_grid_vals = tuple(itertools.product(*coord_grids))
     if not reverse_sweep:
         grid_vals_groups = [mixed_grid_vals]
     else:
@@ -127,7 +128,7 @@ def run_backsteps(
     # Set up info that is constant across the scan
     # i.e., jobtype, frozen_coords
     job = _set_job(scn_typ)
-    mixed_grid_vals_lst = automol.pot.coords(coord_grids)
+    mixed_grid_vals_lst = tuple(itertools.product(*coord_grids))
     # Hold off on backsteps while original scan is running
     if _scan_is_running(
             mixed_grid_vals_lst, coord_names, constraint_dct, scn_run_fs, job):
@@ -543,7 +544,7 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs,
     run_finished = True
 
     if not overwrite:
-        grid_vals = automol.pot.coords(coord_grids)
+        grid_vals = tuple(itertools.product(*coord_grids))
         for vals in grid_vals:
 
             # Set the locs for the scan point

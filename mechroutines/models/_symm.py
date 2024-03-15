@@ -33,7 +33,8 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
 
         zrxn = spc_dct_i.get('zrxn', None)
         if zrxn is not None:
-            grxn = automol.reac.relabel_for_geometry(zrxn)
+            zrxn = automol.reac.without_structures(zrxn)
+            grxn = automol.reac.undo_zmatrix_conversion(zrxn)
         else:
             grxn = None
 
@@ -60,8 +61,8 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 ioprinter.info_message(
                     ' - Determining internal sym number ',
                     'using sampling routine.')
-                int_symm, endgrp = automol.symm.internal_symm_from_sampling(
-                    symm_geos, rotors, grxn=grxn, zma=zma)
+                int_symm, endgrp = automol.symm.symmetry_factors_from_sampling(
+                    symm_geos, rotors, grxn=grxn)
             else:
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
                 int_symm, endgrp = 1.0, 1.0
@@ -89,7 +90,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             int_symm = 1.0
 
         if rotors is not None:
-            rotor_symms = automol.rotor.symmetries(rotors, flat=True)
+            rotor_symms = automol.data.rotor.rotors_torsion_symmetries(rotors, flat=True)
             int_symm = automol.symm.rotor_reduced_symm_factor(
                 int_symm, rotor_symms)
 

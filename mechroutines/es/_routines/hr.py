@@ -39,8 +39,8 @@ def hindered_rotor_scans(
         reverse_sweep = False
 
     # backstep = False
-    run_tors_names = automol.rotor.names(rotors)
-    run_tors_grids = automol.rotor.grids(rotors, increment=increment)
+    run_tors_names = automol.data.rotor.rotors_torsion_names(rotors)
+    run_tors_grids = automol.data.rotor.rotors_torsion_grids(rotors, increment=increment)
 
     # Set constraints
     const_names = automol.zmat.set_constraint_names(
@@ -53,7 +53,7 @@ def hindered_rotor_scans(
             f'Running Rotor: {"-".join(tors_names)}', newline=1)
 
         # Setting the constraints
-        constraint_dct = automol.zmat.constraint_dct(
+        constraint_dct = automol.zmat.constraint_dict(
             zma, const_names, tors_names)
         print('in hr', tors_names)
         scan.execute_scan(

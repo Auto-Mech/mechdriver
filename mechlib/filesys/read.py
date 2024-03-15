@@ -1,6 +1,6 @@
 """ drivers for coordinate scans
 """
-
+import itertools
 import numpy
 from scipy.interpolate import CubicSpline
 from scipy.interpolate import Akima1DInterpolator
@@ -31,7 +31,7 @@ def potential(names, grid_vals, cnf_save_path,
 
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
-    grid_coords = automol.pot.coords(grid_vals)
+    grid_coords = tuple(itertools.product(*grid_vals))
     back_coords = tuple(tuple(val + 4*numpy.pi for val in grid)
                         for grid in grid_coords)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
@@ -59,6 +59,7 @@ def potential(names, grid_vals, cnf_save_path,
 
         # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
+        print("@AVC Energy read:", ene)
         if read_energy_backstep:
             back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
             step_ene = None
@@ -112,12 +113,12 @@ def potential(names, grid_vals, cnf_save_path,
 
     # If potential has any terms that are not None, ID and remove bad points
     if remove_bad_points and len(names) == 1:
-        if automol.pot.is_nonempty(pot):
-            pot = automol.pot.remove_empty_terms(pot)
+        if any(val is not None for val in pot.values()):
+            pot = {k: v for k, v in pot.items() if v is not None}
             bad_angle = identify_bad_point(pot)
             if bad_angle is not None:
                 pot = remove_bad_point(pot, bad_angle)
-                pot = automol.pot.remove_empty_terms(pot)
+                pot = {k: v for k, v in pot.items() if v is not None}
         else:
             pot = {}
 

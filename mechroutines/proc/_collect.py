@@ -216,8 +216,8 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
         if zma_fs[-1].file.torsions.exists(zma_locs):
             rotors, _, _ = tors.build_rotors(
                 spc_dct_i, pf_filesystems, spc_mod_dct_i)
-            names = automol.rotor.names(rotors, flat=True)
-            pots = automol.rotor.potentials(rotors, flat=True)
+            names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
+            pots = automol.data.rotor.rotors_potentials(rotors)
             # Just check if there any potentials with
             miss_data = None
             for name, pot in zip(names, pots):

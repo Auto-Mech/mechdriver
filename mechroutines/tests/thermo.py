@@ -210,7 +210,7 @@ products keys:
 
 '''
 
-zrxn = automol.reac.from_string(ABS_ZRXN_STR)
+zrxn = automol.reac.from_old_string(ABS_ZRXN_STR)
 #
 ##basic_refs = thermo.heatform.get_basic_ts(zrxn)
 basic_refs= [], []
@@ -305,7 +305,7 @@ products keys:
 - [13, 14]
 '''
 
-zrxn = automol.reac.from_string(BS_ZRXN_STR)
+zrxn = automol.reac.from_old_string(BS_ZRXN_STR)
 
 cbh0_refs = thermo.heatform.get_cbhzed_ts(zrxn)
 cbh1_refs = thermo.heatform.get_cbhone_ts(zrxn)

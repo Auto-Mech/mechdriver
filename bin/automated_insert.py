@@ -358,14 +358,14 @@ def choose_beta_qh_cutoff_distance(geo):
         if len(double_bnd_atms) == 2:
             good_ts_gra = conn_ts_gras
             break
-        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
+        ts_gras = automol.geom.connectivity_graph_deprecated(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
         conn_ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
         ts_gras = automol.graph.connected_components(conn_ts_gras)
         if len(ts_gras) != 2:
             continue
         unconn_bnds = []
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i)
             double_bnd_atms_i = [atm for atm in vals if vals[atm] == 1]
             if len(double_bnd_atms_i) == 2:
                 double_bnd_atms = double_bnd_atms_i
@@ -376,7 +376,7 @@ def choose_beta_qh_cutoff_distance(geo):
     chosen_oversaturated_atom = None
     rqhs = [x * 0.1 for x in range(26, 42, 2)]
     for rqh in rqhs:
-        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
+        ts_gras = automol.geom.connectivity_graph_deprecated(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
         ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
         ts_gras = automol.graph.connected_components(ts_gras)
         if len(ts_gras) != 1:
@@ -396,7 +396,7 @@ def choose_beta_qh_cutoff_distance(geo):
                     good_ts_gra, {forming_bond: 2})
                 chosen_ts_gra = automol.graph.add_bonds(
                     chosen_ts_gra, [breaking_bond])
-                vals = automol.graph.atom_unsaturations(chosen_ts_gra, bond_order=True)
+                vals = automol.graph.atom_unpaired_electrons(chosen_ts_gra, bond_order=True)
                 oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
                 if len(oversaturated_atoms) == 1:
                     chosen_oversaturated_atom = oversaturated_atoms[0]
@@ -413,21 +413,21 @@ def choose_beta_cutoff_distance(geo):
     for rqq in rqqs:
         if len(double_bnd_atms) == 2:
             break
-        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=rqq, rqh_bond_max=2.7, rhh_bond_max=2.3)
+        ts_gras = automol.geom.connectivity_graph_deprecated(geo, rqq_bond_max=rqq, rqh_bond_max=2.7, rhh_bond_max=2.3)
         ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
         ts_gras = automol.graph.connected_components(ts_gras)
         if len(ts_gras) != 2:
             continue
         unconn_bnds = []
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i)
             double_bnd_atms = [atm for atm in vals if vals[atm] == 1]
             unconn_bnds.extend(list(automol.graph.bond_keys(ts_gra_i)))
     chosen_ts_gra = []
     chosen_oversaturated_atom = None
     rqqs = [x * 0.1 for x in range(32, 48, 2)]
     for rqq in rqqs:
-        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=rqq, rqh_bond_max=2.7, rhh_bond_max=2.3)
+        ts_gras = automol.geom.connectivity_graph_deprecated(geo, rqq_bond_max=rqq, rqh_bond_max=2.7, rhh_bond_max=2.3)
         ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
         ts_gras = automol.graph.connected_components(ts_gras)
         if len(ts_gras) != 1:
@@ -441,7 +441,7 @@ def choose_beta_cutoff_distance(geo):
                     ts_gra_i, {frozenset(double_bnd_atms): 2})
                 breaking_bond = list(breaking_bond_lst)[0]
                 forming_bond = frozenset(double_bnd_atms)
-            vals = automol.graph.atom_unsaturations(ts_gra_i, bond_order=True)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i, bond_order=True)
             oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
             if len(oversaturated_atoms) == 1:
                 chosen_ts_gra = ts_gras[0]
@@ -460,13 +460,13 @@ def choose_heavy_cutoff_distance(geo):
     chosen_ts_gra = []
     chosen_oversaturated_atom = None
     for rqq in rqqs:
-        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=rqq, rqh_bond_max=2.7, rhh_bond_max=2.3)
+        ts_gras = automol.geom.connectivity_graph_deprecated(geo, rqq_bond_max=rqq, rqh_bond_max=2.7, rhh_bond_max=2.3)
         ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
         ts_gras = automol.graph.connected_components(ts_gras)
         if len(ts_gras) != 1:
             continue
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i, bond_order=True)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i, bond_order=True)
             oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
             if len(oversaturated_atoms) == 1:
                 chosen_ts_gra = ts_gras[0]
@@ -483,13 +483,13 @@ def choose_cutoff_distance(geo):
     chosen_ts_gra = []
     chosen_oversaturated_atom = None
     for rqh in rqhs:
-        ts_gras = automol.geom.connectivity_graph(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
+        ts_gras = automol.geom.connectivity_graph_deprecated(geo, rqq_bond_max=3.5, rqh_bond_max=rqh, rhh_bond_max=2.3)
         ts_gras = automol.graph.set_stereo_from_geometry(ts_gras, geo)
         ts_gras = automol.graph.connected_components(ts_gras)
         if len(ts_gras) != 1:
             continue
         for ts_gra_i in ts_gras:
-            vals = automol.graph.atom_unsaturations(ts_gra_i, bond_order=True)
+            vals = automol.graph.atom_unpaired_electrons(ts_gra_i, bond_order=True)
             oversaturated_atoms = [atm for atm, val in vals.items() if val < 0]
             if len(oversaturated_atoms) == 1:
                 chosen_ts_gra = ts_gras[0]
@@ -631,11 +631,9 @@ def all_reaction_graphs(
     print(back_bnd_ord_dct)
     forward_gra = automol.graph.set_bond_orders(ts_gra, forw_bnd_ord_dct)
     backward_gra = automol.graph.set_bond_orders(ts_gra, back_bnd_ord_dct)
-    reactant_gras = automol.graph.without_dummy_bonds(
-        automol.graph.without_fractional_bonds(forward_gra))
+    reactant_gras = automol.graph.ts.reactants_graph(forward_gra)
     reactant_gras = automol.graph.connected_components(reactant_gras)
-    product_gras = automol.graph.without_dummy_bonds(
-        automol.graph.without_fractional_bonds(backward_gra))
+    product_gras = automol.graph.ts.reactants_graph(backward_gra)
     print(automol.graph.string(forward_gra))
     print(automol.graph.string(backward_gra))
     product_gras = automol.graph.connected_components(product_gras)
@@ -694,13 +692,10 @@ def get_zrxn(geo, rxn_info, rxn_class):
         product_keys = []
         for gra in rxn_gras[1]:
             product_keys.append(automol.graph.atom_keys(gra))
-        std_rxn = automol.reac.Reaction(
+        std_rxn = automol.reac.from_forward_reverse(
             rxn_class, *ts_gras, reactant_keys, product_keys)
-        ts_zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(
-            std_rxn, geo)
-        std_zrxn = automol.reac.relabel_for_zmatrix(
-            std_rxn, zma_keys, dummy_key_dct)
-        # rxn_info = (ts_ichs, *rxn_info[1:])
+        std_zrxn = automol.reac.with_structures(std_rxn, "zmat")
+        ts_zma = automol.reac.ts_structure(std_zrxn)
         ts_geo = automol.zmat.geometry(ts_zma)
     else:
         print(
