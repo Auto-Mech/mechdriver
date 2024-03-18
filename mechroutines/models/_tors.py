@@ -165,7 +165,7 @@ def scale_rotor_pots(rotors, scale_factor=((), None), scale_override=None):
     # Count numbers
     numtors = 0
     for rotor in rotors:
-        numtors += len(rotor)
+        numtors += len(rotor.torsions)
 
     # Calculate the scaling factors
     scale_indcs, factor = scale_factor
