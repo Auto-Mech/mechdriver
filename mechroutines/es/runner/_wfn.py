@@ -138,7 +138,7 @@ def cas_options(zma, spc_info, num_act_elc, num_act_orb, num_states,
 
     # Set the number of closed and occupied orbitals
     fml = automol.zmat.formula(zma)
-    elec_cnt = automol.formula.electron_count(fml)
+    elec_cnt = automol.form.electron_count(fml)
 
     closed_orb = (elec_cnt - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb

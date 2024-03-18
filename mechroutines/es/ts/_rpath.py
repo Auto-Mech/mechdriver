@@ -31,8 +31,8 @@ def internal_coordinates_scan(ts_zma, zrxn,
     # Determine if scan should be for variational reaction class
 
     # Build grid and names appropriate for reaction type
-    var = (automol.par.is_radrad(rxn_class) and
-           automol.par.is_low_spin(rxn_class))
+    var = (automol.ReactionInfo.is_radical_radical(rxn_class) and
+           automol.ReactionInfo.is_low_spin(rxn_class))
     scan_inf = automol.reac.build_scan_info(zrxn, ts_zma, var=var)
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
 
@@ -75,7 +75,7 @@ def internal_coordinates_scan(ts_zma, zrxn,
     if find_max:
         include_endpts = not mref_params
         max_zmas = rxngrid.grid_maximum_zmatrices(
-            zrxn.class_, ts_zma, coord_grids, coord_names, _scn_save_fs,
+            automol.reac.class_(zrxn), ts_zma, coord_grids, coord_names, _scn_save_fs,
             mod_thy_info, constraint_dct, include_endpts=include_endpts)
     else:
         max_zmas = None
@@ -117,8 +117,8 @@ def inf_sep_ene(ts_dct, thy_inf_dct, thy_method_dct, mref_params,
 
     # Get kwargs for the calculation
     rxn_class = ts_dct['class']
-    var = (automol.par.is_radrad(rxn_class) and
-           automol.par.is_low_spin(rxn_class))
+    var = (automol.ReactionInfo.is_radical_radical(rxn_class) and
+           automol.ReactionInfo.is_low_spin(rxn_class))
     if var:
         ts_zma, zrxn = ts_dct['zma'], ts_dct['zrxn']
         rxn_info = ts_dct['rxn_info']

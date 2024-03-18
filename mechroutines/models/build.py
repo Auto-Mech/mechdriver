@@ -150,7 +150,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             ts_sadpt, ts_nobar = 'sadpt', 'sadpt'
 
     # Get all of the information for the filesystem
-    if not automol.par.is_radrad(ts_dct['class']):
+    if not automol.ReactionInfo.is_radical_radical(ts_dct['class']):
 
         # Set up the saddle point keyword
         if search is not None:

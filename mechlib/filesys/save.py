@@ -333,8 +333,8 @@ def rebuild_zma_from_opt_geo(init_zma, opt_geo):
     """ build zma from opt
     """
 
-    dummy_key_dct = automol.zmat.dummy_key_dictionary(init_zma)
-    geo_wdummy = automol.geom.insert_dummies(opt_geo, dummy_key_dct)
+    dtt = automol.zmat.conversion_info(init_zma)
+    geo_wdummy = automol.geom.apply_zmatrix_conversion(opt_geo, dtt)
     zma = automol.zmat.from_geometry(init_zma, geo_wdummy)
 
     return zma
@@ -471,12 +471,14 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     # print(automol.zmat.string(zma))
     # print('\nzrxn')
     # print(zrxn)
-    rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
-    if any(rotors):
+    gra = None if zrxn is None else automol.reac.ts_graph(zrxn)
+    rotors = automol.data.rotor.rotors_from_zmatrix(zma, gra=gra)
+    if rotors:
+        tors_lst = automol.data.rotor.rotors_torsions(rotors, sort=True)
         zma_path = zma_fs[-1].path(zma_locs)
         print(f" - Rotors identified from Z-Matrix at {zma_path}")
         print(" - Saving rotor information at same location.")
-        zma_fs[-1].file.torsions.write(rotors, zma_locs)
+        zma_fs[-1].file.torsions.write(tors_lst, zma_locs)
 
 
 def _save_rings(zma_fs, zma_locs, zrxn=None):
@@ -484,7 +486,8 @@ def _save_rings(zma_fs, zma_locs, zrxn=None):
     """
 
     zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-    rings_atoms = automol.zmat.all_rings_atoms(zma, zrxn=zrxn)
+    tsg = None if zrxn is None else automol.reac.ts_graph(zrxn)
+    rings_atoms = automol.zmat.all_rings_atoms(zma, tsg=tsg)
     ring_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
     if ring_dct:
         zma_path = zma_fs[-1].path(zma_locs)

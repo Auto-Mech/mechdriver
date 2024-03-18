@@ -164,7 +164,7 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
 
     # Check if the init geometry is connected
     if geo_init is not None:
-        if not automol.geom.connected(geo_init):
+        if not automol.geom.is_connected(geo_init):
             geo_init = None
 
     return geo_init
@@ -242,7 +242,7 @@ def _optimize_molecule(spc_info, zma_init,
         zma = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
         if zma is None:
             zma = automol.geom.zmatrix(geo)
-        geo_conn = bool(automol.geom.connected(geo))
+        geo_conn = bool(automol.geom.is_connected(geo))
 
     # If connected, check for imaginary modes and fix them if possible
     if geo_conn:
@@ -257,7 +257,7 @@ def _optimize_molecule(spc_info, zma_init,
         # Recheck connectivity for imag-checked geometry
         if geo is not None:
             conf_found = True
-            conn = automol.geom.connected(geo)
+            conn = automol.geom.is_connected(geo)
             proper_stereo = _inchi_are_same(spc_info[0], geo)
             if conn and proper_stereo:
                 info_message(
@@ -479,22 +479,12 @@ def conformer_sampling(zma, spc_info, thy_info,
             'Generating sample Z-Matrix that does not have',
             'high intramolecular repulsion...')
         bad_geo_cnt = 0
-        ref_pot = automol.pot.intramol_interaction_potential_sum(
-            automol.zmat.geometry(zma))
-        samp_pot = automol.pot.intramol_interaction_potential_sum(
-            automol.zmat.geometry(samp_zma))
-        while samp_pot-ref_pot > repulsion_thresh and bad_geo_cnt < 1000:
+        while not automol.zmat.has_low_relative_repulsion_energy(samp_zma, zma) and bad_geo_cnt < 1000:
             if print_debug:
                 warning_message('Structure has high repulsion.')
                 warning_message(
-                    'Sums of intramol LJ potential interactions [kcal/mol]:',
-                    f'Ref:{ref_pot:.2f}, Test:{samp_pot:.2f}, '
-                    f'Diff:{samp_pot-ref_pot:.2f}')
-                warning_message(
                     'Generating new sample Z-Matrix')
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
-            samp_pot = automol.pot.intramol_interaction_potential_sum(
-                automol.zmat.geometry(samp_zma))
             bad_geo_cnt += 1
 
         cid = autofile.schema.generate_new_conformer_id()
@@ -614,7 +604,7 @@ def ring_conformer_sampling(
                     samp_geo, rings_atoms, ngbs)
                 if automol.geom.ring_angles_reasonable(samp_geo, ring_atoms):
                     print('   - reasonable check 2')
-                    if not automol.pot.low_repulsion_struct(geo, samp_geo):
+                    if not automol.geom.has_low_relative_repulsion_energy(samp_geo, geo):
                         print('   - reasonable check 3')
                         frag_samp_unique = automol.geom.is_unique(
                             frag_samp_geo, frag_saved_geos, check_dct)
