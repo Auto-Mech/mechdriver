@@ -141,9 +141,9 @@ def _mod_class(class_typ, rxn_info):
     if automol.ReactionInfo.requires_spin_designation(_fake_class):
         ts_mul = rinfo.value(rxn_info, 'tsmult')
         high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
-        _spin = 'high-spin' if ts_mul == high_mul else 'low-spin'
+        _spin = automol.ReactionSpin.HIGH if ts_mul == high_mul else automol.ReactionSpin.LOW
     else:
-        _spin = ''
+        _spin = automol.ReactionSpin.NONE
 
     # Determine if it iss intersystem crossing
     # rxn_muls = rinfo.value(rxn_info, 'mult')
