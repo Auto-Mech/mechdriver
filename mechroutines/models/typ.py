@@ -43,7 +43,7 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
     )
     tau_hr_model = bool('tau' in tors_model and vib_model != 'vib')
     if has_tors:
-        if not all(map(automol.data.potent.has_defined_values, automol.data.rotor.rotors_potentials(rotors))):
+        if not automol.data.rotor.rotors_have_potentials(rotors):
             print('WARNING: empty potential will crash MESS so using rigid model instead')
             has_tors = False
         
