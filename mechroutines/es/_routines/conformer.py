@@ -541,7 +541,7 @@ def conformer_sampling(zma, spc_info, thy_info,
             save_conformer(
                 ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
-                init_zma=samp_zma)
+                init_zma=samp_zma, ref_zma=samp_zma)
 
             nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
             nsampd += 1
@@ -1098,7 +1098,7 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,), ref_zma=
         if cnf_save_path:
             zma_save_fs = fs.zmatrix(cnf_save_path)
             ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
-            sens = 100.
+            sens = 10.
     if ref_zma is not None:
         viable =  automol.reac.similar_saddle_point_structure(zma, ref_zma, zrxn, sens)
     else:

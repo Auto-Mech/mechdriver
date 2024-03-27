@@ -123,7 +123,8 @@ def run(pes_rlst, spc_rlst,
         ref_enes = pes_mod_dct_i['therm_fit']['ref_enes']
         spc_dct = thermo_tasks.get_heats_of_formation(
             spc_locs_dct, spc_dct, spc_mods, spc_mod_dct,
-            ref_scheme, ref_enes, run_prefix, save_prefix)
+            ref_scheme, ref_enes, run_prefix, save_prefix, 
+            nprocs=nprocs)
 
         # Combine species for pf generation
         tsk_key_dct = run_fit_tsk[-1]

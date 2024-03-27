@@ -191,7 +191,7 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
 
     # Initialize an empty list
     split_names = ()
-
+    
     # Attempt to read the graph of the instability trans
     # Get the product graphs and inchis
     tra, path = filesys.read.instability_transformation(
@@ -201,7 +201,6 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     if tra is not None:
         ioprinter.info_message('\nFound instability files at path:')
         ioprinter.info_message(f'  {path}')
-
         zrxn, _ = tra
         prd_gras = automol.reac.product_graphs(zrxn)
         constituent_ichs = tuple(automol.graph.chi(gra, stereo=True)
@@ -209,21 +208,13 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
 
         _split_names = ()
         for ich in constituent_ichs:
-            # Remove stereo since we used to not store this data
-            ich_noste1 = automol.chi.standard_form(
-                ich, stereo=False)
+            if spc_dct.get(spc_name).get('inchi') != spc_dct.get(spc_name).get('canon_enant_ich'):
+                ioprinter.info_message('swapping from canonical enantiomer')
+                ich = automol.chi.reflect(ich) 
             for name, spc_dct_i in spc_dct.items():
                 if 'ts_' not in name:
                     # Try to match inchis with stereo included in checks
-                    # if ich == spc_dct_i.get('inchi'):
-                    #     _split_names += (name,)
-                    #     break
-                    # Remove stereo since we used to not store this data
-                    ich_noste2 = automol.chi.standard_form(
-                        spc_dct_i.get('inchi'), stereo=False)
-                    # print('name test', name)
-                    # print(ich_noste1, ich_noste2)
-                    if ich_noste1 == ich_noste2:
+                    if ich == spc_dct_i.get('inchi'):
                         _split_names += (name,)
                         break
         split_names = tuple(i for n, i in enumerate(_split_names)
