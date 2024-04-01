@@ -142,7 +142,7 @@ def set_model_filesys(spc_dct_i, level,
     elif cnf_range == 'min':
         min_rngs_locs, min_rngs_path = min_energy_conformer_locators(
             cnf_save_fs, levelp, hbond_cutoffs=hbond_cutoffs)
-        if min_rngs_locs:
+        if any(min_rngs_locs):
             cnf_run_fs[-1].create(min_rngs_locs)
         else:
             ioprinter.warning_message("Unable to locate filesystem for requested species")
