@@ -542,8 +542,10 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
             chnl_enes, reac_label)
 
         # Append the fake strings to overall strings
-        well_str += fwell_str + '\n'
-        ts_str += fts_str
+        if fake_lbl not in written_labels:
+            well_str += fwell_str + '\n'
+            ts_str += fts_str
+            written_labels.append(fake_lbl)
 
         # Re-set the reactant label for the inner transition state
         inner_reac_label = fake_lbl
@@ -559,8 +561,10 @@ def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
             chnl_enes, prod_label)
 
         # Append the fake strings to overall strings
-        well_str += fwell_str + '\n'
-        ts_str += fts_str
+        if fake_lbl not in written_labels:
+            well_str += fwell_str + '\n'
+            ts_str += fts_str
+            written_labels.append(fake_lbl)
 
         # Reset the product labels for the inner transition state
         inner_prod_label = fake_lbl
@@ -691,16 +695,16 @@ def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
     if side == 'reacs':
         well_key = 'fake_vdwr'
         ts_key = 'fake_vdwr_ts'
-        prepend_key = 'FakeRB'
+        #prepend_key = 'FakeRB'
         side_idx = 0
     elif side == 'prods':
         well_key = 'fake_vdwp'
         ts_key = 'fake_vdwp_ts'
         side_idx = 1
-        if reacs in (prods, prods[::-1]):
-            prepend_key = 'FakeRB'
-        else:
-            prepend_key = 'FakePB'
+        #if reacs in (prods, prods[::-1]):
+        #    prepend_key = 'FakeRB'
+        #else:
+        #    prepend_key = 'FakePB'
 
     # Initialize well and ts strs and data dcts
     fake_dat_dct = {}
@@ -726,7 +730,7 @@ def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
 
     # New MESS label code
     fake_well_label = make_rxn_str(chnl[side_idx], prepend='FakeW-')
-
+    chn_idx = tsname.split('_')[2]  # ts_pesidx_chnidx_sadpt_idx
     _side_str = '+'.join(chnl[side_idx])
     aux_str = f'Fake Well for {_side_str}'
     fake_well, well_dat = blocks.fake_species_block(*fake_inf_dcts)
@@ -748,8 +752,8 @@ def _make_fake_mess_strs(tsname, chnl, side, fake_inf_dcts,
     #     ioprinter.warning_message(f'No label {pst_dct_key} in label dict')
 
     # New MESS label code (use channel index for PST barrier label)
-    chn_idx = tsname.split('_')[2]  # ts_pesidx_chnidx_sadpt_idx
-    pst_label = f'{prepend_key}{chn_idx}'
+    #pst_label = f'{prepend_key}{chn_idx}'
+    pst_label = make_rxn_str(chnl[side_idx], prepend='FakeB-')
     pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,
@@ -828,10 +832,10 @@ def get_channel_data(reacs, prods, tsname_allconfigs,
     # Set up the info for the wells
     rwell_model = spc_model_dct_i['ts']['rwells']
     pwell_model = spc_model_dct_i['ts']['pwells']
-    rxn_class = spc_dct[tsname_allconfigs[0]]['class']
-    if need_fake_wells(rxn_class, rwell_model):
+    #rxn_class = spc_dct[tsname_allconfigs[0]]['class']  # no longer needed
+    if need_fake_wells(reacs, rwell_model):
         chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])
-    if need_fake_wells(rxn_class, pwell_model):
+    if need_fake_wells(prods, pwell_model):
         chnl_infs['fake_vdwp'] = copy.deepcopy(chnl_infs['prods'])
 
     return chnl_infs, model_basis_energy_dct

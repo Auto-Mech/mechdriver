@@ -120,13 +120,13 @@ def pst_ts(rxn_class, ts_sadpt, ts_nobarrier):
     return pst
 
 
-def need_fake_wells(rxn_class, well_model):
+def need_fake_wells(rcts_or_prds, well_model):
     """ Determine if master equation treatments of a reaction channel
         necessitate the generation and inclusion of fake van der Waals wells
         at the entrance- and exit-channel.
 
-        This is is determined by (1) if the user has requested the use
-        of fake-wells, and (2) whether the reaction is bimol???
+        This is determined by (1) if the user has requested the use
+        of fake-wells, and (2) whether the reaction is bimol
 
         :param rxn_class:
         :type rxn_class:

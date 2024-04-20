@@ -150,7 +150,34 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             ts_sadpt, ts_nobar = 'sadpt', 'sadpt'
 
     # Get all of the information for the filesystem
-    if not automol.ReactionInfo.is_radical_radical(ts_dct['class']):
+    rxn_class = ts_dct['class']
+    if automol.ReactionInfo.is_radrad(rxn_class) and automol.ReactionInfo.is_low_spin(rxn_class):
+
+        # Build MESS string for TS with no saddle point
+        if ts_nobar == 'pst':
+            if len(rcts) == 2:
+                inf_dct = pst_data(
+                    ts_dct, reac_dcts,
+                    spc_mod_dct_i,
+                    run_prefix, save_prefix)
+            else:
+                inf_dct = pst_data(
+                    ts_dct, prod_dcts,
+                    spc_mod_dct_i,
+                    run_prefix, save_prefix)
+            writer = 'pst_block'
+        elif ts_nobar == 'rpvtst':
+            inf_dct, chn_basis_ene_dct = rpvtst_nobar(
+                tsname, spc_dct, reac_dcts,
+                pes_mod_dct_i, spc_mod_dct_i,
+                chn_basis_ene_dct,
+                run_prefix, save_prefix)
+            writer = 'rpvtst_block'
+        elif ts_nobar == 'vrctst':
+            inf_dct = flux_data(
+                ts_dct, spc_mod_dct_i)
+            writer = 'vrctst_block'
+    else:  # write the TS for a well-defined saddle point
 
         # Set up the saddle point keyword
         if search is not None:
@@ -178,8 +205,8 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 run_prefix, save_prefix)
             writer = 'rpvtst_block'
         else:
-            print('Obtaining a ZRXN object from conformer any TS, '
-                  'shouldn matter')
+            print("Obtaining a ZRXN object from conformer any TS, "
+                  "shouldn't matter")
             print('-----')
             pf_filesystems = filesys.models.pf_filesys(
                 spc_dct[tsname], spc_mod_dct_i,
@@ -199,32 +226,6 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 calc_ene_trans=False,
                 zrxn=zrxn, spc_locs=spc_locs)
             writer = 'species_block'
-    else:
-
-        # Build MESS string for TS with no saddle point
-        if ts_nobar == 'pst':
-            if len(rcts) == 2:
-                inf_dct = pst_data(
-                    ts_dct, reac_dcts,
-                    spc_mod_dct_i,
-                    run_prefix, save_prefix)
-            else:
-                inf_dct = pst_data(
-                    ts_dct, prod_dcts,
-                    spc_mod_dct_i,
-                    run_prefix, save_prefix)
-            writer = 'pst_block'
-        elif ts_nobar == 'rpvtst':
-            inf_dct, chn_basis_ene_dct = rpvtst_nobar(
-                tsname, spc_dct, reac_dcts,
-                pes_mod_dct_i, spc_mod_dct_i,
-                chn_basis_ene_dct,
-                run_prefix, save_prefix)
-            writer = 'rpvtst_block'
-        elif ts_nobar == 'vrctst':
-            inf_dct = flux_data(
-                ts_dct, spc_mod_dct_i)
-            writer = 'vrctst_block'
     # Add writer to inf dct
     inf_dct['writer'] = writer
 

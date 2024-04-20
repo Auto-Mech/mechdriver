@@ -32,6 +32,9 @@ def min_energy_conformer_locators(
         :rtype: (tuple(str, str), str)
     """
 
+    if nprocs is None:
+        nprocs = 1
+
     locs, paths = conformer_locators(
         cnf_save_fs, mod_thy_info,
         cnf_range='min', hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
@@ -138,12 +141,13 @@ def conformer_locators(
 
         return fin_locs_lst, fin_paths_lst
 
+    if nprocs is None:
+        nprocs = 1
+
     cnf_range_nohb, cnf_range_hb, cnf_range_any = _process_cnf_range(
         cnf_range)
     freq_info, sp_info, sort_prop_dct = _process_sort_info(sort_info_lst)
     union_locs_lst, union_paths_lst = (), ()
-    # print('i set nprocs to 1 on line 146 of mincnf.py')
-    # nprocs = 1
     if cnf_range_hb is not None:
         tmp_locs_lst, tmp_paths_lst = _conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range=cnf_range_hb,
