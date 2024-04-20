@@ -40,7 +40,7 @@ def calc_vrctst_flux(ts_dct,
     print(automol.geom.string(automol.zmat.geometry(ts_dct['zma'])))
 
     # Run and Read all of the info for the correction potential
-    inf_sep_ene, potentials, pot_lbls, zma_for_inp = _correction_pot_data(
+    inf_sep_energy, potentials, pot_lbls, zma_for_inp = _correction_pot_data(
         ts_dct, scan_inf_dct,
         thy_inf_dct, thy_method_dct, mref_params,
         es_keyword_dct,
@@ -58,7 +58,7 @@ def calc_vrctst_flux(ts_dct,
     mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
     cas_kwargs = mref_params['var_scnlvl']
     molp_tmpl_str = varecof_io.writer.molpro_template(
-        ts_info, mod_var_scn_thy_info, inf_sep_ene, cas_kwargs)
+        ts_info, mod_var_scn_thy_info, inf_sep_energy, cas_kwargs)
 
     inp_strs.update({'run.tml': molp_tmpl_str})
 
@@ -171,17 +171,17 @@ def _correction_pot_data(ts_dct, scan_inf_dct,
     # Get the layer above coordinates, which is where the inf_sep.ene might be 
     branch2_locs = next(iter(cscn_save_fs[-1].existing()))[:-1]
     # If a user-defined value exists in the save FS, use that
-    if cscn_save_fs[-2].file.inf_sep_ene.exists(branch2_locs):
+    if cscn_save_fs[-2].file.inf_sep_energy.exists(branch2_locs):
         info_message('User-defined infinite separation energy found at ' \
                      f'{cscn_save_fs[0].path()}', newline=1)
-        inf_sep_ene = cscn_save_fs[-2].file.inf_sep_ene.read(branch2_locs)
-        info_message(f'Infinite separation energy: {inf_sep_ene}')
+        inf_sep_energy = cscn_save_fs[-2].file.inf_sep_energy.read(branch2_locs)
+        info_message(f'Infinite separation energy: {inf_sep_energy}')
     # Otherwise, estimate the inf. sep. ene. using a SR method
     else:
         info_message('No user-defined infinite separation energy found at ' \
                      f'{cscn_save_fs[0].path()}', newline=1)
         info_message('Estimating using the single-ref trick...', newline=1)
-        inf_sep_ene = rpath.inf_sep_ene(
+        inf_sep_energy = rpath.inf_sep_ene(
             ts_dct, thy_inf_dct, thy_method_dct, mref_params,
             savefs_dct, runfs_dct, es_keyword_dct)
 
@@ -193,7 +193,7 @@ def _correction_pot_data(ts_dct, scan_inf_dct,
     if zma_for_inp is None:
         zma_for_inp = ts_dct['zma']
 
-    return inf_sep_ene, potentials, pot_labels, zma_for_inp
+    return inf_sep_energy, potentials, pot_labels, zma_for_inp
 
 
 def _run_potentials(ts_info, ts_geo,
@@ -351,7 +351,7 @@ def _read_potentials(scan_inf_dct, thy_inf_dct, savefs_dct):
     inp_zma_locs = [[coord_name], [grid_val_for_zma]]
     if scn_save_fs[-1].file.zmatrix.exists(inp_zma_locs):
         zma_for_inp = scn_save_fs[-1].file.zmatrix.read(inp_zma_locs)
-        print('Path for getting Z-Matrix to set dummy atom location'
+        print('Path for getting Z-Matrix to set dummy atom location '
               'for structure.inp file for VaReCoF:')
         print('  ', scn_save_fs[-1].file.zmatrix.path(inp_zma_locs))
     else:
