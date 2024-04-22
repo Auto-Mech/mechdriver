@@ -57,6 +57,7 @@ TS_VAL_DCT = {
     'n_pst': ((float,), (), 6.0),
     'active': ((str,), (), None),
     'ts_search': ((str,), (), None),
+    'conf_id': ((tuple, list), (), None),
     'ts_idx': ((int,), (), 0)
     # vrc_dct = autorun.varecof.VRC_DCT
     # machine_dct = {}

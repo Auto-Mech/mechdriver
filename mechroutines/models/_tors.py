@@ -71,8 +71,9 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
     if rotors is not None:
         if typ.squash_tors_pot(spc_mod_dct_i):
             for rotor in rotors:
-                for torsion in rotor:
+                for torsion in automol.data.rotor.torsions(rotor):
                     torsion.pot = automol.pot.relax_scale(torsion.pot)
+
     return rotors, mdhr_dct, zma_locs
 
 
@@ -283,6 +284,24 @@ def _tors_strs(torsion, rotor, geo):
         geo=None,
         rotor_id=automol.data.tors.name(torsion))
 
+    # This is an ugly fix for if the D# torsion in the zmat was
+    # defined with a dummy atom, now it redefines it relative
+    # to another neighboring atom of the axis atom
+    # TODO the "groups" need to remove the atom that has been
+    # added to the "coordinate".
+    if None in automol.data.tors.coordinate(torsion):
+        gra = automol.geom.graph(geo)
+        coo = automol.data.tors.coordinate(torsion)
+        update_coo = list(coo)
+        ngb_dct = automol.graph.atoms_neighbor_atom_keys(gra)
+        if coo[0] is None:
+            update_coo[0] = list(filter(
+                lambda x: x != coo[2], ngb_dct[coo[1]]))[0] 
+        if coo[3] is None:
+            update_coo[3] = list(filter(
+                lambda x: x != coo[1], ngb_dct[coo[2]]))[0] 
+        torsion.coordinate = tuple(update_coo)
+    # End ugly fix
     mess_flux_str = mess_io.writer.fluxional_mode(
         automol.data.tors.coordinate(torsion),
         span=automol.data.tors.span(torsion))

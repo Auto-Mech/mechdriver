@@ -271,7 +271,8 @@ def _add_hf_to_spc_dct(hf0k, spc_dct, spc_name, spc_locs_idx, spc_mod):
 
 def get_heats_of_formation(
         spc_locs_dct, spc_dct, spc_mods, spc_mod_dct,
-        ref_scheme, ref_enes, run_prefix, save_prefix):
+        ref_scheme, ref_enes, run_prefix, save_prefix,
+        nprocs=1):
     """ gather the hof
     """
     chn_basis_ene_dct = {}
@@ -281,9 +282,9 @@ def get_heats_of_formation(
         spc_mod_dct_i = spc_mod_dct[spc_mod]
         chn_basis_ene_dct[spc_mod] = {}
         basis_dct = thermfit.prepare_basis(
-            ref_scheme, spc_dct, (*spc_locs_dct.keys(),))
+            ref_scheme, spc_dct, (*spc_locs_dct.keys(),),
+            nprocs=nprocs)
         for spc in basis_dct:
-            print(spc, spc_dct[spc])
             if spc_dct[spc]['basis_ichs'] is not None:
                 print(f'replacing references for {spc}')
                 print('original: ', basis_dct[spc])
