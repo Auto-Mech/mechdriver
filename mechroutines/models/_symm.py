@@ -77,7 +77,9 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             else:
                 [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
                 geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-            ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo, grxn, racemic=racemic)
+            ret = automol.symm.oxygenated_hydrocarbon_symm_num(
+                geo, zrxn=grxn, account_for_enantiomer=racemic,
+                radical_as_enantiomer=False)
             int_symm, ext_symm = ret
 
         else:
@@ -93,11 +95,10 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             rotor_symms = automol.data.rotor.rotors_torsion_symmetries(rotors, flat=True)
             int_symm = automol.symm.rotor_reduced_symm_factor(
                 int_symm, rotor_symms)
+            print('reduced int sym', int_symm)
 
-            ext_symm *= _umbrella_factor(rotors, geo)
-        # if spc_dct_i['smiles'] in ['CC(OO)C[CH2]', '[CH2]CCCOO','CC(OO)CC[CH2]','[CH2]CCCCOO','CC(C[CH2])COO','OOCC([CH2])(C)C','OOCC([CH2])C','OOCCC(C)(C)[CH2]','OOC(C([CH2])(C)C)C','OOCC(C([CH2])C)C','CCC(COO)([CH2])C','OOC(C([CH2])C)C(C)C','OOC(CC(C)C)([CH2])C','OOC(CC([CH2])(C)C)(C)C','OOC(C(C)(C)C)C(C)[CH2]','OOCC(CC(C)C)([CH2])C','OOC(CC(C)(C)C)([CH2])C','OOC(C([CH2])(C)C)C(C)C']:
-        #     print('divide ext sym by two')
-        #     ext_symm /= 2
+            # umbrella sampling assumed, and built in to HCO now
+            # ext_symm *= _umbrella_factor(rotors, geo)
         symm_factor = ext_symm * int_symm
 
     return symm_factor
