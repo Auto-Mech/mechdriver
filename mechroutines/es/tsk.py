@@ -981,7 +981,7 @@ def hr_tsk(job, spc_dct, spc_name,
 
             # Script (add energy script call)
             script_str, kwargs = qchem_params(
-                method_dct)
+                method_dct, spc_info=spc_info)
 
             ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_min_locs)
             ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
@@ -1051,7 +1051,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
         if spc_natoms == 1:
             # Skip all tasks except init_geom and conf_energy
             # if species is an atom
-            if tsk not in ('init_geom', 'conf_energy', 'conf_prop'):
+            if tsk not in ('init_geom', 'conf_opt', 'conf_energy', 'conf_prop'):
                 skip = True
                 ioprinter.info_message(
                     'Skipping task for an atom...', newline=1)

@@ -13,9 +13,9 @@ from mechlib.amech_io.parser._keywrd import defaults_with_dcts
 # DCTS
 MODKIN_REQ_LST = ('pressures', 'rate_temps', 'thermo_temps')
 MODKIN_VAL_DCT = {
-    'pressures': ((tuple,), (), None),
-    'rate_temps': ((tuple,), (), None),
-    'thermo_temps': ((tuple,), (), None),
+    'pressures': ((tuple,), (), (0.1, 1., 10., 100.)),
+    'rate_temps': ((tuple,), (),(300., 400., 500., 600., 800., 1000., 1500.)),
+    'therm_temps': ((tuple,), (), (300., 400., 500., 600., 800., 1000., 1500.)),
     'well_extension_pressure': ((int, float), (), 1.0),
     'well_extension_temp': ((int, float), (), 300.0),
     'temp_unit': ((str,), (), 'K'),
@@ -34,7 +34,7 @@ MODKIN_VAL_DCT = {
         'chebfit_pdeg': (int, (), 4),
         'chebfit_tol': ((float,), (), 20.0)
     },
-    'thermo_fit': {
+    'therm_fit': {
         'ref_scheme': ((str,), ('basic', 'cbh0'), 'basic'),
         'ref_enes': ((str,), ('ANL0',), 'ANL0')
     },
@@ -46,7 +46,7 @@ MODKIN_VAL_DCT = {
     }
 }
 
-MODPF_REQ_LST = ('pressures', 'rate_temps', 'thermo_temps')
+MODPF_REQ_LST = ('pressures', 'rate_temps', 'therm_temps')
 MODPF_VAL_DCT = {
     'ene': {
         'lvl1': ((tuple,), (), None),
@@ -189,8 +189,6 @@ def _kin_model_build(kin_mod_dct_i):
     # Set defaults
     new_kin_dct = automol.util.dict_.right_update(
         defaults_with_dcts(MODKIN_VAL_DCT), kin_mod_dct_i)
-
-    # Check for correct input
 
     # Repartition ratefit key word into dcts for `ratefit` code
     old_ratefit = new_kin_dct['rate_fit']
