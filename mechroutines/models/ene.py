@@ -67,7 +67,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
 
     # Get the electronic energy levels
     ene_levels = tuple(val[1] for key, val in spc_model_dct_i['ene'].items()
-                       if 'lvl' in key)
+                       if 'lvl' in key and val is not None)
 
     # Read the energies from the filesystem
     e_elec = None

@@ -829,7 +829,6 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info, orig_locs=None):
     found_saved_enes = []
     for idx, locs in enumerate(saved_locs):
         path = cnf_save_fs[-1].path(locs)
-        print('saved cnf path', path)
         sp_save_fs = autofile.fs.single_point(path)
         if sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
             found_saved_enes.append(sp_save_fs[-1].file.energy.read(

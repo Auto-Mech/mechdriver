@@ -179,6 +179,7 @@ def _molpro(method_dct, prog, job=None, geo=None, spc_info=None):
         'memory': memory,
         'mol_options': ['nosym'],
         'scf_options': [scf_econv_line, 'maxit=150']
+        # 'scf_options': [scf_econv_line, 'so-sci', 'maxit=150']
         # 'scf_options': [scf_econv_line, 'maxit=5']
     }
 
