@@ -151,7 +151,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
 
     # Get all of the information for the filesystem
     rxn_class = ts_dct['class']
-    if automol.ReactionInfo.is_radrad(rxn_class) and automol.ReactionInfo.is_low_spin(rxn_class):
+    if automol.ReactionInfo.is_radical_radical(rxn_class) and automol.ReactionInfo.is_low_spin(rxn_class):
 
         # Build MESS string for TS with no saddle point
         if ts_nobar == 'pst':
