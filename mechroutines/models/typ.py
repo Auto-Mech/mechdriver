@@ -120,7 +120,7 @@ def pst_ts(rxn_class, ts_sadpt, ts_nobarrier):
     return pst
 
 
-def need_fake_wells(rxn_class, well_model):
+def need_fake_wells(reagents, well_model):
     """ Determine if master equation treatments of a reaction channel
         necessitate the generation and inclusion of fake van der Waals wells
         at the entrance- and exit-channel.
@@ -128,13 +128,13 @@ def need_fake_wells(rxn_class, well_model):
         This is determined by (1) if the user has requested the use
         of fake-wells, and (2) whether the reaction is bimol
 
-        :param rxn_class:
-        :type rxn_class:
+        :param reagents: List of reactants or products (only the length matters)
         :param well_model:
         :type well_model:
         :rtype: bool
     """
-    return (well_model == 'fake' and automol.ReactionInfo.requires_well_description(rxn_class))
+    assert len(reagents) in (1, 2), f"There should be 1 or 2 reagents: {reagents}"
+    return (well_model == 'fake' and len(reagents) > 1)
 
 
 def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
