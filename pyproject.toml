@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "mechdriver"
+version = "2024.5.23"
+description = ""
+authors = ["Andreas Copan <avcopan@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "drivers" },
+    { include = "mechlib" },
+    { include = "mechroutines" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
