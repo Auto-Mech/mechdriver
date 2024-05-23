@@ -645,11 +645,11 @@ def ring_conformer_sampling(
     for samp_zma in unique_zmas:
         nsamp = nsamp0 - nsampd
         # Break the while loop if enough sampls completed
-        if nsamp <= 0:
-            info_message(
-                'Requested number of samples have been completed.',
-                'Conformer search complete.')
-            break
+ #       if nsamp <= 0:
+ #           info_message(
+ #               'Requested number of samples have been completed.',
+ #               'Conformer search complete.')
+ #           break
 
         # Run the conformer sampling
         samp_geo = automol.zmat.geometry(samp_zma)
