@@ -28,7 +28,7 @@ def qchem_params(method_dct, job=None, geo=None, spc_info=None):
 
     prog = method_dct.get('program', None)
 
-    # Build the defaul values
+    # Build the default values
     ret = INI_PARAM_BUILD_DCT[prog](
         method_dct, prog,
         job=job, geo=geo, spc_info=spc_info)
@@ -323,8 +323,17 @@ def _qchem(method_dct, prog, job=None, geo=None, spc_info=None):
 
     return script_str, kwargs
 
+def _ase(method_dct, prog, job=None, geo=None, spc_info=None):
+    """ Build kwargs dictionary and BASH submission script for ASE jobs.
+    """
+    kwargs = {
+        'memory': 1000,
+    }
+    return '', kwargs
 
 INI_PARAM_BUILD_DCT = {
+    elstruct.par.Program.ASE_PSI4: _ase,
+    elstruct.par.Program.ASE_NWX: _ase,
     elstruct.par.Program.GAUSSIAN09: _gaussian,
     elstruct.par.Program.GAUSSIAN16: _gaussian,
     elstruct.par.Program.MOLPRO2021: _molpro,
