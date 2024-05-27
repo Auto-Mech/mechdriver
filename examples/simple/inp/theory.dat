@@ -1,0 +1,13 @@
+level wbsgs
+    method = b3lyp
+    basis = 6-31g*
+    orb_res = RU
+    program = gaussian09
+end level
+
+level mp2dz
+    method = mp2
+    basis = cc-pvdz
+    orb_res = RR
+    program = gaussian09
+end level
