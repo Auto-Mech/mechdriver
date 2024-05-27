@@ -1,14 +1,18 @@
 [tool.poetry]
 name = "mechdriver"
-version = "2024.5.23"
+version = "2024.5.24"
 description = ""
 authors = ["Andreas Copan <avcopan@gmail.com>"]
 readme = "README.md"
 packages = [
+    { include = "automech" },
     { include = "drivers" },
     { include = "mechlib" },
     { include = "mechroutines" },
 ]
+
+[tool.poetry.scripts]
+automech = 'automech.cli:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"
