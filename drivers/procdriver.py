@@ -68,16 +68,13 @@ def run(pes_rlst, spc_rlst,
         elif obj == 'all':
             obj_queue = spc_queue + ts_queue
 
-        # Set up model dictionaries for the code to use
-        spc_mod_dct_i = spc_mod_dct['global']
-        pes_mod_dct_i = pes_mod_dct['global']
 
         # Run task and collate info about missing data
         missing_data += run_tsk(
             tsk, obj_queue,
             prnt_keyword_dct,
             spc_dct, thy_dct,
-            spc_mod_dct_i, pes_mod_dct_i,
+            spc_mod_dct, pes_mod_dct,
             run_prefix, save_prefix, mdriver_path)
 
     # Write a report that details what data is missing
