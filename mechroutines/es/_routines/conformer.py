@@ -1447,7 +1447,36 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
     """
 
     job = elstruct.Job.OPTIMIZATION
-
+    for locs in cnf_save_fs[-1].existing():
+        cnf_save_path = cnf_save_fs[-1].path(locs)
+        print('chcking syms at', cnf_save_path)
+        sym_save_fs = autofile.fs.symmetry(cnf_save_path)
+        all_sym_locs = sym_save_fs[-1].existing()
+        for sym_loc in all_sym_locs: 
+            loc_geo = None
+            sym_geos = []
+            sym_locs = []
+            updated_sym_locs = sym_save_fs[-1].existing()
+            for other_sym_loc in updated_sym_locs: 
+                if sym_loc == other_sym_loc:
+                    loc_geo = sym_save_fs[-1].file.geometry.read(other_sym_loc)
+                    continue
+                sym_geos.append(
+                    sym_save_fs[-1].file.geometry.read(other_sym_loc))
+                sym_locs.append(other_sym_loc)
+            if zrxn is None:
+                check_dct = {'dist': 0.3, 'tors': None}
+            else:
+                check_dct = {'dist': 0.3}
+            if loc_geo is not None:
+                unique, match_idx = automol.geom.is_unique(
+                    loc_geo, sym_geos, check_dct=check_dct)
+                if not unique:
+                    bad_path = sym_save_fs[-1].path(sym_loc)
+                    print(bad_path, 'not unique to other symms', sym_locs[match_idx])
+                    shutil.move(bad_path + '/dir.yaml', bad_path + '/hide.yaml')
+                #else:
+                #    print(sym_loc,  'is unique to', sym_locs)
     if not cnf_run_fs[0].exists():
         print(" - No conformers in RUN filesys to save.")
     else:
@@ -1515,16 +1544,43 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
         if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
             sym_id = _sym_unique(
                 geo, ene, saved_geos, saved_enes)
-            print('save_conformer locs:', locs, sym_id)
             if sym_id is None:
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, thy_info[1:],
                     init_zma=init_zma,  zrxn=zrxn,
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
-            # else:
-            #     sym_locs = saved_locs[sym_id]
-            #     filesys.save.sym_indistinct_conformer(
-            #         geo, cnf_save_fs, locs, sym_locs)
+            else:
+                print('save_conformer locs:', locs, saved_locs[sym_id])
+                sym_locs = saved_locs[sym_id]
+                sym_save_prefix = cnf_save_fs[-1].path(sym_locs)
+                sym_save_fs = autofile.fs.symmetry(sym_save_prefix)
+                sym_geos = []
+                sym_locs = []
+                for existing_sym_loc in sym_save_fs[-1].existing():
+                    print('checking existing sym loc', existing_sym_loc)
+                    if existing_sym_loc[0] == locs[1]:
+                        continue
+                    sym_geos.append(
+                        sym_save_fs[-1].file.geometry.read(existing_sym_loc))
+                    sym_locs.append(existing_sym_loc)
+                if zrxn is None:
+                    check_dct = {'dist': 0.3, 'tors': None}
+                else:
+                    check_dct = {'dist': 0.3}
+                unique, match_idx = automol.geom.is_unique(geo, sym_geos, check_dct=check_dct)
+                if unique:
+                    filesys.save.sym_indistinct_conformer(
+                        geo, cnf_save_fs, locs, sym_locs, inf_obj=ret[0])
+                else:
+                    print('sym conformer not unique to other sym conformers')
+                    print(sym_loc[match_idx])
+                    print(sym_save_fs[-1].existing())
+                    print([locs[1]])
+                    if [locs[1]] in sym_save_fs[-1].existing():
+                        remove_path = sym_save_fs[-1].path([locs[1]])
+                        print('its already saved so i remove it', remove_path)
+                        shutil.rmtree(remove_path)
+
             #     if cnf_save_fs[-1].exists(locs):
             #         cnf_save_path = cnf_save_fs[-1].path(locs)
             #         shutil.rmtree(cnf_save_path)
