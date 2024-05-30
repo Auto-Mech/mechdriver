@@ -106,7 +106,7 @@ def parsed_conformer(
     _conformer_aux_info(zma_fs, zma_locs, zrxn=zrxn)
 
 
-def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs):
+def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs, inf_obj=None):
     """ Save conformer that is symmetryically similar to another conformer
         that is in the filesystem.
     """
@@ -120,7 +120,8 @@ def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs):
     ioprinter.save_symmetry(sym_save_path)
     sym_save_fs[-1].create([cnf_tosave_locs[-1]])
     sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
-
+    if inf_obj:
+        sym_save_fs[-1].file.geometry_info.write(inf_obj, [cnf_tosave_locs[-1]])
 
 def scan_point_structure(opt_ret, scn_fs, scn_locs, thy_locs, job,
                          init_zma=None, init_geo=None):
