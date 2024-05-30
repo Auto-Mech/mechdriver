@@ -222,8 +222,13 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
             miss_data = None
             for name, pot in zip(names, pots):
                 if pot:
-                    pot_steps_str = ','.join('{:.2f}'.format(step[0]) for step in pot.keys())
-                    pot_vals_str = ','.join('{:.2f}'.format(val) for val in pot.values())
+                    values = automol.data.potent.values(pot)
+                    steps = automol.data.potent.coordinates_values(pot)
+                    # pot_steps_str = ','.join('{:.2f}'.format(step[0]) for step in pot.keys())
+                    # pot_vals_str = ','.join('{:.2f}'.format(val) for val in pot.values())
+                    pot_steps_str = ','.join('{:.2f}'.format(step) for step in steps[0])
+                    # pot_steps_str = ','.join('{:.2f}'.format(step[0]) for step in steps)
+                    pot_vals_str = ','.join('{:.2f}'.format(val) for val in values)
                     print(f'Rotor {name}: {pot_steps_str}')
                     print(f'Rotor {name}: {pot_vals_str}')
                     #print(f'Rotor {name}: {pot}')
