@@ -11,7 +11,7 @@ import thermfit
 from phydat import phycon
 import automol.zmat
 import automol.geom
-from automol.reac import undo_zmatrix_conversion
+from automol.reac import with_structures
 from automol.geom import hydrogen_bonded_structure
 from autorun import execute_function_in_parallel
 from mechanalyzer.inf import thy as tinfo
@@ -512,7 +512,7 @@ def _remove_hbonded_structures(
             zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
-                grxn = undo_zmatrix_conversion(zrxn)
+                grxn = with_structures(zrxn, "geom")
             else:
                 grxn = None
 
@@ -546,7 +546,7 @@ def _remove_nonhbonded_structures(
             zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
-                grxn = undo_zmatrix_conversion(zrxn)
+                grxn = with_structures(zrxn, "geom")
             else:
                 grxn = None
 
