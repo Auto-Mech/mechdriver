@@ -139,7 +139,7 @@ def options_matrix_optimization(script_str, prefix,
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 if automol.zmat.is_valid(step_geo):
                     if zrxn is not None:
-                        grxn = automol.reac.undo_zmatrix_conversion(zrxn)
+                        grxn = automol.reac.with_structures(zrxn, "geom")
                         gra = automol.reac.ts_graph(grxn)
                     else:
                         gra = None
