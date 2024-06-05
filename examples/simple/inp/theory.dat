@@ -3,6 +3,8 @@ level wbsgs
     basis = 6-31g*
     orb_res = RU
     program = gaussian09
+    mem = 1.0
+    nprocs = 1
 end level
 
 level mp2dz
@@ -10,4 +12,6 @@ level mp2dz
     basis = cc-pvdz
     orb_res = RR
     program = gaussian09
+    mem = 1.0
+    nprocs = 1
 end level
