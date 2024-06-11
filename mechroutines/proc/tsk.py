@@ -108,6 +108,13 @@ def run_tsk(tsk, obj_queue,
                 for locs, weight in zip(locs_lst, weight_lst):
                     label = spc_name + ':' + ':'.join(locs)
                     csv_data[label] = [weight]
+            elif 'freqs' in tsk:
+                csv_data['freq'].update(species_csv_data['freq'])
+                csv_data['tfreq'].update(species_csv_data['tfreq'])
+                csv_data['allfreq'].update(species_csv_data['allfreq'])
+                csv_data['scalefactor'].update(species_csv_data['scalefactor'])
+                print("species: ",species_csv_data)
+                print("total: ", csv_data)
             else:
                 csv_data.update(species_csv_data)
     # Write a report that details what data is missing
