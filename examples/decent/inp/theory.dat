@@ -15,8 +15,9 @@ level b2t
 end level
 
 level f12d
-    orb_res =  RR
+    orb_res =  RU
     program =  orca4
-    method =  ccsd(t)-f12
+    method =  ccsd(t)-f12-ri
     basis =  cc-pvdz-f12
+    nprocs = 9
 end level
