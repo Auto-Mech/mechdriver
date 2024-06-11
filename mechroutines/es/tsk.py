@@ -272,7 +272,8 @@ def conformer_tsk(job, spc_dct, spc_name,
                 'Missing conformers. Skipping task...')
 
     elif job == 'pucker':
-
+        algo = es_keyword_dct['algorithm']
+        thresh_pucker = es_keyword_dct['thresholds']
         # Build the ini zma filesys
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
@@ -308,6 +309,8 @@ def conformer_tsk(job, spc_dct, spc_name,
             zma, spc_info, mod_thy_info,
             cnf_run_fs, cnf_save_fs,
             script_str, overwrite,
+            algorithm=algo,
+            thresholds=thresh_pucker,
             nsamp_par=mc_nsamp,
             ring_tors_dct=ring_tors_dct, zrxn=zrxn,
             two_stage=two_stage, retryfail=retryfail,
