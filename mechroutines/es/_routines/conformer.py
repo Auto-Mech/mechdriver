@@ -574,12 +574,17 @@ def ring_conformer_sampling(
         script_str, overwrite,
         algorithm='torsions',
         thresholds='default',
+        skip=False,
         nsamp_par=(False, 3, 1, 3, 50, 50),
         ring_tors_dct=None,
         zrxn=None, two_stage=False, retryfail=False,
         **kwargs):
     """ run sampling algorithm to find conformers
     """
+
+    if skip: 
+        print("\nRing puckering: Skipping...\n")
+        return
 
     # Build filesys
     cnf_save_fs[0].create()
