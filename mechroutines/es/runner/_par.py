@@ -324,11 +324,42 @@ def _qchem(method_dct, prog, job=None, geo=None, spc_info=None):
     return script_str, kwargs
 
 
+def _orca(method_dct, prog, job=None, geo=None, spc_info=None):
+    """ Build kwargs dictionary and BASH submission script for Orca jobs.
+
+        :param method_dct:
+        :type method_dct: dict[str: obj]
+        :param job: elstronic structure calculation
+        :type job: str
+        :rtype: (dict[str:tuple(str)], str)
+    """
+
+    _, _ = geo, spc_info
+
+    # Set the options
+    nprocs = method_dct.get('nprocs', 8)
+    memory = method_dct.get('mem', 20)
+    nprocs = nprocs if nprocs is not None else 8
+    memory = memory if memory is not None else 20
+
+    method = method_dct.get('method')
+
+    # Build the submission script string
+    script_str = SCRIPT_DCT[prog].format(nprocs)
+
+    kwargs = {
+        'memory': memory,
+    }
+
+    return script_str, kwargs
+
+
 INI_PARAM_BUILD_DCT = {
-    elstruct.par.Program.GAUSSIAN09: _gaussian,
-    elstruct.par.Program.GAUSSIAN16: _gaussian,
-    elstruct.par.Program.MOLPRO2021: _molpro,
-    elstruct.par.Program.MOLPRO2015: _molpro,
-    elstruct.par.Program.PSI4: _psi4,
-    elstruct.par.Program.QCHEM5: _qchem,
+    elstruct.Program.GAUSSIAN09: _gaussian,
+    elstruct.Program.GAUSSIAN16: _gaussian,
+    elstruct.Program.MOLPRO2021: _molpro,
+    elstruct.Program.MOLPRO2015: _molpro,
+    elstruct.Program.PSI4: _psi4,
+    elstruct.Program.QCHEM5: _qchem,
+    elstruct.Program.ORCA4: _orca,
 }

@@ -71,8 +71,9 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
     if rotors is not None:
         if typ.squash_tors_pot(spc_mod_dct_i):
             for rotor in rotors:
-                for torsion in automol.data.rotor.torsions(rotor):
-                    torsion.pot = automol.pot.relax_scale(torsion.pot)
+                pot = automol.data.rotor.potential(rotor)
+                pot = automol.data.potent.squash(pot)
+                automol.data.rotor.set_potential(rotor, pot, in_place=True)
 
     return rotors, mdhr_dct, zma_locs
 
