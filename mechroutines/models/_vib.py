@@ -81,13 +81,6 @@ def full_vib_analysis(
                     scale_override=None)
                 tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
 
-                # The lines commented below are to use torsional oscillator
-                # frequencies from projrot for the ZPVE
-                # [_, hr_str, _, prot_str, _] = tors_strs
-                # tors_zpe = tors_projected_scaled_zpe(
-                #     pf_filesystems, hr_str, prot_str, run_prefix,
-                #     spc_mod_dct_i, zrxn=zrxn, zma_locs=zma_locs)
-
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
         if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
             proj_ffreqs = ()
@@ -280,24 +273,6 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
 
     return proj_freqs, harm_freqs, tors_freqs, proj_imag, harm_disps
-
-
-def tors_projected_scaled_zpe(
-        pf_filesystems, mess_hr_str, projrot_hr_str,
-        prefix, spc_mod_dct_i, zrxn=None, conf=None,
-        zma_locs=None):
-    """ Get frequencies from one version of ProjRot
-    """
-    ret = tors_projected_freqs(
-        pf_filesystems, mess_hr_str, projrot_hr_str,
-        prefix, zrxn=zrxn, conf=conf, zma_locs=zma_locs)
-    _, _, tors_freqs, _, _ = ret
-    scaled_tors_freqs, scaled_tors_zpe = scale_frequencies(
-        tors_freqs, 0.0,
-        spc_mod_dct_i, scale_method='c3')
-    # tors_zpe = 0.5 * sum(tors_freqs) * phycon.WAVEN2EH
-
-    return scaled_tors_zpe
 
 
 def potential_scale_factor(harm_freqs, proj_freqs, tors_freqs):
