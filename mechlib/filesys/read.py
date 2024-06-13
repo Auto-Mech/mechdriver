@@ -59,7 +59,6 @@ def potential(names, grid_vals, cnf_save_path,
 
         # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
-        print("@AVC Energy read:", ene)
         if read_energy_backstep:
             back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
             step_ene = None
