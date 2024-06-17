@@ -351,16 +351,29 @@ def conformer_tsk(job, spc_dct, spc_name,
             zma_locs = (0,)
             if saddle:
                 zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+
             zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
-            # Make the ring filesystem
-            conformer.single_conformer(
-                zma, spc_info, mod_thy_info,
-                cnf_run_fs, cnf_save_fs,
-                script_str, overwrite,
-                retryfail=retryfail, zrxn=zrxn,
-                use_locs=locs, resave=resave,
-                **kwargs)
+            # Check if the instability files exist
+            if ini_zma_save_fs[-1].file.instability.exists(zma_locs):
+                print("Lower-level geometry is unstable...")
+                print("Saving instability information and skipping optimization...")
+
+                # Determine if there is an instability, if so return prods
+                instab_zmas = automol.reac.instability_product_zmas(zma)
+                (rid, cid,) = locs
+                filesys.save.instability(
+                    zma, instab_zmas, cnf_save_fs,
+                    rng_locs=(rid,), tors_locs=(cid,), zma_locs=(0,))
+            else:
+                # Make the ring filesystem
+                conformer.single_conformer(
+                    zma, spc_info, mod_thy_info,
+                    cnf_run_fs, cnf_save_fs,
+                    script_str, overwrite,
+                    retryfail=retryfail, zrxn=zrxn,
+                    use_locs=locs, resave=resave,
+                    **kwargs)
 
         for locs in uni_cnf_locs_lst:
             ini_locs, rid = locs
@@ -1058,7 +1071,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
         else:
             # Skip all tasks except ini_geom
             # if (non-TS) species is unstable (zrxn found (i.e. is not None))
-            if tsk != 'init_geom':
+            if tsk not in ('init_geom', 'conf_opt'):
                 instab, path = filesys.read.instability_transformation(
                     spc_dct, spc_name, ini_thy_info, save_prefix)
 
