@@ -468,6 +468,10 @@ def ts_zma_locs(spc_dct, tsname, zma_fs, spc_dct_i=None):
             zma_i = zma_fs[-1].file.zmatrix.read(zma_locs_i)
             if automol.zmat.vmatrix(zma_i) == automol.zmat.vmatrix(spc_dct_i['zma']):
                 zma_locs = zma_locs_i
+    if zma_locs is None:
+        print(f'No locations in {zma_fs[0].path()} match parent zma: ')
+        print(automol.zmat.string(spc_dct_i['zma']))
+
     return zma_locs
 
 
