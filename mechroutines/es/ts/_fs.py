@@ -53,6 +53,7 @@ def rpath_fs(ts_dct, tsname,
     else:
         # Run a scan along the requested reaction coordinates
         # Have an auto option that just selects the coordinate?
+        # THIS IS THE DEFAULT AND ISNT FINISHED
         ini_pfx_run_path = ini_ts_run_fs[-1].path(ts_locs)
         ini_pfx_save_path = ini_ts_save_fs[-1].path(ts_locs)
         scn_alg = 'drp'
