@@ -66,7 +66,10 @@ def run(pes_rlst, pes_grp_dct,
         print(pes_grp_rlst, pes_param_dct)
 
         # Generate the paths needed for MESSRATE calculations
-        rate_paths_dct = rate_paths(pes_grp_rlst, run_prefix)
+        rate_paths_dct = rate_paths(
+            pes_grp_rlst,
+            run_prefix,
+            prefix=write_rate_tsk[-1]['kin_model'])
 
         # Process info required ro run all of the PESs
         if write_rate_tsk is not None:
