@@ -30,7 +30,7 @@ end kin
 
 spc global
     ene = (
-        lvl1 = b2t
+        lvl1 = f12d
     )
     rot = (
         mod = rigid
@@ -42,8 +42,8 @@ spc global
     )
     tors = (
         mod = 1dhrf
-        enelvl = wbs
-        geolvl = wbs
+        enelvl = b2t
+        geolvl = b2t
         scale = on
     )
     symm = (
