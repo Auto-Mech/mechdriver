@@ -1,53 +1,30 @@
-# Mechdriver
-This repository houses the main AutoMech driver (bin/automech.py) and also the high-level electronic structure and thermochemical routines and drivers.
+# MechDriver
+
+## Description
+
+This repository houses the main driver for executing an AutoMech workflow.
 
 ## Installation
 
-You can install all dependencies with: 
-```bash
-conda env create -f environment.yml
-```
-This will create a new environment `mechdriver-env` to isolate the current installation.
-## Usage
+### Users
 
-You can install `mechdriver` after  activating this environment
+End users can install the code using Conda, Mamba, or Pixi.
 ```
-conda activate mechdriver-env
-python setup.py install
+conda install automech # option 1
+mamba install automech # option 2
+pixi add automech      # option 3
 ```
-You need to create input files and place them in `inp` directory. The list of these files are given below.
-You can also find examples in the `tests/inp` directory. You can start the calculations by running `automech.py`
-in the `bin` directory with the command line option for the path to the directory that contains `inp` directory.
+Before running the above command, you will need to add `auto-mech` to your list of
+channels:
 ```
-python -u $PATH_TO_MECHDRIVER/mechdriver/bin/automech.py $PATH_TO_INP >& output2.txt
+conda config --append channels auto-mech # option 1 and 2
+pixi project channel add auto-mech       # option 3
 ```
+If `conda-forge` isn't the default channel for your Conda/Mamba installation, you will
+also need to set this additional configuration using the command above with `--prepend`.
 
-To deactivate an active environment, use
-```
-conda deactivate
-```
-### Input Files
-1. run.dat
-2. mechanism.dat
-3. species.csv
-4. theory.dat
-5. models.dat
-6. species.dat
-7. active space, geom.xyz (aux)
+### Developers
 
-## Code Structure
-### Drivers
-1. esdriver: carries out electronic structure tasks for requested species and theories
-2. thermodriver: carries out partition function calculations for requested species and models
-3. ktpdriver: carries out rate calculations for requested mechanism and models
-4. transdriver: carries out energy transfer calculations for a given mechanism
-5. printdriver: creates txt and csv output for requested species, modules, and theories
-6. sordriver:
-
-### Mechroutines
-1. es
-2. pf
-3. output
-
-### Mechlib
-###
+Developers who wish to contribute to the code should follow the instructions
+[here](https://github.com/avcopan/amech-dev?tab=readme-ov-file#automech-developer-set-up)
+to get set up.
