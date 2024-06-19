@@ -6,9 +6,17 @@ This repository houses the main driver for executing an AutoMech workflow.
 
 ## Installation
 
+### Developers
+
+The AutoMech code is in development, so we encourage users to install it in developer mode and send us bug reports.
+See
+[here](https://github.com/avcopan/amech-dev?tab=readme-ov-file#automech-developer-set-up)
+for instructions to get set up.
+
+
 ### Users
 
-End users can install the code using Conda, Mamba, or Pixi.
+End-users who are unable to contribute (see above) can install the code using Conda, Mamba, or Pixi.
 ```
 conda install automech # option 1
 mamba install automech # option 2
@@ -22,9 +30,3 @@ pixi project channel add auto-mech       # option 3
 ```
 If `conda-forge` isn't the default channel for your Conda/Mamba installation, you will
 also need to set this additional configuration using the command above with `--prepend`.
-
-### Developers
-
-Developers who wish to contribute to the code should follow the instructions
-[here](https://github.com/avcopan/amech-dev?tab=readme-ov-file#automech-developer-set-up)
-to get set up.
