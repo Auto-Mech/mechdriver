@@ -4,6 +4,8 @@
 import shutil
 import time
 import random
+import subprocess
+import os
 
 import automol
 import elstruct
@@ -18,6 +20,9 @@ from mechroutines.es import runner as es_runner
 from mechroutines.es._routines import _util as util
 from mechroutines.es._routines._geom import remove_imag
 
+from automol.extern import Ring_Reconstruction as RR
+import numpy
+from phydat import phycon
 
 # Initial conformer
 def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
@@ -554,18 +559,22 @@ def conformer_sampling(zma, spc_info, thy_info,
         samp_attempt_idx += 1
 
 
-def _num_samp_zmas(ring_atoms, nsamp_par):
+def _num_samp_zmas(ring_atoms, nsamp_par, n_rings=1):
     """ choose starting number of sample zmas
     """
-    ntors = len(ring_atoms) - 3
-    apar, bpar, cpar = nsamp_par[0:3]
-    return 50 * (apar + bpar * cpar**ntors)
+    ntors = len(ring_atoms) - 3 - 2*(n_rings-1)
+    #adl MODIFY I removed the 50* since n. sampling explodes with ring size already...
+    apar, bpar, cpar = nsamp_par[1:4]
+    return 30*(apar + bpar * cpar**ntors)
 
 
 def ring_conformer_sampling(
         zma, spc_info, thy_info,
         cnf_run_fs, cnf_save_fs,
         script_str, overwrite,
+        algorithm='torsions',
+        thresholds='default',
+        skip=False,
         nsamp_par=(False, 3, 1, 3, 50, 50),
         ring_tors_dct=None,
         zrxn=None, two_stage=False, retryfail=False,
@@ -573,19 +582,133 @@ def ring_conformer_sampling(
     """ run sampling algorithm to find conformers
     """
 
+    if skip: 
+        print("\nRing puckering: Skipping...\n")
+        return
+
     # Build filesys
     cnf_save_fs[0].create()
     inf_obj = autofile.schema.info_objects.conformer_trunk(0)
-
     # Set up torsions
     geo = automol.zmat.geometry(zma)
-    tors_dcts = ring_tors_dct.items() if ring_tors_dct is not None else {}
+    tors_dcts = ring_tors_dct.items() if ring_tors_dct else {}
     rings_atoms = []
     for ring_atoms, samp_range_dct in tors_dcts:
         rings_atoms.append([int(idx)-1 for idx in ring_atoms.split('-')])
     gra = automol.geom.graph(geo)
     ngbs = automol.graph.atoms_sorted_neighbor_atom_keys(gra)
+    
+    # Exclude from puckering sampling the ring atoms after a higher order bond
+    rot_bset = set(automol.graph.rotational_bond_keys(gra,with_rings_rotors=True))
+    rings_bonds = {frozenset([ ring[i-1], atom ]) for ring in rings_atoms for i, atom in enumerate(ring)}
+    rings_planar_bonds = rings_bonds.difference(rot_bset)
+    rings_planar_atoms = set()
+    for ring_atoms,_ in tors_dcts:
+        ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
+        for planar_bond in rings_planar_bonds:
+            if all(atom in ring_atoms for atom in planar_bond):
+                ring_list_index = max(planar_bond) + 1
+                if ring_list_index < len(ring_atoms): rings_planar_atoms.add(ring_atoms[ring_list_index])
+    # Find dihedrals of atoms in ring_planar_atoms
+    coos = automol.zmat.coordinates(zma)
+    planar_dih, dih_remover, remove_ring = [],[],[]
+    for cord,dih_atoms in {key: value for key,value in coos.items(
+                                ) if key.startswith("D")}.items():
+        if dih_atoms[0][0] in rings_planar_atoms: planar_dih.append(cord)
+    # Check rings_tors_dct and remove dihedrals of ring_planar_atoms if present
+    for ring_atoms,ring_dihs in tors_dcts:
+        dih_remover.extend([(ring_atoms,dih) for dih in ring_dihs if dih in planar_dih])
+    for ring_atoms,dih in dih_remover:
+        del ring_tors_dct[ring_atoms][dih]
+    # Check if any ring now has no dihedrals to sample, and remove it
+    for ring_atoms,ring_dihs in tors_dcts:
+        if ring_dihs == {}: remove_ring.append(ring_atoms) 
+    for ring_atoms in remove_ring:  
+        del ring_tors_dct[ring_atoms]
 
+    # Check whether all dihedrals were removed and eventually return from functions
+    if len(tors_dcts)==0: 
+        print("\nRing puckering: No dihedrals to sample\n")
+        return
+
+    # Collect information on total ring atoms and create a unique dic for sampled dihedrals
+    # Create lists for check only on ring atoms not connected in Z matrices
+    all_ring_atoms, all_samp_range_dct, all_unconnected_lst = [], {}, []
+    bonds_from_zma = [frozenset(value[0]) for key,value in coos.items(
+                                ) if key.startswith("R")]
+    for ring_atoms, samp_range_dct in tors_dcts:
+        ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
+        all_ring_atoms.extend(ring_atoms)
+        all_samp_range_dct.update(samp_range_dct)
+        # Find unconnected ats comparing bonds from zmat to rings_bonds
+        # Compare the bonds of the ring to those of the Z-Matrix, get those present
+        # only in in the former
+        ring_bonds = {frozenset([ring_atoms[i-1], atom]) for i, atom in enumerate(
+                        ring_atoms)}
+        unconnected_ats = [list(el) for el in ring_bonds.difference(bonds_from_zma)]
+        for unconnected_bond in unconnected_ats: #note that there is one redundancy for fused rings
+            all_unconnected_lst.append((unconnected_bond, 
+                                    automol.zmat.ring_distances(zma, unconnected_bond)))
+    all_ring_atoms = list(set(all_ring_atoms))
+    print("All Unconnected rings atoms: ",all_unconnected_lst)
+
+    ### ALGORITHM CHOICE ###
+
+    if algorithm not in ['torsions','pucker','crest','robust']:
+        print("Invalid choice of algorithm argument. Exit...")
+        exit()
+
+    # Initialize variables for CREST and PUCKER algorithms
+    samp_zmas,samp_zmas_crest,samp_zmas_pucker,samp_zmas_torsions = [], [], [], []
+    unique_zmas = []
+    vma_adl =  automol.zmat.vmatrix(zma)
+
+    nsamp = _num_samp_zmas(all_ring_atoms, nsamp_par, len(rings_atoms))
+    print("nsamp for pucker or torsions algorithms: ",nsamp)
+
+    if algorithm == 'crest' or algorithm == 'robust': 
+        ring_puckering_with_crest(geo, zrxn, spc_info, vma_adl, samp_zmas_crest)
+        unique_zmas.extend(samp_zmas_crest)
+
+    if algorithm == 'pucker' or algorithm == 'robust': 
+        ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp, 
+                                        all_ring_atoms, coos, samp_zmas_pucker,
+                                        bonds_from_zma)
+    
+        # Now sample with dihedrals also 4-membered rings
+        for ring_atoms, samp_range_dct in tors_dcts:
+            ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
+            if len(ring_atoms) == 4:
+                print("Found a 4 membered ring")
+                print(samp_range_dct)
+                for i,samp_zmai in enumerate(samp_zmas_pucker):
+                    samp_zmas_pucker[i] = automol.zmat.samples(samp_zmai, 1, samp_range_dct)[0]
+        samp_zmas.extend(samp_zmas_pucker)
+
+    if algorithm == 'torsions' or algorithm == 'robust':
+        samp_zmas_torsions = list(automol.zmat.samples(zma, nsamp, all_samp_range_dct))
+        all_ring_atoms_list_all, new_coord_rings_all = {}, {}
+        
+        for key_dct,_ in tors_dcts:
+            ring_atoms = [int(idx)-1 for idx in key_dct.split('-')]
+            all_ring_atoms_list_all[key_dct] = ring_atoms
+        first_ring_at_sub_dct, last_ring_at_sub_dct = subs_analysis(all_ring_atoms,
+                                                        all_ring_atoms_list_all, ngbs, geo)
+
+        for i,samp_zmai in enumerate(samp_zmas_torsions):
+            samp_geoi = automol.zmat.geometry(samp_zmai)
+            for key_dct,ring_atoms in all_ring_atoms_list_all.items():
+                new_coord_ring_all = automol.geom.coordinates(samp_geoi, tuple(ring_atoms),angstrom=True)
+                new_coord_rings_all[key_dct] = [tuple(xyz) for xyz in new_coord_ring_all]
+            samp_zmas_torsions[i] = fixings_subs_positions(
+                                samp_zmai, all_ring_atoms_list_all, geo, coos,
+                                first_ring_at_sub_dct, last_ring_at_sub_dct,
+                                new_coord_rings_all)         
+        samp_zmas.extend(samp_zmas_torsions)         
+
+
+    print("\n\nENTERING CHECKS LOOP\n\n")
+# Control dictionaries
     check_dct = {
         'dist': 3.5e-1,
         'coulomb': 1.5e-2,
@@ -597,74 +720,104 @@ def ring_conformer_sampling(
         frag_saved_geos.append(
             automol.geom.ring_fragments_geometry(geoi, rings_atoms, ngbs))
 
-    # Make sample zmas
-    unique_geos, unique_frag_geos, unique_zmas = [], [], []
-    print('tors_dcts test\n', tors_dcts)
-    for ring_atoms, samp_range_dct in tors_dcts:
-        ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
-        dist_value_dct = automol.zmat.ring_distances(zma, ring_atoms)
-        nsamp = _num_samp_zmas(ring_atoms, nsamp_par)
-        samp_zmas = automol.zmat.samples(zma, nsamp, samp_range_dct)
-        for samp_zma in samp_zmas:
-            if automol.zmat.ring_distances_reasonable(
-                    samp_zma, ring_atoms, dist_value_dct):
-                samp_geo = automol.zmat.geometry(samp_zma)
+    unique_geos, unique_frag_geos = [], []
+
+    relax_thresh = {
+                    "dist":1.,
+                    "angles":1.,
+                    "potential":1.,
+                    }
+    
+    if thresholds == 'relaxed': 
+        relax_thresh = {
+                "dist":1.7,
+                "angles":0.8,
+                "potential":1.5,
+                }
+
+    for samp_zma in samp_zmas:
+        samp_check = True
+        # if zrxn != None: # Use it for TS??
+        #     if not automol.reac.similar_saddle_point_structure(samp_zma, zma, zrxn): continue
+        #     print('   -0.5) reasonable saddle point structure')
+        for unconnected_ats,unconnected_dist_value_dct in all_unconnected_lst:
+            if not automol.zmat.ring_distances_reasonable( samp_zma, unconnected_ats, 
+                                unconnected_dist_value_dct, 0.3 * relax_thresh["dist"]): 
+                samp_check = False
+        if samp_check == False: continue
+        samp_geo = automol.zmat.geometry(samp_zma)
+        print('   -1) reasonable distances')
+        for ring_atoms, samp_range_dct in tors_dcts:
+            ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
+            if not automol.geom.ring_angles_reasonable(samp_geo, ring_atoms, 
+                            80.0 * phycon.DEG2RAD * relax_thresh["angles"]): 
+                samp_check = False
+        if samp_check == False: continue
+        print('   -2) reasonable angles')
+        if automol.geom.has_low_relative_repulsion_energy(samp_geo, geo, 
+                                thresh = 40. * relax_thresh['potential']):
+            print('   -3) reasonable rel repuls')
+            # Added try and check for a few problematic sampling points
+            try:
                 frag_samp_geo = automol.geom.ring_fragments_geometry(
                     samp_geo, rings_atoms, ngbs)
-                if automol.geom.ring_angles_reasonable(samp_geo, ring_atoms):
-                    print('   - reasonable check 2')
-                    if not automol.geom.has_low_relative_repulsion_energy(samp_geo, geo):
-                        print('   - reasonable check 3')
-                        frag_samp_unique = automol.geom.is_unique(
-                            frag_samp_geo, frag_saved_geos, check_dct)
-                        samp_unique = automol.geom.is_unique(
-                            frag_samp_geo, unique_frag_geos, check_dct)
-                        if frag_samp_unique:
-                            print('   - reasonable check 4')
-                            if samp_unique:
-                                print('   - reasonable check 5')
-                                unique_zmas.append(samp_zma)
-                                unique_geos.append(samp_geo)
-                                unique_frag_geos.append(frag_samp_geo)
+            except:
+                continue
+            frag_samp_unique = automol.geom.is_unique(
+                frag_samp_geo, frag_saved_geos, check_dct)
+            samp_unique = automol.geom.is_unique(
+                frag_samp_geo, unique_frag_geos, check_dct)
+            if frag_samp_unique and samp_unique:
+                print('   -4) unique check')
+                run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
+                samp_zma, cnf_run_fs, cnf_save_fs, thy_info)
+                if run_in_run: continue
+                else:
+                    print('   -5) not run in run, ok')
+                    unique_zmas.append(samp_zma)
+                    unique_geos.append(samp_geo)
+                    unique_frag_geos.append(frag_samp_geo)
 
     # Set the samples
     nsamp = len(unique_zmas)
     nsamp0 = nsamp
     nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs)
 
-    tot_samp = nsamp - nsampd
-    info_message(
-        ' - Number of samples that have been currently run:', nsampd)
-    info_message(' - Number of samples requested:', nsamp)
+    tot_samp = nsamp + nsampd
+    info_message(' - Number of samples that have been currently run:', nsampd)
+    info_message(' - Number of new samples requested:', nsamp)
+    info_message(' - Number of total samples:', tot_samp)
 
-    if nsamp-nsampd > 0:
+    if nsamp > 0:
         info_message(
-            f'Running {nsamp-nsampd} samples...', newline=1)
-    samp_idx = 1
+            f'Running {nsamp} samples...', newline=1)
 
-    for samp_zma in unique_zmas:
-        nsamp = nsamp0 - nsampd
-        # Break the while loop if enough sampls completed
-        if nsamp <= 0:
-            info_message(
-                'Requested number of samples have been completed.',
-                'Conformer search complete.')
-            break
+    # Get xyz of all unique samplign points found
+    open("unique_samples.xyz","w").close()
+    for samp_idx,samp_zma in enumerate(unique_zmas):
+        samp_geo = automol.zmat.geometry(samp_zma)
+        geo_string = automol.geom.xyz_string(samp_geo, comment="")
+        with open("unique_samples.xyz","a") as f:
+            f.write(geo_string+"\n")
 
-        # Run the conformer sampling
+    for samp_idx,samp_zma in enumerate(unique_zmas):
+        nsamp = tot_samp - nsampd
+
+        info_message(f"\nSample {samp_idx+1}/{nsamp0}")      
+        # Build the filesystem
         samp_geo = automol.zmat.geometry(samp_zma)
         rid = autofile.schema.generate_new_ring_id()
-        cid = autofile.schema.generate_new_conformer_id()
-        locs = (rid, cid)
+        cid = autofile.schema.generate_new_conformer_id()  
+        locs = (rid, cid)  
 
-        cnf_run_fs[-1].create(locs)
+        cnf_run_fs[-1].create(locs) 
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        info_message(f"\nSample {samp_idx}/{tot_samp}")
         tors_names = tuple(set(names
-                               for tors_dct in ring_tors_dct.values()
-                               for names in tors_dct.keys()))
+                            for tors_dct in ring_tors_dct.values()
+                            for names in tors_dct.keys()))
+
         if two_stage and tors_names:
             frozen_coords_lst = (tors_names, ())
             success, ret = es_runner.multi_stage_optimization(
@@ -694,20 +847,388 @@ def ring_conformer_sampling(
                 retryfail=retryfail,
                 **kwargs
             )
-
         # save function added here
         if success:
             save_conformer(
                 ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False,
                 init_zma=samp_zma)
-
             nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs)
             nsampd += 1
-            samp_idx += 1
             inf_obj.nsamp = nsampd
             cnf_save_fs[0].file.info.write(inf_obj)
             cnf_run_fs[0].file.info.write(inf_obj)
+
+
+########### RING PUCKERING WITH CREST #############
+def ring_puckering_with_crest(geo, zrxn, spc_info, vma_adl, samp_zmas_crest):
+    """
+    adl Setup CREST calculation:
+    - convert geo to string
+    - write string to xyz file
+    - call crest and wait that execution ends
+    - read various xyzs from rotamers
+    - convert them in zmatrix and proceed with opt
+    - Add constraints file! For species, do not add constraints, for TS constrain distances of reacting atoms
+    """
+    
+    constrained_atoms, crest_constrain = {}, " "
+    geo_string = automol.geom.xyz_string(geo, comment="")
+    filename = "ring_conf.xyz"
+    with open(filename,"w") as f:
+        f.write(geo_string)
+    if zrxn is not None:
+        ts_gra = automol.reac.ts_graph(zrxn)
+        ts_bond_keys = automol.graph.ts.reacting_bond_keys(ts_gra)
+        for bond in ts_bond_keys:
+            constrained_atoms[','.join(map(str,[el+1 for el in bond])
+                            )] = automol.geom.distance(geo, *list(bond), angstrom=True)
+                
+        
+    # Setup crest subfolder
+    crest_dir_prefix = "crest_calc"
+    dirs_lst = [dir for dir in os.listdir() if crest_dir_prefix in dir]
+    folder_nums = []
+    if not dirs_lst: crest_dir = crest_dir_prefix+"_1"
+    else:
+        for direc in dirs_lst:
+            folder_nums.append(int(direc.split("_")[2])) 
+        crest_dir = f"{crest_dir_prefix}_{max(folder_nums) + 1}"
+    os.system(f"mkdir -p {crest_dir}") 
+    print(f"\n####\nWorking in {crest_dir}\n####\n")
+
+    # Create constraints file if constrained atoms are present
+    if constrained_atoms: #Not empty dict
+        crest_constrain = f"crest {filename} --constrain 1" # Generate coord.ref
+        p = subprocess.Popen(crest_constrain, stdout=subprocess.PIPE, shell=True)
+        output, err = p.communicate()  
+        #This makes the wait possible
+        p_status = p.wait()
+        # Only bonds of unconnected atoms are constrained
+        # For TSs I also need to fix distance of reacting atoms!
+        with open(".xcontrol.sample","w") as f:
+            f.write("$constrain\n")
+            f.write("force constant = 0.10\n")
+            for constrained_ats,constrained_dist in constrained_atoms.items():
+                f.write(f"distance: {constrained_ats}, {constrained_dist:.4f}\n")
+            f.write("$end\n")
+        crest_constrain = " --cinp .xcontrol.sample " # Deafult name of constraints file
+        os.system(f"cp coord.ref .xcontrol.sample {crest_dir}")
+    crest_sampl = f'''cp {filename} {crest_dir}
+                    echo {spc_info[-2]} > {crest_dir}/.CHRG
+                    echo {int(spc_info[-1])-1} > {crest_dir}/.UHF
+                    cd {crest_dir}
+                    crest {filename} --gfn2 --mrest 10 --noreftopo --ewin 200.{crest_constrain}-T 12 > crest_ouput.out
+                    '''
+    p = subprocess.Popen(crest_sampl, stdout=subprocess.PIPE, shell=True)
+    output, err = p.communicate()  
+    p_status = p.wait()
+    with open(f"{crest_dir}/crest_conformers.xyz","r") as f:
+        samp_geos = (geoi for geoi,_ in automol.geom.from_xyz_trajectory_string(f.read()))
+    for geoi in samp_geos:
+        samp_zma = automol.zmat.from_geometry(vma_adl, geoi)
+        samp_zmas_crest.append(samp_zma)
+
+
+########### RING PUCKERING WITH CREMER POPLE PARAMS #############
+def ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp,
+                                    all_ring_atoms,coos, samp_zmas_pucker, 
+                                    bonds_from_zma,dist_thresh=1.1):
+    """
+    Valid for 5 to 16 membered rings
+    """
+    all_ring_atoms_list = {}
+    all_ring_bonds_list, all_bond_lengths = {}, {}
+    all_ring_angles_list, all_angles_lengths = {}, {}
+    geo_string = automol.geom.string(geo, angstrom=True)
+    geo_list = [ [float(x) for x in line.split()[1:]] for line in geo_string.split('\n') ]
+    for key_dct,_ in tors_dcts:
+        # list of ring atoms
+        ring_atoms = [int(idx)-1 for idx in key_dct.split('-')]
+        N_atoms = len(ring_atoms)
+        if N_atoms < 5: continue # We treat 4 membered rings separately
+        # list of lists of ring atoms for each ring
+        all_ring_atoms_list[key_dct] = ring_atoms
+        # list of tuples of ring bonds
+        ring_bonds_list = [(atom, ring_atoms[(i+1)%N_atoms] 
+                            ) for i, atom in enumerate(ring_atoms)]
+        # list of lists of bonds of each ring
+        all_ring_bonds_list[key_dct] = ring_bonds_list
+        # list of bond lengths for current ring
+        bond_lengths = [automol.geom.distance(geo,i,j,angstrom=True) for i,j in ring_bonds_list]
+        # list of lists of bond lengths for each ring
+        all_bond_lengths[key_dct] = bond_lengths
+        # list of tuples of ring angles
+        ring_angle_list = [(atom, ring_atoms[(i+1)%N_atoms], ring_atoms[(i+2)%N_atoms], 
+                            ) for i, atom in enumerate(ring_atoms)]
+        # list of lists of angles of each ring
+        all_ring_angles_list[key_dct] = ring_angle_list
+        # list of angle amplitudes for current ring
+        angle_amplit = [automol.geom.central_angle(geo,i,j,k) for i,j,k in ring_angle_list]
+        # list of lists of angle amplitudes for each ring
+        all_angles_lengths[key_dct] = angle_amplit    
+
+    # Reorder all_ring_atoms_list dictionary, ascending atom ordering
+    all_ring_atoms_list = dict(sorted(all_ring_atoms_list.items(), key=lambda item: item[1]))
+    print("reordered all atoms rings list", all_ring_atoms_list)
+
+    # Compute puckering parameters for each ring present in molecular structure
+    rings_puckering_params,initZ = {}, {}
+    for key_dct, ring_atoms in all_ring_atoms_list.items():
+        coord = [xyz for i,xyz in enumerate(geo_list) if i in ring_atoms]
+        rings_puckering_params[key_dct],initZ[key_dct] = automol.geom.cremer_pople_params(coord)
+    print("Initial puckering_params", rings_puckering_params)
+    # print("Initial ring atoms heights:", initZ) 
+
+    first_ring_at_sub_dct, last_ring_at_sub_dct = subs_analysis(
+                 all_ring_atoms,all_ring_atoms_list, ngbs, geo)
+
+    # Generate random values for cremer pople parameters
+    rng = numpy.random.default_rng() # seed=int or array[ints] for reproducibility
+    puck_combos = [[] for i in range(nsamp)]
+    for nsa in range(nsamp):
+        for key_dct,params in rings_puckering_params.items():
+            n_atoms_ring = len(all_ring_atoms_list[key_dct])
+            pucker_q_range = 1 + 0.1*(n_atoms_ring%6) if n_atoms_ring>5 else 1               
+            pucker_q = rng.random(len(params[0])-1)*pucker_q_range if len(params[0])>1 else 0 
+            if n_atoms_ring%2 == 0: 
+                pucker_qlast = -pucker_q_range + rng.random(1) * 2*pucker_q_range
+            else: 
+                pucker_qlast = rng.random(1)*pucker_q_range
+     
+            # if n_atoms_ring == 6:
+            #     pucker_q = rng.random(1)*0.9
+            #     if pucker_q < 0.5: pucker_qlast = random.choice([-0.7,0.0001,0.7])
+            #     else: pucker_qlast = 0.000001
+            #     pucker_qlast = numpy.array([pucker_qlast])
+            #     print(pucker_q,pucker_qlast)
+
+            pucker_phi = -numpy.pi + rng.random(len(params[1])) * 2 * numpy.pi
+            if n_atoms_ring > 5: curr_ring_sampled_params = (pucker_q.tolist(),pucker_qlast.tolist(),pucker_phi.tolist())
+            elif n_atoms_ring == 5: curr_ring_sampled_params = ([],pucker_qlast.tolist(),pucker_phi.tolist())
+            puck_combos[nsa].append(curr_ring_sampled_params)
+
+    # Cycle through different values of puckering
+    for combo in puck_combos:
+        new_coord_rings,new_Z_rings = {}, {} 
+         # Initialize the zmatrix of the sampling points
+        samp_zma = automol.zmat.from_geometry(vma_adl, geo)  
+        for key_dct,ring_params in zip(all_ring_atoms_list,combo):
+            pucker_q = ring_params[0] + ring_params[1]
+            pucker_phi = list(ring_params[2])
+            new_coord_ring,newZ = RR.SetRingPuckerCoords(all_ring_atoms_list[key_dct], 
+                                                    pucker_q,
+                                                    pucker_phi, 
+                                                    all_bond_lengths[key_dct], 
+                                                    all_angles_lengths[key_dct])
+
+            new_coord_rings[key_dct] = [tuple(xyz) for xyz in new_coord_ring]
+            new_Z_rings[key_dct] = newZ
+
+        # Cycle through the rings and update torsions relative to the atoms of each ring
+        for key_dct,ring_atoms in all_ring_atoms_list.items():
+            # Create geo data structure for ring atoms only (needed to use dihderal_angle function)
+            at_syms = automol.geom.symbols(geo, ring_atoms) 
+            ring_geo = automol.geom.from_data(''.join(at_syms),new_coord_rings[key_dct],angstrom=True)
+            # Update Z Matrix
+            new_key_dct = {}
+            for name, cord in coos.items():
+                atm_idxs = cord[0]
+                if len(atm_idxs) == 2:
+                    new_key_dct[name] = automol.geom.distance(geo, *atm_idxs, angstrom=True)
+                elif len(atm_idxs) == 3:
+                    new_key_dct[name] = automol.geom.central_angle(geo, *atm_idxs, degree=True)
+                elif len(set(atm_idxs) & set(ring_atoms)) == 4 : 
+                    # From fourth ring atom to end of ring (also accounts for fused rings this way)
+                    # Refer to indexes on ring only geometry
+                    indexes = [i for i,at in enumerate(ring_atoms) if at in atm_idxs]
+                    indexes = sorted(indexes, reverse=True)
+                    new_key_dct[name] =  automol.geom.dihedral_angle(ring_geo, *indexes, degree=True)
+                    # Added part for fused rings!
+                    # Fixes case of DH in ring that in zmatrix is defined with 
+                    # respect to an atom not in the ring
+                elif (len(set(atm_idxs[:3]) & set(ring_atoms)) == 3
+                      ) and (ring_atoms.index(atm_idxs[0]) > 2):
+                    indexes = [i for i,at in enumerate(ring_atoms) if at in atm_idxs]
+                    indexes = sorted(indexes, reverse=True)
+                    indexes.append(indexes[-1]-1)
+                
+                    for name2, cord2 in coos.items(): 
+                        if cord2[0][0] == atm_idxs[-1] and len(cord2[0])==4:
+                            name_of_dh_of_last_of_at_idxs = name2
+                            break
+                    new_key_dct[name] =  (automol.geom.dihedral_angle(ring_geo, *indexes, degree=True
+                        ) - new_key_dct[name_of_dh_of_last_of_at_idxs]) % 360.
+                    # if new_key_dct[name] > 180.: new_key_dct[name] -= 360.
+                    # if new_key_dct[name] < 45. and new_key_dct[name] > 0: new_key_dct[name] += 45. 
+                    # elif new_key_dct[name] > -45. and new_key_dct[name] < 0: new_key_dct[name] -= 45.
+
+                elif len(atm_idxs) == 4: # All other atoms keep original value
+                    new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True) 
+
+            samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+     
+        samp_zma = fixings_subs_positions(samp_zma, all_ring_atoms_list, geo, coos,
+                           first_ring_at_sub_dct, last_ring_at_sub_dct,
+                           new_coord_rings, dist_thresh)
+
+        samp_zmas_pucker.append(samp_zma)
+
+
+########### GET INFORMATION ON SUBS ON FIRST AND LAST RING ATOM #############
+def subs_analysis(all_ring_atoms,all_ring_atoms_list, ngbs, geo):
+    last_ring_at_sub_dct,first_ring_at_sub_dct = {}, {}
+
+    for key_dct, ring_atoms in all_ring_atoms_list.items():
+
+        # Gets position of first substituent on first and last atom of ring (which usually messes up)
+        first_ring_at,last_ring_at = min(ring_atoms),max(ring_atoms)
+        first_ring_at_ngbs,last_ring_at_ngbs = set(ngbs[first_ring_at]), set(ngbs[last_ring_at])
+        first_ring_at_subs = first_ring_at_ngbs.difference(set(all_ring_atoms))
+        last_ring_at_subs = last_ring_at_ngbs.difference(set(all_ring_atoms))
+        # Get xyz of ring and sub
+        coord_ring = [xyz for i,(_,xyz) in enumerate(geo) if i in ring_atoms]
+        first_coord_sub = [xyz for i,(_,xyz) in enumerate(geo) if i in first_ring_at_subs]
+        last_coord_sub = [xyz for i,(_,xyz) in enumerate(geo) if i in last_ring_at_subs]
+        # Call alpha beta calculator
+        first_sub_params = [tuple(RR.GetRingSubstituentPosition(coord_ring,coord_sub,-1)
+                                  ) for coord_sub in first_coord_sub]
+        last_sub_params = [tuple(RR.GetRingSubstituentPosition(coord_ring,coord_sub,-1)
+                                 ) for coord_sub in last_coord_sub]
+        # Update sub dictionaries
+        last_ring_at_sub_dct[key_dct] = {key:value for key,value in zip(
+                                        last_ring_at_subs,last_sub_params)}
+        first_ring_at_sub_dct[key_dct] = {key:value for key,value in zip(
+                                        first_ring_at_subs,first_sub_params)}
+
+    return first_ring_at_sub_dct,last_ring_at_sub_dct
+
+
+########### FIX POSITIONS OF SUBS OF FIRST AND LAST RING ATOM #############
+def fixings_subs_positions(samp_zma, all_ring_atoms_list, geo, coos,
+                           first_ring_at_sub_dct, last_ring_at_sub_dct,
+                           new_coord_rings, dist_thresh=1.2):
+    
+    samp_geo = automol.zmat.geometry(samp_zma)
+    # I need to perform the substituents check here AFTER I have built the samp ZMat!
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+
+        at_syms = automol.geom.symbols(geo, ring_atoms) 
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+                # First sub of first ring atom
+                # Check that I am working on the third ring atom
+                if atm_idxs[0] == ring_atoms[2]:
+                    change_dh = False
+                    for atm in first_ring_at_sub_dct[key_dct]:
+                        dist_sub_to_last = automol.geom.distance(
+                                samp_geo, atm,max(ring_atoms), angstrom=True)
+                        if dist_sub_to_last < dist_thresh: change_dh = True
+
+                        for atm2 in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_sub = automol.geom.distance(
+                                samp_geo, atm,atm2, angstrom=True)
+                            if dist_sub_to_sub < dist_thresh: change_dh = True
+                    if change_dh: 
+                        new_key_dct[name] -= 60.
+
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+    samp_geo = automol.zmat.geometry(samp_zma)
+
+    # I need to perform the substituents check here AFTER AFTER I have built the samp ZMat!
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+                # First sub of first ring atom
+                # If previous -60 rotation didn't help, rotate 60 on the other direction
+                if atm_idxs[0] == ring_atoms[2]:
+                    change_dh = False
+                    for atm in first_ring_at_sub_dct[key_dct]:
+                        dist_sub_to_last = automol.geom.distance(
+                                samp_geo, atm,max(ring_atoms), angstrom=True)
+                        if dist_sub_to_last < dist_thresh: change_dh = True
+
+                        for atm2 in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_sub = automol.geom.distance(
+                                samp_geo, atm,atm2, angstrom=True)
+                            if dist_sub_to_sub < dist_thresh: change_dh = True
+                    if change_dh: 
+                        new_key_dct[name] += 120.
+                           
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+    samp_geo = automol.zmat.geometry(samp_zma)
+
+    # I need to perform the substituents check here AFTER AFTER AFTER I have built the samp ZMat!
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+
+                # Last ring atom first sub. 
+                if atm_idxs[0] in last_ring_at_sub_dct[key_dct]:
+                    change_dh = False
+                    if atm_idxs[0] == min(last_ring_at_sub_dct[key_dct]):
+                        for atm in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_first = automol.geom.distance(
+                                                samp_geo, atm,min(ring_atoms), angstrom=True)
+                            if dist_sub_to_first < dist_thresh: change_dh = True
+                            for atm2 in first_ring_at_sub_dct[key_dct]:
+                                dist_sub_to_sub = automol.geom.distance(
+                                    samp_geo, atm,atm2, angstrom=True)
+                                if dist_sub_to_sub < dist_thresh: change_dh = True
+                    if change_dh:  
+                        new_key_dct[name] -= 60.     
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+    samp_geo = automol.zmat.geometry(samp_zma)
+
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+
+                # Last ring atom first sub. 
+                if atm_idxs[0] in last_ring_at_sub_dct[key_dct]: 
+                    change_dh = False
+                    if atm_idxs[0] == min(last_ring_at_sub_dct[key_dct]):
+                        for atm in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_first = automol.geom.distance(
+                                                samp_geo, atm,min(ring_atoms), angstrom=True)
+                            if dist_sub_to_first < dist_thresh: change_dh = True
+                            for atm2 in first_ring_at_sub_dct[key_dct]:
+                                dist_sub_to_sub = automol.geom.distance(
+                                    samp_geo, atm,atm2, angstrom=True)
+                                if dist_sub_to_sub < dist_thresh: change_dh = True
+                    if change_dh:  
+                        new_key_dct[name] += 120.      
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+
+    return samp_zma
 
 
 def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
