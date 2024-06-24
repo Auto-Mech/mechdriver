@@ -978,7 +978,7 @@ def ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp,
         coord = [xyz for i,xyz in enumerate(geo_list) if i in ring_atoms]
         rings_puckering_params[key_dct],initZ[key_dct] = automol.geom.cremer_pople_params(coord)
     print("Initial puckering_params", rings_puckering_params)
-    print("Initial ring atoms heights:", initZ) 
+    # print("Initial ring atoms heights:", initZ) 
 
     first_ring_at_sub_dct, last_ring_at_sub_dct = subs_analysis(
                  all_ring_atoms,all_ring_atoms_list, ngbs, geo)
@@ -1183,7 +1183,7 @@ def fixings_subs_positions(samp_zma, all_ring_atoms_list, geo, coos,
                 new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
             elif len(atm_idxs) == 4:
                 new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
-                print(atm_idxs,name)
+
                 # Last ring atom first sub. 
                 if atm_idxs[0] in last_ring_at_sub_dct[key_dct]:
                     change_dh = False
@@ -1211,7 +1211,7 @@ def fixings_subs_positions(samp_zma, all_ring_atoms_list, geo, coos,
                 new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
             elif len(atm_idxs) == 4:
                 new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
-                print(atm_idxs,name)
+
                 # Last ring atom first sub. 
                 if atm_idxs[0] in last_ring_at_sub_dct[key_dct]: 
                     change_dh = False
