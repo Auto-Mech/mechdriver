@@ -6,10 +6,10 @@
     the electronic structure methods.
 """
 
-import automol
 import ioformat
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import check_dct1
+from mechlib.amech_io.parser._keywrd import right_update
 
 
 # DCTS
@@ -53,7 +53,7 @@ def theory_dictionary(thy_str):
     # Add defaults to each thy dictionary
     full_thy_dct = {}
     for lvl, dct in thy_dct.items():
-        full_thy_dct[lvl] = automol.util.dict_.right_update(
+        full_thy_dct[lvl] = right_update(
             defaults_from_val_dct(THY_VAL_DCT), dct)
 
     # Check each dictionary

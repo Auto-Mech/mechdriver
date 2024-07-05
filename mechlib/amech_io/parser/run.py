@@ -22,13 +22,13 @@
 """
 
 import sys
-import automol
 import ioformat
 from mechlib.amech_io.printer import error_message
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import defaults_from_key_val_dcts
 from mechlib.amech_io.parser._keywrd import check_dct1
 from mechlib.amech_io.parser._keywrd import check_thy_lvls
+from mechlib.amech_io.parser._keywrd import right_update
 
 
 # DICTIONARIES OF DEFAULTS #
@@ -193,7 +193,7 @@ def input_dictionary(run_str):
     inp_dct = ioformat.ptt.keyword_dct_from_block(inp_block)
 
     # Add defaults to the dictionary
-    inp_dct = automol.util.dict_.right_update(
+    inp_dct = right_update(
         defaults_from_val_dct(RUN_INP_VAL_DCT), inp_dct)
 
     # Check the dictionary
@@ -376,7 +376,7 @@ def _tsk_defaults(tsk_lst):
             tsk = _tsk_lst[:-1][-1]
             default_dct = defaults_from_key_val_dcts(
                 tsk, TSK_KEY_DCT, TSK_VAL_DCT)
-            new_key_dct = automol.util.dict_.right_update(
+            new_key_dct = right_update(
                 default_dct, keyword_dct)
 
             mod_lst = _tsk_lst[:-1] + [new_key_dct]
