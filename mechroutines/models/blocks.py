@@ -1,7 +1,9 @@
 """ Writes the MESS strings for various species and treatments
     using data read from the SAVE filesystem.
 """
-
+import itertools
+import functools
+from operator import mul
 import automol.combine
 import mess_io
 from phydat import phycon
@@ -160,8 +162,8 @@ def tau_block(inf_dct):
 
 
 # FAKE SPC and WELL BLOCKS
-def fake_species_block(inf_dct_i, inf_dct_j):
-    """ Takes data for two species (atom/molecule) that are being combined
+def fake_species_block(*inf_dcts):
+    """ Takes data for multiple species (atom/molecule) that are being combined
         into a `fake` van der Waals well, which has been previously
         read and processed from the SAVE filesys, then writes it into
         the string that defines an '____' section of a MESSRATES input file.
@@ -170,22 +172,20 @@ def fake_species_block(inf_dct_i, inf_dct_j):
         :type inf_dct: dict[str:___]
         :rtype: str
     """
+    # Gather information
+    geoms = [d['geom'] for d in inf_dcts]
+    sym_factors = [d['sym_factor'] for d in inf_dcts]
+    elec_levels_lst = [d['elec_levels'] for d in inf_dcts]
+    freqs_lst = [d['freqs'] for d in inf_dcts]
+    mess_hr_strs = [d['mess_hr_str'] for d in inf_dcts]
 
     # Combine the electronic structure information for the two species together
-    geom = automol.combine.fake_vdw_geometry(
-        inf_dct_i['geom'], inf_dct_j['geom'])
-
-    sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
-
-    elec_levels = automol.combine.electronic_energy_levels(
-        inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
-
-    fake_freqs = automol.combine.fake_vdw_frequencies(
-        inf_dct_i['geom'], inf_dct_j['geom'])
-
-    freqs = fake_freqs + inf_dct_i['freqs'] + inf_dct_j['freqs']
-
-    mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
+    geom = automol.combine.fake_vdw_geometry(*geoms)
+    sym_factor = functools.reduce(mul, sym_factors)
+    elec_levels = automol.combine.electronic_energy_levels(*elec_levels_lst)
+    fake_extra_freqs = automol.combine.fake_vdw_frequencies(*geoms)
+    freqs = tuple(itertools.chain(fake_extra_freqs, *freqs_lst))
+    mess_hr_str = ''.join(mess_hr_strs)
 
     # Write the MESS string for the fake molecule
     core_str = mess_io.writer.core_rigidrotor(

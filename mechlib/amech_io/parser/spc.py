@@ -12,7 +12,7 @@ from mechlib.reaction import rxnid
 from mechlib.reaction import _util as rxn_util
 from mechlib.filesys import reaction_fs
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
-from mechlib.amech_io.parser._keywrd import check_dct1
+from mechlib.amech_io.parser._keywrd import check_dct1, right_update, separate_subdct
 
 # DCTS
 SPC_REQ = ('inchi', 'mult', 'charge', 'elec_levels', 'mc_nsamp')
@@ -113,20 +113,20 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct, act_dct):
     ts_default = defaults_from_val_dct(TS_VAL_DCT)
 
     # Separate the global dct
-    dat_dct, glob_dct = automol.util.dict_.separate_subdct(
+    dat_dct, glob_dct = separate_subdct(
         amech_dct, key='global')
 
     # Add in all of the species
     for spc in spc_dct:
 
         # Add stuff from the main amech dct and global dct
-        spc_dct[spc] = automol.util.dict_.right_update(
+        spc_dct[spc] = right_update(
             spc_dct[spc], glob_dct)
-        spc_dct[spc] = automol.util.dict_.right_update(
+        spc_dct[spc] = right_update(
             spc_dct[spc], amech_dct.get(spc, {}))
 
         # Add the defaults
-        spc_dct[spc] = automol.util.dict_.right_update(
+        spc_dct[spc] = right_update(
             spc_default, spc_dct[spc])
 
         # Add speciaized calls not in the default dct
@@ -145,7 +145,7 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct, act_dct):
             ts_dct[tsname] = {**dat_dct[tsname]}
 
             # Need to add the TS defaults
-            ts_dct[tsname] = automol.util.dict_.right_update(
+            ts_dct[tsname] = right_update(
                 ts_default, ts_dct[tsname])
 
             # Check if an active space was defined; if so, get info
@@ -210,7 +210,7 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct, glob_dct):
 
         # Put in defaults if they were not defined
         # hindered rotor being set incorrectly here
-        combined_dct[sadpt] = automol.util.dict_.right_update(
+        combined_dct[sadpt] = right_update(
             defaults_from_val_dct(TS_VAL_DCT), combined_dct[sadpt])
 
     return combined_dct

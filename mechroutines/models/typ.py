@@ -133,7 +133,6 @@ def need_fake_wells(reagents, well_model):
         :type well_model:
         :rtype: bool
     """
-    assert len(reagents) in (1, 2), f"There should be 1 or 2 reagents: {reagents}"
     return (well_model == 'fake' and len(reagents) > 1)
 
 

@@ -37,7 +37,7 @@ def _model_header(spc_mod_dct_i, sort_info_lst=(), refscheme=''):
     # vpt2_info = None
 
     ene_infos = tuple(inf for key, inf in spc_mod_dct_i['ene'].items()
-                      if 'lvl' in key)
+                      if 'lvl' in key and inf is not None)
 
     # Write the theory information info header for a reaction/species
     chemkin_header_str = f'! vib model: {vib_model}\n'

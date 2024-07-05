@@ -4,10 +4,10 @@
 
 """
 
-import automol
 import ioformat
 from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io.parser._keywrd import defaults_with_dcts
+from mechlib.amech_io.parser._keywrd import right_update, merge_subdct
 
 
 # DCTS
@@ -109,7 +109,7 @@ def models_dictionary(mod_str, thy_dct):
 
     # Add defaults, check key-vals, and format each model dicts
     if kin_blocks is not None:
-        kin_mod_dct = automol.util.dict_.merge_subdct(
+        kin_mod_dct = merge_subdct(
             ioformat.ptt.keyword_dcts_from_blocks(kin_blocks),
             keep_subdct=True)
         for mod, dct in kin_mod_dct.items():
@@ -119,7 +119,7 @@ def models_dictionary(mod_str, thy_dct):
         kin_mod_dct = None
 
     if spc_blocks is not None:
-        spc_mod_dct = automol.util.dict_.merge_subdct(
+        spc_mod_dct = merge_subdct(
             ioformat.ptt.keyword_dcts_from_blocks(spc_blocks),
             keep_subdct=True)
         for mod, dct in spc_mod_dct.items():
@@ -150,7 +150,7 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
         spc_model_dct_i['ts'].pop('wells')
 
     # Set the defaults for the dct
-    new_dct = automol.util.dict_.right_update(
+    new_dct = right_update(
       defaults_with_dcts(MODPF_VAL_DCT), spc_model_dct_i)
 
     # Have to check the dictionary to see if levels
@@ -187,7 +187,7 @@ def _kin_model_build(kin_mod_dct_i):
     """
 
     # Set defaults
-    new_kin_dct = automol.util.dict_.right_update(
+    new_kin_dct = right_update(
         defaults_with_dcts(MODKIN_VAL_DCT), kin_mod_dct_i)
 
     # Repartition ratefit key word into dcts for `ratefit` code
