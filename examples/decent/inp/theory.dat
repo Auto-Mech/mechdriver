@@ -2,7 +2,7 @@ level wbs
     method = wb97xd
     basis = 6-31g*
     orb_res = RU
-    program = gaussian09
+    program = gaussian16
     nprocs = 9  # for 36 procs, request 9 to run 4 in parallel
 end level
 
@@ -10,7 +10,7 @@ level b2t
     method = b2plypd3
     basis = cc-pvtz
     orb_res = RU
-    program = gaussian09
+    program = gaussian16
     nprocs = 9
 end level
 
