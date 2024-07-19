@@ -236,6 +236,7 @@ def _optimize_molecule(spc_info, zma_init,
     )
 
     # read the geometry
+    geo_conn = False
     if success:
         inf_obj, _, out_str = ret
         geo = elstruct.reader.opt_geometry(inf_obj.prog, out_str)
@@ -245,6 +246,7 @@ def _optimize_molecule(spc_info, zma_init,
         geo_conn = bool(automol.geom.is_connected(geo))
 
     # If connected, check for imaginary modes and fix them if possible
+    conf_found = False
     if geo_conn and success:
 
         # Remove the imaginary mode
