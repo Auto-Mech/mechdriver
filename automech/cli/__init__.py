@@ -1,5 +1,6 @@
 import click
-from automech.cli import automech
+from automech.cli import _run
+from automech.cli import _setup_subtasks
 
 
 @click.group()
@@ -21,7 +22,19 @@ def run(path: str = ".", safemode_off: bool = False):
     The job run directory must contain an `inp/` subdirectory with the following
     required files: run.dat, theory.dat, models.dat, species.csv
     """
-    automech.main(path=path, safemode_off=safemode_off)
+    _run.main(path=path, safemode_off=safemode_off)
+
+
+@main.command()
+@click.option('-p', '--path', default='.', show_default=True, help='The job run directory')
+def setup_subtasks(path: str = "."):
+    """Take the user-supplied input files in a job run directory and split them into
+    subtasks for parallel execution
+
+    The job run directory must contain an `inp/` subdirectory with the following
+    required files: run.dat, theory.dat, models.dat, species.csv
+    """
+    _setup_subtasks.main(path=path)
 
 
 @main.command()
