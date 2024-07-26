@@ -27,12 +27,17 @@ INFO_FILE = "info.yaml"
 
 class InfoKey:
     group_ids = "group_ids"  # identifiers for each subtask group, in the order they should be run
-    run_path = "run_path"    # path to the run filesystem
+    run_path = "run_path"  # path to the run filesystem
     save_path = "save_path"  # path to the save filesystem
     # If relative paths are given for `path`, `save_path`, and/or `run_path`, they will
     # be relative to the following `work_path`, which is the user's current working
     # directory when they run the setup command:
     work_path = "work_path"  # path to where the user ran the command
+
+
+class SpecKey:
+    nprocs = "nprocs"
+    mem = "mem"
 
 
 def main(
@@ -87,7 +92,7 @@ def main(
 
     # Write the subtask info to YAML
     info_path = out_path / INFO_FILE
-    print(f"Writing subtask information to {info_path}")
+    print(f"Writing general information to {info_path}")
     info_dct = {
         InfoKey.save_path: save_path,
         InfoKey.run_path: run_path,
@@ -148,6 +153,15 @@ def setup_subtask_group(
     all_key = "all"
     keys = subtask_keys_from_run_dict(run_dct, key_type, all_key=all_key)
 
+    # Get the specs for each task and write them to a YAML file
+    spec_dct = {
+        task_name: parse_task_specs(task_line, file_dct)
+        for task_name, task_line in tasks
+    }
+    yaml_path = out_path / f"{group_id}.yaml"
+    print(f"Writing task specs to {yaml_path}")
+    yaml_path.write_text(yaml.dump(spec_dct, default_flow_style=None))
+
     # Create directories for each subtask and save the paths in a DataFrame
     row_dcts = []
     for num, (task_name, task_line) in enumerate(tasks):
@@ -176,6 +190,7 @@ def setup_subtask_group(
     csv_path = out_path / f"{group_id}.csv"
     print(f"Writing subtask table to {csv_path}")
     df.to_csv(csv_path, index=False)
+    print()
 
     return df
 
@@ -199,6 +214,58 @@ def write_input_files(run_dir: str | Path, file_dct: dict[str, str]) -> None:
         (inp_dir / name).write_text(contents)
 
 
+def parse_task_specs(task_line: str, file_dct: dict[str, str]) -> dict[str, int]:
+    """Read the memory and nprocs specs for a given task
+
+    :param task_line: The task line from the run.dat file
+    :param file_dct: The file dictionary
+    :return: The specs, as a dictionary
+    """
+    word = pp.Word(pp.printables, exclude_chars="=")
+    eq = pp.Suppress(pp.Literal("="))
+    field = pp.Group(word + eq + word)
+    expr = pp.Suppress(...) + pp.DelimitedList(field, delim=pp.WordEnd())
+    field_dct = dict(expr.parseString(task_line).as_list())
+
+    nprocs = mem = None
+
+    if "nprocs" in field_dct:
+        nprocs = int(float(field_dct.get("nprocs")))
+
+    if "runlvl" in field_dct:
+        runlvl = field_dct.get("runlvl")
+        theory_dct = parse_theory_dat(file_dct.get("theory.dat"))
+        nprocs = int(float(theory_dct.get(runlvl).get("nprocs")))
+        mem = int(float(theory_dct.get(runlvl).get("mem")))
+
+    spec_dct = {SpecKey.nprocs: nprocs, SpecKey.mem: mem}
+    return spec_dct
+
+
+# Functions acting on theory.dat data
+def parse_theory_dat(theory_dat: str) -> dict[str, dict[str, str]]:
+    """Parse a theory.dat file into a dictionary of dictionaries
+
+    :param theory_dat: The contents of the theory.dat file, as a string
+    :return: The dictionary of the parsed theory.dat file
+    """
+    theory_dat = without_comments(theory_dat)
+    theory_expr = pp.OneOrMore(block_expression("level", key="content"))
+    blocks = theory_expr.parseString(theory_dat).as_list()
+
+    word = pp.Word(pp.printables)
+    eq = pp.Suppress(pp.Literal("="))
+    field = pp.Group(word("key") + eq + word("val"))
+    block_expr = word("key") + pp.DelimitedList(field, delim=pp.LineEnd())("fields")
+
+    theory_dct = {}
+    for block in blocks:
+        res = block_expr.parseString(block)
+        theory_dct[res.get("key")] = dict(res.get("fields").as_list())
+
+    return theory_dct
+
+
 # Functions acting on run.dat data
 def parse_run_dat(run_dat: str) -> dict[str, str]:
     """Parse a run.dat file into a dictionary of blocks
@@ -208,12 +275,11 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
     """
 
     def _parse_block(run_dat, keyword):
-        start = pp.Keyword(keyword) + pp.LineEnd()
-        end = pp.Keyword("end") + pp.Keyword(keyword)
-        expr = pp.Suppress(... + start) + pp.SkipTo(end)("content")
+        expr = block_expression(keyword, key="content")
         content = expr.parseString(run_dat).get("content")
         return format_block(content)
 
+    run_dat = without_comments(run_dat)
     return {
         "input": _parse_block(run_dat, "input"),
         "pes": _parse_block(run_dat, "pes"),
@@ -317,9 +383,9 @@ def tasks_from_run_dict(
         types = ("spc", "pes")
         assert subtask_type in types, f"Subtask type {subtask_type} not in {types}"
         start_key = "ts" if subtask_type == "pes" else "spc"
-        return ((line.split()[1], line) for line in lines if line.startswith(start_key))
+        return tuple((line.split()[1], line) for line in lines if line.startswith(start_key))
 
-    return ((line.split()[0], line) for line in lines)
+    return tuple((line.split()[0], line) for line in lines)
 
 
 # Generic string formatting functions
@@ -362,3 +428,15 @@ def parse_index_series(inp: str) -> tuple[int, ...]:
             start, stop = res
             idxs.extend(range(start, stop + 1))
     return tuple(mit.unique_everseen(idxs))
+
+
+def block_expression(keyword: str, key: str = "content") -> pp.ParseExpression:
+    """Parse a block from an AutoMech input file
+
+    :param inp: The input file contents
+    :param keyword: The block keyword
+    :return: _description_
+    """
+    start = pp.Keyword(keyword)
+    end = pp.Keyword("end") + pp.Keyword(keyword)
+    return pp.Suppress(... + start) + pp.SkipTo(end)(key) + pp.Suppress(end)

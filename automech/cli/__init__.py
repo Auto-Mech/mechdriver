@@ -93,6 +93,13 @@ def setup(
 @click.option(
     "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The job run directory"
 )
-def run_adhoc(path: str = SUBTASK_DIR):
+@click.option(
+    "-a",
+    "--activation-hook",
+    default=None,
+    show_default=True,
+    help="An activation hook, to be called using `eval`",
+)
+def run_adhoc(path: str = SUBTASK_DIR, activation_hook: str | None = None):
     """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
-    _subtasks_run_adhoc.main(path=path)
+    _subtasks_run_adhoc.main(path=path, activation_hook=activation_hook)
