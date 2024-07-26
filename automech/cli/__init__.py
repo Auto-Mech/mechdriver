@@ -1,6 +1,6 @@
 import click
 from automech.cli import _run
-from automech.cli import _setup_subtasks
+from automech.cli import _subtasks_setup
 
 
 @click.group()
@@ -13,32 +13,37 @@ def main():
 @click.option('-p', '--path', default='.', show_default=True, help='The job run directory')
 @click.option('-S', '--safemode-off', is_flag=True, help='Turn off safemode?')
 def run(path: str = ".", safemode_off: bool = False):
-    """Central Execution script to launch a MechDriver process which will
+    """Run central workflow 
+    Central Execution script to launch a MechDriver process which will
     parse all of the user-supplied input files in a specified directory, then
     launches all of the requested electronic structure, transport,
     thermochemistry and kinetics calculations via their associated
     sub-drivers.
 
-    The job run directory must contain an `inp/` subdirectory with the following
-    required files: run.dat, theory.dat, models.dat, species.csv
+    The AutoMech directory must contain an `inp/` subdirectory with the following
+    required files: run.dat, theory.dat, models.dat, species.csv, mechanism.dat
     """
     _run.main(path=path, safemode_off=safemode_off)
 
 
-@main.command()
+@main.group()
+def subtasks():
+    """Run AutoMech subtasks in parallel"""
+    pass
+
+
+@subtasks.command()
 @click.option('-p', '--path', default='.', show_default=True, help='The job run directory')
-def setup_subtasks(path: str = "."):
-    """Take the user-supplied input files in a job run directory and split them into
-    subtasks for parallel execution
+def setup(path: str = "."):
+    """Set-up subtasks from a user-supplied AutoMech directory
 
-    The job run directory must contain an `inp/` subdirectory with the following
-    required files: run.dat, theory.dat, models.dat, species.csv
+    The AutoMech directory must contain an `inp/` subdirectory with the following
+    required files: run.dat, theory.dat, models.dat, species.csv, mechanism.dat
     """
-    _setup_subtasks.main(path=path)
+    _subtasks_setup.main(path=path)
 
 
 @main.command()
-
 def greetme():
     """Hello world function, for CLI testing purposes"""
     print("Hello, world!")
