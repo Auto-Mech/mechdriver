@@ -25,6 +25,10 @@ SUBTASK_DIR = "subtasks"
 INFO_FILE = "info.yaml"
 
 
+class TableKey:
+    task = "task"
+
+
 class InfoKey:
     group_ids = "group_ids"  # identifiers for each subtask group, in the order they should be run
     run_path = "run_path"  # path to the run filesystem
@@ -36,6 +40,7 @@ class InfoKey:
 
 
 class SpecKey:
+    task = "task"
     nprocs = "nprocs"
     mem = "mem"
 
@@ -154,19 +159,19 @@ def setup_subtask_group(
     keys = subtask_keys_from_run_dict(run_dct, key_type, all_key=all_key)
 
     # Get the specs for each task and write them to a YAML file
-    spec_dct = {
-        task_name: parse_task_specs(task_line, file_dct)
+    spec_lst = [
+        {SpecKey.task: task_name, **parse_task_specs(task_line, file_dct)}
         for task_name, task_line in tasks
-    }
+    ]
     yaml_path = out_path / f"{group_id}.yaml"
     print(f"Writing task specs to {yaml_path}")
-    yaml_path.write_text(yaml.dump(spec_dct, default_flow_style=None))
+    yaml_path.write_text(yaml.dump(spec_lst, default_flow_style=None))
 
     # Create directories for each subtask and save the paths in a DataFrame
     row_dcts = []
-    for num, (task_name, task_line) in enumerate(tasks):
-        row_dct = {"task": task_name}
-        task_path = out_path / f"{group_id}_{num:02d}_{task_name}"
+    for task_key, (task_name, task_line) in enumerate(tasks):
+        row_dct = {TableKey.task: task_name}
+        task_path = out_path / f"{group_id}_{task_key:02d}_{task_name}"
         print(f"Setting up subtask directories in {task_path}")
         task_run_dct = {k: v for k, v in run_dct.items() if k in block_keys}
         task_run_dct[task_type] = task_line
@@ -383,7 +388,9 @@ def tasks_from_run_dict(
         types = ("spc", "pes")
         assert subtask_type in types, f"Subtask type {subtask_type} not in {types}"
         start_key = "ts" if subtask_type == "pes" else "spc"
-        return tuple((line.split()[1], line) for line in lines if line.startswith(start_key))
+        return tuple(
+            (line.split()[1], line) for line in lines if line.startswith(start_key)
+        )
 
     return tuple((line.split()[0], line) for line in lines)
 
