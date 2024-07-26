@@ -1,6 +1,7 @@
 """ Standalone script to break an AutoMech input into subtasks for parallel execution
 """
 
+import os
 import re
 import textwrap
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 import more_itertools as mit
 import pandas
 import pyparsing as pp
+import yaml
 from pyparsing import common as ppc
 
 COMMENT_REGEX = re.compile(r"#.*$", flags=re.M)
@@ -19,33 +21,89 @@ DEFAULT_GROUPS = (
     ("kin", None),
 )
 
-SUBTASK_DIR = ".subtasks"
+SUBTASK_DIR = "subtasks"
+INFO_FILE = "info.yaml"
+
+
+class InfoKey:
+    group_ids = "group_ids"  # identifiers for each subtask group, in the order they should be run
+    run_path = "run_path"    # path to the run filesystem
+    save_path = "save_path"  # path to the save filesystem
+    # If relative paths are given for `path`, `save_path`, and/or `run_path`, they will
+    # be relative to the following `work_path`, which is the user's current working
+    # directory when they run the setup command:
+    work_path = "work_path"  # path to where the user ran the command
 
 
 def main(
     path: str | Path,
+    out_path: str | Path = SUBTASK_DIR,
+    save_path: str | Path | None = None,
+    run_path: str | Path | None = None,
     groups: tuple[tuple[str, str | None], ...] = DEFAULT_GROUPS,
-) -> tuple[pandas.DataFrame, ...]:
+):
     """Creates run directories for each task/species/TS and returns the paths in tables
 
     Task types: 'els', 'thermo', or 'kin'
     Subtask types: 'spc', 'pes', or `None` (=all species and/or reactions)
 
     :param path: The path to the AutoMech input to split into subtasks
+    :param out_path: The root path of the output (will be filled with subtask
+        directories, CSVs, and YAML file)
+    :param save_path: The path to the save filesystem
+        (if `None`, the value in run.dat is used)
+    :param run_path: The path to the run filesystem
+        (if `None`, the value in run.dat is used)
     :param groups: The subtasks groups to set up, as pairs of task and subtask types
     :return: DataFrames of run paths, whose columns (species/TS index) are independent
         and can be run in parallel, but whose rows (tasks) are potentially sequential
     """
-    return tuple(
-        setup_subtask_group(path, t, s, group_id=i) for i, (t, s) in enumerate(groups)
+    # Read input files from source path
+    path = Path(path)
+    file_dct = read_input_files(path)
+    run_dct = parse_run_dat(file_dct.get("run.dat"))
+
+    # Set the run and save paths
+    save_path, run_path = filesystem_paths_from_run_dict(
+        run_dct, save_path=save_path, run_path=run_path
     )
+    run_dct["input"] = f"run_prefix = {run_path}\nsave_prefix = {save_path}"
+
+    # Create the path for the subtask directories
+    out_path = Path(out_path)
+    out_path.mkdir(exist_ok=True)
+
+    # Set up each subtask group
+    group_ids = list(range(len(groups)))
+    for group_id, (task_type, key_type) in zip(group_ids, groups, strict=True):
+        setup_subtask_group(
+            run_dct,
+            file_dct,
+            task_type=task_type,
+            key_type=key_type,
+            group_id=group_id,
+            out_path=out_path,
+        )
+
+    # Write the subtask info to YAML
+    info_path = out_path / INFO_FILE
+    print(f"Writing subtask information to {info_path}")
+    info_dct = {
+        InfoKey.save_path: save_path,
+        InfoKey.run_path: run_path,
+        InfoKey.work_path: os.getcwd(),
+        InfoKey.group_ids: group_ids,
+    }
+    info_path.write_text(yaml.dump(info_dct))
 
 
 def setup_subtask_group(
-    source_path: str | Path,
+    run_dct: dict[str, str],
+    file_dct: dict[str, str],
     task_type: str,
     key_type: str | None = None,
     group_id: str | int | None = None,
+    out_path: str | Path = SUBTASK_DIR,
 ) -> pandas.DataFrame:
     """Set up a group of subtasks from a run dictionary, creating run directories and
     returning them in a table
@@ -53,6 +111,7 @@ def setup_subtask_group(
     :param source_path: The path to the AutoMech input to split into subtasks
     :param task_type: The type of task: 'els', 'thermo', or 'kin'
     :param key_type: The type of subtask key: 'spc', 'pes', or `None`
+    :param group_id: The group ID, used to name files and folders
     :return: A DataFrame of run paths, whose columns (subtasks) are independent and can
         be run in parallel, but whose rows (tasks) are potentially sequential
     """
@@ -75,16 +134,6 @@ def setup_subtask_group(
         assert isinstance(key, int), f"Invalid subtask key: {key}"
         return f"{key}"
 
-    # Read input files from source path
-    source_path = Path(source_path)
-    file_dct = read_input_files(source_path)
-    run_dct = parse_run_dat(file_dct.get("run.dat"))
-    run_dct["input"] = subtask_input_block_from_run_dict(run_dct)
-
-    # Create the path for the subtask directories
-    root_path = source_path / SUBTASK_DIR
-    root_path.mkdir(exist_ok=True)
-
     # Form a prefix for the task/subtask type
     if group_id is None:
         type_keys = [task_type] + ([] if key_type is None else [key_type])
@@ -103,7 +152,7 @@ def setup_subtask_group(
     row_dcts = []
     for num, (task_name, task_line) in enumerate(tasks):
         row_dct = {"task": task_name}
-        task_path = root_path / f"{group_id}_{num:02d}_{task_name}"
+        task_path = out_path / f"{group_id}_{num:02d}_{task_name}"
         print(f"Setting up subtask directories in {task_path}")
         task_run_dct = {k: v for k, v in run_dct.items() if k in block_keys}
         task_run_dct[task_type] = task_line
@@ -123,9 +172,11 @@ def setup_subtask_group(
 
     df = pandas.DataFrame(row_dcts)
 
-    csv_path = root_path / f"{group_id}.csv"
-    print(f"Writing subtask group information to {csv_path}\n")
-    df.to_csv(csv_path)
+    # Write the subtask table to CSV
+    csv_path = out_path / f"{group_id}.csv"
+    print(f"Writing subtask table to {csv_path}")
+    df.to_csv(csv_path, index=False)
+
     return df
 
 
@@ -187,13 +238,19 @@ def form_run_dat(run_dct: dict[str, str]) -> str:
     return run_dat
 
 
-def subtask_input_block_from_run_dict(
-    run_dct: dict[str, str], subtask_depth: int = 3
+def filesystem_paths_from_run_dict(
+    run_dct: dict[str, str],
+    save_path: str | Path | None = None,
+    run_path: str | Path | None = None,
 ) -> str:
     """Get the input block of a run dictionary, with absolute paths for the RUN and SAVE
     directories
 
     :param run_dct: The dictionary of a parsed run.dat file
+    :param save_path: The path to the save filesystem
+        (if `None`, the value in run.dat is used.)
+    :param run_path: The path to the run filesystem
+        (if `None`, the value in run.dat is used.)
     :return: The input block, with absolute paths
     """
 
@@ -205,19 +262,9 @@ def subtask_input_block_from_run_dict(
         expr = field + word("path")
         return expr.parseString(inp_block).get("path")
 
-    def _resolve_path(path: str) -> str:
-        path: Path = Path(path)
-        # If the path is not absolute, go back the appropriate number of directories
-        # from the subtask directory
-        if not path.is_absolute():
-            for _ in range(subtask_depth):
-                path = ".." / path
-        return str(path)
-
-    run_prefix = _resolve_path(_extract_path("run"))
-    save_prefix = _resolve_path(_extract_path("save"))
-
-    return f"run_prefix = {run_prefix}\nsave_prefix = {save_prefix}"
+    save_path = _extract_path("save") if save_path is None else save_path
+    run_path = _extract_path("run") if run_path is None else run_path
+    return save_path, run_path
 
 
 def subtask_keys_from_run_dict(

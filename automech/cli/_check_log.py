@@ -15,9 +15,9 @@ class Status(enum.Enum):
 def print_status(status: Status, path: str | Path) -> None:
     path = str(path)
     color_start_code = {
-        Status.SUCCESS: "\033[92m", # green
-        Status.WARNING: "\033[93m", # yellow
-        Status.ERROR: "\033[91m",   # red
+        Status.SUCCESS: "\033[92m",  # green
+        Status.WARNING: "\033[93m",  # yellow
+        Status.ERROR: "\033[91m",  # red
     }.get(status)
     color_end_code = "\033[0m"
     print(f"{path:.<80} {color_start_code}{status.value:^7}{color_end_code}")

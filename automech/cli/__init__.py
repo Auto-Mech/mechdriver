@@ -1,6 +1,7 @@
 import click
 
-from automech.cli import _check_log, _run, _subtasks_setup
+from . import _check_log, _run, _subtasks_run_adhoc, _subtasks_setup
+from ._subtasks_setup import SUBTASK_DIR
 
 
 @click.group()
@@ -51,16 +52,47 @@ def subtasks():
 @click.option(
     "-p", "--path", default=".", show_default=True, help="The job run directory"
 )
-def setup(path: str = "."):
+@click.option(
+    "-o",
+    "--out-path",
+    default=SUBTASK_DIR,
+    show_default=True,
+    help="The output path of the subtask directories",
+)
+@click.option(
+    "-s",
+    "--save-path",
+    default=None,
+    show_default=True,
+    help="The save filesystem prefix",
+)
+@click.option(
+    "-r",
+    "--run-path",
+    default=None,
+    show_default=True,
+    help="The run filesystem prefix",
+)
+def setup(
+    path: str = ".",
+    out_path: str = SUBTASK_DIR,
+    save_path: str | None = None,
+    run_path: str | None = None,
+):
     """Set-up subtasks from a user-supplied AutoMech directory
 
     The AutoMech directory must contain an `inp/` subdirectory with the following
     required files: run.dat, theory.dat, models.dat, species.csv, mechanism.dat
     """
-    _subtasks_setup.main(path=path)
+    _subtasks_setup.main(
+        path=path, out_path=out_path, save_path=save_path, run_path=run_path
+    )
 
 
-@main.command()
-def greetme():
-    """Hello world function, for CLI testing purposes"""
-    print("Hello, world!")
+@subtasks.command()
+@click.option(
+    "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The job run directory"
+)
+def run_adhoc(path: str = SUBTASK_DIR):
+    """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
+    _subtasks_run_adhoc.main(path=path)
