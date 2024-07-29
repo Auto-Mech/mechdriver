@@ -1,13 +1,22 @@
 """ Standalone script to run AutoMech subtasks in parallel on an Ad Hoc SSH Cluster
 """
 
+import itertools
 import subprocess
 from pathlib import Path
 
 import pandas
 import yaml
 
-from ._subtasks_setup import INFO_FILE, SUBTASK_DIR, InfoKey, SpecKey, TableKey
+from ._subtasks_setup import (
+    INFO_FILE,
+    SUBTASK_DIR,
+    InfoKey,
+    SpecKey,
+    TableKey,
+    Task,
+    read_task_list,
+)
 
 SCRIPT_DIR = Path(__file__).parent / "scripts"
 RUN_SCRIPT = str(SCRIPT_DIR / "run_adhoc.sh")
@@ -44,22 +53,28 @@ def main(
 
     for group_id in group_ids[:1]:
         df = pandas.read_csv(path / f"{group_id}.csv")
-        spec_lst = yaml.safe_load((path / f"{group_id}.yaml").read_text())
+        tasks = read_task_list(path / f"{group_id}.yaml")
         for task_key, row in df.iterrows():
-            task_name = row[TableKey.task]
-            spec_dct: dict = spec_lst[task_key]
-            assert spec_dct[SpecKey.task] == task_name, f"{task_name} {spec_dct}"
+            task: Task = tasks[task_key]
+            assert row[TableKey.task] == task.name, f"{row} does not match {task.name}"
 
-            subtask_nprocs = str(spec_dct.get(SpecKey.nprocs))
-            subtask_mem = str(spec_dct.get(SpecKey.mem))
-            subtask_paths = ",".join(v for k, v in row.items() if str(k).isdigit())
+            subtask_paths = []
+            subtask_logs = []
+
+            for key, nworkers in zip(
+                task.subtask_keys, task.subtask_nworkers, strict=True
+            ):
+                path = row.get(key)
+                subtask_paths.extend([path] * nworkers)
+                subtask_logs.extend([f"out{i}.log" for i in range(nworkers)])
 
             run_args = [
                 RUN_SCRIPT,
                 work_path,
-                subtask_mem,
-                subtask_nprocs,
-                subtask_paths,
+                f"{task.mem}",
+                f"{task.nprocs}",
+                ",".join(subtask_paths),
+                ",".join(subtask_logs),
                 nodes,
                 "" if activation_hook is None else activation_hook,
             ]

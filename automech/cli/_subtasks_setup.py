@@ -1,11 +1,14 @@
 """ Standalone script to break an AutoMech input into subtasks for parallel execution
 """
 
+import dataclasses
+import io
 import os
 import re
 import textwrap
 from pathlib import Path
 
+import automol
 import more_itertools as mit
 import pandas
 import pyparsing as pp
@@ -23,6 +26,8 @@ DEFAULT_GROUPS = (
 
 SUBTASK_DIR = "subtasks"
 INFO_FILE = "info.yaml"
+
+SAMP_TASKS = ("conf_samp",)
 
 
 class TableKey:
@@ -43,6 +48,17 @@ class SpecKey:
     task = "task"
     nprocs = "nprocs"
     mem = "mem"
+    worker_counts = "worker_counts"
+
+
+@dataclasses.dataclass
+class Task:
+    name: str
+    line: str
+    mem: int
+    nprocs: int
+    subtask_keys: list[int]
+    subtask_nworkers: list[int]
 
 
 def main(
@@ -104,7 +120,7 @@ def main(
         InfoKey.work_path: os.getcwd(),
         InfoKey.group_ids: group_ids,
     }
-    info_path.write_text(yaml.dump(info_dct))
+    info_path.write_text(yaml.safe_dump(info_dct))
 
 
 def setup_subtask_group(
@@ -154,28 +170,23 @@ def setup_subtask_group(
     block_keys = ["input"] + (["pes", "spc"] if key_type is None else [key_type])
 
     # Parse tasks and subtask keys for this group
-    tasks = tasks_from_run_dict(run_dct, task_type, key_type)
     all_key = "all"
-    keys = subtask_keys_from_run_dict(run_dct, key_type, all_key=all_key)
+    tasks = determine_task_list(run_dct, file_dct, task_type, key_type, all_key=all_key)
 
     # Get the specs for each task and write them to a YAML file
-    spec_lst = [
-        {SpecKey.task: task_name, **parse_task_specs(task_line, file_dct)}
-        for task_name, task_line in tasks
-    ]
     yaml_path = out_path / f"{group_id}.yaml"
     print(f"Writing task specs to {yaml_path}")
-    yaml_path.write_text(yaml.dump(spec_lst, default_flow_style=None))
+    write_task_list(tasks, yaml_path)
 
     # Create directories for each subtask and save the paths in a DataFrame
     row_dcts = []
-    for task_key, (task_name, task_line) in enumerate(tasks):
-        row_dct = {TableKey.task: task_name}
-        task_path = out_path / f"{group_id}_{task_key:02d}_{task_name}"
+    for task_key, task in enumerate(tasks):
+        row_dct = {TableKey.task: task.name}
+        task_path = out_path / f"{group_id}_{task_key:02d}_{task.name}"
         print(f"Setting up subtask directories in {task_path}")
         task_run_dct = {k: v for k, v in run_dct.items() if k in block_keys}
-        task_run_dct[task_type] = task_line
-        for key in keys:
+        task_run_dct[task_type] = task.line
+        for key in task.subtask_keys:
             # Generate the subtask path
             subtask_path = task_path / _subtask_directory(key)
             subtask_path.mkdir(parents=True, exist_ok=True)
@@ -200,6 +211,34 @@ def setup_subtask_group(
     return df
 
 
+def determine_task_list(
+    run_dct: dict[str, str],
+    file_dct: dict[str, str],
+    task_type: str,
+    key_type: str | None = None,
+    all_key: object = "all",
+) -> list[Task]:
+    """Set up a group of subtasks from a run dictionary, creating run directories and
+    returning them in a table
+
+    """
+    keys = subtask_keys_from_run_dict(run_dct, key_type, all_key=all_key)
+
+    return [
+        Task(
+            name=parse_task_name(task_line),
+            line=task_line,
+            mem=parse_task_memory(task_line, file_dct),
+            nprocs=parse_task_nprocs(task_line, file_dct),
+            subtask_keys=keys,
+            subtask_nworkers=parse_subtasks_nworkers(
+                task_line, file_dct, nsub=len(keys)
+            ),
+        )
+        for task_line in task_lines_from_run_dict(run_dct, task_type, key_type)
+    ]
+
+
 # Functions acting on the run directory as a whole
 def read_input_files(run_dir: str | Path) -> dict[str, str]:
     inp_dir = Path(run_dir) / "inp"
@@ -219,20 +258,61 @@ def write_input_files(run_dir: str | Path, file_dct: dict[str, str]) -> None:
         (inp_dir / name).write_text(contents)
 
 
-def parse_task_specs(task_line: str, file_dct: dict[str, str]) -> dict[str, int]:
-    """Read the memory and nprocs specs for a given task
+# Parse task information
+def parse_task_name(task_line: str) -> str:
+    """Parse the task name from a task line
 
     :param task_line: The task line from the run.dat file
-    :param file_dct: The file dictionary
-    :return: The specs, as a dictionary
+    :return: The task name
+    """
+    task_name = task_line.split()[0]
+    if task_name in ["spc", "ts"]:
+        task_name = task_line.split()[1]
+    return task_name
+
+
+def parse_task_fields(task_line: str) -> dict[str, str]:
+    """Parse in-line fields of the form `key=val`
+
+    :param inp: The string to parse
+    :return: The fields, as a dictionary
     """
     word = pp.Word(pp.printables, exclude_chars="=")
     eq = pp.Suppress(pp.Literal("="))
     field = pp.Group(word + eq + word)
     expr = pp.Suppress(...) + pp.DelimitedList(field, delim=pp.WordEnd())
-    field_dct = dict(expr.parseString(task_line).as_list())
+    return dict(expr.parseString(task_line).as_list())
 
-    nprocs = mem = None
+
+def parse_task_memory(task_line: str, file_dct: dict[str, str]) -> int:
+    """Parse the memory requirement for a given task
+
+    :param task_line: The task line from the run.dat file
+    :param file_dct: The file dictionary
+    :return: The memory requirement for the task
+    """
+    field_dct = parse_task_fields(task_line)
+
+    mem = None
+
+    if "runlvl" in field_dct:
+        runlvl = field_dct.get("runlvl")
+        theory_dct = parse_theory_dat(file_dct.get("theory.dat"))
+        mem = int(float(theory_dct.get(runlvl).get("mem")))
+
+    return mem
+
+
+def parse_task_nprocs(task_line: str, file_dct: dict[str, str]) -> int:
+    """Read the memory and nprocs specs for a given task
+
+    :param task_line: The task line from the run.dat file
+    :param file_dct: The file dictionary
+    :return: The memory and nprocs for the task
+    """
+    field_dct = parse_task_fields(task_line)
+
+    nprocs = None
 
     if "nprocs" in field_dct:
         nprocs = int(float(field_dct.get("nprocs")))
@@ -241,10 +321,34 @@ def parse_task_specs(task_line: str, file_dct: dict[str, str]) -> dict[str, int]
         runlvl = field_dct.get("runlvl")
         theory_dct = parse_theory_dat(file_dct.get("theory.dat"))
         nprocs = int(float(theory_dct.get(runlvl).get("nprocs")))
-        mem = int(float(theory_dct.get(runlvl).get("mem")))
 
-    spec_dct = {SpecKey.nprocs: nprocs, SpecKey.mem: mem}
-    return spec_dct
+    return nprocs
+
+
+def parse_subtasks_nworkers(
+    task_line: str, file_dct: dict[str, str], nsub: int
+) -> list[int]:
+    """Read the memory and nprocs specs for a given task
+
+    :param task_line: The task line from the run.dat file
+    :param file_dct: The file dictionary
+    :param nsub: The
+    :return: The memory and nprocs for the task
+    """
+    nworkers_lst = [1] * nsub
+
+    if task_line.startswith("spc"):
+        task_name = parse_task_name(task_line)
+        field_dct = parse_task_fields(task_line)
+        if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
+            nmax = int(field_dct.get("cnf_range", "n100")[1:])
+            spc_df = parse_species_csv(file_dct.get("species.csv"))
+            nsamp_lst = [
+                sample_count_from_inchi(chi, param_d=nmax) for chi in spc_df["inchi"]
+            ]
+            nworkers_lst = [max(n - 1, 1) for n in nsamp_lst]
+
+    return nworkers_lst
 
 
 # Functions acting on theory.dat data
@@ -269,6 +373,46 @@ def parse_theory_dat(theory_dat: str) -> dict[str, dict[str, str]]:
         theory_dct[res.get("key")] = dict(res.get("fields").as_list())
 
     return theory_dct
+
+
+# Functions acting on species.csv data
+def parse_species_csv(species_csv: str) -> pandas.DataFrame:
+    """Parse a species.csv file into a pandas dataframe
+
+    :param species_csv: The contents of the species.csv file, as a string
+    :return: The species table
+    """
+    return pandas.read_csv(io.StringIO(species_csv), quotechar="'")
+
+
+def sample_count_from_inchi(
+    chi: str,
+    param_a: int = 12,
+    param_b: int = 1,
+    param_c: int = 3,
+    param_d: int = 100,
+) -> int:
+    """Determine species MC sample count for a molecule from its InChI or AMChI string
+
+    The parameters (a, b, c, d) are used to calculate the sample count as follows:
+    ```
+        nsamp = min(a + b * c^ntors, d)
+    ```
+    where `ntors` is the number of torsional degrees of freedom in the molecule.
+
+    :param chi: An InChI or AMChI string
+    :param param_a: The `a` parameter used to calculate the sample count
+    :param param_b: The `b` parameter used to calculate the sample count
+    :param param_c: The `c` parameter used to calculate the sample count
+    :param param_d: The `d` parameter used to calculate the sample count
+    :return: The sample count
+    """
+    gra = automol.amchi.graph(chi, stereo=False)
+    ntors = len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=False))
+    if not ntors:
+        return 1
+
+    return min(param_a + param_b * param_c**ntors, param_d)
 
 
 # Functions acting on run.dat data
@@ -340,7 +484,7 @@ def filesystem_paths_from_run_dict(
 
 def subtask_keys_from_run_dict(
     run_dct: dict[str, str], subtask_type: str | None = None, all_key: str = "all"
-) -> tuple[object, ...] | None:
+) -> list[object]:
     """Extract species indices from a run.dat dictionary
 
     :param run_dct: The dictionary of a parsed run.dat file
@@ -348,7 +492,7 @@ def subtask_keys_from_run_dict(
     """
 
     if subtask_type is None:
-        return (all_key,)
+        return [all_key]
 
     if subtask_type == "spc":
         spc_block = run_dct.get("spc")
@@ -369,12 +513,12 @@ def subtask_keys_from_run_dict(
             pidx = res.get("pes")
             cidxs = parse_index_series(res.get("channels"))
             keys.extend((pidx, cidx) for cidx in cidxs)
-        return tuple(mit.unique_everseen(keys))
+        return list(mit.unique_everseen(keys))
 
 
-def tasks_from_run_dict(
+def task_lines_from_run_dict(
     run_dct: dict[str, str], task_type: str, subtask_type: str | None = None
-) -> tuple[tuple[str, str], ...]:
+) -> list[str]:
     """Extract electronic structure tasks from  of a run.dat dictionary
 
     :param run_dct: The dictionary of a parsed run.dat file
@@ -388,11 +532,32 @@ def tasks_from_run_dict(
         types = ("spc", "pes")
         assert subtask_type in types, f"Subtask type {subtask_type} not in {types}"
         start_key = "ts" if subtask_type == "pes" else "spc"
-        return tuple(
-            (line.split()[1], line) for line in lines if line.startswith(start_key)
-        )
+        lines = [line for line in lines if line.startswith(start_key)]
 
-    return tuple((line.split()[0], line) for line in lines)
+    return lines
+
+
+# Task read/write
+def write_task_list(yaml_tasks: list[Task], path: str | Path) -> None:
+    """Write a task list out in YAML format
+
+    :param tasks: The list of tasks
+    :param path: The path to the YAML file to write
+    """
+    path = Path(path)
+    yaml_tasks = list(map(dataclasses.asdict, yaml_tasks))
+    path.write_text(yaml.safe_dump(yaml_tasks, default_flow_style=None))
+
+
+def read_task_list(path: str | Path) -> list[Task]:
+    """Read a list of tasks from a YAML file
+
+    :param path: The path to the YAML file
+    :return: The list of tasks
+    """
+    path = Path(path)
+    yaml_tasks = yaml.safe_load(path.read_text())
+    return [Task(**d) for d in yaml_tasks]
 
 
 # Generic string formatting functions
@@ -415,7 +580,7 @@ def without_comments(inp: str) -> str:
     return re.sub(COMMENT_REGEX, "", inp)
 
 
-def parse_index_series(inp: str) -> tuple[int, ...]:
+def parse_index_series(inp: str) -> list[int]:
     r"""Parse a sequence of indices from a string separated by commas and newlines,
     with ranges indicated by 'x-y'
 
@@ -434,7 +599,7 @@ def parse_index_series(inp: str) -> tuple[int, ...]:
         else:
             start, stop = res
             idxs.extend(range(start, stop + 1))
-    return tuple(mit.unique_everseen(idxs))
+    return list(mit.unique_everseen(idxs))
 
 
 def block_expression(keyword: str, key: str = "content") -> pp.ParseExpression:

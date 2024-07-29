@@ -6,14 +6,20 @@ WORK_PATH=${1}
 SUBTASK_MEM=${2}        # memory required per job
 SUBTASK_NPROCS=${3}     # number of cores required per job
 IFS="," read -ra SUBTASK_PATHS <<< "${4}"   # list of run directories
-IFS="," read -ra NODES <<< "${5}"           # list of nodes for running
-ACTIVATION_HOOK=${6}    # activation hook
+IFS="," read -ra SUBTASK_LOGS <<< "${5}"    # list of worker counts
+IFS="," read -ra NODES <<< "${6}"           # list of nodes for running
+ACTIVATION_HOOK=${7}    # activation hook
 
-echo "NODES: ${NODES[*]}"
-echo "SUBTASK_PATHS: ${SUBTASK_PATHS[*]}"
+echo "Working directory: ${WORK_PATH}"
+echo "Subtask memory: ${SUBTASK_MEM}"
+echo "Subtask nprocs: ${SUBTASK_NPROCS}"
+echo "Subtask paths: ${SUBTASK_PATHS[@]}"
+echo "Subtask logs: ${SUBTASK_LOGS[@]}"
+echo "Nodes: ${NODES[@]}"
+printf "Activation hook: ---\n${ACTIVATION_HOOK}\n---\n"
 
-# Determine how many workers to put on each node, based on job memory and nprocs
-echo "Determining node capacities based on job memory ${SUBTASK_MEM} and nprocs ${SUBTASK_NPROCS}..."
+# Determine how many workers to put on each node, based on subtask specs
+echo "Determining node capacities based on subtask specs..."
 SSHLOGINS=()
 SSHLOGIN=""
 for node in "${NODES[@]}"; do
@@ -27,18 +33,14 @@ for node in "${NODES[@]}"; do
     SSHLOGINS+=("${node_nwork}/${node}")
 done
 SSHLOGIN=$(IFS=,; echo "${SSHLOGINS[*]}")
-echo "Running with --sshlogin ${SSHLOGIN}"
 
-echo "WORK_PATH: ${WORK_PATH}"
-echo "ACTIVATION HOOK:"
-echo "${ACTIVATION_HOOK}"
+run_command="automech run -p {1} &> {1}/{2}"
+check_command="automech check-log -p {1}/{2}"
 
-run_command="automech run -p {1} &> {1}/out.log"
-check_command="automech check-log -p {1}"
 parallel --sshlogin ${SSHLOGIN} "
     cd ${WORK_PATH} &&
     eval ${ACTIVATION_HOOK@Q} &&
-    echo \"Host: \$(hostname) | Working directory: \${PWD} | Command: ${run_command}\" &&
+    printf \"Host: \$(hostname)\n| Working directory: \${PWD}\n| Command: ${run_command}\n\" &&
     ${run_command} &&
     ${check_command}
-" ::: ${SUBTASK_PATHS[*]}
+" ::: ${SUBTASK_PATHS[*]} :::+ ${SUBTASK_LOGS[*]}
