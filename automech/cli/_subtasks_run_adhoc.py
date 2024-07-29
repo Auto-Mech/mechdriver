@@ -36,10 +36,11 @@ def main(
 
     group_ids = info_dct[InfoKey.group_ids]
     work_path = info_dct[InfoKey.work_path]
+    run_path = Path(info_dct[InfoKey.run_path])
+    save_path = Path(info_dct[InfoKey.save_path])
 
-    print(f"Activation command: {activation_hook}")
-    print(info_dct)
-    print(group_ids)
+    run_path.mkdir(exist_ok=True)
+    save_path.mkdir(exist_ok=True)
 
     for group_id in group_ids[:1]:
         df = pandas.read_csv(path / f"{group_id}.csv")
@@ -60,6 +61,6 @@ def main(
                 subtask_nprocs,
                 subtask_paths,
                 nodes,
+                "" if activation_hook is None else activation_hook,
             ]
-            print(run_args)
             subprocess.run(run_args)

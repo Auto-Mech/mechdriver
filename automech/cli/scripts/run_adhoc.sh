@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 WORK_PATH=${1}
 SUBTASK_MEM=${2}        # memory required per job
 SUBTASK_NPROCS=${3}     # number of cores required per job
-IFS="," read -ra SUBTASK_PATHS <<< "${4}"    # list of run directories
-IFS="," read -ra NODES <<< "${5}"   # list of nodes for running
+IFS="," read -ra SUBTASK_PATHS <<< "${4}"   # list of run directories
+IFS="," read -ra NODES <<< "${5}"           # list of nodes for running
+ACTIVATION_HOOK=${6}    # activation hook
 
 echo "NODES: ${NODES[*]}"
 echo "SUBTASK_PATHS: ${SUBTASK_PATHS[*]}"
@@ -26,5 +29,16 @@ done
 SSHLOGIN=$(IFS=,; echo "${SSHLOGINS[*]}")
 echo "Running with --sshlogin ${SSHLOGIN}"
 
-# parallel --sshlogin ${SSHLOGIN} "cd ${PWD} && ./scripts/_run.sh" ::: ${SUBTASK_PATHS[*]}
+echo "WORK_PATH: ${WORK_PATH}"
+echo "ACTIVATION HOOK:"
+echo "${ACTIVATION_HOOK}"
 
+run_command="automech run -p {1} &> {1}/out.log"
+check_command="automech check-log -p {1}"
+parallel --sshlogin ${SSHLOGIN} "
+    cd ${WORK_PATH} &&
+    eval ${ACTIVATION_HOOK@Q} &&
+    echo \"Host: \$(hostname) | Working directory: \${PWD} | Command: ${run_command}\" &&
+    ${run_command} &&
+    ${check_command}
+" ::: ${SUBTASK_PATHS[*]}
