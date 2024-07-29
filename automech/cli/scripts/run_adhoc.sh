@@ -41,6 +41,6 @@ parallel --sshlogin ${SSHLOGIN} "
     cd ${WORK_PATH} &&
     eval ${ACTIVATION_HOOK@Q} &&
     printf \"Host: \$(hostname)\n| Working directory: \${PWD}\n| Command: ${run_command}\n\" &&
-    ${run_command} &&
+    ${run_command};
     ${check_command}
 " ::: ${SUBTASK_PATHS[*]} :::+ ${SUBTASK_LOGS[*]}

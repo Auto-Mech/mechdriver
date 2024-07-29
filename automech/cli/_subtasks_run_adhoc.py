@@ -64,7 +64,7 @@ def main(
             for key, nworkers in zip(
                 task.subtask_keys, task.subtask_nworkers, strict=True
             ):
-                path = row.get(key)
+                path = row.get(str(key))
                 subtask_paths.extend([path] * nworkers)
                 subtask_logs.extend([f"out{i}.log" for i in range(nworkers)])
 
