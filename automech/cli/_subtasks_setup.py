@@ -44,13 +44,6 @@ class InfoKey:
     work_path = "work_path"  # path to where the user ran the command
 
 
-class SpecKey:
-    task = "task"
-    nprocs = "nprocs"
-    mem = "mem"
-    worker_counts = "worker_counts"
-
-
 @dataclasses.dataclass
 class Task:
     name: str
@@ -343,6 +336,9 @@ def parse_subtasks_nworkers(
         if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
             nmax = int(field_dct.get("cnf_range", "n100")[1:])
             spc_df = parse_species_csv(file_dct.get("species.csv"))
+            if not "inchi" in spc_df:
+                spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.inchi)
+
             nsamp_lst = [
                 sample_count_from_inchi(chi, param_d=nmax) for chi in spc_df["inchi"]
             ]
@@ -408,11 +404,13 @@ def sample_count_from_inchi(
     :return: The sample count
     """
     gra = automol.amchi.graph(chi, stereo=False)
-    ntors = len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=False))
-    if not ntors:
+    # If there are no torsions at all, return 1
+    if not len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=True)):
         return 1
 
-    return min(param_a + param_b * param_c**ntors, param_d)
+    ntors = len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=False))
+    nsamp = min(param_a + param_b * param_c**ntors, param_d)
+    return nsamp
 
 
 # Functions acting on run.dat data

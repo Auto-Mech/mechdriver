@@ -1,7 +1,6 @@
 """ Standalone script to run AutoMech subtasks in parallel on an Ad Hoc SSH Cluster
 """
 
-import itertools
 import subprocess
 from pathlib import Path
 
@@ -12,7 +11,6 @@ from ._subtasks_setup import (
     INFO_FILE,
     SUBTASK_DIR,
     InfoKey,
-    SpecKey,
     TableKey,
     Task,
     read_task_list,
@@ -51,7 +49,7 @@ def main(
     run_path.mkdir(exist_ok=True)
     save_path.mkdir(exist_ok=True)
 
-    for group_id in group_ids[:1]:
+    for group_id in group_ids:
         df = pandas.read_csv(path / f"{group_id}.csv")
         tasks = read_task_list(path / f"{group_id}.yaml")
         for task_key, row in df.iterrows():
