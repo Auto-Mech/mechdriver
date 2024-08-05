@@ -16,6 +16,7 @@ import yaml
 from pyparsing import common as ppc
 
 COMMENT_REGEX = re.compile(r"#.*$", flags=re.M)
+ALL_KEY = "all"
 
 DEFAULT_GROUPS = (
     ("els", "spc"),
@@ -50,7 +51,7 @@ class Task:
     line: str
     mem: int
     nprocs: int
-    subtask_keys: list[int]
+    subtask_keys: list[str]
     subtask_nworkers: list[int]
 
 
@@ -137,21 +138,14 @@ def setup_subtask_group(
 
     def _subtask_directory(key):
         id_str_ = "{:02d}".format
-        subtask_dir = key
-        if isinstance(key, tuple):
-            subtask_dir = "_".join(map(id_str_, key))
-        if isinstance(key, int):
-            subtask_dir = id_str_(key)
+        key_ = parse_subtask_key(key)
+        subtask_dir = key_
+        if isinstance(key_, tuple):
+            subtask_dir = "_".join(map(id_str_, key_))
+        if isinstance(key_, int):
+            subtask_dir = id_str_(key_)
         assert isinstance(subtask_dir, str), f"Invalid subtask key: {key}"
         return subtask_dir
-
-    def _subtask_block(key):
-        if isinstance(key, tuple):
-            assert len(key) == 2, f"PES key does not have 2 elements: {key}"
-            pes_idx, chn_idx = key
-            return f"{pes_idx}: {chn_idx}"
-        assert isinstance(key, int), f"Invalid subtask key: {key}"
-        return f"{key}"
 
     # Form a prefix for the task/subtask type
     if group_id is None:
@@ -163,8 +157,7 @@ def setup_subtask_group(
     block_keys = ["input"] + (["pes", "spc"] if key_type is None else [key_type])
 
     # Parse tasks and subtask keys for this group
-    all_key = "all"
-    tasks = determine_task_list(run_dct, file_dct, task_type, key_type, all_key=all_key)
+    tasks = determine_task_list(run_dct, file_dct, task_type, key_type)
 
     # Get the specs for each task and write them to a YAML file
     yaml_path = out_path / f"{group_id}.yaml"
@@ -185,8 +178,8 @@ def setup_subtask_group(
             subtask_path.mkdir(parents=True, exist_ok=True)
             # Generate the input file dictionary
             subtask_run_dct = task_run_dct.copy()
-            if key != all_key:
-                subtask_run_dct[key_type] = _subtask_block(key)
+            if key != ALL_KEY:
+                subtask_run_dct[key_type] = key
             subtask_file_dct = {**file_dct, "run.dat": form_run_dat(subtask_run_dct)}
             # Write the input files and append the path to the current dataframe row
             write_input_files(subtask_path, subtask_file_dct)
@@ -209,13 +202,12 @@ def determine_task_list(
     file_dct: dict[str, str],
     task_type: str,
     key_type: str | None = None,
-    all_key: object = "all",
 ) -> list[Task]:
     """Set up a group of subtasks from a run dictionary, creating run directories and
     returning them in a table
 
     """
-    keys = subtask_keys_from_run_dict(run_dct, key_type, all_key=all_key)
+    keys = subtask_keys_from_run_dict(run_dct, key_type)
 
     return [
         Task(
@@ -481,8 +473,8 @@ def filesystem_paths_from_run_dict(
 
 
 def subtask_keys_from_run_dict(
-    run_dct: dict[str, str], subtask_type: str | None = None, all_key: str = "all"
-) -> list[object]:
+    run_dct: dict[str, str], subtask_type: str | None = None
+) -> list[str]:
     """Extract species indices from a run.dat dictionary
 
     :param run_dct: The dictionary of a parsed run.dat file
@@ -490,11 +482,11 @@ def subtask_keys_from_run_dict(
     """
 
     if subtask_type is None:
-        return [all_key]
+        return [ALL_KEY]
 
     if subtask_type == "spc":
         spc_block = run_dct.get("spc")
-        return parse_index_series(spc_block)
+        return list(map(str, parse_index_series(spc_block)))
 
     if subtask_type == "pes":
         pes_block = run_dct.get("pes")
@@ -510,8 +502,10 @@ def subtask_keys_from_run_dict(
         for res in expr.parseString(pes_block):
             pidx = res.get("pes")
             cidxs = parse_index_series(res.get("channels"))
-            keys.extend((pidx, cidx) for cidx in cidxs)
+            keys.extend(f"{pidx}: {cidx}" for cidx in cidxs)
         return list(mit.unique_everseen(keys))
+
+    return []
 
 
 def task_lines_from_run_dict(
@@ -576,6 +570,25 @@ def without_comments(inp: str) -> str:
     :return: The string, without comments
     """
     return re.sub(COMMENT_REGEX, "", inp)
+
+
+def parse_subtask_key(key: str) -> int | tuple[int, int] | str:
+    """Parse a subtask key into its components
+
+    Examples:
+        '1'     ->  1
+        '1: 2'  ->  (1, 2)
+        'all'   ->  'all'
+
+    :param key: The key to parse
+    :return: The parsed components
+    """
+    spc_key = ppc.integer
+    all_key = pp.Literal(ALL_KEY)
+    pes_key = ppc.integer + pp.Suppress(":") + ppc.integer
+    expr = (spc_key ^ all_key ^ pes_key) + pp.StringEnd()
+    res = expr.parseString(key).as_list()
+    return res[0] if len(res) == 1 else tuple(res)
 
 
 def parse_index_series(inp: str) -> list[int]:

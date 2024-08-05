@@ -62,8 +62,9 @@ def main(
             for key, nworkers in zip(
                 task.subtask_keys, task.subtask_nworkers, strict=True
             ):
-                path = row.get(str(key))
-                subtask_paths.extend([path] * nworkers)
+                assert key in row, f"Key {key} not present in row:\n{row}"
+                subtask_path = row.get(key)
+                subtask_paths.extend([subtask_path] * nworkers)
                 subtask_logs.extend([f"out{i}.log" for i in range(nworkers)])
 
             run_args = [
