@@ -156,8 +156,6 @@ def setup_subtask_group(
 
     # Blocks that must be included in the run.dat
     block_keys = ["input"] + (["pes", "spc"] if key_type is None else [key_type])
-    if task_type != "els":
-        block_keys.append("els")
 
     # Parse tasks and subtask keys for this group
     tasks = determine_task_list(run_dct, file_dct, task_type, key_type)
