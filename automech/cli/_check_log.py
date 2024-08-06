@@ -15,7 +15,7 @@ class Status(enum.Enum):
     RUNNING = "RUNNING" # Currently running
     TBD = "TBD"         # Not yet started
     OK_1E = "OK_1E"     # All but 1 log file succeeded
-    OK_2E = "OK_1E"     # All but 2 log files succeeded
+    OK_2E = "OK_2E"     # All but 2 log files succeeded
 
 STATUS_WIDTH = 7
 
