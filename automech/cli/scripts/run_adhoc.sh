@@ -40,11 +40,11 @@ RUN_COMMAND="automech run -p {1} &> ${LOG_FILE}"
 CHECK_COMMAND="automech check-log -p ${LOG_FILE}"
 
 parallel --sshlogin ${SSHLOGIN} "
-    cd ${WORK_PATH} &&
+    cd ${WORK_PATH};
+    touch ${IS_RUNNING_FILE};
     eval ${ACTIVATION_HOOK@Q} &&
     printf \"Host: \$(hostname)\n| Working directory: \${PWD}\n| Command: ${RUN_COMMAND}\n\" &&
-    touch ${IS_RUNNING_FILE} &&
-    ${RUN_COMMAND} &&
+    ${RUN_COMMAND};
     rm ${IS_RUNNING_FILE};
     ${CHECK_COMMAND}
 " ::: ${SUBTASK_PATHS[*]} :::+ ${SUBTASK_LOGS[*]}

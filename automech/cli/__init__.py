@@ -1,6 +1,6 @@
 import click
 
-from . import _check_log, _run, _subtasks_run_adhoc, _subtasks_setup
+from . import _check_log, _run, _subtasks_run_adhoc, _subtasks_setup, _subtasks_status
 from ._subtasks_setup import SUBTASK_DIR
 
 
@@ -91,7 +91,7 @@ def setup(
 
 @subtasks.command()
 @click.option(
-    "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The job run directory"
+    "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
 )
 @click.option(
     "-n", "--nodes", default=None, show_default=True, help="A comma-separated list of nodes"
@@ -106,3 +106,12 @@ def setup(
 def run_adhoc(path: str = SUBTASK_DIR, nodes: str | None=None , activation_hook: str | None = None):
     """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
     _subtasks_run_adhoc.main(path=path, nodes=nodes, activation_hook=activation_hook)
+
+
+@subtasks.command()
+@click.option(
+    "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
+)
+def status(path: str = SUBTASK_DIR):
+    """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
+    _subtasks_status.main(path=path)
