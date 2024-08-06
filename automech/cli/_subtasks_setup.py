@@ -23,7 +23,7 @@ DEFAULT_GROUPS = (
     ("els", "spc"),
     ("els", "pes"),
     ("thermo", "spc"),
-    ("kin", None),
+    ("ktp", None),
 )
 
 SUBTASK_DIR = "subtasks"
@@ -65,7 +65,7 @@ def main(
 ):
     """Creates run directories for each task/species/TS and returns the paths in tables
 
-    Task types: 'els', 'thermo', or 'kin'
+    Task types: 'els', 'thermo', or 'ktp'
     Subtask types: 'spc', 'pes', or `None` (=all species and/or reactions)
 
     :param path: The path to the AutoMech input to split into subtasks
@@ -130,7 +130,7 @@ def setup_subtask_group(
     returning them in a table
 
     :param source_path: The path to the AutoMech input to split into subtasks
-    :param task_type: The type of task: 'els', 'thermo', or 'kin'
+    :param task_type: The type of task: 'els', 'thermo', or 'ktp'
     :param key_type: The type of subtask key: 'spc', 'pes', or `None`
     :param group_id: The group ID, used to name files and folders
     :return: A DataFrame of run paths, whose columns (subtasks) are independent and can
@@ -156,6 +156,8 @@ def setup_subtask_group(
 
     # Blocks that must be included in the run.dat
     block_keys = ["input"] + (["pes", "spc"] if key_type is None else [key_type])
+    if task_type != "els":
+        block_keys.append("els")
 
     # Parse tasks and subtask keys for this group
     tasks = determine_task_list(run_dct, file_dct, task_type, key_type)
@@ -266,8 +268,9 @@ def parse_task_fields(task_line: str) -> dict[str, str]:
     word = pp.Word(pp.printables, exclude_chars="=")
     eq = pp.Suppress(pp.Literal("="))
     field = pp.Group(word + eq + word)
-    expr = pp.Suppress(...) + pp.DelimitedList(field, delim=pp.WordEnd())
-    return dict(expr.parseString(task_line).as_list())
+    expr = pp.Suppress(...) + pp.DelimitedList(field, delim=pp.WordEnd()) | pp.Empty()
+    field_dct: dict[str, str] = dict(expr.parseString(task_line).as_list())
+    return field_dct
 
 
 def parse_task_memory(task_line: str, file_dct: dict[str, str]) -> int:
@@ -426,7 +429,7 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
         "spc": _parse_block(run_dat, "spc"),
         "els": _parse_block(run_dat, "els"),
         "thermo": _parse_block(run_dat, "thermo"),
-        "kin": _parse_block(run_dat, "kin"),
+        "ktp": _parse_block(run_dat, "ktp"),
     }
 
 
@@ -436,7 +439,7 @@ def form_run_dat(run_dct: dict[str, str]) -> str:
     :param run_dct: The dictionary of a parsed run.dat file
     :return: The run.dat file contents, as a string
     """
-    keys = ["input", "spc", "pes", "els", "thermo", "kin"]
+    keys = ["input", "spc", "pes", "els", "thermo", "ktp"]
     run_dat = ""
     for key in keys:
         if key in run_dct:
@@ -515,7 +518,7 @@ def task_lines_from_run_dict(
     """Extract electronic structure tasks from  of a run.dat dictionary
 
     :param run_dct: The dictionary of a parsed run.dat file
-    :param task_type: The type of task: 'els', 'thermo', or 'kin'
+    :param task_type: The type of task: 'els', 'thermo', or 'ktp'
     :param subtask_type: The type of subtask: 'spc', 'pes', or `None`
     :return: A sequence of (task name, task line) pairs
     """
