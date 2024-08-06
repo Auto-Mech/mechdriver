@@ -18,6 +18,7 @@ from pyparsing import common as ppc
 COMMENT_REGEX = re.compile(r"#.*$", flags=re.M)
 ALL_KEY = "all"
 
+DEFAULT_MEM = 20
 DEFAULT_GROUPS = (
     ("els", "spc"),
     ("els", "pes"),
@@ -278,7 +279,7 @@ def parse_task_memory(task_line: str, file_dct: dict[str, str]) -> int:
     """
     field_dct = parse_task_fields(task_line)
 
-    mem = None
+    mem = DEFAULT_MEM
 
     if "runlvl" in field_dct:
         runlvl = field_dct.get("runlvl")
@@ -297,7 +298,7 @@ def parse_task_nprocs(task_line: str, file_dct: dict[str, str]) -> int:
     """
     field_dct = parse_task_fields(task_line)
 
-    nprocs = None
+    nprocs = 1
 
     if "nprocs" in field_dct:
         nprocs = int(float(field_dct.get("nprocs")))
