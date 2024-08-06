@@ -34,13 +34,17 @@ for node in "${NODES[@]}"; do
 done
 SSHLOGIN=$(IFS=,; echo "${SSHLOGINS[*]}")
 
-run_command="automech run -p {1} &> {1}/{2}"
-check_command="automech check-log -p {1}/{2}"
+LOG_FILE="{1}/{2}"
+IS_RUNNING_FILE="${LOG_FILE}_IS_RUNNING"
+RUN_COMMAND="automech run -p {1} &> ${LOG_FILE}"
+CHECK_COMMAND="automech check-log -p ${LOG_FILE}"
 
 parallel --sshlogin ${SSHLOGIN} "
     cd ${WORK_PATH} &&
     eval ${ACTIVATION_HOOK@Q} &&
-    printf \"Host: \$(hostname)\n| Working directory: \${PWD}\n| Command: ${run_command}\n\" &&
-    ${run_command};
-    ${check_command}
+    printf \"Host: \$(hostname)\n| Working directory: \${PWD}\n| Command: ${RUN_COMMAND}\n\" &&
+    touch ${IS_RUNNING_FILE} &&
+    ${RUN_COMMAND} &&
+    rm ${IS_RUNNING_FILE};
+    ${CHECK_COMMAND}
 " ::: ${SUBTASK_PATHS[*]} :::+ ${SUBTASK_LOGS[*]}
