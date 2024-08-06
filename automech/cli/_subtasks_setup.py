@@ -156,8 +156,6 @@ def setup_subtask_group(
 
     # Blocks that must be included in the run.dat
     block_keys = ["input"] + (["pes", "spc"] if key_type is None else [key_type])
-    if task_type != "els":
-        block_keys.append("els")
 
     # Parse tasks and subtask keys for this group
     tasks = determine_task_list(run_dct, file_dct, task_type, key_type)
@@ -332,13 +330,13 @@ def parse_subtasks_nworkers(
         if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
             nmax = int(field_dct.get("cnf_range", "n100")[1:])
             spc_df = parse_species_csv(file_dct.get("species.csv"))
-            if not "inchi" in spc_df:
+            if "inchi" not in spc_df:
                 spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.inchi)
 
             nsamp_lst = [
                 sample_count_from_inchi(chi, param_d=nmax) for chi in spc_df["inchi"]
             ]
-            nworkers_lst = [max(n - 1, 1) for n in nsamp_lst]
+            nworkers_lst = [max((n - 1) // 2, 1) for n in nsamp_lst]
 
     return nworkers_lst
 

@@ -77,13 +77,14 @@ def main(
             )
         print()
 
-    print(f"Non-OK log files in {work_path}:")
-    twidth = max(len(r[0]) for r in non_okay_log_records)
-    swidth = max(len(r[1]) for r in non_okay_log_records)
-    pwidth = max(len(r[2]) for r in non_okay_log_records)
-    for task_name, skey, log_path, stat in non_okay_log_records:
-        stat = colored_status_string(stat)
-        print(f"{task_name:<{twidth}} {skey:<{swidth}} {log_path:<{pwidth}} {stat}")
+    if non_okay_log_records:
+        print(f"Non-OK log files in {work_path}:")
+        twidth = max(len(r[0]) for r in non_okay_log_records)
+        swidth = max(len(r[1]) for r in non_okay_log_records)
+        pwidth = max(len(r[2]) for r in non_okay_log_records)
+        for task_name, skey, log_path, stat in non_okay_log_records:
+            stat = colored_status_string(stat)
+            print(f"{task_name:<{twidth}} {skey:<{swidth}} {log_path:<{pwidth}} {stat}")
     print()
 
 
