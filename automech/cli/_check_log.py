@@ -12,10 +12,11 @@ class Status(enum.Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     # Status codes for multiple or non-existent log files
-    RUNNING = "RUNNING" # Currently running
-    TBD = "TBD"         # Not yet started
-    OK_1E = "OK_1E"     # All but 1 log file succeeded
-    OK_2E = "OK_2E"     # All but 2 log files succeeded
+    RUNNING = "RUNNING"  # Currently running
+    TBD = "TBD"  # Not yet started
+    OK_1E = "OK_1E"  # All but 1 log file succeeded
+    OK_2E = "OK_2E"  # All but 2 log files succeeded
+
 
 STATUS_WIDTH = 7
 
@@ -47,13 +48,13 @@ def colored_status_string(status: Status) -> str:
     :return: The colored status string
     """
     color_start_code = {
-        Status.OK: "\033[92m",      # bright green
-        Status.WARNING: "\033[93m", # bright yellow
-        Status.ERROR: "\033[91m",   # bright red
-        Status.RUNNING: "\033[96m", # bright cyan
-        Status.TBD: "\033[90m",     # gray
-        Status.OK_1E: "\033[95m",   # bright magenta
-        Status.OK_2E: "\033[95m",   # bright magenta
+        Status.OK: "\033[92m",  # bright green
+        Status.WARNING: "\033[93m",  # bright yellow
+        Status.ERROR: "\033[91m",  # bright red
+        Status.RUNNING: "\033[96m",  # bright cyan
+        Status.TBD: "\033[90m",  # gray
+        Status.OK_1E: "\033[95m",  # bright magenta
+        Status.OK_2E: "\033[95m",  # bright magenta
     }.get(status)
     color_end_code = "\033[0m"
     return f"{color_start_code}{status.value:^{STATUS_WIDTH}}{color_end_code}"
@@ -72,4 +73,4 @@ def main(path: str = "."):
     assert path.is_file(), f"File does not exist: {path}"
 
     status = parse_log_status(path)
-    print(f"{str(path):.<80} {colored_status_string(status)}")
+    print(f"{str(path) + ' ':.<80} {colored_status_string(status)}")
