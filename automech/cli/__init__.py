@@ -1,6 +1,7 @@
 import click
 
 from . import _check_log, _run, _subtasks_run_adhoc, _subtasks_setup, _subtasks_status
+from ._check_log import Status
 from ._subtasks_setup import SUBTASK_DIR
 
 
@@ -94,7 +95,11 @@ def setup(
     "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
 )
 @click.option(
-    "-n", "--nodes", default=None, show_default=True, help="A comma-separated list of nodes"
+    "-n",
+    "--nodes",
+    default=None,
+    show_default=True,
+    help="A comma-separated list of nodes",
 )
 @click.option(
     "-a",
@@ -103,9 +108,23 @@ def setup(
     show_default=True,
     help="An activation hook, to be called using `eval`",
 )
-def run_adhoc(path: str = SUBTASK_DIR, nodes: str | None=None , activation_hook: str | None = None):
+@click.option(
+    "-s",
+    "--statuses",
+    default=f"{Status.TBD.value}",
+    show_default=True,
+    help="A comma-separated list of statuses to run or re-run",
+)
+def run_adhoc(
+    path: str = SUBTASK_DIR,
+    nodes: str | None = None,
+    activation_hook: str | None = None,
+    statuses: str = f"{Status.TBD.value}",
+):
     """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
-    _subtasks_run_adhoc.main(path=path, nodes=nodes, activation_hook=activation_hook)
+    _subtasks_run_adhoc.main(
+        path=path, nodes=nodes, activation_hook=activation_hook, statuses=statuses
+    )
 
 
 @subtasks.command()
