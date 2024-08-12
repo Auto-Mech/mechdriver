@@ -95,9 +95,10 @@ def main(
     out_path.mkdir(exist_ok=True)
 
     # Set up each subtask group
-    group_ids = list(range(len(groups)))
-    for group_id, (task_type, key_type) in zip(group_ids, groups, strict=True):
-        setup_subtask_group(
+    all_group_ids = list(range(len(groups)))
+    run_group_ids = []
+    for group_id, (task_type, key_type) in zip(all_group_ids, groups, strict=True):
+        ret = setup_subtask_group(
             run_dct,
             file_dct,
             task_type=task_type,
@@ -105,6 +106,8 @@ def main(
             group_id=group_id,
             out_path=out_path,
         )
+        if ret is not None:
+            run_group_ids.append(group_id)
 
     # Write the subtask info to YAML
     info_path = out_path / INFO_FILE
@@ -113,7 +116,7 @@ def main(
         InfoKey.save_path: save_path,
         InfoKey.run_path: run_path,
         InfoKey.work_path: os.getcwd(),
-        InfoKey.group_ids: group_ids,
+        InfoKey.group_ids: run_group_ids,
     }
     info_path.write_text(yaml.safe_dump(info_dct))
 
@@ -125,7 +128,7 @@ def setup_subtask_group(
     key_type: str | None = None,
     group_id: str | int | None = None,
     out_path: str | Path = SUBTASK_DIR,
-) -> pandas.DataFrame:
+) -> pandas.DataFrame | None:
     """Set up a group of subtasks from a run dictionary, creating run directories and
     returning them in a table
 
@@ -159,6 +162,10 @@ def setup_subtask_group(
 
     # Parse tasks and subtask keys for this group
     tasks = determine_task_list(run_dct, file_dct, task_type, key_type)
+
+    # If the task list is empty, return `None`
+    if not tasks:
+        return None
 
     # Get the specs for each task and write them to a YAML file
     yaml_path = out_path / f"{group_id}.yaml"
