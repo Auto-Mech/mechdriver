@@ -56,8 +56,11 @@ def main(
     save_path.mkdir(exist_ok=True)
 
     for group_id in group_ids:
-        df = pandas.read_csv(path / f"{group_id}.csv")
         tasks = read_task_list(path / f"{group_id}.yaml")
+        if not tasks:
+            continue
+
+        df = pandas.read_csv(path / f"{group_id}.csv")
         for task_key, row in df.iterrows():
             task: Task = tasks[task_key]
             assert row[TableKey.task] == task.name, f"{row} does not match {task.name}"
