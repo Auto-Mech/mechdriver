@@ -225,7 +225,7 @@ def determine_task_list(
             nprocs=parse_task_nprocs(task_line, file_dct),
             subtask_keys=keys,
             subtask_nworkers=parse_subtasks_nworkers(
-                task_line, file_dct, nsub=len(keys)
+                task_line, file_dct, subtask_keys=keys
             ),
         )
         for task_line in task_lines_from_run_dict(run_dct, task_type, key_type)
@@ -320,7 +320,7 @@ def parse_task_nprocs(task_line: str, file_dct: dict[str, str]) -> int:
 
 
 def parse_subtasks_nworkers(
-    task_line: str, file_dct: dict[str, str], nsub: int
+    task_line: str, file_dct: dict[str, str], subtask_keys: list[str]
 ) -> list[int]:
     """Read the memory and nprocs specs for a given task
 
@@ -329,7 +329,7 @@ def parse_subtasks_nworkers(
     :param nsub: The
     :return: The memory and nprocs for the task
     """
-    nworkers_lst = [1] * nsub
+    nworkers_lst = [1] * len(subtask_keys)
 
     if task_line.startswith("spc"):
         task_name = parse_task_name(task_line)
@@ -340,9 +340,8 @@ def parse_subtasks_nworkers(
             if "inchi" not in spc_df:
                 spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.inchi)
 
-            nsamp_lst = [
-                sample_count_from_inchi(chi, param_d=nmax) for chi in spc_df["inchi"]
-            ]
+            chis = [spc_df.iloc[int(k) - 1]["inchi"] for k in subtask_keys]
+            nsamp_lst = [sample_count_from_inchi(c, param_d=nmax) for c in chis]
             nworkers_lst = [max((n - 1) // 2, 1) for n in nsamp_lst]
 
     return nworkers_lst
