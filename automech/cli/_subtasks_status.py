@@ -158,7 +158,7 @@ def print_task_row(label: str, vals: Sequence[str], label_width: int, wrap: int)
     :param wrap: Wrap the row values after this many columns
     """
     for chunk_vals in mit.chunked(vals, wrap):
-        row = f"{label:>{label_width}}"
+        row = f"{label:>{label_width}} "
         row += " ".join(f"{v:^{STATUS_WIDTH}}" for v in chunk_vals)
         print(row)
         label = ""  # drop the label after the first chunk
@@ -175,5 +175,5 @@ def print_long_row_guide(label_width: int, nvals: int, wrap: int, char: str="-")
     :param char: The character to use for the separator, defaults to "-"
     """
     if nvals > wrap:
-        total_width = label_width + (STATUS_WIDTH + 1) * wrap
+        total_width = label_width + 1 + (STATUS_WIDTH + 1) * wrap
         print(char * total_width)
