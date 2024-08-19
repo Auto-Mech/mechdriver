@@ -131,6 +131,13 @@ def run_adhoc(
 @click.option(
     "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
 )
-def status(path: str = SUBTASK_DIR):
-    """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
-    _subtasks_status.main(path=path)
+@click.option(
+    "-w",
+    "--wrap",
+    default=18,
+    show_default=True,
+    help="Wrap to included this many subtask columns per row",
+)
+def status(path: str = SUBTASK_DIR, wrap: int = 18):
+    """Check the status of running subtasks"""
+    _subtasks_status.main(path=path, wrap=wrap)
