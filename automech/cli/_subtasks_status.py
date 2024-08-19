@@ -20,16 +20,13 @@ from ._subtasks_setup import (
 )
 
 
-def main(
-    path: str | Path = SUBTASK_DIR,
-) -> None:
-    """Runs subtasks in parallel on Ad Hoc cluster
+def main(path: str | Path = SUBTASK_DIR, wrap: int = 18) -> None:
+    """Check the status of running subtasks
 
     Assumes the subtasks were set up at this path using `automech subtasks setup`
 
     :param path: The path where the AutoMech subtasks were set up
-    :param nodes: A comma-separated list of nodes to run on
-    :param activation_hook: Shell commands for activating the AutoMech environment on the remote
+    :Param wrap: Wrap to include this many subtask columns per row
     """
     path = Path(path)
     assert (
@@ -41,11 +38,6 @@ def main(
 
     group_ids = info_dct[InfoKey.group_ids]
     work_path = info_dct[InfoKey.work_path]
-    run_path = Path(info_dct[InfoKey.run_path])
-    save_path = Path(info_dct[InfoKey.save_path])
-
-    run_path.mkdir(exist_ok=True)
-    save_path.mkdir(exist_ok=True)
 
     non_okay_log_records = []
     for group_id in group_ids:
@@ -54,8 +46,8 @@ def main(
         twidth = task_column_width(tasks)
         skeys = subtask_keys(tasks)
 
-        header = task_group_header(skeys, twidth)
-        print(header)
+        print_long_row_guide(twidth, len(skeys), wrap, char="#")
+        print_task_row(TableKey.task, skeys, label_width=twidth, wrap=wrap)
         for task_key, row in df.iterrows():
             task: Task = tasks[task_key]
             assert row[TableKey.task] == task.name, f"{row} does not match {task.name}"
@@ -65,8 +57,7 @@ def main(
             subtask_stats = list(
                 map(colored_status_string, map(parse_subtask_status, subtask_abs_paths))
             )
-            line = f"{task.name:>{twidth}} " + " ".join(subtask_stats)
-            print(line)
+            print_task_row(task.name, subtask_stats, label_width=twidth, wrap=wrap)
 
             non_okay_log_records.extend(
                 (task.name, skey, p, s)
@@ -158,13 +149,31 @@ def subtask_keys(tasks: list[Task]) -> list[str]:
     return list(mit.unique_everseen(itertools.chain(*(t.subtask_keys for t in tasks))))
 
 
-def task_group_header(skeys: list[str], twidth: int) -> str:
-    """Print the header for a task group
+def print_task_row(label: str, vals: Sequence[str], label_width: int, wrap: int) -> None:
+    """Print a single row in the task group table
 
-    :param tasks: The list of tasks
-    :param twidth: The task column width
-    :return: The header
+    :param label: The row label
+    :param vals: The row values
+    :param label_width: The label column width
+    :param wrap: Wrap the row values after this many columns
     """
-    header = f"{TableKey.task:>{twidth}} "
-    header += " ".join(f"{k:^{STATUS_WIDTH}}" for k in skeys)
-    return header
+    for chunk_vals in mit.chunked(vals, wrap):
+        row = f"{label:>{label_width}}"
+        row += " ".join(f"{v:^{STATUS_WIDTH}}" for v in chunk_vals)
+        print(row)
+        label = ""  # drop the label after the first chunk
+
+    # If wrapping, add an extra dividing line as a guide
+    print_long_row_guide(label_width, len(vals), wrap)
+
+
+def print_long_row_guide(label_width: int, nvals: int, wrap: int, char: str="-") -> None:
+    """Print a horizontal guide to guide the eye, if the row is long
+
+    :param label_width: The label column width
+    :param wrap: Wrap the row values after this many columns
+    :param char: The character to use for the separator, defaults to "-"
+    """
+    if nvals > wrap:
+        total_width = label_width + (STATUS_WIDTH + 1) * wrap
+        print(char * total_width)
