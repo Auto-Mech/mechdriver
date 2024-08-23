@@ -73,8 +73,7 @@ def energy_dist_params(pesgrp_num, pes_param_dct, hot_enes_dct, rxn_chan_str):
                 max_ene.append(300.1)
                 max_ene_ped.append(300.1)
                 continue
-            
-            dof_info = mechanalyzer.calculator.ene_partition.get_dof_info(
+            dof_info = mechanalyzer.calculator.spinfo_frommess.get_info(
                 spc_blocks_ped[prods])
             max_ene_ped.append(mechanalyzer.calculator.ene_util.max_en_auto(
                 dof_info['n_atoms']['TS'], ene_bw, ref_ene=energy_dct[prods]))
