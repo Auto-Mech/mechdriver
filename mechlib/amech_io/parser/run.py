@@ -66,7 +66,7 @@ TSK_KEY_DCT = {
     'init_geom': (('spc',), BASE),
     'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier', 'varecof_nprocs')),
     'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 
-                                           'algorithm','thresholds','skip',)), #adl add here new keyword algorithm
+                                           'algorithm','thresholds','eps','checks','skip')), #adl add here new keyword algorithm
     'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
     'conf_energy': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
     'conf_grad': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
@@ -135,12 +135,6 @@ TSK_VAL_DCT = {
     'resave': ((bool,), (True, False), False),
     'retryfail': ((bool,), (True, False), True),
     'overwrite': ((bool,), (True, False), False),
-    'algorithm': ((str,), #adl added argument for ring puckering
-                  ('crest','pucker','torsions','robust'), 'torsions'),
-    'thresholds': ((str,), #adl added argument for ring puckering
-                  ('default','relaxed'), 'default'),
-    'skip': ((bool,), #adl added argument for ring puckering
-                  (True,False), False),
     # ES
     'cnf_range': ((str,), (), 'min'),   # change to econfs, nconfs
     'sort': ((str,), (), None),
@@ -154,6 +148,14 @@ TSK_VAL_DCT = {
     'nobarrier': ((str,), ('pst', 'rpvtst', 'vrctst'), None),
     're_id': ((bool,), (True, False), False),
     'varecof_nprocs': ((int,), (), 10),
+    #adl added arguments for ring puckering
+    'algorithm': ((str,), 
+                  ('crest','pucker','torsions','robust','torsions2'), 'torsions'),
+    'thresholds': ((str,), 
+                  ('default','relaxed'), 'default'),
+    'eps': ((float,), (), 0.3),
+    'checks': ((int,), (1,2), 1),
+    'skip': ((bool,), (True,False), False),
     # Trans
     'njobs': ((int,), (), 1),
     'nsamp': ((int,), (), 1),

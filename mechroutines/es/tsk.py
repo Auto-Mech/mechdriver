@@ -275,6 +275,8 @@ def conformer_tsk(job, spc_dct, spc_name,
         algo = es_keyword_dct['algorithm']
         thresh_pucker = es_keyword_dct['thresholds']
         am_skipping = es_keyword_dct['skip']
+        eps = es_keyword_dct['eps']
+        checks = es_keyword_dct['checks']
         # Build the ini zma filesys
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
@@ -284,9 +286,10 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Set up the run scripts
         script_str, kwargs = qchem_params(
             method_dct, elstruct.Job.OPTIMIZATION)
-
+        # Always run two stage optimization
+        two_stage = True
         # Set variables if it is a saddle
-        two_stage = saddle
+        #two_stage = saddle
         mc_nsamp = spc_dct_i['mc_nsamp']
 
         # Read the geometry and zma from the ini file system
@@ -312,6 +315,8 @@ def conformer_tsk(job, spc_dct, spc_name,
             script_str, overwrite,
             algorithm=algo,
             thresholds=thresh_pucker,
+            eps=eps,
+            checks=checks,
             skip=am_skipping,
             nsamp_par=mc_nsamp,
             ring_tors_dct=ring_tors_dct, zrxn=zrxn,
