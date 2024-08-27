@@ -951,7 +951,7 @@ def ring_checks_loops(
     2) ring closure - CREST topology and energy checks - DBSCAN clustering
     '''
     
-    unique_zmas, unique_frag_geos = [], []
+    unique_zmas, unique_geos, unique_frag_geos = [], [], []
     ref_geo_for_rep_pot = geo
 
     if checks == 1:
@@ -1007,7 +1007,8 @@ def ring_checks_loops(
                         continue
                     else:
                         print('   -4) not run in run, ok')
-                        unique_zmas.append(samp_zma)
+                        #unique_zmas.append(samp_zma)
+                        unique_geos.append(samp_geo)
                         unique_frag_geos.append(frag_samp_geo)
                         if algorithm in ["crest","torsions2"]:
                             if len(unique_frag_geos) == 1:
@@ -1041,11 +1042,16 @@ def ring_checks_loops(
         unique_geos = automol.geom.checks_with_crest(
                                     "pucker_checks.xyz",
                                     spc_info,
-                                    rings_atoms,
-                                    eps=eps
                                     )
-        
-        unique_zmas = [automol.zmat.base.from_geometry(vma_adl, geoi) for geoi in unique_geos]
+
+    unique_geos = automol.geom.dbscan(
+                        "pucker_checks.xyz",
+                        spc_info,
+                        rings_atoms,
+                        eps=eps
+                        )
+    
+    unique_zmas = [automol.zmat.base.from_geometry(vma_adl, geoi) for geoi in unique_geos]
     
     return unique_zmas
 
@@ -1110,9 +1116,9 @@ def ring_puckering_with_crest(geo, zrxn, spc_info, vma, samp_zmas_crest):
                     cd {crest_dir}
                     crest {filename} --gfn2 --mrest 10 --noreftopo --ewin 200.{crest_constrain}-T 8 > crest_ouput.out
                     '''
-    p = subprocess.Popen(crest_sampl, stdout=subprocess.PIPE, shell=True)
-    output, err = p.communicate()  
-    p_status = p.wait()
+    with subprocess.Popen(crest_sampl, stdout=subprocess.PIPE, shell=True) as p:
+        p.communicate()  
+        p.wait()
     with open(f"{crest_dir}/crest_conformers.xyz","r") as f:
         samp_geos = (geoi for geoi,_ in automol.geom.from_xyz_trajectory_string(f.read()))
     for geoi in samp_geos:
