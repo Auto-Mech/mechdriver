@@ -1038,12 +1038,14 @@ def ring_checks_loops(
                 geo_string = automol.geom.xyz_string(samp_geo, comment=" ")
                 f.write(geo_string+"\n")
 
-        unique_zmas = automol.geom.checks_with_crest(
+        unique_geos = automol.geom.checks_with_crest(
                                     "pucker_checks.xyz",
-                                    spc_info,vma_adl,
+                                    spc_info,
                                     rings_atoms,
                                     eps=eps
                                     )
+        
+        unique_zmas = [automol.zmat.base.from_geometry(vma_adl, geoi) for geoi in unique_geos]
     
     return unique_zmas
 
