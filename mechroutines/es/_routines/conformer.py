@@ -963,7 +963,7 @@ def ring_checks_loops(
     2) ring closure - CREST topology and energy checks - DBSCAN clustering
     '''
     
-    unique_zmas, unique_frag_geos = [], []
+    unique_zmas, unique_frag_geos, unique_geos = [], [], []
     ref_geo_for_rep_pot = geo
 
     if checks == 1:
