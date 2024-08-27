@@ -1045,10 +1045,10 @@ def ring_checks_loops(
                                     )
 
     unique_geos = automol.geom.dbscan(
-                        "pucker_checks.xyz",
-                        spc_info,
-                        rings_atoms,
-                        eps=eps
+                        unique_geos,
+                        rings_atoms, 
+                        eps, 
+                        min_samples=1
                         )
     
     unique_zmas = [automol.zmat.base.from_geometry(vma_adl, geoi) for geoi in unique_geos]
