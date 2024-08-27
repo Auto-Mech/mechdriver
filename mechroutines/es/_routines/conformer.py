@@ -803,8 +803,20 @@ def ring_conformer_sampling(
                                             checks, samp_zmas[algo], all_unconnected_lst,
                                             relax_thresh, algo, check_dct, rings_atoms,
                                             ngbs, frag_saved_geos, cnf_run_fs, cnf_save_fs,
-                                            thy_info, spc_info, vma, eps, geo
+                                            thy_info, spc_info, vma, geo
                                             ))
+    # Set up the DBSCAN clustering
+    unique_geos = [automol.zmat.geometry(zmai) for zmai in unique_zmas]
+
+    unique_geos = automol.geom.dbscan(
+                        unique_geos,
+                        rings_atoms, 
+                        eps, 
+                        min_samples=1
+                        )
+    
+    unique_zmas = [automol.zmat.base.from_geometry(vma, geoi) for geoi in unique_geos]
+
     with open("uniques.xyz","w") as f:  
         for zmai in unique_zmas:
             new_geo = automol.zmat.geometry(zmai)
@@ -943,7 +955,7 @@ def ring_checks_loops(
                         relax_thresh, algorithm, check_dct,
                         rings_atoms, ngbs, frag_saved_geos,
                         cnf_run_fs, cnf_save_fs, thy_info,
-                        spc_info, vma_adl, eps, geo
+                        spc_info, vma_adl, geo
                         ):
     '''
     adl Two implementations of loops of checks for the sampled geometries.
@@ -951,7 +963,7 @@ def ring_checks_loops(
     2) ring closure - CREST topology and energy checks - DBSCAN clustering
     '''
     
-    unique_zmas, unique_geos, unique_frag_geos = [], [], []
+    unique_zmas, unique_frag_geos = [], []
     ref_geo_for_rep_pot = geo
 
     if checks == 1:
@@ -972,13 +984,7 @@ def ring_checks_loops(
                 continue
             samp_geo = automol.zmat.geometry(samp_zma)
             print('   -1) reasonable distances')
-            # for ring_atoms, samp_range_dct in tors_dcts:
-            #     ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
-            #     if not automol.geom.ring_angles_reasonable(samp_geo, ring_atoms, 
-            #                     80.0 * phycon.DEG2RAD * relax_thresh["angles"]): 
-            #         samp_check = False
-            # if samp_check == False: continue
-            # print('   -2) reasonable angles')
+
             if len(unique_frag_geos) == 0:
                 if algorithm in ["crest","torsions2"]:
                     ref_geo_for_rep_pot = samp_geo
@@ -1043,17 +1049,8 @@ def ring_checks_loops(
                                     "pucker_checks.xyz",
                                     spc_info,
                                     )
-
-    unique_geos = automol.geom.dbscan(
-                        unique_geos,
-                        rings_atoms, 
-                        eps, 
-                        min_samples=1
-                        )
     
-    unique_zmas = [automol.zmat.base.from_geometry(vma_adl, geoi) for geoi in unique_geos]
-    
-    return unique_zmas
+    return [automol.zmat.base.from_geometry(vma_adl, geoi) for geoi in unique_geos]
 
 
 ########### RING PUCKERING WITH CREST #############
