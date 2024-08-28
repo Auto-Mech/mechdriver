@@ -799,12 +799,14 @@ def ring_conformer_sampling(
     ### CHECKS LOOP ###
     unique_zmas = []
     for algo in algorithm:
+        print(f"Working on algorithm {algo}")
         unique_zmas.extend(ring_checks_loops(
                                             checks, samp_zmas[algo], all_unconnected_lst,
                                             relax_thresh, algo, check_dct, rings_atoms,
                                             ngbs, frag_saved_geos, cnf_run_fs, cnf_save_fs,
                                             thy_info, spc_info, vma, geo
                                             ))
+        print(f"Valid samples after checks: {len(unique_zmas)}")
     # Set up the DBSCAN clustering
     unique_geos = [automol.zmat.geometry(zmai) for zmai in unique_zmas]
 
@@ -816,6 +818,7 @@ def ring_conformer_sampling(
                         )
     
     unique_zmas = [automol.zmat.base.from_geometry(vma, geoi) for geoi in unique_geos]
+    print(f"Valid samples after clustering: {len(unique_zmas)}")
 
     with open("uniques.xyz","w") as f:  
         for zmai in unique_zmas:
@@ -837,6 +840,7 @@ def ring_conformer_sampling(
     if nsamp > 0:
         info_message(
             f'Running {nsamp} samples...', newline=1)
+    return
 
     # Create list of saved geos; initialize with saved geos
     num_saved = len(saved_geos)
@@ -960,10 +964,11 @@ def ring_checks_loops(
     '''
     adl Two implementations of loops of checks for the sampled geometries.
     1) ring closure - repulsive potential - unique ring structure - not already run
-    2) ring closure - CREST topology and energy checks - DBSCAN clustering
+    2) ring closure - CREST topology and energy checks
+    Both followed by DBSCAN clustering
     '''
     
-    unique_zmas, unique_frag_geos, unique_geos = [], [], []
+    unique_frag_geos, unique_geos = [], []
     ref_geo_for_rep_pot = geo
 
     if checks == 1:
@@ -1013,7 +1018,6 @@ def ring_checks_loops(
                         continue
                     else:
                         print('   -4) not run in run, ok')
-                        #unique_zmas.append(samp_zma)
                         unique_geos.append(samp_geo)
                         unique_frag_geos.append(frag_samp_geo)
                         if algorithm in ["crest","torsions2"]:
@@ -1032,16 +1036,14 @@ def ring_checks_loops(
                     samp_check = False
             if samp_check == False: continue
             samp_geo = automol.zmat.geometry(samp_zma)
-
+            unique_frag_geos.append(samp_geo)
             print('   -1) reasonable distances')
-            unique_zmas.append(samp_zma)
-
+            
         # Get xyz of all unique sampling points found, after original geo
         with open("pucker_checks.xyz","w") as f:
             geo_string = automol.geom.xyz_string(geo, comment=" ")
             f.write(geo_string+"\n")
-            for samp_zma in unique_zmas:
-                samp_geo = automol.zmat.geometry(samp_zma)
+            for samp_geo in unique_frag_geos:
                 geo_string = automol.geom.xyz_string(samp_geo, comment=" ")
                 f.write(geo_string+"\n")
 
