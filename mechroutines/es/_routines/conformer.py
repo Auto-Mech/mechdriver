@@ -607,7 +607,7 @@ def ring_conformer_sampling(
     # Exclude from puckering sampling the ring atoms after a higher order bond
     rot_bset = set(automol.graph.rotational_bond_keys(gra,with_rings_rotors=True))
     rings_bonds = {frozenset([ ring[i-1], atom ]
-                             ) for ring in rings_atoms for i, atom in enumerate(ring)}
+                   ) for ring in rings_atoms for i, atom in enumerate(ring)}
     rings_planar_bonds = rings_bonds.difference(rot_bset)
     rings_planar_atoms = set()
     for ring_atoms,_ in tors_dcts:
@@ -622,7 +622,8 @@ def ring_conformer_sampling(
     planar_dih, dih_remover, remove_ring = [],[],[]
     for cord,dih_atoms in {key: value for key,value in coos.items(
                                 ) if key.startswith("D")}.items():
-        if dih_atoms[0][0] in rings_planar_atoms: planar_dih.append(cord)
+        if dih_atoms[0][0] in rings_planar_atoms: 
+            planar_dih.append(cord)
     # Check rings_tors_dct and remove dihedrals of ring_planar_atoms if present
     for ring_atoms,ring_dihs in tors_dcts:
         dih_remover.extend([(ring_atoms,dih) for dih in ring_dihs if dih in planar_dih])
@@ -840,7 +841,7 @@ def ring_conformer_sampling(
     if nsamp > 0:
         info_message(
             f'Running {nsamp} samples...', newline=1)
-    return
+    
 
     # Create list of saved geos; initialize with saved geos
     num_saved = len(saved_geos)
