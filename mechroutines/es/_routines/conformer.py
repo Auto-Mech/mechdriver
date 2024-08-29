@@ -960,7 +960,7 @@ def ring_checks_loops(
                         relax_thresh, algorithm, check_dct,
                         rings_atoms, ngbs, frag_saved_geos,
                         cnf_run_fs, cnf_save_fs, thy_info,
-                        spc_info, vma_adl, geo
+                        spc_info, vma, geo
                         ):
     '''
     adl Two implementations of loops of checks for the sampled geometries.
@@ -968,6 +968,30 @@ def ring_checks_loops(
     2) ring closure - CREST topology and energy checks
     Both followed by DBSCAN clustering
     '''
+    def ring_closure_check():
+        samp_check = True
+        for unconnected_ats,unconnected_dist_value_dct in all_unconnected_lst:
+            if not automol.zmat.ring_distances_reasonable( 
+                            samp_zma, unconnected_ats, unconnected_dist_value_dct,
+                            0.3 * relax_thresh["dist"]
+                            ): 
+                samp_check = False
+        return samp_check
+    
+    def unique_check():
+        samp_check = True
+        try:
+            frag_samp_geo = automol.geom.ring_fragments_geometry(
+                samp_geo, rings_atoms, ngbs)
+            samp_check = automol.geom.is_unique(frag_samp_geo,
+                                frag_saved_geos, check_dct) and samp_check
+            samp_check = automol.geom.is_unique(frag_samp_geo,
+                                unique_frag_geos, check_dct) and samp_check
+        except:
+            # Accounts for weird unconnected geos that can be skipped
+            samp_check = False                         
+        return samp_check, frag_samp_geo
+            
     
     unique_frag_geos, unique_geos = [], []
     ref_geo_for_rep_pot = geo
@@ -975,18 +999,11 @@ def ring_checks_loops(
     if checks == 1:
         for i,samp_zma in enumerate(samp_zmas):
             print("samp",i+1)
-            samp_check = True
             # if zrxn != None: # Use it for TS??
             #     if not automol.reac.similar_saddle_point_structure(samp_zma, zma, zrxn): 
             #       continue
             #     print('   -0.5) reasonable saddle point structure')
-            for unconnected_ats,unconnected_dist_value_dct in all_unconnected_lst:
-                if not automol.zmat.ring_distances_reasonable( 
-                                samp_zma, unconnected_ats, unconnected_dist_value_dct, 
-                                0.3 * relax_thresh["dist"]
-                                ): 
-                    samp_check = False
-            if samp_check == False: 
+            if ring_closure_check() == False: 
                 continue
             samp_geo = automol.zmat.geometry(samp_zma)
             print('   -1) reasonable distances')
@@ -998,44 +1015,30 @@ def ring_checks_loops(
                                     samp_geo, ref_geo_for_rep_pot, 
                                     thresh = 40. * relax_thresh['potential']):
                 print('   -2) reasonable rel repuls')
-                # Added try and check for a few problematic sampling points
-                try:
-                    frag_samp_geo = automol.geom.ring_fragments_geometry(
-                        samp_geo, rings_atoms, ngbs)
-                except:
-                    # Accounts for weird unconnected geos that can be skipped
+
+                samp_check, frag_samp_geo = unique_check()
+                if samp_check == False: 
                     continue
-                frag_samp_unique = automol.geom.is_unique(
-                    frag_samp_geo, frag_saved_geos, check_dct)
-                samp_unique = automol.geom.is_unique(
-                    frag_samp_geo, unique_frag_geos, check_dct)
-                            
-                if frag_samp_unique and samp_unique:
-                    print('   -3) unique check')
-                    run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
-                                    samp_zma, cnf_run_fs, cnf_save_fs, thy_info)
-                    
-                    if run_in_run: 
-                        continue
-                    else:
-                        print('   -4) not run in run, ok')
-                        unique_geos.append(samp_geo)
-                        unique_frag_geos.append(frag_samp_geo)
-                        if algorithm in ["crest","torsions2"]:
-                            if len(unique_frag_geos) == 1:
-                                ref_geo_for_rep_pot = samp_geo
+                print('   -3) unique check')
+
+                run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
+                                samp_zma, cnf_run_fs, cnf_save_fs, thy_info)               
+                if run_in_run: 
+                    continue
+                else:
+                    print('   -4) not run in run, ok')
+                    unique_geos.append(samp_geo)
+                    unique_frag_geos.append(frag_samp_geo)
+                    if algorithm in ["crest","torsions2"]:
+                        if len(unique_frag_geos) == 1:
+                            ref_geo_for_rep_pot = samp_geo
 
     elif checks == 2:
         for i,samp_zma in enumerate(samp_zmas):
             print("samp",i+1)
-            samp_check = True
-            for unconnected_ats,unconnected_dist_value_dct in all_unconnected_lst:
-                if not automol.zmat.ring_distances_reasonable( 
-                                samp_zma, unconnected_ats, unconnected_dist_value_dct,
-                                0.3 * relax_thresh["dist"]
-                                ): 
-                    samp_check = False
-            if samp_check == False: continue
+
+            if ring_closure_check() == False: 
+                continue
             samp_geo = automol.zmat.geometry(samp_zma)
             unique_frag_geos.append(samp_geo)
             print('   -1) reasonable distances')
@@ -1048,12 +1051,29 @@ def ring_checks_loops(
                 geo_string = automol.geom.xyz_string(samp_geo, comment=" ")
                 f.write(geo_string+"\n")
 
-        unique_geos = automol.geom.checks_with_crest(
+        crest_geos = automol.geom.checks_with_crest(
                                     "pucker_checks.xyz",
                                     spc_info,
                                     )
+        unique_frag_geos = []
+        for samp_geo in crest_geos:
+            samp_check, frag_samp_geo = unique_check()
+            if samp_check == False: 
+                continue
+            print('   -3) unique check')
+
+            samp_zma = automol.zmat.base.from_geometry(vma, samp_geo)
+            run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
+                            samp_zma, cnf_run_fs, cnf_save_fs, thy_info)               
+            if run_in_run: 
+                continue
+            else:
+                print('   -4) not run in run, ok')
+                unique_geos.append(samp_geo)
+                unique_frag_geos.append(frag_samp_geo)
+
     
-    return [automol.zmat.base.from_geometry(vma_adl, geoi) for geoi in unique_geos]
+    return [automol.zmat.base.from_geometry(vma, geoi) for geoi in unique_geos]
 
 
 ########### RING PUCKERING WITH CREST #############
