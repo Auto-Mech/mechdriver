@@ -512,12 +512,8 @@ def _remove_hbonded_structures(
             zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
-<<<<<<< HEAD
                 grxn = with_structures(zrxn, "geom")
-=======
-                grxn = undo_zmatrix_conversion(zrxn)
                 tsg = automol.reac.ts_graph(grxn)
->>>>>>> small bugfix
             else:
                 tsg = None
 
