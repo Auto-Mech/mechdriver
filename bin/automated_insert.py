@@ -127,14 +127,16 @@ THEORY_DCT = {
         'basis':  'cc-pvtz'}}
 
 
-def parse_user_locs(insert_dct):
+def parse_user_locs(insert_dct, geo, cnf_fs):
     rid = insert_dct['rid']
     cid = insert_dct['cid']
+    if rid is None:
+        rid = rng_loc_for_geo(geo, cnf_fs)
     if rid is None:
         rid = autofile.schema.generate_new_ring_id()
     if cid is None:
         cid = autofile.schema.generate_new_conformer_id()
-    return [rid], [cid], (rid, cid)
+    return (rid, cid)
 
 
 def parse_user_species(insert_dct):
@@ -142,19 +144,20 @@ def parse_user_species(insert_dct):
     ich = insert_dct['inchi']
     mult = insert_dct['mult']
     chg = insert_dct['charge']
-    if ich is None and smi is None:
+    if ich is None and smi is None and not insert_dct['trusted']:
         print(
             'Error: user did not specify species' +
             'with an inchi or smiles in input')
         sys.exit()
-    if ich is None:
+    if ich is None and smi is not None:
         ich = automol.smiles.chi(smi)
-    if not automol.chi.is_complete(ich):
-        ich = automol.chi.add_stereo(ich)
-    if mult is None:
+    if ich is not None:
+        if not automol.chi.is_complete(ich):
+            ich = automol.chi.add_stereo(ich)
+    if mult is None and not insert_dct['trusted']:
         print('Error: user did not specify mult in input')
         sys.exit()
-    if chg is None:
+    if chg is None and not insert_dct['trusted']:
         print('Error: user did not specify charge in input')
         sys.exit()
     return sinfo.from_data(ich, chg, mult)
@@ -274,11 +277,13 @@ def create_species_filesystems(prefix, spc_info, mod_thy_info, locs=None):
 
     # species filesystem
     spc_fs = autofile.fs.species(prefix)
+    print(spc_info, spc_fs[0].path())
     spc_fs[-1].create(spc_info)
     spc_prefix = spc_fs[-1].path(spc_info)
 
     # theory filesystem
     thy_fs = autofile.fs.theory(spc_prefix)
+    print(mod_thy_info[1:])
     thy_fs[-1].create(mod_thy_info[1:])
     thy_prefix = thy_fs[-1].path(mod_thy_info[1:])
 
@@ -346,6 +351,21 @@ def read_user_filesystem(dct):
             'Script will exit')
         sys.exit()
     return dct['save_filesystem']
+
+
+def species_info_from_input(geo, spc_info, inp_str=None):
+    spc_info = list(spc_info)
+    if spc_info[0] is None:
+        spc_info[0] = automol.geom.chi(geo, stereo=True)
+    if spc_info[1] is None:
+        #read from inp_str
+        mults_allowed = automol.graph.possible_spin_multiplicities(
+             automol.chi.graph(spc_info[0], stereo=False))
+        spc_info[1] = mults_allowed[0]
+    if spc_info[2] is None:
+        #read from inp_str
+        spc_info[2] = 0
+    return tuple(spc_info)
 
 
 def choose_beta_qh_cutoff_distance(geo):
@@ -715,8 +735,14 @@ def main(insert_dct):
 
     # Read in the input and output files that we
     # Are inserting into the filesystem
-    inp_str = read_user_file(insert_dct, 'input_file')
-    out_str = read_user_file(insert_dct, 'output_file')
+    if insert_dct['input_file'] == 'string':
+        inp_str = insert_dct['input_string']
+    else:
+        inp_str = read_user_file(insert_dct, 'input_file')
+    if insert_dct['output_file'] == 'string':
+        out_str = insert_dct['output_string']
+    else:
+        out_str = read_user_file(insert_dct, 'output_file')
     output_type = insert_dct['output_type']
     geo, zma, ene, hess_job = _struct_based_on_input(
         output_type, out_str, prog, method)
@@ -726,18 +752,20 @@ def main(insert_dct):
         rxn_info, spc_info, rxn_class = parse_user_reaction(insert_dct)
         zrxn, zma, geo, rxn_info = get_zrxn(geo, rxn_info, rxn_class)
     else:
+        zrxn = None
         spc_info = parse_user_species(insert_dct)
-
-    if zma is None:
-        zma = automol.geom.zmatrix(geo)
-        geo = automol.zmat.geometry(zma)
+        if None in spc_info:
+            spc_info = species_info_from_input(geo, spc_info)
+        if zma is None:
+            zma = automol.geom.zmatrix(geo)
+            geo = automol.zmat.geometry(zma)
 
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    rng_locs, tors_locs, locs = parse_user_locs(insert_dct)
 
     # Check that the save location matches geo information
+    print('spc_info', spc_info)
     if not insert_dct['saddle']:
-        if not species_match(geo, spc_info):
+        if not species_match(geo, spc_info) and not insert_dct['trusted']:
             print(
                 'I refuse to save this geometry until user specified' +
                 ' info matches the info in user given output')
@@ -750,6 +778,7 @@ def main(insert_dct):
             prefix, rxn_info, mod_thy_info,
             ts_locs=insert_dct['ts_locs'], locs=None)
     cnf_fs = fs_array[-1]
+    locs = parse_user_locs(insert_dct, geo, cnf_fs)
     if not locs_match(geo, cnf_fs, locs):
         print(
             'I refuse to save this geometry until user specified' +
@@ -793,8 +822,8 @@ def main(insert_dct):
                 hess_ret = (hess_inf_obj, inp_str, out_str)
             save_info = (geo, zma, ene, inf_obj, inp_str)
             save.parsed_conformer(
-                save_info, cnf_fs, mod_thy_info[1:], rng_locs=rng_locs,
-                tors_locs=tors_locs, zrxn=zrxn, hess_ret=hess_ret)
+                save_info, cnf_fs, mod_thy_info[1:], rng_locs=[locs[0]],
+                tors_locs=[locs[1]], zrxn=zrxn, hess_ret=hess_ret)
             print(
                 'geometry is now saved at {}'.format(cnf_fs[-1].path(locs)))
     else:
@@ -889,6 +918,7 @@ def parse_script_input(script_input_file):
         'zrxn_file': None,
         'run_path': None,
         'saddle': False,
+        'trusted': False,
     }
     for i, line in enumerate(script_input):
         if len(line) < 2:
