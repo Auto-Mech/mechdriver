@@ -29,6 +29,7 @@ DEFAULT_GROUPS = (
 SUBTASK_DIR = "subtasks"
 INFO_FILE = "info.yaml"
 
+ROTOR_TASKS = ("hr_scan",)
 SAMP_TASKS = ("conf_samp",)
 
 
@@ -334,13 +335,18 @@ def parse_subtasks_nworkers(
     if task_line.startswith("spc"):
         task_name = parse_task_name(task_line)
         field_dct = parse_task_fields(task_line)
+
+        # Get the list of ChIs ordered by subtask key
+        spc_df = parse_species_csv(file_dct.get("species.csv"))
+        if "inchi" not in spc_df:
+            spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.inchi)
+        chis = [spc_df.iloc[int(k) - 1]["inchi"] for k in subtask_keys]
+
+        # Determine the number of workers per subtask
+        if task_name in ROTOR_TASKS:
+            nworkers_lst = list(map(rotor_count_from_inchi, chis))
         if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
             nmax = int(field_dct.get("cnf_range", "n100")[1:])
-            spc_df = parse_species_csv(file_dct.get("species.csv"))
-            if "inchi" not in spc_df:
-                spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.inchi)
-
-            chis = [spc_df.iloc[int(k) - 1]["inchi"] for k in subtask_keys]
             nsamp_lst = [sample_count_from_inchi(c, param_d=nmax) for c in chis]
             nworkers_lst = [max((n - 1) // 2, 1) for n in nsamp_lst]
 
@@ -379,6 +385,21 @@ def parse_species_csv(species_csv: str) -> pandas.DataFrame:
     :return: The species table
     """
     return pandas.read_csv(io.StringIO(species_csv), quotechar="'")
+
+
+def rotor_count_from_inchi(chi: str) -> int:
+    """Determine species rotor count for a molecule from its InChI or AMChI string
+
+    :param chi: An InChI or AMChI string
+    :return: The rotor count
+    """
+    gra = automol.amchi.graph(chi, stereo=False)
+    # If there are no torsions at all, return 1
+    if not len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=True)):
+        return 1
+
+    nrotor = len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=True))
+    return nrotor
 
 
 def sample_count_from_inchi(
