@@ -684,8 +684,7 @@ def ring_conformer_sampling(
 
     if algorithm == 'pucker' or algorithm == 'robust': 
         ring_puckering_with_cremerpople(geo, vma, tors_dcts, ngbs, nsamp, 
-                                        all_ring_atoms, coos, samp_zmas_pucker,
-                                        bonds_from_zma)
+                                        all_ring_atoms, coos, samp_zmas_pucker)
     
         # Now sample with dihedrals also 4-membered rings
         for ring_atoms, samp_range_dct in tors_dcts:
@@ -922,15 +921,27 @@ def ring_conformer_sampling(
             inf_obj_temp, _, out_str = ret
             prog = inf_obj_temp.prog
             good_geo = elstruct.reader.opt_geometry(prog, out_str)
-            good_ring_geo = automol.geom.ring_fragments_geometry(good_geo,rings_atoms)
-            string_ring_geo = automol.geom.xyz_string(good_ring_geo)
-            new_mol = rdkit.Chem.rdmolfiles.MolFromXYZBlock(string_ring_geo)
+            # good_ring_geo = automol.geom.ring_fragments_geometry(good_geo,rings_atoms)
+            # string_ring_geo = automol.geom.xyz_string(good_ring_geo)
+            # new_mol = rdkit.Chem.rdmolfiles.MolFromXYZBlock(string_ring_geo)
 
-            # Compare to previously saved ring geos
-            for i in range(len(mols)):
-                rdkitrmsd = rdkit.Chem.AllChem.GetBestRMS(mols[i], new_mol)
-                print(f"rmsd new - {i}: {rdkitrmsd}")
-                if rdkitrmsd < 0.01:
+            # # Compare to previously saved ring geos
+            # for i in range(len(mols)):
+            #     rdkitrmsd = rdkit.Chem.AllChem.GetBestRMS(mols[i], new_mol)
+            #     print(f"rmsd new - {i}: {rdkitrmsd}")
+            #     if rdkitrmsd < 0.01:
+            #         print("Ring state previously saved in filsys")
+            #         print("Moving to the next conformer...")
+            #         break
+            # # If bestrmsd is > 0.01 always then save
+            # # Typical values of ca. 0.005-8 obseved for equivalent geos
+            good_ring_geo = automol.geom.ring_fragments_geometry(good_geo,rings_atoms)
+            good_zma = automol.geom.zmatrix(good_ring_geo)
+            ring_saved_geos = [automol.geom.ring_fragments_geometry(geoi,rings_atoms) for geoi in saved_geos]
+            for ring_geoi in ring_saved_geos:
+                zmai = automol.geom.zmatrix(ring_geoi)
+                if automol.zmat.almost_equal(zmai, good_zma,
+                                             dist_rtol=0.018, ang_atol=.05):
                     print("Ring state previously saved in filsys")
                     print("Moving to the next conformer...")
                     break
@@ -986,6 +997,7 @@ def ring_checks_loops(
         return samp_check
     
     def unique_check():
+        # TODO I need to include also the initial geometries!
         samp_check = True
         try:
             frag_samp_geo = automol.geom.ring_fragments_geometry(
@@ -1029,11 +1041,12 @@ def ring_checks_loops(
                 print('   -3) unique check')
 
                 run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
-                                samp_zma, cnf_run_fs, cnf_save_fs, thy_info)               
-                if run_in_run: 
+                                samp_zma, cnf_run_fs, cnf_save_fs, thy_info)
+                run_in_save = this_conformer_was_run_in_save(samp_zma, cnf_save_fs)   
+                if run_in_run and run_in_save: 
                     continue
                 else:
-                    print('   -4) not run in run, ok')
+                    print('   -4) not run in save, ok')
                     unique_geos.append(samp_geo)
                     unique_frag_geos.append(frag_samp_geo)
                     if algorithm in ["crest","torsions2"]:
@@ -1072,14 +1085,14 @@ def ring_checks_loops(
             samp_zma = automol.zmat.base.from_geometry(vma, samp_geo)
             run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
                             samp_zma, cnf_run_fs, cnf_save_fs, thy_info)               
-            if run_in_run: 
+            run_in_save = this_conformer_was_run_in_save(samp_zma, cnf_save_fs)   
+            if run_in_run and run_in_save: 
                 continue
             else:
-                print('   -4) not run in run, ok')
+                print('   -4) not run in save, ok')
                 unique_geos.append(samp_geo)
                 unique_frag_geos.append(frag_samp_geo)
-
-    
+  
     return [automol.zmat.base.from_geometry(vma, geoi) for geoi in unique_geos]
 
 
@@ -1521,6 +1534,12 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
         if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
             sym_id = _sym_unique(
                 geo, ene, saved_geos, saved_enes)
+            # Determine correct ring location
+            rid = rng_loc_for_geo(geo, cnf_save_fs)
+            if rid is None:
+                rid = autofile.schema.generate_new_ring_id()
+            _,cid = locs
+            locs = (rid,cid)
             print('save_conformer locs:', locs, sym_id)
             if sym_id is None:
                 filesys.save.conformer(
@@ -1976,6 +1995,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
         frag_zma = automol.geom.zmatrix(frag_geo)
     checked_rids = []
     for locs in cnf_save_fs[-1].existing():
+        print("Debug: locs", locs)        
         current_rid, _ = locs
         if current_rid in checked_rids:
             continue
@@ -1983,15 +2003,22 @@ def rng_loc_for_geo(geo, cnf_save_fs):
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = automol.geom.ring_fragments_geometry(locs_geo)
         if frag_locs_geo is None or frag_geo is None:
+            print("Debug: Something is None")
+            print(frag_locs_geo)
+            print(frag_geo)
+            print(locs)
             rid = locs[0]
             break
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
         # for now: set tolerances to include all ring puckering
-        # previous tolerances: dist_rtol=0.15, ang_atol=.45):
+        # previous tolerances: dist_rtol=150., ang_atol=45.):
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
-                                     dist_rtol=150., ang_atol=45.):
+                                     dist_rtol=0.1, ang_atol=0.2):
             rid = locs[0]
+            print("Zmat similar - locs: ", locs)
             break
+    # Shouldn't I generate new ring state if none corresponds?
+    # It is done in tsk already
 
     return rid
 
