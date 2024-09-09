@@ -442,6 +442,7 @@ def conformer_sampling(zma, spc_info, thy_info,
     """
 
     # Check if any saving needs to be done before hand
+    ref_rid = rid
     cnf_run_fs[1].create([rid])
     if resave:
         _presamp_save(
@@ -473,6 +474,7 @@ def conformer_sampling(zma, spc_info, thy_info,
     samp_attempt_idx = 1
     while True:
         nsamp = nsamp0 - nsampd
+        rid = ref_rid
         # Break the while loop if enough sampls completed
         if nsamp <= 0:
             info_message(
@@ -545,6 +547,14 @@ def conformer_sampling(zma, spc_info, thy_info,
 
         # save function added here
         if success:
+            inf_obj_temp, _, out_str = ret
+            prog = inf_obj_temp.prog
+            samp_geo = elstruct.reader.opt_geometry(prog, out_str)
+            # Determine ring state and update rid
+            rid = rng_loc_for_geo(samp_geo, cnf_save_fs)
+            if rid is None:
+                rid = autofile.schema.generate_new_ring_id()
+            locs = [rid, cid]
             save_conformer(
                 ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
@@ -589,6 +599,10 @@ def ring_conformer_sampling(
     if skip: 
         print("\nRing puckering: Skipping...\n")
         return
+# I can use resave in conf_samp
+    # _presamp_save(
+    #         spc_info, cnf_run_fs, cnf_save_fs,
+    #         thy_info, zrxn=zrxn, rid=None, ref_zma=zma)
     
     import rdkit
 
