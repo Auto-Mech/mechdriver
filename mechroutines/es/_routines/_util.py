@@ -68,3 +68,12 @@ def nsamp_init(nsamp_par, ntaudof):
     else:
         nsamp = nsamp_par[5]
     return nsamp
+
+
+def ring_samp_zmas(ring_atoms, nsamp_par, n_rings=1):
+    """ choose starting number of sample zmas
+    """
+    ntors = len(ring_atoms) - 3 - 2*(n_rings-1)
+    apar, bpar, cpar = nsamp_par[1:4]
+    #Set maximum number of initial sampling points per run
+    return min(10000,10*(apar + bpar * cpar**ntors))

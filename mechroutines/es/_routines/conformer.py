@@ -571,15 +571,6 @@ def conformer_sampling(zma, spc_info, thy_info,
         samp_attempt_idx += 1
 
 
-def _num_samp_zmas(ring_atoms, nsamp_par, n_rings=1):
-    """ choose starting number of sample zmas
-    """
-    ntors = len(ring_atoms) - 3 - 2*(n_rings-1)
-    apar, bpar, cpar = nsamp_par[1:4]
-    #Set maximum number of initial sampling points per run
-    return min(10000,10*(apar + bpar * cpar**ntors))
-
-
 def ring_conformer_sampling(
         zma, spc_info, thy_info,
         cnf_run_fs, cnf_save_fs,
@@ -681,7 +672,7 @@ def ring_conformer_sampling(
     samp_zmas,samp_zmas_crest,samp_zmas_pucker,samp_zmas_torsions = {}, [], [], []
     vma =  automol.zmat.vmatrix(zma)
 
-    nsamp = _num_samp_zmas(all_ring_atoms, nsamp_par, len(rings_atoms))
+    nsamp = util.ring_samp_zmas(all_ring_atoms, nsamp_par, len(rings_atoms))
     if algorithm in ["torsions","pucker","robust"]:
         print("nsamp for pucker or torsions algorithms: ",nsamp)
 
