@@ -628,6 +628,9 @@ def parse_index_series(inp: str) -> list[int]:
         Input: '1,3, 5-9  \n  11,13-14\n23\n 27-29'
         Output: (1, 3, 5, 6, 7, 8, 9, 11, 13, 14, 23, 27, 28, 29)
     """
+    if not inp:
+        return []
+
     dash = pp.Suppress(pp.Literal("-"))
     entry = ppc.integer ^ pp.Group(ppc.integer + dash + ppc.integer)
     delim = pp.LineEnd() ^ pp.Literal(",")
