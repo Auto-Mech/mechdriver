@@ -357,11 +357,19 @@ def conformer_tsk(job, spc_dct, spc_name,
             zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
         zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
-        # Read the torsions from the ini file sys
+        # Read the ring torsions from the ini file sys
         if ini_zma_save_fs[-1].file.ring_torsions.exists(zma_locs):
             ring_tors_dct = ini_zma_save_fs[-1].file.ring_torsions.read(zma_locs)
         else:
             ring_tors_dct = {}
+
+        # Read the torsions from the ini file sys
+        if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
+            tors_lst = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
+            rotors = automol.data.rotor.rotors_from_data(zma, tors_lst)
+            tors_names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
+        else:
+            tors_names = ()
 
         geo_path = ini_cnf_save_fs[-1].path(ini_min_locs)
         ioprinter.initial_geom_path('Sampling started', geo_path)
@@ -371,6 +379,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             zma, spc_info, mod_thy_info,
             cnf_run_fs, cnf_save_fs,
             script_str, overwrite,
+            tors_names,
             algorithm=algo,
             thresholds=thresh_pucker,
             eps=eps,
