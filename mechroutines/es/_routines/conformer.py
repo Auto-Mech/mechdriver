@@ -816,20 +816,22 @@ def ring_conformer_sampling(
     # Set up the DBSCAN clustering
     unique_geos = [automol.zmat.geometry(zmai) for zmai in unique_zmas]
 
-    unique_geos = automol.geom.dbscan(
-                        unique_geos,
-                        rings_atoms, 
-                        eps, 
-                        min_samples=1
-                        )
+    if len(unique_geos) > 0:
+        unique_geos = automol.geom.dbscan(
+                            unique_geos,
+                            rings_atoms, 
+                            eps, 
+                            min_samples=1
+                            )
+    else:
+        print("No valid samples! Try changing the protocol...")
     
     unique_zmas = [automol.zmat.base.from_geometry(vma, geoi) for geoi in unique_geos]
     print(f"Valid samples after clustering: {len(unique_zmas)}")
 
     with open("uniques.xyz","w") as f:  
-        for zmai in unique_zmas:
-            new_geo = automol.zmat.geometry(zmai)
-            geo_string = automol.geom.xyz_string(new_geo, comment="")
+        for geoi in unique_geos:
+            geo_string = automol.geom.xyz_string(geoi, comment="")
             f.write(geo_string+"\n")  
 
 
@@ -950,8 +952,8 @@ def ring_conformer_sampling(
                 print("len saved geos now: ", len(saved_geos))
                 
                 if num_saved < len(saved_geos):
-                    rings_geos_strings.append(string_ring_geo) #Useful for printing
-                    mols.append(new_mol)
+                    # rings_geos_strings.append(string_ring_geo) #Useful for printing
+                    # mols.append(new_mol)
                     num_saved = len(saved_geos)
 
     with open("final-rings-stru.xyz","w") as f:
@@ -1152,9 +1154,8 @@ def ring_puckering_with_crest(geo, zrxn, spc_info, vma, samp_zmas_crest):
 
 
 ########### RING PUCKERING WITH CREMER POPLE PARAMS #############
-def ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp,
-                                    all_ring_atoms,coos, samp_zmas_pucker, 
-                                    bonds_from_zma,dist_thresh=1.1):
+def ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp, all_ring_atoms,
+                                    coos, samp_zmas_pucker, dist_thresh=1.1):                               
     """
     Valid for 5 to 16 membered rings
     """
