@@ -132,12 +132,19 @@ def run_adhoc(
     "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
 )
 @click.option(
+    "-c",
+    "--check-file",
+    default="check.log",
+    show_default=True,
+    help="Log file for writing paths to be checked",
+)
+@click.option(
     "-w",
     "--wrap",
     default=18,
     show_default=True,
     help="Wrap to included this many subtask columns per row",
 )
-def status(path: str = SUBTASK_DIR, wrap: int = 18):
+def status(path: str = SUBTASK_DIR, check_file: str = "check.log", wrap: int = 18):
     """Check the status of running subtasks"""
-    _subtasks_status.main(path=path, wrap=wrap)
+    _subtasks_status.main(path=path, check_file=check_file, wrap=wrap)

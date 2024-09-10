@@ -21,24 +21,30 @@ class Status(enum.Enum):
 STATUS_WIDTH = 7
 
 
-def parse_log_status(log_path: str | Path) -> Status:
-    """Parse the status of a log file
+def check_log(log_path: str | Path) -> tuple[Status, str | None]:
+    """Check a log file, returning the status and the line that triggered it.
 
     :param log_path: The log file path
-    :return: The status
+    :return: The status and the line triggering the status, if applicable
     """
     log_path = Path(log_path)
+    line = None
     if not log_path.exists():
-        return Status.TBD
+        status = Status.TBD
+        return (status, line)
 
     log = log_path.read_text()
     has_exit_message = re.search("EXITING AUTOMECHANIC", log)
     has_is_running_file = Path(f"{log_path}_IS_RUNNING").exists()
     if not has_exit_message:
-        return Status.RUNNING if has_is_running_file else Status.ERROR
+        status = Status.RUNNING if has_is_running_file else Status.ERROR
+        line = log.strip().splitlines()[-1]
+        return (status, line)
 
-    has_warning = re.search("(?<!Future)Warning", log, flags=re.IGNORECASE)
-    return Status.WARNING if has_warning else Status.OK
+    warning_match = re.search(r".*(?<!Future)Warning.*", log, flags=re.IGNORECASE)
+    status = Status.WARNING if warning_match else Status.OK
+    line = warning_match.group(0) if warning_match else None
+    return (status, line)
 
 
 def colored_status_string(status: Status) -> str:
@@ -72,5 +78,7 @@ def main(path: str = "."):
         path /= "out.log"
     assert path.is_file(), f"File does not exist: {path}"
 
-    status = parse_log_status(path)
+    status, line = check_log(path)
     print(f"{str(path) + ' ':.<80} {colored_status_string(status)}")
+    if line is not None:
+        print(line)
