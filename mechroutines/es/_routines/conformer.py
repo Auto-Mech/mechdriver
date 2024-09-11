@@ -486,7 +486,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 f'Max sample num: 5*{nsamp} attempted, ending search',
                 'Run again if more samples desired.')
             break
-
+        print(f"Debug: ew iteration, nsampd - {nsampd}")
         # Run the conformer sampling
         if nsampd > 0:
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
@@ -559,13 +559,14 @@ def conformer_sampling(zma, spc_info, thy_info,
                 ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
                 init_zma=samp_zma, ref_zma=samp_zma)
-
-            nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
+            nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, ref_rid)
+            print('Conformer succesfully saved in ', locs)
+            print(inf_obj)
             nsampd += 1
             samp_idx += 1
             inf_obj.nsamp = nsampd
-            cnf_save_fs[1].file.info.write(inf_obj, [rid])
-            cnf_run_fs[1].file.info.write(inf_obj, [rid])
+            cnf_save_fs[1].file.info.write(inf_obj, [ref_rid])
+            cnf_run_fs[1].file.info.write(inf_obj, [ref_rid])
 
         # Increment attempt counter
         samp_attempt_idx += 1
@@ -842,15 +843,15 @@ def ring_conformer_sampling(
         for ref_zma in unique_zmas:
             new_cnt = 0
 
-            while new_cnt < 3:
+            while new_cnt < 2:
                 bad_geo_cnt = 0
                 new_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
 
-                while not automol.zmat.has_low_relative_repulsion_energy(new_zma, ref_zma) and bad_geo_cnt < 1000:
+                while not automol.zmat.has_low_relative_repulsion_energy(new_zma, ref_zma) and bad_geo_cnt < 200:
                     new_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
                     bad_geo_cnt += 1
 
-                if bad_geo_cnt < 1000:
+                if bad_geo_cnt < 200:
                     new_zmas.append(new_zma)
                 new_cnt += 1
             
@@ -1061,7 +1062,7 @@ def ring_checks_loops(
                 run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
                                 samp_zma, cnf_run_fs, cnf_save_fs, thy_info)
                 run_in_save = this_conformer_was_run_in_save(samp_zma, cnf_save_fs)   
-                if run_in_run and run_in_save: 
+                if run_in_run or run_in_save: 
                     continue
                 else:
                     print('   -4) not run in save, ok')
@@ -1104,7 +1105,7 @@ def ring_checks_loops(
             run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
                             samp_zma, cnf_run_fs, cnf_save_fs, thy_info)               
             run_in_save = this_conformer_was_run_in_save(samp_zma, cnf_save_fs)   
-            if run_in_run and run_in_save: 
+            if run_in_run or run_in_save: 
                 continue
             else:
                 print('   -4) not run in save, ok')
@@ -1584,7 +1585,8 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
         obj('vspace')
         rid = None
         if rid_traj:
-            rid = locs[0]
+            if rid in cnf_save_fs[-1].existing():
+                rid = locs[0]
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
 
