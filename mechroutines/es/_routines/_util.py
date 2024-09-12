@@ -4,6 +4,7 @@
 import numpy
 import automol
 from mechlib.amech_io.printer import info_message
+from automol.extern import Ring_Reconstruction as RR
 
 
 def calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
@@ -76,4 +77,166 @@ def ring_samp_zmas(ring_atoms, nsamp_par, n_rings=1):
     ntors = len(ring_atoms) - 3 - 2*(n_rings-1)
     apar, bpar, cpar = nsamp_par[1:4]
     #Set maximum number of initial sampling points per run
-    return min(10000,10*(apar + bpar * cpar**ntors))
+    return min(10000,30*(apar + bpar * cpar**ntors))
+
+
+########### GET INFORMATION ON SUBS ON FIRST AND LAST RING ATOM #############
+def subs_analysis(all_ring_atoms,all_ring_atoms_list, ngbs, geo, unconnected_keys):
+    """ Generate dicts of neighbours for the unconnected (in the Z-Matrix) atoms of
+        a ring structure
+    """
+    last_ring_at_sub_dct,first_ring_at_sub_dct = {}, {}
+
+    for key_dct, ring_atoms in all_ring_atoms_list.items():
+
+        # Gets position of first substituent on first and last atom of ring (which usually messes up)
+        first_ring_at,last_ring_at = unconnected_keys[key_dct][0],unconnected_keys[key_dct][1]
+        first_ring_at_ngbs,last_ring_at_ngbs = set(ngbs[first_ring_at]), set(ngbs[last_ring_at])
+        first_ring_at_subs = first_ring_at_ngbs.difference(set(all_ring_atoms))
+        last_ring_at_subs = last_ring_at_ngbs.difference(set(all_ring_atoms))
+        # Get xyz of ring and sub
+        coord_ring = [xyz for i,(_,xyz) in enumerate(geo) if i in ring_atoms]
+        first_coord_sub = [xyz for i,(_,xyz) in enumerate(geo) if i in first_ring_at_subs]
+        last_coord_sub = [xyz for i,(_,xyz) in enumerate(geo) if i in last_ring_at_subs]
+        # Call alpha beta calculator
+        first_sub_params = [tuple(RR.GetRingSubstituentPosition(coord_ring,coord_sub,-1)
+                                  ) for coord_sub in first_coord_sub]
+        last_sub_params = [tuple(RR.GetRingSubstituentPosition(coord_ring,coord_sub,-1)
+                                 ) for coord_sub in last_coord_sub]
+        # Update sub dictionaries
+        last_ring_at_sub_dct[key_dct] = {key:value for key,value in zip(
+                                        last_ring_at_subs,last_sub_params)}
+        first_ring_at_sub_dct[key_dct] = {key:value for key,value in zip(
+                                        first_ring_at_subs,first_sub_params)}
+
+    return first_ring_at_sub_dct,last_ring_at_sub_dct
+
+
+########### FIX POSITIONS OF SUBS OF FIRST AND LAST RING ATOM #############
+def fixings_subs_positions(samp_zma, all_ring_atoms_list, coos, unconnected_keys,
+                           first_ring_at_sub_dct, last_ring_at_sub_dct, dist_thresh=1.2):
+    """ maniuplates the dihedrals of a Z-Matrix to assure that the substituents of the
+        unconnected atoms of a ring are not close to ring atoms or to each other
+    """
+    samp_geo = automol.zmat.geometry(samp_zma)
+    # I need to perform the substituents check here AFTER I have built the samp ZMat!
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+        non_bonded_first,non_bonded_last = tuple(unconnected_keys[key_dct])
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+                # First sub of first ring atom
+                # Check that I am working on the third ring atom
+                if atm_idxs[0] == ring_atoms[2]:
+                    change_dh = False
+                    for atm in first_ring_at_sub_dct[key_dct]:
+                        dist_sub_to_last = automol.geom.distance(
+                                samp_geo, atm, non_bonded_last, angstrom=True)
+                        print(atm,non_bonded_last,dist_sub_to_last)
+                        if dist_sub_to_last < dist_thresh: 
+                            change_dh = True
+
+                        for atm2 in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_sub = automol.geom.distance(
+                                samp_geo, atm,atm2, angstrom=True)
+                            if dist_sub_to_sub < dist_thresh: 
+                                change_dh = True
+                    if change_dh: 
+                        new_key_dct[name] -= 60.
+
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+    samp_geo = automol.zmat.geometry(samp_zma)
+
+    # I need to perform the substituents check here AFTER AFTER I have built the samp ZMat!
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+                # First sub of first ring atom
+                # If previous -60 rotation didn't help, rotate 60 on the other direction
+                if atm_idxs[0] == ring_atoms[2]:
+                    change_dh = False
+                    for atm in first_ring_at_sub_dct[key_dct]:
+                        dist_sub_to_last = automol.geom.distance(
+                                samp_geo, atm,non_bonded_last, angstrom=True)
+                        if dist_sub_to_last < dist_thresh: change_dh = True
+
+                        for atm2 in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_sub = automol.geom.distance(
+                                samp_geo, atm,atm2, angstrom=True)
+                            if dist_sub_to_sub < dist_thresh: change_dh = True
+                    if change_dh: 
+                        new_key_dct[name] += 120.
+                           
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+    samp_geo = automol.zmat.geometry(samp_zma)
+
+    # I need to perform the substituents check here AFTER AFTER AFTER I have built the samp ZMat!
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+
+                # Last ring atom first sub. 
+                if atm_idxs[0] in last_ring_at_sub_dct[key_dct]:
+                    change_dh = False
+                    if atm_idxs[0] == min(last_ring_at_sub_dct[key_dct]):
+                        for atm in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_first = automol.geom.distance(samp_geo,
+                                                atm, non_bonded_first, angstrom=True)
+                            if dist_sub_to_first < dist_thresh: change_dh = True
+                            for atm2 in first_ring_at_sub_dct[key_dct]:
+                                dist_sub_to_sub = automol.geom.distance(
+                                    samp_geo, atm,atm2, angstrom=True)
+                                if dist_sub_to_sub < dist_thresh: change_dh = True
+                    if change_dh:  
+                        new_key_dct[name] -= 60.     
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+    samp_geo = automol.zmat.geometry(samp_zma)
+
+    for key_dct,ring_atoms in all_ring_atoms_list.items():
+        new_key_dct = {}
+        for name, cord in coos.items():
+            atm_idxs = cord[0]
+            if len(atm_idxs) == 2:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, angstrom=True)
+            elif len(atm_idxs) == 3:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+            elif len(atm_idxs) == 4:
+                new_key_dct[name] = automol.zmat.value(samp_zma, name, degree=True)
+
+                # Last ring atom first sub. 
+                if atm_idxs[0] in last_ring_at_sub_dct[key_dct]: 
+                    change_dh = False
+                    if atm_idxs[0] == min(last_ring_at_sub_dct[key_dct]):
+                        for atm in last_ring_at_sub_dct[key_dct]:
+                            dist_sub_to_first = automol.geom.distance(samp_geo,
+                                                atm, non_bonded_first, angstrom=True)
+                            if dist_sub_to_first < dist_thresh: change_dh = True
+                            for atm2 in first_ring_at_sub_dct[key_dct]:
+                                dist_sub_to_sub = automol.geom.distance(
+                                    samp_geo, atm,atm2, angstrom=True)
+                                if dist_sub_to_sub < dist_thresh: change_dh = True
+                    if change_dh:  
+                        new_key_dct[name] += 120.      
+        samp_zma = automol.zmat.set_values_by_name(samp_zma, new_key_dct)
+
+    return samp_zma
