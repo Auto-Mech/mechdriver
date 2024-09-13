@@ -133,7 +133,7 @@ def need_fake_wells(reagents, well_model):
         :type well_model:
         :rtype: bool
     """
-    return (well_model == 'fake' and len(reagents) > 1)
+    return (well_model == 'fake' and len(reagents) == 2)
 
 
 def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
