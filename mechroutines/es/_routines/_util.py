@@ -88,7 +88,6 @@ def subs_analysis(all_ring_atoms,all_ring_atoms_list, ngbs, geo, unconnected_key
     last_ring_at_sub_dct,first_ring_at_sub_dct = {}, {}
 
     for key_dct, ring_atoms in all_ring_atoms_list.items():
-
         # Gets position of first substituent on first and last atom of ring (which usually messes up)
         first_ring_at,last_ring_at = unconnected_keys[key_dct][0],unconnected_keys[key_dct][1]
         first_ring_at_ngbs,last_ring_at_ngbs = set(ngbs[first_ring_at]), set(ngbs[last_ring_at])
@@ -138,7 +137,6 @@ def fixings_subs_positions(samp_zma, all_ring_atoms_list, coos, unconnected_keys
                     for atm in first_ring_at_sub_dct[key_dct]:
                         dist_sub_to_last = automol.geom.distance(
                                 samp_geo, atm, non_bonded_last, angstrom=True)
-                        print(atm,non_bonded_last,dist_sub_to_last)
                         if dist_sub_to_last < dist_thresh: 
                             change_dh = True
 

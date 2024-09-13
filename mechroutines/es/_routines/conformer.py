@@ -575,7 +575,7 @@ def ring_conformer_sampling(
         cnf_run_fs, cnf_save_fs,
         script_str, overwrite,
         tors_names,
-        algorithm='torsions',
+        algorithm='pucker',
         thresholds='default',
         eps=0.2,
         checks=1,
@@ -668,7 +668,8 @@ def ring_conformer_sampling(
 
     ### ALGORITHM CHOICE ###
     # Initialize variables for CREST and PUCKER algorithms
-    samp_zmas,samp_zmas_crest,samp_zmas_pucker,samp_zmas_torsions = {}, [], [], []
+    samp_zmas = {}
+    samp_zmas_crest,samp_zmas_pucker,samp_zmas_torsions = [], [], []
     vma =  automol.zmat.vmatrix(zma)
 
     nsamp = util.ring_samp_zmas(all_ring_atoms, nsamp_par, len(rings_atoms))
@@ -789,9 +790,9 @@ def ring_conformer_sampling(
     
     if thresholds == 'relaxed': 
         relax_thresh = {
-                "dist":1.7,
+                "dist":2.,
                 "angles":0.8,
-                "potential":1.5,
+                "potential":2.,
                 }
         
     if algorithm == "robust":
@@ -823,7 +824,7 @@ def ring_conformer_sampling(
     else:
         print("No valid samples! Try changing the protocol...")
     
-    unique_zmas = [automol.zmat.base.from_geometry(vma, geoi) for geoi in unique_geos]
+    unique_zmas = [automol.zmat.from_geometry(vma, geoi) for geoi in unique_geos]
     print(f"Valid samples after clustering: {len(unique_zmas)}")
 
     with open("uniques.xyz","w") as f:  
@@ -833,8 +834,10 @@ def ring_conformer_sampling(
 
     ######## Generate extra samples by randomizing the position of the substituents
     if tors_names:
-        _,tors_range_dct = util.calc_nsamp(tors_names, nsamp_par, zma, zrxn=None)
-
+        print("Generating random torsions of subs..")
+        print(tors_names)
+        _,tors_range_dct = util.calc_nsamp(tors_names, nsamp_par, zma, zrxn)
+    
         info_message(
         'Generating sample Z-Matrices that do not have',
         'high intramolecular repulsion...')
@@ -938,7 +941,7 @@ def ring_conformer_sampling(
             inf_obj_temp, _, out_str = ret
             prog = inf_obj_temp.prog
             good_geo = elstruct.reader.opt_geometry(prog, out_str)
-            # good_ring_geo = automol.geom.ring_fragments_geometry(good_geo,rings_atoms)
+            good_ring_geo = automol.geom.ring_fragments_geometry(good_geo,rings_atoms)
             # string_ring_geo = automol.geom.xyz_string(good_ring_geo)
             # new_mol = rdkit.Chem.rdmolfiles.MolFromXYZBlock(string_ring_geo)
 
@@ -952,17 +955,21 @@ def ring_conformer_sampling(
             #         break
             # # If bestrmsd is > 0.01 always then save
             # # Typical values of ca. 0.005-8 obseved for equivalent geos
-            good_ring_geo = automol.geom.ring_fragments_geometry(good_geo,rings_atoms)
             good_zma = automol.geom.zmatrix(good_ring_geo)
             ring_saved_geos = [automol.geom.ring_fragments_geometry(geoi,rings_atoms) for geoi in saved_geos]
 
-            # If working on a TS, check that the structure is reasonable
+            # If working on a TS, check ring closure at least
             if zrxn is not None:
+                is_ts_good = True
                 for unconnected_ats,unconnected_dist_value_dct in all_unconnected_lst:
-                    if not automol.zmat.ring_distances_reasonable( automol.geom.zmatrix(good_geo),
-                                                    unconnected_ats, unconnected_dist_value_dct ):
+                    if not automol.zmat.ring_distances_reasonable( 
+                                        automol.zmat.from_geometry(vma, good_geo),
+                                        unconnected_ats, unconnected_dist_value_dct,
+                                         0.3 * relax_thresh["dist"] ):
                         print("TS doesn't pass ring closure test")
-                        continue
+                        is_ts_good = False
+                if not is_ts_good:
+                    continue
 
             for ring_geoi in ring_saved_geos:
                 zmai = automol.geom.zmatrix(ring_geoi)
@@ -1082,8 +1089,9 @@ def ring_checks_loops(
         for i,samp_zma in enumerate(samp_zmas):
             print("samp",i+1)
 
-            if ring_closure_check() == False: 
-                continue
+            if relax_thresh["dist"] == 1.:
+                if ring_closure_check() == False: 
+                    continue
             samp_geo = automol.zmat.geometry(samp_zma)
             unique_frag_geos.append(samp_geo)
             print('   -1) reasonable distances')
@@ -1107,7 +1115,7 @@ def ring_checks_loops(
                 continue
             print('   -3) unique check')
 
-            samp_zma = automol.zmat.base.from_geometry(vma, samp_geo)
+            samp_zma = automol.zmat.from_geometry(vma, samp_geo)
             run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
                             samp_zma, cnf_run_fs, cnf_save_fs, thy_info)               
             run_in_save = this_conformer_was_run_in_save(samp_zma, cnf_save_fs)   
@@ -1118,7 +1126,7 @@ def ring_checks_loops(
                 unique_geos.append(samp_geo)
                 unique_frag_geos.append(frag_samp_geo)
   
-    return [automol.zmat.base.from_geometry(vma, geoi) for geoi in unique_geos]
+    return [automol.zmat.from_geometry(vma, geoi) for geoi in unique_geos]
 
 
 ########### RING PUCKERING WITH CREST #############
