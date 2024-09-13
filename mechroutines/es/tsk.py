@@ -334,7 +334,7 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job == 'pucker':
         algo = es_keyword_dct['algorithm']
         thresh_pucker = es_keyword_dct['thresholds']
-        am_skipping = es_keyword_dct['skip']
+        rand_tors = es_keyword_dct['rand_tors']
         eps = es_keyword_dct['eps']
         checks = es_keyword_dct['checks']
         # Build the ini zma filesys
@@ -384,7 +384,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             thresholds=thresh_pucker,
             eps=eps,
             checks=checks,
-            skip=am_skipping,
+            rand_tors=rand_tors,
             nsamp_par=mc_nsamp,
             ring_tors_dct=ring_tors_dct, zrxn=zrxn,
             two_stage=two_stage, retryfail=retryfail,
