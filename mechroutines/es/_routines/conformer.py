@@ -579,20 +579,13 @@ def ring_conformer_sampling(
         thresholds='default',
         eps=0.2,
         checks=1,
-        skip=False,
+        rand_tors=2,
         nsamp_par=(False, 3, 1, 3, 50, 50),
         ring_tors_dct=None,
         zrxn=None, two_stage=True, retryfail=False,
         **kwargs):
     """ run sampling algorithm to find conformers
     """
-
-    if skip: 
-        print("\nRing puckering: Skipping...\n")
-        return
-    
-#    import rdkit
-
     # Build filesys
     cnf_save_fs[0].create()
     inf_obj = autofile.schema.info_objects.conformer_trunk(0)
@@ -764,12 +757,17 @@ def ring_conformer_sampling(
                                 first_ring_at_sub_dct, last_ring_at_sub_dct)         
         samp_zmas["torsions2"] = samp_zmas_torsions_two
 
-    with open("allsamples.xyz","w") as f:
-        for algo,s_zmas in samp_zmas.items():
-            for zmai in s_zmas:
-                new_geo = automol.zmat.geometry(zmai)
-                geo_string = automol.geom.xyz_string(new_geo, comment="")
-                f.write(geo_string+"\n")        
+
+    if algorithm == "etkdg" or algorithm == 'robust':
+        samp_zmas["etkdg"] = util.gen_confs(zma,nsamp/3)
+
+
+    # with open("allsamples.xyz","w") as f:
+    #     for algo,s_zmas in samp_zmas.items():
+    #         for zmai in s_zmas:
+    #             new_geo = automol.zmat.geometry(zmai)
+    #             geo_string = automol.geom.xyz_string(new_geo, comment="")
+    #             f.write(geo_string+"\n")        
 
 
     print("\n\nENTERING CHECKS LOOP\n\n")
@@ -796,7 +794,7 @@ def ring_conformer_sampling(
                 }
         
     if algorithm == "robust":
-        algorithm = ["crest","torsions2","torsions","pucker"]
+        algorithm = ["crest","torsions2","torsions","pucker","etkdg"]
     else:
         algorithm = [algorithm]
 
@@ -845,15 +843,15 @@ def ring_conformer_sampling(
         for ref_zma in unique_zmas:
             new_cnt = 0
 
-            while new_cnt < 2:
+            while new_cnt < rand_tors:
                 bad_geo_cnt = 0
                 new_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
 
-                while not automol.zmat.has_low_relative_repulsion_energy(new_zma, ref_zma) and bad_geo_cnt < 200:
+                while not automol.zmat.has_low_relative_repulsion_energy(new_zma, ref_zma) and bad_geo_cnt < 1000:
                     new_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
                     bad_geo_cnt += 1
 
-                if bad_geo_cnt < 200:
+                if bad_geo_cnt < 1000:
                     new_zmas.append(new_zma)
                 new_cnt += 1
             
@@ -942,20 +940,7 @@ def ring_conformer_sampling(
             prog = inf_obj_temp.prog
             good_geo = elstruct.reader.opt_geometry(prog, out_str)
             good_ring_geo = automol.geom.ring_fragments_geometry(good_geo,rings_atoms)
-            # string_ring_geo = automol.geom.xyz_string(good_ring_geo)
-            # new_mol = rdkit.Chem.rdmolfiles.MolFromXYZBlock(string_ring_geo)
-
-            # # Compare to previously saved ring geos
-            # for i in range(len(mols)):
-            #     rdkitrmsd = rdkit.Chem.AllChem.GetBestRMS(mols[i], new_mol)
-            #     print(f"rmsd new - {i}: {rdkitrmsd}")
-            #     if rdkitrmsd < 0.01:
-            #         print("Ring state previously saved in filsys")
-            #         print("Moving to the next conformer...")
-            #         break
-            # # If bestrmsd is > 0.01 always then save
-            # # Typical values of ca. 0.005-8 obseved for equivalent geos
-            good_zma = automol.geom.zmatrix(good_ring_geo)
+            ring_zma = automol.geom.zmatrix(good_ring_geo)
             ring_saved_geos = [automol.geom.ring_fragments_geometry(geoi,rings_atoms) for geoi in saved_geos]
 
             # If working on a TS, check ring closure at least
@@ -968,12 +953,13 @@ def ring_conformer_sampling(
                                          0.3 * relax_thresh["dist"] ):
                         print("TS doesn't pass ring closure test")
                         is_ts_good = False
+                        break
                 if not is_ts_good:
                     continue
 
             for ring_geoi in ring_saved_geos:
                 zmai = automol.geom.zmatrix(ring_geoi)
-                if automol.zmat.almost_equal(zmai, good_zma,
+                if automol.zmat.almost_equal(zmai, ring_zma,
                                              dist_rtol=0.018, ang_atol=.05):
                     print("Ring state previously saved in filsys")
                     print("Moving to the next conformer...")

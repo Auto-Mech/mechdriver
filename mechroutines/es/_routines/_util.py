@@ -5,6 +5,8 @@ import numpy
 import automol
 from mechlib.amech_io.printer import info_message
 from automol.extern import Ring_Reconstruction as RR
+from rdkit import Chem
+from rdkit.Chem import AllChem
 
 
 def calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
@@ -78,6 +80,30 @@ def ring_samp_zmas(ring_atoms, nsamp_par, n_rings=1):
     apar, bpar, cpar = nsamp_par[1:4]
     #Set maximum number of initial sampling points per run
     return min(10000,30*(apar + bpar * cpar**ntors))
+
+
+def gen_confs(zma, vma, num_conf):
+    """ Generate conformational samples using rkdit ETKDGv3 algorithm
+    """
+    print("Generating {} Conformers".format(num_conf))
+    mol = automol.zmat.rdkit_molecule(zma)
+    mol = Chem.AddHs(mol)
+    mol.UpdatePropertyCache()
+    Chem.GetSymmSSSR(mol)
+    params = AllChem.ETKDGv3()
+    params.useRandomCoords = True
+    #params.enforceChirality = False
+    AllChem.EmbedMultipleConfs(mol, num_conf, params)
+    
+    geos = []
+    for cid in [conf.GetId() for conf in mol.GetConformers()]:
+        atms = mol.GetAtoms()
+        # Similar to what is used in automol/extern/rdkit/to_conformers.py
+        syms = tuple(str(rda.GetSymbol()).title() for rda in atms)
+        xyzs = tuple(map(tuple, mol.GetConformer(cid).GetPositions()))
+        geos.append(automol.geom.from_data(syms, xyzs, angstrom=True))
+       
+    return [automol.zmat.from_geometry(vma, geoi) for geoi in geos]
 
 
 ########### GET INFORMATION ON SUBS ON FIRST AND LAST RING ATOM #############
