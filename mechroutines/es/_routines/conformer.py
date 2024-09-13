@@ -1883,8 +1883,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
             if frag_locs_geo is None:
                 continue
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
-        # for now: set tolerances to include all ring puckering
-        # previous tolerances: dist_rtol=150., ang_atol=45.):
+        
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
                                      dist_rtol=0.1, ang_atol=0.2):
             rid = locs[0]
