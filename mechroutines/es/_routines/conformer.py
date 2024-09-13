@@ -761,7 +761,6 @@ def ring_conformer_sampling(
     if algorithm == "etkdg" or algorithm == 'robust':
         samp_zmas["etkdg"] = util.gen_confs(zma,nsamp/3)
 
-
     # with open("allsamples.xyz","w") as f:
     #     for algo,s_zmas in samp_zmas.items():
     #         for zmai in s_zmas:
@@ -960,31 +959,26 @@ def ring_conformer_sampling(
             for ring_geoi in ring_saved_geos:
                 zmai = automol.geom.zmatrix(ring_geoi)
                 if automol.zmat.almost_equal(zmai, ring_zma,
-                                             dist_rtol=0.018, ang_atol=.05):
+                                             dist_rtol=0.018, ang_atol=.1):
                     print("Ring state previously saved in filsys")
-                    print("Moving to the next conformer...")
-                    break
-            # If bestrmsd is > 0.01 always then save
-            # Typical values of ca. 0.005-8 obseved for equivalent geos
-            else:
-                save_conformer(
-                    ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
-                    zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False,
-                    init_zma=samp_zma)
-                nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs)
-                nsampd += 1
-                inf_obj.nsamp = nsampd
-                cnf_save_fs[0].file.info.write(inf_obj)
-                cnf_run_fs[0].file.info.write(inf_obj)
-             
-                _,saved_geos,_ = _saved_cnf_info(
-                                    cnf_save_fs, thy_info)
-                
-                if num_saved < len(saved_geos):
-                    # rings_geos_strings.append(string_ring_geo) #Useful for printing
-                    # mols.append(new_mol)
-                    num_saved = len(saved_geos)
-                print("Current num of saved geos:", num_saved)
+                    print("Trying to save conf anyways in existing RID folder")
+
+            save_conformer(
+                ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
+                zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False,
+                init_zma=samp_zma)
+            nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs)
+            nsampd += 1
+            inf_obj.nsamp = nsampd
+            cnf_save_fs[0].file.info.write(inf_obj)
+            cnf_run_fs[0].file.info.write(inf_obj)
+            
+            _,saved_geos,_ = _saved_cnf_info(
+                                cnf_save_fs, thy_info)
+            
+            if num_saved < len(saved_geos):
+                num_saved = len(saved_geos)
+        print("Current num of saved geos:", num_saved)
 
     with open("final-rings-stru.xyz","w") as f:
         for geo_string in rings_geos_strings:
@@ -1397,6 +1391,7 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
             rid = rng_loc_for_geo(geo, cnf_save_fs)
             if rid is None:
                 rid = autofile.schema.generate_new_ring_id()
+                print("Generating new ring state folder RID")
             _,cid = locs
             locs = (rid,cid)
             print('save_conformer locs:', locs, sym_id)
@@ -1846,7 +1841,7 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
 
 def rng_loc_for_geo(geo, cnf_save_fs):
     """ Find the ring-conf locators for a given geometry in the
-        conformamer save filesystem
+        conformer save filesystem
     """
 
     rid = None
@@ -1862,16 +1857,12 @@ def rng_loc_for_geo(geo, cnf_save_fs):
         checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = automol.geom.ring_fragments_geometry(locs_geo)
-        if frag_geo is None:
-            rid = locs[0]
-            break
-        else:
-            if frag_locs_geo is None:
-                continue
+        if frag_geo is None or frag_locs_geo is None:
+            continue
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
         
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
-                                     dist_rtol=0.1, ang_atol=0.2):
+                                     dist_rtol=0.018, ang_atol=.1):
             rid = locs[0]
             print("Debug: Zmat similar - locs: ", locs)
             break
