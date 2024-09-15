@@ -759,8 +759,7 @@ def ring_conformer_sampling(
 
 
     if algorithm == "etkdg" or algorithm == 'robust':
-        samp_zmas["etkdg"] = util.gen_confs(zma,nsamp/3)
-
+        samp_zmas["etkdg"] = util.gen_confs(zma, vma, int(nsamp/10))
     # with open("allsamples.xyz","w") as f:
     #     for algo,s_zmas in samp_zmas.items():
     #         for zmai in s_zmas:
@@ -846,7 +845,8 @@ def ring_conformer_sampling(
                 bad_geo_cnt = 0
                 new_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
 
-                while not automol.zmat.has_low_relative_repulsion_energy(new_zma, ref_zma) and bad_geo_cnt < 1000:
+                while not automol.zmat.has_low_relative_repulsion_energy(
+                                 new_zma, ref_zma) and bad_geo_cnt < 1000:
                     new_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
                     bad_geo_cnt += 1
 
@@ -1040,7 +1040,7 @@ def ring_checks_loops(
             print('   -1) reasonable distances')
 
             if len(unique_frag_geos) == 0:
-                if algorithm in ["crest","torsions2"]:
+                if algorithm in ["crest","torsions2","etkdg"]:
                     ref_geo_for_rep_pot = samp_geo
             if automol.geom.has_low_relative_repulsion_energy(
                                     samp_geo, ref_geo_for_rep_pot, 
@@ -1061,7 +1061,7 @@ def ring_checks_loops(
                     print('   -4) not run in save, ok')
                     unique_geos.append(samp_geo)
                     unique_frag_geos.append(frag_samp_geo)
-                    if algorithm in ["crest","torsions2"]:
+                    if algorithm in ["crest","torsions2","etkdg"]:
                         if len(unique_frag_geos) == 1:
                             ref_geo_for_rep_pot = samp_geo
 

@@ -84,6 +84,12 @@ def ring_samp_zmas(ring_atoms, nsamp_par, n_rings=1):
 
 def gen_confs(zma, vma, num_conf):
     """ Generate conformational samples using rkdit ETKDGv3 algorithm
+    :param zma: Z-Matrix
+    :type zma: zmat automol object
+    :param vma: Value matrix object
+    :type vma: vmat automol object
+    :return [zmas]: list of zmas for generated conformers
+    :rtype [zmas]: list of zmat objects
     """
     print("Generating {} Conformers".format(num_conf))
     mol = automol.zmat.rdkit_molecule(zma)
@@ -92,7 +98,7 @@ def gen_confs(zma, vma, num_conf):
     Chem.GetSymmSSSR(mol)
     params = AllChem.ETKDGv3()
     params.useRandomCoords = True
-    #params.enforceChirality = False
+    params.enforceChirality = True
     AllChem.EmbedMultipleConfs(mol, num_conf, params)
     
     geos = []
@@ -106,7 +112,6 @@ def gen_confs(zma, vma, num_conf):
     return [automol.zmat.from_geometry(vma, geoi) for geoi in geos]
 
 
-########### GET INFORMATION ON SUBS ON FIRST AND LAST RING ATOM #############
 def subs_analysis(all_ring_atoms,all_ring_atoms_list, ngbs, geo, unconnected_keys):
     """ Generate dicts of neighbours for the unconnected (in the Z-Matrix) atoms of
         a ring structure
@@ -137,7 +142,6 @@ def subs_analysis(all_ring_atoms,all_ring_atoms_list, ngbs, geo, unconnected_key
     return first_ring_at_sub_dct,last_ring_at_sub_dct
 
 
-########### FIX POSITIONS OF SUBS OF FIRST AND LAST RING ATOM #############
 def fixings_subs_positions(samp_zma, all_ring_atoms_list, coos, unconnected_keys,
                            first_ring_at_sub_dct, last_ring_at_sub_dct, dist_thresh=1.2):
     """ maniuplates the dihedrals of a Z-Matrix to assure that the substituents of the
