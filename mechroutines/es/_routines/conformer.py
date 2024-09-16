@@ -764,13 +764,13 @@ def ring_conformer_sampling(
         samp_zmas["etkdg"] = util.gen_confs(
                              zma, vma, int(nsamp/10), zrxn, constrained_atoms)
         
-    with open("allsamples.xyz","w") as f:
-        for algo,s_zmas in samp_zmas.items():
-            for zmai in s_zmas:
-                new_geo = automol.zmat.geometry(zmai)
-                geo_string = automol.geom.xyz_string(new_geo, comment="")
-                f.write(geo_string+"\n")        
-    exit()
+  #  with open("allsamples.xyz","w") as f:
+  #      for algo,s_zmas in samp_zmas.items():
+  #          for zmai in s_zmas:
+  #              new_geo = automol.zmat.geometry(zmai)
+  #              geo_string = automol.geom.xyz_string(new_geo, comment="")
+  #              f.write(geo_string+"\n")        
+
     print("\n\nENTERING CHECKS LOOP\n\n")
     # Control dictionaries
     check_dct = {
