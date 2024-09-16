@@ -759,15 +759,18 @@ def ring_conformer_sampling(
 
 
     if algorithm == "etkdg" or algorithm == 'robust':
-        samp_zmas["etkdg"] = util.gen_confs(zma, vma, int(nsamp/10))
-    # with open("allsamples.xyz","w") as f:
-    #     for algo,s_zmas in samp_zmas.items():
-    #         for zmai in s_zmas:
-    #             new_geo = automol.zmat.geometry(zmai)
-    #             geo_string = automol.geom.xyz_string(new_geo, comment="")
-    #             f.write(geo_string+"\n")        
-
-
+        if zrxn is not None:
+            constrained_atoms = util.get_ts_reacting_atoms_dists(zrxn, geo)
+        samp_zmas["etkdg"] = util.gen_confs(
+                             zma, vma, int(nsamp/10), zrxn, constrained_atoms)
+        
+    with open("allsamples.xyz","w") as f:
+        for algo,s_zmas in samp_zmas.items():
+            for zmai in s_zmas:
+                new_geo = automol.zmat.geometry(zmai)
+                geo_string = automol.geom.xyz_string(new_geo, comment="")
+                f.write(geo_string+"\n")        
+    exit()
     print("\n\nENTERING CHECKS LOOP\n\n")
     # Control dictionaries
     check_dct = {
@@ -976,8 +979,7 @@ def ring_conformer_sampling(
             _,saved_geos,_ = _saved_cnf_info(
                                 cnf_save_fs, thy_info)
             
-            if num_saved < len(saved_geos):
-                num_saved = len(saved_geos)
+            num_saved = len(saved_geos)
         print("Current num of saved geos:", num_saved)
 
     with open("final-rings-stru.xyz","w") as f:
@@ -996,7 +998,7 @@ def ring_checks_loops(
     '''
     adl Two implementations of loops of checks for the sampled geometries.
     1) ring closure - repulsive potential - unique ring structure - not already run
-    2) ring closure - CREST topology and energy checks
+    2) ring closure - CREST topology and energy checks - unique ring structure - not already run
     Both followed by DBSCAN clustering
     '''
     def ring_closure_check():
@@ -1128,11 +1130,7 @@ def ring_puckering_with_crest(geo, zrxn, spc_info, vma, samp_zmas_crest):
         f.write(geo_string)
 
     if zrxn is not None:
-        ts_gra = automol.reac.ts_graph(zrxn)
-        ts_bond_keys = automol.graph.ts.reacting_bond_keys(ts_gra)
-        for bond in ts_bond_keys:
-            constrained_atoms[','.join(map(str,[el+1 for el in bond])
-                            )] = automol.geom.distance(geo, *list(bond), angstrom=True)
+        constrained_atoms = util.get_ts_reacting_atoms_dists(zrxn, geo)
 
     # Setup crest subfolder
     crest_dir_prefix = "crest_calc"
@@ -1149,10 +1147,9 @@ def ring_puckering_with_crest(geo, zrxn, spc_info, vma, samp_zmas_crest):
     # Create constraints file if constrained atoms are present
     if constrained_atoms: #Not empty dict
         crest_constrain = f"crest {filename} --constrain 1" # Generate coord.ref
-        p = subprocess.Popen(crest_constrain, stdout=subprocess.PIPE, shell=True)
-        output, err = p.communicate()  
-        #This makes the wait possible
-        p_status = p.wait()
+        with subprocess.Popen(crest_constrain, stdout=subprocess.PIPE, shell=True) as p:
+            p.communicate()  
+            p.wait()
         # Only bonds of unconnected atoms are constrained
         # For TSs I also need to fix distance of reacting atoms!
         with open(".xcontrol.sample","w") as f:
@@ -1200,20 +1197,14 @@ def ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp, all_ri
         # list of tuples of ring bonds
         ring_bonds_list = [(atom, ring_atoms[(i+1)%N_atoms] 
                             ) for i, atom in enumerate(ring_atoms)]
-        # list of lists of bonds of each ring
         all_ring_bonds_list[key_dct] = ring_bonds_list
-        # list of bond lengths for current ring
         bond_lengths = [automol.geom.distance(geo,i,j,angstrom=True) for i,j in ring_bonds_list]
-        # list of lists of bond lengths for each ring
         all_bond_lengths[key_dct] = bond_lengths
         # list of tuples of ring angles
         ring_angle_list = [(atom, ring_atoms[(i+1)%N_atoms], ring_atoms[(i+2)%N_atoms], 
                             ) for i, atom in enumerate(ring_atoms)]
-        # list of lists of angles of each ring
         all_ring_angles_list[key_dct] = ring_angle_list
-        # list of angle amplitudes for current ring
         angle_amplit = [automol.geom.central_angle(geo,i,j,k) for i,j,k in ring_angle_list]
-        # list of lists of angle amplitudes for each ring
         all_angles_lengths[key_dct] = angle_amplit    
 
     # Reorder all_ring_atoms_list dictionary, ascending atom ordering
@@ -1270,8 +1261,8 @@ def ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp, all_ri
         # Cycle through the rings and update torsions relative to the atoms of each ring
         for key_dct,ring_atoms in all_ring_atoms_list.items():
             # Create geo data structure for ring atoms only (needed to use dihderal_angle function)
-            at_syms = automol.geom.symbols(geo, ring_atoms) 
-            ring_geo = automol.geom.from_data(''.join(at_syms),new_coord_rings[key_dct],angstrom=True)
+            syms = automol.geom.symbols(geo, ring_atoms) 
+            ring_geo = automol.geom.from_data(''.join(syms),new_coord_rings[key_dct],angstrom=True)
             # Update Z Matrix
             new_key_dct = {}
             for name, cord in coos.items():
@@ -1286,11 +1277,11 @@ def ring_puckering_with_cremerpople(geo, vma_adl, tors_dcts, ngbs, nsamp, all_ri
                     indexes = [i for i,at in enumerate(ring_atoms) if at in atm_idxs]
                     indexes = sorted(indexes, reverse=True)
                     new_key_dct[name] =  automol.geom.dihedral_angle(ring_geo, *indexes, degree=True)
+                elif (len(set(atm_idxs[:3]) & set(ring_atoms)) == 3
+                      ) and (ring_atoms.index(atm_idxs[0]) > 2):
                     # Added part for fused rings!
                     # Fixes case of DH in ring that in zmatrix is defined with 
                     # respect to an atom not in the ring
-                elif (len(set(atm_idxs[:3]) & set(ring_atoms)) == 3
-                      ) and (ring_atoms.index(atm_idxs[0]) > 2):
                     indexes = [i for i,at in enumerate(ring_atoms) if at in atm_idxs]
                     indexes = sorted(indexes, reverse=True)
                     indexes.append(indexes[-1]-1)

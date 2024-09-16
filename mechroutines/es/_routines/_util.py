@@ -5,8 +5,9 @@ import numpy
 import automol
 from mechlib.amech_io.printer import info_message
 from automol.extern import Ring_Reconstruction as RR
-from rdkit import Chem
+from rdkit import Chem, DistanceGeometry
 from rdkit.Chem import AllChem
+from rdkit.Chem import rdDistGeom
 
 
 def calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
@@ -82,12 +83,35 @@ def ring_samp_zmas(ring_atoms, nsamp_par, n_rings=1):
     return min(10000,30*(apar + bpar * cpar**ntors))
 
 
-def gen_confs(zma, vma, num_conf):
+def get_ts_reacting_atoms_dists(zrxn, geo):
+    """ Creates a dicitonary where keys are pairs of atoms and values are bond lengths.
+    The atom pairs are the ones involved in bond breaking and forming
+    :param zrxn: reaction object
+    :type geo: automol reaction object
+    :param geo: geometry object
+    :type zrxn: automol geometry object
+    :output constr_ats: Dictionary including forming and breaking bond atoms keys and value of bond in A
+    :type constr_ats: { "at1,at2" : bond_dist(float) }
+    """
+    constr_ats = {}
+    ts_gra = automol.reac.ts_graph(zrxn)
+    ts_bond_keys = automol.graph.ts.reacting_bond_keys(ts_gra)
+    for bond in ts_bond_keys:
+        constr_ats[','.join(map(str,[el+1 for el in bond])
+                        )] = automol.geom.distance(geo, *list(bond), angstrom=True)
+    return constr_ats
+
+
+def gen_confs(zma, vma, num_conf, zrxn, constr_ats):
     """ Generate conformational samples using rkdit ETKDGv3 algorithm
     :param zma: Z-Matrix
     :type zma: zmat automol object
     :param vma: Value matrix object
     :type vma: vmat automol object
+    :param zrxn: reaction object
+    :type zrxn: automol reaction object
+    :param constr_ats: Dictionary including forming and breaking bond atoms keys and value of bond in A
+    :type constr_ats: { "at1,at2" : bond_dist(float) }
     :return [zmas]: list of zmas for generated conformers
     :rtype [zmas]: list of zmat objects
     """
@@ -99,6 +123,20 @@ def gen_confs(zma, vma, num_conf):
     params = AllChem.ETKDGv3()
     params.useRandomCoords = True
     params.enforceChirality = True
+
+    if zrxn is not None:
+        bounds = rdDistGeom.GetMoleculeBoundsMatrix(mol)
+        for constrained_ats,constrained_dist in constr_ats.items():
+            at1,at2 = map(int,constrained_ats.split(","))
+            at1 -= 1
+            at2 -= 1
+            bounds[at1,at2] = constrained_dist - 0.1
+            bounds[at2,at1] = constrained_dist + 0.1
+        params.useExpTorsionAnglePrefs = False
+        params.useBasicKnowledge = False   
+        DistanceGeometry.DoTriangleSmoothing(bounds)
+        params.SetBoundsMat(bounds)
+
     AllChem.EmbedMultipleConfs(mol, num_conf, params)
     
     geos = []
