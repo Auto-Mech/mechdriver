@@ -66,7 +66,7 @@ TSK_KEY_DCT = {
     'init_geom': (('spc',), BASE),
     'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier', 'varecof_nprocs')),
     'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 
-                                           'algorithm','thresholds','eps','checks','skip')), #adl add here new keyword algorithm
+                                           'algorithm','thresholds','eps','checks','rand_tors')),
     'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
     'conf_energy': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
     'conf_grad': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
@@ -150,12 +150,12 @@ TSK_VAL_DCT = {
     'varecof_nprocs': ((int,), (), 10),
     #adl added arguments for ring puckering
     'algorithm': ((str,), 
-                  ('crest','pucker','torsions','robust','torsions2'), 'torsions'),
+                  ('crest','pucker','torsions','robust','torsions2','etkdg'), 'pucker'),
     'thresholds': ((str,), 
                   ('default','relaxed'), 'default'),
-    'eps': ((float,), (), 0.3),
+    'eps': ((float,), (), 0.2),
     'checks': ((int,), (1,2), 1),
-    'skip': ((bool,), (True,False), False),
+    'rand_tors': ((int,), (), 2),
     # Trans
     'njobs': ((int,), (), 1),
     'nsamp': ((int,), (), 1),

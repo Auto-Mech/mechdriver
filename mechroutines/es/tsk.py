@@ -207,6 +207,17 @@ def conformer_tsk(job, spc_dct, spc_name,
             ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
                 ini_cnf_save_fs, mod_ini_thy_info, nprocs=nprocs)
             ini_locs, ini_min_cnf_path = ini_loc_info
+
+            all_locs,all_paths = filesys.mincnf.conformer_locators(
+            cnf_save_fs, mod_thy_info, cnf_range='all', nprocs=nprocs)
+            unique_rids = set()
+            ini_confs = []
+            for loc,loc_path in zip(all_locs,all_paths):
+                if loc[0] not in unique_rids:
+                    ini_confs.append((loc,loc_path))
+                unique_rids.add(loc[0])
+            visited_rids = set()
+    
         else:
             print(f'Using user specified conformer IDs: {user_conf_ids}')
             ini_locs = user_conf_ids
@@ -243,18 +254,21 @@ def conformer_tsk(job, spc_dct, spc_name,
 
             # Check runsystem for equal ring CONF make conf_fs
             # Else make new ring conf directory
-            rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+            # Why should RID be None? I am taking stuff from filesys so it will already have a RID!
+            rid = ini_locs[0]
+            # rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+            # print("Debug: back to tsk - rid", rid)
 
-            if rid is None:
-                conformer.single_conformer(
-                    zma, spc_info, mod_thy_info,
-                    cnf_run_fs, cnf_save_fs,
-                    script_str, overwrite,
-                    retryfail=retryfail, zrxn=zrxn,
-                    **kwargs)
+            # if rid is None:
+            #     conformer.single_conformer(
+            #         zma, spc_info, mod_thy_info,
+            #         cnf_run_fs, cnf_save_fs,
+            #         script_str, overwrite,
+            #         retryfail=retryfail, zrxn=zrxn,
+            #         **kwargs)
 
-                rid = conformer.rng_loc_for_geo(
-                    geo, cnf_save_fs)
+            #     rid = conformer.rng_loc_for_geo(
+            #         geo, cnf_save_fs)
 
             # Run the sampling
             conformer.conformer_sampling(
@@ -267,6 +281,52 @@ def conformer_tsk(job, spc_dct, spc_name,
                 retryfail=retryfail, resave=resave,
                 repulsion_thresh=40.0, print_debug=print_debug,
                 **kwargs)
+            
+            visited_rids.add(rid)
+            if True:
+                for ini_locs,ini_path in ini_confs:
+                    if ini_locs[0] not in visited_rids:
+                        ini_zma_save_fs = autofile.fs.zmatrix(ini_path)
+                        # Set up the run scripts
+                        # script_str, kwargs = qchem_params(
+                        #     method_dct, elstruct.Job.OPTIMIZATION)
+                        # Set variables if it is a saddle
+                        # two_stage = saddle
+                        # mc_nsamp = spc_dct_i['mc_nsamp']
+                        # resave = resave
+
+                        # Read the geometry and zma from the ini file system
+                        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+                        zma_locs = (0,)
+                        if saddle:
+                            zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
+                        zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
+
+                        # Read the torsions from the ini file sys
+                        if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
+                            tors_lst = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
+                            rotors = automol.data.rotor.rotors_from_data(zma, tors_lst)
+                            tors_names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
+                        else:
+                            tors_names = ()
+
+                        geo_path = ini_cnf_save_fs[-1].path(ini_locs)
+                        ioprinter.initial_geom_path('Sampling started', geo_path)
+                        rid = ini_locs[0]
+                        # Run the sampling
+                        conformer.conformer_sampling(
+                            zma, spc_info, mod_thy_info,
+                            cnf_run_fs, cnf_save_fs, rid,
+                            script_str, overwrite,
+                            nsamp_par=mc_nsamp,
+                            tors_names=tors_names,
+                            zrxn=zrxn, two_stage=two_stage,
+                            retryfail=retryfail, resave=False,
+                            repulsion_thresh=40.0, print_debug=print_debug,
+                            **kwargs)
+                
+
+
         else:
             ioprinter.info_message(
                 'Missing conformers. Skipping task...')
@@ -274,7 +334,7 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job == 'pucker':
         algo = es_keyword_dct['algorithm']
         thresh_pucker = es_keyword_dct['thresholds']
-        am_skipping = es_keyword_dct['skip']
+        rand_tors = es_keyword_dct['rand_tors']
         eps = es_keyword_dct['eps']
         checks = es_keyword_dct['checks']
         # Build the ini zma filesys
@@ -288,8 +348,6 @@ def conformer_tsk(job, spc_dct, spc_name,
             method_dct, elstruct.Job.OPTIMIZATION)
         # Always run two stage optimization
         two_stage = True
-        # Set variables if it is a saddle
-        #two_stage = saddle
         mc_nsamp = spc_dct_i['mc_nsamp']
 
         # Read the geometry and zma from the ini file system
@@ -299,11 +357,19 @@ def conformer_tsk(job, spc_dct, spc_name,
             zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
         zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
-        # Read the torsions from the ini file sys
+        # Read the ring torsions from the ini file sys
         if ini_zma_save_fs[-1].file.ring_torsions.exists(zma_locs):
             ring_tors_dct = ini_zma_save_fs[-1].file.ring_torsions.read(zma_locs)
         else:
             ring_tors_dct = {}
+
+        # Read the torsions from the ini file sys
+        if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
+            tors_lst = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
+            rotors = automol.data.rotor.rotors_from_data(zma, tors_lst)
+            tors_names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
+        else:
+            tors_names = ()
 
         geo_path = ini_cnf_save_fs[-1].path(ini_min_locs)
         ioprinter.initial_geom_path('Sampling started', geo_path)
@@ -313,11 +379,12 @@ def conformer_tsk(job, spc_dct, spc_name,
             zma, spc_info, mod_thy_info,
             cnf_run_fs, cnf_save_fs,
             script_str, overwrite,
+            tors_names,
             algorithm=algo,
             thresholds=thresh_pucker,
             eps=eps,
             checks=checks,
-            skip=am_skipping,
+            rand_tors=rand_tors,
             nsamp_par=mc_nsamp,
             ring_tors_dct=ring_tors_dct, zrxn=zrxn,
             two_stage=two_stage, retryfail=retryfail,
