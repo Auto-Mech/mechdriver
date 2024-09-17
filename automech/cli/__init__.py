@@ -74,11 +74,22 @@ def subtasks():
     show_default=True,
     help="The run filesystem prefix",
 )
+@click.option(
+    "-g",
+    "--task-groups",
+    default="els,thermo,ktp",
+    show_default=True,
+    help=(
+        "The task groups to set up, as a comma-separated list.\n"
+        "Options: els(=els-spc,els-pes), thermo, ktp"
+    ),
+)
 def setup(
     path: str = ".",
     out_path: str = SUBTASK_DIR,
     save_path: str | None = None,
     run_path: str | None = None,
+    task_groups: str = "els,thermo,ktp",
 ):
     """Set-up subtasks from a user-supplied AutoMech directory
 
@@ -86,7 +97,11 @@ def setup(
     required files: run.dat, theory.dat, models.dat, species.csv, mechanism.dat
     """
     _subtasks_setup.main(
-        path=path, out_path=out_path, save_path=save_path, run_path=run_path
+        path=path,
+        out_path=out_path,
+        save_path=save_path,
+        run_path=run_path,
+        task_groups=task_groups.split(","),
     )
 
 

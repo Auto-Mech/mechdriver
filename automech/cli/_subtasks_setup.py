@@ -6,6 +6,7 @@ import io
 import os
 import re
 import textwrap
+from collections.abc import Sequence
 from pathlib import Path
 
 import automol
@@ -19,12 +20,14 @@ COMMENT_REGEX = re.compile(r"#.*$", flags=re.M)
 ALL_KEY = "all"
 
 DEFAULT_MEM = 20
-DEFAULT_GROUPS = (
-    ("els", "spc"),
-    ("els", "pes"),
-    ("thermo", "spc"),
-    ("ktp", None),
-)
+DEFAULT_TASK_GROUPS = ("els", "thermo", "ktp")
+GROUP_ID = {"els-spc": 0, "els-pes": 1, "thermo": 2, "ktp": 3}
+GROUP_TASK_AND_KEY_TYPE = {
+    "els-spc": ("els", "spc"),
+    "els-pes": ("els", "pes"),
+    "thermo": ("thermo", "spc"),
+    "ktp": ("ktp", None),
+}
 
 SUBTASK_DIR = "subtasks"
 INFO_FILE = "info.yaml"
@@ -62,7 +65,7 @@ def main(
     out_path: str | Path = SUBTASK_DIR,
     save_path: str | Path | None = None,
     run_path: str | Path | None = None,
-    groups: tuple[tuple[str, str | None], ...] = DEFAULT_GROUPS,
+    task_groups: Sequence[str] = DEFAULT_TASK_GROUPS,
 ):
     """Creates run directories for each task/species/TS and returns the paths in tables
 
@@ -76,10 +79,17 @@ def main(
         (if `None`, the value in run.dat is used)
     :param run_path: The path to the run filesystem
         (if `None`, the value in run.dat is used)
-    :param groups: The subtasks groups to set up, as pairs of task and subtask types
+    :param task_groups: The task groups to set up
     :return: DataFrames of run paths, whose columns (species/TS index) are independent
         and can be run in parallel, but whose rows (tasks) are potentially sequential
     """
+    # Pre-process the task groups
+    task_groups = list(task_groups)
+    if "els" in task_groups:
+        idx = task_groups.index("els")
+        task_groups[idx : idx + 1] = ("els-spc", "els-pes")
+    assert all(g in GROUP_ID for g in task_groups), f"{task_groups} not in {GROUP_ID}"
+
     # Read input files from source path
     path = Path(path)
     file_dct = read_input_files(path)
@@ -95,10 +105,11 @@ def main(
     out_path = Path(out_path)
     out_path.mkdir(exist_ok=True)
 
-    # Set up each subtask group
-    all_group_ids = list(range(len(groups)))
+    # Set up the subtasks for each group
     run_group_ids = []
-    for group_id, (task_type, key_type) in zip(all_group_ids, groups, strict=True):
+    for task_group in task_groups:
+        group_id = GROUP_ID.get(task_group)
+        task_type, key_type = GROUP_TASK_AND_KEY_TYPE.get(task_group)
         ret = setup_subtask_group(
             run_dct,
             file_dct,
@@ -260,7 +271,7 @@ def parse_task_name(task_line: str) -> str:
     :return: The task name
     """
     task_name = task_line.split()[0]
-    if task_name in ["spc", "ts"]:
+    if task_name in ["spc", "ts", "all"]:
         task_name = task_line.split()[1]
     return task_name
 
@@ -553,7 +564,11 @@ def task_lines_from_run_dict(
         types = ("spc", "pes")
         assert subtask_type in types, f"Subtask type {subtask_type} not in {types}"
         start_key = "ts" if subtask_type == "pes" else "spc"
-        lines = [line for line in lines if line.startswith(start_key)]
+        lines = [
+            line
+            for line in lines
+            if line.startswith(start_key) or line.startswith("all")
+        ]
 
     return lines
 
