@@ -60,7 +60,7 @@ class Task:
     subtask_nworkers: list[int]
 
 
-def main(
+def setup(
     path: str | Path,
     out_path: str | Path = SUBTASK_DIR,
     save_path: str | Path | None = None,

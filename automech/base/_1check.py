@@ -21,7 +21,30 @@ class Status(enum.Enum):
 STATUS_WIDTH = 7
 
 
-def check_log(log_path: str | Path) -> tuple[Status, str | None]:
+def check_log(path: str = ".", log: bool=False) -> tuple[Status, str | None]:
+    """Check an AutoMech log file to see if it succeeded
+
+    :param path: The path to the log file or directory. If the path is a directory, the
+        log file must be called `out.log`.
+    :param log: Whether to print the result to the terminal.
+    """
+    path: Path = Path(path)
+    assert path.exists(), f"Path does not exist: {path}"
+    if path.is_dir():
+        path /= "out.log"
+    assert path.is_file(), f"File does not exist: {path}"
+
+    status, line = _check_log(path)
+
+    if log:
+        print(f"{str(path) + ' ':.<80} {colored_status_string(status)}")
+        if line is not None:
+            print(line)
+
+    return (status, line)
+
+
+def _check_log(log_path: str | Path) -> tuple[Status, str | None]:
     """Check a log file, returning the status and the line that triggered it.
 
     :param log_path: The log file path
@@ -64,21 +87,3 @@ def colored_status_string(status: Status) -> str:
     }.get(status)
     color_end_code = "\033[0m"
     return f"{color_start_code}{status.value:^{STATUS_WIDTH}}{color_end_code}"
-
-
-def main(path: str = "."):
-    """Check an AutoMech log file to see if it succeeded
-
-    :param path: The path to the log file or directory. If the path is a directory, the
-        log file must be called `out.log`.
-    """
-    path: Path = Path(path)
-    assert path.exists(), f"Path does not exist: {path}"
-    if path.is_dir():
-        path /= "out.log"
-    assert path.is_file(), f"File does not exist: {path}"
-
-    status, line = check_log(path)
-    print(f"{str(path) + ' ':.<80} {colored_status_string(status)}")
-    if line is not None:
-        print(line)

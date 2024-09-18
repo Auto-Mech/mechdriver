@@ -9,8 +9,8 @@ import more_itertools as mit
 import pandas
 import yaml
 
-from ._check_log import STATUS_WIDTH, Status, check_log, colored_status_string
-from ._subtasks_setup import (
+from ..base import STATUS_WIDTH, Status, check_log, colored_status_string
+from ._0setup import (
     INFO_FILE,
     SUBTASK_DIR,
     InfoKey,
@@ -20,7 +20,7 @@ from ._subtasks_setup import (
 )
 
 
-def main(
+def status(
     path: str | Path = SUBTASK_DIR, check_file: str = "check.log", wrap: int = 18
 ) -> None:
     """Check the status of running subtasks

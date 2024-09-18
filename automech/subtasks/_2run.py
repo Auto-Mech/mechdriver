@@ -7,8 +7,8 @@ from pathlib import Path
 import pandas
 import yaml
 
-from ._check_log import Status
-from ._subtasks_setup import (
+from ..base import Status
+from ._0setup import (
     INFO_FILE,
     SUBTASK_DIR,
     InfoKey,
@@ -16,13 +16,13 @@ from ._subtasks_setup import (
     Task,
     read_task_list,
 )
-from ._subtasks_status import parse_subtask_status
+from ._1status import parse_subtask_status
 
 SCRIPT_DIR = Path(__file__).parent / "scripts"
 RUN_SCRIPT = str(SCRIPT_DIR / "run_adhoc.sh")
 
 
-def main(
+def run_adhoc(
     path: str | Path = SUBTASK_DIR,
     nodes: str | None = None,
     activation_hook: str | None = None,
