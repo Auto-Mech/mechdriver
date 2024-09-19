@@ -10,7 +10,7 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib.filesys import prefix_fs
 
 
-def main(path: str = ".", safemode_off: bool = False):
+def run(path: str = ".", safemode_off: bool = False):
     """Central Execution script to launch a MechDriver process which will
     parse all of the user-supplied input files in a specified directory, then
     launches all of the requested electronic structure, transport,

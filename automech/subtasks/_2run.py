@@ -2,13 +2,14 @@
 """
 
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 
 import pandas
 import yaml
 
-from ._check_log import Status
-from ._subtasks_setup import (
+from ..base import Status
+from ._0setup import (
     INFO_FILE,
     SUBTASK_DIR,
     InfoKey,
@@ -16,17 +17,17 @@ from ._subtasks_setup import (
     Task,
     read_task_list,
 )
-from ._subtasks_status import parse_subtask_status
+from ._1status import log_paths_with_check_results, parse_subtask_status
 
 SCRIPT_DIR = Path(__file__).parent / "scripts"
 RUN_SCRIPT = str(SCRIPT_DIR / "run_adhoc.sh")
 
 
-def main(
+def run_adhoc(
     path: str | Path = SUBTASK_DIR,
-    nodes: str | None = None,
+    nodes: Sequence[str] | None = None,
     activation_hook: str | None = None,
-    statuses: str = f"{Status.TBD.value}",
+    statuses: Sequence[Status] = (Status.TBD,),
 ) -> None:
     """Runs subtasks in parallel on Ad Hoc cluster
 
@@ -41,8 +42,6 @@ def main(
     assert (
         path.exists()
     ), f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
-
-    statuses = list(map(Status, statuses.split(",")))
 
     info_path = path / INFO_FILE
     info_dct = yaml.safe_load(info_path.read_text())
@@ -73,7 +72,9 @@ def main(
             ):
                 assert key in row, f"Key {key} not present in row:\n{row}"
                 subtask_path = row.get(key)
-                status = parse_subtask_status(subtask_path)
+                status = parse_subtask_status(
+                    log_paths_with_check_results(subtask_path)
+                )
                 if status in statuses:
                     subtask_paths.extend([subtask_path] * nworkers)
                     subtask_logs.extend([f"out{i}.log" for i in range(nworkers)])
@@ -86,7 +87,7 @@ def main(
                     f"{task.nprocs}",
                     ",".join(subtask_paths),
                     ",".join(subtask_logs),
-                    nodes,
+                    ",".join(nodes),
                     "" if activation_hook is None else activation_hook,
                 ]
                 subprocess.run(run_args)
