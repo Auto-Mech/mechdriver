@@ -764,6 +764,11 @@ def ring_conformer_sampling(
         samp_zmas["etkdg"] = util.gen_confs(
                              zma, vma, int(nsamp/10), zrxn, constrained_atoms)
         
+    # Add initial stru to samples (useful if I run pucker at different lot than init_geom)
+    if algorithm != "robust":
+        samp_zmas[algorithm].append(zma)
+    else:
+        samp_zmas["pucker"].append(zma)
   #  with open("allsamples.xyz","w") as f:
   #      for algo,s_zmas in samp_zmas.items():
   #          for zmai in s_zmas:
