@@ -138,7 +138,10 @@ def run_adhoc_(
 ):
     """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
     run_adhoc(
-        path=path, nodes=nodes, activation_hook=activation_hook, statuses=statuses
+        path=path,
+        nodes=None if nodes is None else nodes.split(","),
+        activation_hook=activation_hook,
+        statuses=list(map(Status, statuses.split(","))),
     )
 
 

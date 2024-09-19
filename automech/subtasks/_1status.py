@@ -58,7 +58,7 @@ def status(
             subtask_paths = list(map(row.get, skeys))
             subtask_stats = []
             for skey, spath in zip(skeys, subtask_paths, strict=True):
-                log_dct = log_paths_with_statuses(spath)
+                log_dct = log_paths_with_check_results(spath)
                 subtask_stats.append(
                     colored_status_string(parse_subtask_status(log_dct=log_dct))
                 )
@@ -90,16 +90,20 @@ def status(
     check_file.write_text("\n".join(check_lines))
 
 
-def log_paths_with_statuses(path: str | Path) -> dict[str, tuple[Status, str | None]]:
+def log_paths_with_check_results(
+    path: str | Path,
+) -> dict[str, tuple[Status, str | None]]:
     """Get a dictionary of log file paths and statuses at a given path
 
-    :param path: _description_
-    :return: _description_
+    :param path: The directory path
+    :return: A dictionary mapping log paths onto log check results
     """
     log_paths = list(map(str, Path(path).glob("out*.log")))
+    if not log_paths:
+        return {}
+
     log_checks = list(map(check_log, log_paths))
-    log_dct = dict(zip(log_paths, log_checks, strict=True))
-    return {k: v for k, v in log_dct.items()}
+    return dict(zip(log_paths, log_checks, strict=True))
 
 
 def parse_subtask_status(
@@ -107,7 +111,6 @@ def parse_subtask_status(
 ) -> Status:
     """Parse the run status from a subtask directory
 
-    :param path: The directory path
     :return: The status
     """
     if not log_dct:
