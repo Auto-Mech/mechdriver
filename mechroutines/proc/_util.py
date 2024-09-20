@@ -107,11 +107,12 @@ def _set_sort_info_lst(sort_str, thy_dct, spc_info):
 
 def choose_conformers(
         spc_name, proc_keyword_dct, spc_mod_dct_i,
-        save_prefix, run_prefix, spc_dct_i, thy_dct):
+        save_prefix, run_prefix, spc_dct, thy_dct):
     """ Create a list of conformers based on the species name
         and model.dat info
     """
     # conformer range
+    spc_dct_i = spc_dct[spc_name]
     symm_dct = {}
     populate_symm = False
     cnf_range = proc_keyword_dct['cnf_range']
@@ -121,13 +122,17 @@ def choose_conformers(
     hbond_cutoffs = spc_dct_i['hbond_cutoffs']
 
     # thy_info build
+    zrxn = spc_dct_i.get('zrxn', None)
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
-    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
+    if zrxn is None:
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
+    else:
+        spc_info = rinfo.ts_info(rinfo.from_dct(
+            spc_dct_i['reacs'], spc_dct_i['prods'], spc_dct))
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     sort_info_lst = _set_sort_info_lst(
         proc_keyword_dct['sort'], thy_dct, spc_info)
 
-    zrxn = spc_dct_i.get('zrxn', None)
     _root = filesys.root_locs(
         spc_dct_i, name=spc_name, saddle=(zrxn is not None))
     _, cnf_save_fs = filesys.build_fs(

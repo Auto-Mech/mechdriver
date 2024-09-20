@@ -68,7 +68,7 @@ def run_tsk(tsk, obj_queue,
             spc_dct_i = spc_dct[spc_name]
             ret = util.choose_conformers(
                 spc_name, proc_keyword_dct, spc_mod_dct_i,
-                save_prefix, run_prefix, spc_dct_i, thy_dct)
+                save_prefix, run_prefix, spc_dct, thy_dct)
             cnf_info, mod_thy_info, symid_dct = ret
             cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = cnf_info
             # Add geo to missing data task if locs absent
