@@ -162,7 +162,7 @@ def _run_task_for_locs_lst(
         if 'freq' in tsk and not _skip(spc_name, spc_dct_i):
             _dat, miss_data_i = collect.frequencies(
                 spc_name, spc_dct_i, spc_mod_dct_i,
-                proc_keyword_dct, thy_dct,
+                proc_keyword_dct, thy_dct, spc_dct,
                 cnf_fs, locs, locs_path, run_prefix, save_prefix)
             if _dat is not None:
                 csv_data_i, csv_data_j, disp_str = _dat
