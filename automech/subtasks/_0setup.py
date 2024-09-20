@@ -229,7 +229,7 @@ def determine_task_list(
     """
     keys = subtask_keys_from_run_dict(run_dct, key_type)
 
-    return [
+    tasks: list[Task] = [
         Task(
             name=parse_task_name(task_line),
             line=task_line,
@@ -242,6 +242,15 @@ def determine_task_list(
         )
         for task_line in task_lines_from_run_dict(run_dct, task_type, key_type)
     ]
+
+    fit_idx = next((i for i, t in enumerate(tasks) if t.name == "run_fits"), None)
+    run_idx = next((i for i, t in enumerate(tasks) if t.name == "run_mess"), None)
+
+    if fit_idx is not None and run_idx is not None:
+        fit_task = tasks.pop(fit_idx)
+        tasks[run_idx].line += f"\n{fit_task.line}"
+
+    return tasks
 
 
 # Functions acting on the run directory as a whole
