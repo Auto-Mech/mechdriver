@@ -662,21 +662,29 @@ def all_reaction_graphs(
     return ts_gras, rxn_gras
 
 
-def get_zrxn(geo, rxn_info, rxn_class):
-    breaking_bond2 = None
-    if rxn_class in ['hydrogen abstraction', 'hydrogen migration']:
-        ts_gra, breaking_bond, forming_bond = h_transfer_gra(geo)
-    elif rxn_class in ['ring forming scission']:
-        ts_gra, breaking_bond, forming_bond = ringformsci_gra(geo)
-    elif rxn_class in ['beta scission']:
-        ts_gra, breaking_bond, forming_bond = betasci_gra(geo)
-    elif rxn_class in ['elimination']:
-        ts_gra, breaking_bond, breaking_bond2, forming_bond = elim_gra(geo)
+def build_zrxn_from_geo(
+        geo, rxn_info, rxn_class, rct_gra, breaking_bonds, forming_bonds):
+    """ build the zrxn object using known information about the reactant
+        graph and the forming/breaking bonds and update with found ts geo
+    """
+    ts_forw_gra = automol.graph.ts.graph(rct_gra, forming_bonds, breaking_bonds)
+    ts_back_gra = automol.graph.ts.reverse(ts_forw_gra)
+    prd_gras = automol.graph.ts.products_graph(ts_forw_gra)
+    rct_gras = automol.graph.connected_components(rct_gra)
+    prd_gras = automol.graph.connected_components(prd_gra)
 
-    ts_gras, rxn_gras = all_reaction_graphs(
-        ts_gra, breaking_bond, forming_bond,
-        rxn_class == 'beta scission', breaking_bond2)
+    # match_ich_info = _match_info(rxn_info, (ts_forw_gra, ts_back_gra))
+    rxn = automol.reac.from_data(
+        ts_forw_gra, [automol.graph.atom_keys(rct_gra_i) for rct_gra_i in rct_gras],
+        [automol.graph.atom_keys(prd_gra_i) for prd_gra_i in prd_gras],
+        ts_struc=geo, struc_type='geom')
+    std_zrxn = automol.reac.apply_zmatrix_conversion(rxn)
+    ts_zma = automol.reac.ts_structure(std_zrxn)
+    ts_geo = automol.zmat.geometry(ts_zma)
+    return std_zrxn, ts_zma, ts_geo, rxn_info
 
+
+def _match_info(rxn_info, rxn_gras) 
     rxn_ichs = [[], []]
     for i, side in enumerate(rxn_info[0]):
         for ich in side:
@@ -704,7 +712,25 @@ def get_zrxn(geo, rxn_info, rxn_class):
         print('my ichs  ', ts_ichs)
         print('your ichs', rxn_ichs)
         match_ich_info = True
+    return match_ich_info
 
+
+def get_zrxn(geo, rxn_info, rxn_class):
+    breaking_bond2 = None
+    if rxn_class in ['hydrogen abstraction', 'hydrogen migration']:
+        ts_gra, breaking_bond, forming_bond = h_transfer_gra(geo)
+    elif rxn_class in ['ring forming scission']:
+        ts_gra, breaking_bond, forming_bond = ringformsci_gra(geo)
+    elif rxn_class in ['beta scission']:
+        ts_gra, breaking_bond, forming_bond = betasci_gra(geo)
+    elif rxn_class in ['elimination']:
+        ts_gra, breaking_bond, breaking_bond2, forming_bond = elim_gra(geo)
+
+    ts_gras, rxn_gras = all_reaction_graphs(
+        ts_gra, breaking_bond, forming_bond,
+        rxn_class == 'beta scission', breaking_bond2)
+
+    match_ich_info = _match_info(rxn_info, rxn_gras)
     if match_ich_info:
         reactant_keys = []
         for gra in rxn_gras[0]:
@@ -750,6 +776,10 @@ def main(insert_dct):
     # Parse out user specified save location
     if insert_dct['saddle']:
         rxn_info, spc_info, rxn_class = parse_user_reaction(insert_dct)
+        if insert_dct['breaking_bonds'] is not None or insert_dct['forming_bonds'] is not None:
+            zrxn, zma, geo, rxn_info = build_zrxn_from_geo(
+                geo, rxn_info, rxn_class,
+                insert_dct['breaking_bonds'], insert_dct['forming_bonds'])
         zrxn, zma, geo, rxn_info = get_zrxn(geo, rxn_info, rxn_class)
     else:
         zrxn = None
@@ -915,6 +945,8 @@ def parse_script_input(script_input_file):
         'ts_locs': None,
         'ts_mult': None,
         'rxn_class': None,
+        'breaking_bonds': None,
+        'forming_bonds': None,
         'zrxn_file': None,
         'run_path': None,
         'saddle': False,
