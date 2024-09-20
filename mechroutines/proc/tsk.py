@@ -12,12 +12,15 @@ from autorun import execute_function_in_parallel
 def run_tsk(tsk, obj_queue,
             proc_keyword_dct,
             spc_dct, thy_dct,
-            spc_mod_dct_i, pes_mod_dct_i,
+            spc_mod_dct, pes_mod_dct,
             run_prefix, save_prefix, mdriver_path):
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
     """
 
+    # Update spc_mod_dct from targetted levels in run.dat
+    spc_mod_dct_i, pes_mod_dct_i = util.reconcile_spc_mod_and_proc_keyword_dcts(
+        tsk, spc_mod_dct, proc_keyword_dct, thy_dct)
     # Print the head of the task
     ioprinter.output_task_header(tsk)
     ioprinter.output_keyword_list(proc_keyword_dct, thy_dct)
@@ -27,7 +30,7 @@ def run_tsk(tsk, obj_queue,
     filelabel, thylabel = util.get_file_label(
         tsk, pes_mod_dct_i, proc_keyword_dct, spc_mod_dct_i)
     chn_basis_ene_dct = {}
-    col_array = []
+    col_array = [] 
     spc_array = []
 
     # Exclude unstable species
@@ -43,12 +46,11 @@ def run_tsk(tsk, obj_queue,
 
     # Set up lists for reporting missing data
     miss_data = ()
-    # ts_miss_data = ()
     # disp_dct = {}
     # Begin the loop over the species
     for spc_name in obj_queue:
 
-        # info printed to output file
+        # Species Header in logfile
         ioprinter.obj('line_dash')
         ioprinter.info_message("Species: ", spc_name)
 
@@ -64,13 +66,11 @@ def run_tsk(tsk, obj_queue,
         else:
             # unpack spc and level info for conformers
             spc_dct_i = spc_dct[spc_name]
-            spc_mod_dct_i = util.choose_theory(
-                proc_keyword_dct, spc_mod_dct_i)
             ret = util.choose_conformers(
                 spc_name, proc_keyword_dct, spc_mod_dct_i,
                 save_prefix, run_prefix, spc_dct_i, thy_dct)
-            cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
-
+            cnf_info, mod_thy_info, symid_dct = ret
+            cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = cnf_info
             # Add geo to missing data task if locs absent
             if not rng_cnf_locs_lst:
                 miss_data += ((spc_name, mod_thy_info, 'geometry'),)
@@ -81,6 +81,7 @@ def run_tsk(tsk, obj_queue,
                 proc_keyword_dct, thy_dct, mod_thy_info,
                 pes_mod_dct_i, chn_basis_ene_dct, spc_array,
                 rng_cnf_locs_lst, rng_cnf_locs_path, cnf_fs,
+                symid_dct,
                 run_prefix, save_prefix, col_array, miss_data)
             ret_lst = execute_function_in_parallel(
                 _run_task_for_locs_lst, list(rng_cnf_locs_lst), args,
@@ -145,13 +146,14 @@ def _run_task_for_locs_lst(
         tsk, spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
         proc_keyword_dct, thy_dct, mod_thy_info,
         pes_mod_dct_i, chn_basis_ene_dct, spc_array,
-        locs_lst, locs_path_lst, cnf_fs, run_prefix, save_prefix,
+        locs_lst, locs_path_lst, cnf_fs, symid_dct,
+        run_prefix, save_prefix,
         col_array, miss_data, proc_locs_lst, output_queue=None):
     """
     """
     csv_data = util.set_csv_data(tsk)
     for locs, locs_path in zip(locs_lst, locs_path_lst):
-        if locs[1] not in proc_locs_lst:
+        if not any(locs[1] == sel_locs[1] for sel_locs in proc_locs_lst):
             continue
         miss_data_i = None
         label = spc_name + ':' + ':'.join(locs)
@@ -198,6 +200,8 @@ def _run_task_for_locs_lst(
             csv_data_i, miss_data_i = collect.torsions(
                 spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
                 mod_thy_info, run_prefix, save_prefix)
+            print(csv_data_i)
+            csv_data[label] = csv_data_i
 
         elif 'hess_json' in tsk:
             csv_data_i, miss_data_i = collect.hess_json(
@@ -212,6 +216,11 @@ def _run_task_for_locs_lst(
                 proc_keyword_dct, thy_dct, locs, locs_path,
                 cnf_fs, run_prefix, save_prefix)
             csv_data[label] = csv_data_i
+            if ':'.join(locs) in symid_dct:
+                rid_label = spc_name + ':' + locs[0] + ':'
+                for symid in symid_dct[':'.join(locs)]:
+                    csv_data[rid_label + ':'.join(symid)] = csv_data_i 
+                
 
         elif 'enthalpy' in tsk or 'weight' in tsk:
             ret = collect.enthalpy(
@@ -225,6 +234,10 @@ def _run_task_for_locs_lst(
             else:
                 csv_data[label] = csv_data_i
                 col_array = spc_array
+                if ':'.join(locs) in symid_dct:
+                    rid_label = spc_name + ':' + locs[0] + ':'
+                    for symid in symid_dct[':'.join(locs)]:
+                        csv_data[rid_label + ':'.join(symid)] = csv_data_i 
 
         elif 'entropy' in tsk:
             # this is enthalpy not entropy
@@ -240,6 +253,10 @@ def _run_task_for_locs_lst(
                 cnf_fs, mod_thy_info, locs, locs_path,
                 locs_lst[0], locs_path_lst[0])
             csv_data[label] = [ret]
+            if ':'.join(locs) in symid_dct:
+                rid_label = spc_name + ':' + locs[0] + ':'
+                for symid in symid_dct[':'.join(locs)]:
+                    csv_data[rid_label + ':'.join(symid)] = [ret]
             
         elif 'heat' in tsk:
             ret = collect.enthalpy(
@@ -248,6 +265,10 @@ def _run_task_for_locs_lst(
                 locs, locs_path, cnf_fs, run_prefix, save_prefix)
             csv_data_i, chn_basis_ene_dct, spc_array, miss_data_i = ret
             csv_data[label] = csv_data_i
+            if ':'.join(locs) in symid_dct:
+                rid_label = spc_name + ':' + locs[0] + ':'
+                for symid in symid_dct[':'.join(locs)]:
+                    csv_data[rid_label + ':'.join(symid)] = csv_data_i
 
         elif 'messpf_inp' in tsk:
             ret = collect.messpf_input(

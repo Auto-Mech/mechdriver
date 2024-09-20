@@ -10,7 +10,7 @@ from mechanalyzer.inf import spc as sinfo
 
 
 # Set paths to MESS jobs
-def rate_paths(pes_dct, run_prefix):
+def rate_paths(pes_dct, run_prefix, prefix=''):
     """ Set up the path for saveing the input and output of
         MESSRATE calculations.
 
@@ -28,7 +28,7 @@ def rate_paths(pes_dct, run_prefix):
         rate_path_dct[pes_inf] = {}
 
         for mess_version in ('v1', 'v2'):
-            _pes_str = f'{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
+            _pes_str = f'{prefix}{pes_fml}_{str(pes_idx+1)}_{str(subpes_idx+1)}'
             id1 = f'base{mess_version}'
             id2 = f'wext{mess_version}'
             rate_path_dct[pes_inf].update({

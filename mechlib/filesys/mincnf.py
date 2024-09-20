@@ -513,10 +513,10 @@ def _remove_hbonded_structures(
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
                 grxn = with_structures(zrxn, "geom")
+                tsg = automol.reac.ts_graph(grxn)
             else:
-                grxn = None
+                tsg = None
 
-            tsg = automol.reac.ts_graph(grxn)
             if hbond_cutoffs is not None:
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
                     geo, *hbond_cutoffs, tsg=tsg)
@@ -547,10 +547,10 @@ def _remove_nonhbonded_structures(
             if zma_fs[-1].file.reaction.exists((0,)):
                 zrxn = zma_fs[-1].file.reaction.read((0,))
                 grxn = with_structures(zrxn, "geom")
+                tsg = automol.reac.ts_graph(grxn)
             else:
-                grxn = None
+                tsg = None
 
-            tsg = automol.reac.ts_graph(grxn)
             if hbond_cutoffs is not None:
                 hydrogen_bonded_structure_ = hydrogen_bonded_structure(
                     geo, *hbond_cutoffs, tsg=tsg)

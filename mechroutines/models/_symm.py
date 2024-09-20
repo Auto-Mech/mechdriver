@@ -6,6 +6,7 @@ import numpy
 import automol
 from autofile import fs
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.models import typ
 
 def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                     grxn=None, zma=None, racemic=True):
@@ -89,16 +90,17 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 'setting internal sym factor to 1.0')
             ext_symm = automol.geom.external_symmetry_factor(geo)
             int_symm = 1.0
-
-        if rotors is not None:
-            rotor_symms = automol.data.rotor.rotors_torsion_symmetries(rotors, flat=True)
-            int_symm = automol.symm.rotor_reduced_symm_factor(
-                int_symm, rotor_symms)
-            print('reduced int sym', int_symm)
-
-            # umbrella sampling assumed, and built in to HCO now
-            # ext_symm *= _umbrella_factor(rotors, geo)
-        symm_factor = ext_symm * int_symm
+        
+        symm_factor = ext_symm
+        if typ.nonrigid_tors(spc_mod_dct_i, rotors):
+            if rotors is not None:
+                rotor_symms = automol.data.rotor.rotors_torsion_symmetries(rotors, flat=True)
+                int_symm = automol.symm.rotor_reduced_symm_factor(
+                    int_symm, rotor_symms)
+                print('reduced int sym', int_symm)
+                # umbrella sampling assumed, and built in to HCO now
+                # symm_factor *= _umbrella_factor(rotors, geo)
+            symm_factor *= int_symm
 
     return symm_factor
 

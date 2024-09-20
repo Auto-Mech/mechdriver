@@ -6,6 +6,7 @@ import pandas
 import json
 import ioformat
 import automol
+import autofile
 from autofile import io_ as io
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
@@ -14,19 +15,19 @@ from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 
 
-def freq_es_levels(print_keyword_dct):
+def freq_es_levels(proc_keyword_dct):
     """ ?
     """
-    es_levels = _default_es_levels(print_keyword_dct)
-    es_levels['vib'] = print_keyword_dct['proplvl']
+    es_levels = _default_es_levels(proc_keyword_dct)
+    es_levels['vib'] = proc_keyword_dct['proplvl']
     return es_levels
 
 
-def ene_es_levels(print_keyword_dct):
+def ene_es_levels(proc_keyword_dct):
     """ ?
     """
-    es_levels = _default_es_levels(print_keyword_dct)
-    es_levels['ene'] = print_keyword_dct['proplvl']
+    es_levels = _default_es_levels(proc_keyword_dct)
+    es_levels['ene'] = proc_keyword_dct['proplvl']
     return es_levels
 
 
@@ -48,26 +49,26 @@ def generate_spc_model_dct(es_levels, thy_dct):
     return spc_model_dct_i
 
 
-def _default_es_levels(print_keyword_dct):
+def _default_es_levels(proc_keyword_dct):
     """ ?
     """
-    es_model = {'geo': print_keyword_dct['geolvl']}
-    es_model['vib'] = print_keyword_dct['geolvl']
-    es_model['ene'] = print_keyword_dct['geolvl']
-    es_model['sym'] = print_keyword_dct['geolvl']
+    es_model = {'geo': proc_keyword_dct['geolvl']}
+    es_model['vib'] = proc_keyword_dct['geolvl']
+    es_model['ene'] = proc_keyword_dct['geolvl']
+    es_model['sym'] = proc_keyword_dct['geolvl']
     es_model['tors'] = (
-        print_keyword_dct['geolvl'],
-        print_keyword_dct['geolvl'])
-    es_model['vpt2'] = print_keyword_dct['geolvl']
+        proc_keyword_dct['geolvl'],
+        proc_keyword_dct['geolvl'])
+    es_model['vpt2'] = proc_keyword_dct['geolvl']
     return es_model
 
 # ‘geolvl’: (‘lvl_wbt’, (1.00, thy_inf))
 # es_model = {
 #   ‘ene’: {
-# ‘geolvl’: (‘geolvl’, parser.models.format_lvl(print_keyword_dct[‘geolvl’]))
+# ‘geolvl’: (‘geolvl’, parser.models.format_lvl(proc_keyword_dct[‘geolvl’]))
 #        }
 #           ‘vib’: {
-#               ‘geolvl’: print_keyword_dct[‘geolvl’]
+#               ‘geolvl’: proc_keyword_dct[‘geolvl’]
 #           }
 
 
@@ -104,62 +105,19 @@ def _set_sort_info_lst(sort_str, thy_dct, spc_info):
     return sort_lvls
 
 
-def _set_conf_range(print_keyword_dct):
-    """ ?
-    """
-    cnf_range = print_keyword_dct['cnf_range']
-    # if cnf_range == 'all':
-    #     pass
-    # elif cnf_range != 'min':
-    #     cnf_range = 'n{}'.format(cnf_range)
-    # else:
-    #     cnf_range = print_keyword_dct['econfs']
-    #     if cnf_range != 'min':
-    #         cnf_range = 'e{}'.format(cnf_range)
-    return cnf_range
-
-
-def conformer_list(
-        spc_name, print_keyword_dct, save_prefix, run_prefix,
-        spc_dct_i, thy_dct):
-    """ Create a list of conformers based on the species name
-        and run.dat geolvl/proplvl
-    """
-    # conformer range
-    cnf_range = _set_conf_range(print_keyword_dct)
-    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
-    # thy_info build
-    thy_info = tinfo.from_dct(thy_dct.get(print_keyword_dct.get('geolvl')))
-    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
-    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    sort_info_lst = _set_sort_info_lst(
-        print_keyword_dct['sort'], thy_dct, spc_info)
-    zrxn = spc_dct_i.get('zrxn', None)
-    _root = filesys.root_locs(
-        spc_dct_i,
-        saddle=(zrxn is not None),
-        name=spc_name)
-    _, cnf_save_fs = filesys.build_fs(
-        run_prefix, save_prefix, 'CONFORMER',
-        thy_locs=mod_thy_info[1:],
-        **_root)
-    rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
-        cnf_save_fs, mod_thy_info,
-        cnf_range=cnf_range, sort_info_lst=sort_info_lst, hbond_cutoffs=hbond_cutoffs,
-        print_enes=True, nprocs=print_keyword_dct['nprocs'])
-
-    return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
-
-
-def conformer_list_from_models(
-        spc_name, thy_dct, print_keyword_dct,
-        save_prefix, run_prefix,
-        spc_dct_i, spc_mod_dct_i):
+def choose_conformers(
+        spc_name, proc_keyword_dct, spc_mod_dct_i,
+        save_prefix, run_prefix, spc_dct_i, thy_dct):
     """ Create a list of conformers based on the species name
         and model.dat info
     """
     # conformer range
-    cnf_range = _set_conf_range(print_keyword_dct)
+    symm_dct = {}
+    populate_symm = False
+    cnf_range = proc_keyword_dct['cnf_range']
+    if '_includesym' in cnf_range:
+        cnf_range = cnf_range.split('_includesym')[0]
+        populate_symm = True
     hbond_cutoffs = spc_dct_i['hbond_cutoffs']
 
     # thy_info build
@@ -167,7 +125,7 @@ def conformer_list_from_models(
     spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     sort_info_lst = _set_sort_info_lst(
-        print_keyword_dct['sort'], thy_dct, spc_info)
+        proc_keyword_dct['sort'], thy_dct, spc_info)
 
     zrxn = spc_dct_i.get('zrxn', None)
     _root = filesys.root_locs(
@@ -179,9 +137,15 @@ def conformer_list_from_models(
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
         cnf_range=cnf_range, sort_info_lst=sort_info_lst, hbond_cutoffs=hbond_cutoffs,
-        print_enes=True, nprocs=print_keyword_dct['nprocs'])
-
-    return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
+        print_enes=True, nprocs=proc_keyword_dct['nprocs'])
+    if populate_symm:
+        for cnf_locs, cnf_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
+            symm_fs = autofile.fs.symmetry(cnf_path)
+            symm_locs_lst = symm_fs[-1].existing(ignore_bad_formats=True)
+            if symm_locs_lst:
+                symm_dct[':'.join(cnf_locs)] = symm_locs_lst
+    cnf_info = (cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path,)
+    return cnf_info, mod_thy_info, symm_dct
 
 
 def set_csv_data(tsk):
@@ -459,41 +423,6 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
     return filelabel, thylabel
 
 
-# def choose_theory(proc_keyword_dct, spc_mod_dct_i, thy_dct):
-def choose_theory(proc_keyword_dct, spc_mod_dct_i):
-    """ choose between theories set in models.dat and in run.dat
-    """
-    if proc_keyword_dct['geolvl']:
-        #thy_info = tinfo.from_dct(thy_dct.get(
-        #   proc_keyword_dct['geolvl']))
-        spc_mod_dct_i = None
-    # else:
-    #    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
-    # return thy_info, spc_mod_dct_i
-    return spc_mod_dct_i
-
-
-def choose_conformers(
-        spc_name, proc_keyword_dct, spc_mod_dct_i,
-        save_prefix, run_prefix, spc_dct_i, thy_dct):
-    """ get the locations (locs and paths) for the number of conformers
-        set in the proc_keyword_dct and in the theory directory specified
-        by either the same dct or by models.ddat
-    """
-    if spc_mod_dct_i is not None:
-        ret = conformer_list_from_models(
-            spc_name, thy_dct, proc_keyword_dct,
-            save_prefix, run_prefix,
-            spc_dct_i, spc_mod_dct_i)
-        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
-    else:
-        cnf_inf = conformer_list(
-            spc_name, proc_keyword_dct, save_prefix, run_prefix,
-            spc_dct_i, thy_dct)
-        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = cnf_inf
-
-    return cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
-
 
 # Queue manipulation functions
 def remove_unstable(spc_queue, spc_dct, thy_dct, spc_mod_dct_i,
@@ -577,3 +506,49 @@ def remove_radrad_ts(obj_queue, spc_dct):
             new_queue += (obj,)
 
     return new_queue
+
+
+def reconcile_spc_mod_and_proc_keyword_dcts(
+        tsk, spc_mod_dct, proc_keyword_dct, thy_dct):
+    spc_model = proc_keyword_dct.get('spc_model', 'global')
+    kin_model = proc_keyword_dct.get('kin_model', 'global')
+    if spc_model is None:
+        print('No base species model specified, defaulting to "global" in models.dat')
+        spc_model = 'global'
+    if kin_model is None:
+        print('No base kinetic model specified, defaulting to "global" in models.dat')
+        kin_model = 'global'
+    spc_mod_dct_i = spc_mod_dct[spc_model].copy()
+    pes_mod_dct_i = spc_mod_dct[kin_model].copy()
+    geo_lvl = proc_keyword_dct.get('geolvl', None)
+    prop_lvl = proc_keyword_dct.get('proplvl', None)
+    geo_tsks = [
+        'date', 'geo', 'molden', 'zmatrix', 'torsions',
+        'pf', 'messpf_inp', 'gibbs', 'weight', 'energy']
+    if tsk in geo_tsks and geo_lvl:
+        print('updating species model with specified geolvl', geo_lvl)
+        geo_thy_info = (
+            geo_lvl,
+            (1.00, tinfo.from_dct(thy_dct.get(geo_lvl))))
+        for key in ['symm', 'vib', 'tors']:
+            if key in spc_mod_dct_i:
+                spc_mod_dct_i[key]['geolvl'] = geo_thy_info
+    if prop_lvl is not None:
+        print('updating species model with specified proplvl', geo_lvl)
+        if tsk in ['energy', 'enthalpy', 'gibbs', 'weight']:
+            prop_thy_info = (
+                prop_lvl,
+                (1.00, tinfo.from_dct(thy_dct.get(prop_lvl))))
+            spc_mod_dct_i['ene']['lvl1'] = prop_thy_info
+        if tsk in ['freqs', 'hess_json']:
+            prop_thy_info = (
+                prop_lvl,
+                (1.00, tinfo.from_dct(thy_dct.get(prop_lvl))))
+            spc_mod_dct_i['vib']['geolvl'] = prop_thy_info
+        if tsk in ['torsions']:
+            prop_thy_info = (
+                prop_lvl,
+                (1.00, tinfo.from_dct(thy_dct.get(prop_lvl))))
+            spc_mod_dct_i['tors']['enelvl'] = prop_thy_info
+    return spc_mod_dct_i, pes_mod_dct_i
+
