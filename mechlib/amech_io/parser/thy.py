@@ -15,7 +15,7 @@ from mechlib.amech_io.parser._keywrd import right_update
 # DCTS
 # rquired, Type, allowed, default,
 # maybe set defaults using the qchem params script?
-THY_REQ = ('program', 'method', 'basis', 'orb_res')
+THY_REQ = ('program', 'method', 'orb_res')
 THY_VAL_DCT = {
     'program': ((str,), (), None),
     'method': ((str,), (), None),
