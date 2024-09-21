@@ -161,8 +161,7 @@ def _check_supported_vals(inp_dct, val_dct, req_lst, section):
             # If val is None, check if it is required
             if key in req_lst:
                 print(f"bad {section}".format(section))
-                print(f"key {key} has no value defined even " "though it is required")
-                sys.exit()
+                raise ValueError(f"key {key} has no value defined even though it is required")
 
 
 def _check_required_keys(inp_dct, req_lst, section):
