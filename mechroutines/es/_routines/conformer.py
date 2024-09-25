@@ -759,6 +759,7 @@ def ring_conformer_sampling(
 
 
     if algorithm == "etkdg" or algorithm == 'robust':
+        constrained_atoms = {}
         if zrxn is not None:
             constrained_atoms = util.get_ts_reacting_atoms_dists(zrxn, geo)
         samp_zmas["etkdg"] = util.gen_confs(
