@@ -68,7 +68,7 @@ def run_tsk(tsk, obj_queue,
             spc_dct_i = spc_dct[spc_name]
             ret = util.choose_conformers(
                 spc_name, proc_keyword_dct, spc_mod_dct_i,
-                save_prefix, run_prefix, spc_dct_i, thy_dct)
+                save_prefix, run_prefix, spc_dct, thy_dct)
             cnf_info, mod_thy_info, symid_dct = ret
             cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = cnf_info
             # Add geo to missing data task if locs absent
@@ -162,7 +162,7 @@ def _run_task_for_locs_lst(
         if 'freq' in tsk and not _skip(spc_name, spc_dct_i):
             _dat, miss_data_i = collect.frequencies(
                 spc_name, spc_dct_i, spc_mod_dct_i,
-                proc_keyword_dct, thy_dct,
+                proc_keyword_dct, thy_dct, spc_dct,
                 cnf_fs, locs, locs_path, run_prefix, save_prefix)
             if _dat is not None:
                 csv_data_i, csv_data_j, disp_str = _dat

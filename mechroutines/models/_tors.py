@@ -10,6 +10,7 @@ from phydat import phycon
 from autofile import fs
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import job_path
 from mechlib import filesys
@@ -19,12 +20,16 @@ from mechroutines.models import typ
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
 def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
-                 read_potentials=True):
+                 spc_dct, read_potentials=True):
     """ Add more rotor info
     """
-
     run_prefix = pf_filesystems['run_prefix']
-    spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
+    zrxn = spc_dct_i.get('zrxn', None)
+    if zrxn is None:
+        spc_info = sinfo.from_dct(spc_dct_i, canonical=True)
+    else:
+        spc_info = rinfo.ts_info(rinfo.from_dct(
+            spc_dct_i['reacs'], spc_dct_i['prods'], spc_dct))
     if 'rxn_info' not in spc_dct_i:
         spc_fml = automol.chi.formula_layer(spc_info[0])
     else:

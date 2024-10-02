@@ -23,7 +23,7 @@ import itertools
 
 def full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        run_prefix, zrxn=None):
+        spc_dct, run_prefix, zrxn=None):
     """ process to get freq
     """
     # Pack into big object to pass into functions and return
@@ -43,7 +43,7 @@ def full_vib_analysis(
     rot_dists = None
 
     rotors, mdhr_dct, zma_locs = tors.build_rotors(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i)
+        spc_dct_i, pf_filesystems, spc_mod_dct_i, spc_dct)
     # Squash the rotor potentials as necessary
     if rotors is not None:
         if typ.squash_tors_pot(spc_mod_dct_i):

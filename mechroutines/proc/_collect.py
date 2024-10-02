@@ -98,7 +98,7 @@ def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
 
 def frequencies(
         spc_name, spc_dct_i, spc_mod_dct_i,
-        proc_keyword_dct, thy_dct,
+        proc_keyword_dct, thy_dct, spc_dct,
         cnf_fs, locs, locs_path, run_prefix, save_prefix):
     """collect frequencies
     """
@@ -133,8 +133,8 @@ def frequencies(
             name=spc_name, saddle=saddle)
 
         vib_anal_dct = vib.full_vib_analysis(
-            spc_dct_i, pf_filesystems, spc_mod_dct_i,
-            run_prefix, zrxn=zrxn)
+            spc_dct_i, pf_filesystems, spc_mod_dct_i, 
+            spc_dct, run_prefix, zrxn=zrxn)
         freqs = vib_anal_dct['fund_proj_RTimagTors']
         imag = vib_anal_dct['harm_imag']
         zpe = vib_anal_dct['anharm_zpe']
