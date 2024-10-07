@@ -1397,7 +1397,6 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
                 sym_locs = saved_locs[sym_id]
-                print('save_conformer locs:', locs, sym_locs)
                 sym_save_prefix = cnf_save_fs[-1].path(sym_locs)
                 sym_save_fs = autofile.fs.symmetry(sym_save_prefix)
                 sym_geos = []
