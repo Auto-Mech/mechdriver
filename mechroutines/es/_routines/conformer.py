@@ -1390,7 +1390,6 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                 print("Generating new ring state folder RID")
             _,cid = locs
             locs = (rid,cid)
-            print('save_conformer locs:', locs, sym_id)
             if sym_id is None:
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, thy_info[1:],
@@ -1398,25 +1397,25 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
                 sym_locs = saved_locs[sym_id]
+                print('save_conformer locs:', locs, sym_locs)
                 sym_save_prefix = cnf_save_fs[-1].path(sym_locs)
                 sym_save_fs = autofile.fs.symmetry(sym_save_prefix)
                 sym_geos = []
-                sym_locs = []
+                # sym_locs = []
                 for existing_sym_loc in sym_save_fs[-1].existing():
                     if existing_sym_loc[0] == locs[1]:
                         continue
                     sym_geos.append(
                         sym_save_fs[-1].file.geometry.read(existing_sym_loc))
-                    sym_locs.append(existing_sym_loc)
+                    # sym_locs.append(existing_sym_loc)
                 if zrxn is None:
                     check_dct = {'dist': 0.3, 'tors': None}
                 else:
                     check_dct = {'dist': 0.3}
                 unique, match_idx = automol.geom.is_unique(geo, sym_geos, check_dct=check_dct)
                 if unique:
-                    print('save_conformer locs:', locs, saved_locs[sym_id])
                     filesys.save.sym_indistinct_conformer(
-                        geo, cnf_save_fs, locs, sym_locs[match_idx], inf_obj=ret[0])
+                        geo, cnf_save_fs, locs, sym_locs, inf_obj=ret[0])
 
             #     if cnf_save_fs[-1].exists(locs):
             #         cnf_save_path = cnf_save_fs[-1].path(locs)
