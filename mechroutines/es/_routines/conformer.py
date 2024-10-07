@@ -1416,7 +1416,7 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                 if unique:
                     print('save_conformer locs:', locs, saved_locs[sym_id])
                     filesys.save.sym_indistinct_conformer(
-                        geo, cnf_save_fs, locs, sym_locs, inf_obj=ret[0])
+                        geo, cnf_save_fs, locs, sym_locs[match_idx], inf_obj=ret[0])
 
             #     if cnf_save_fs[-1].exists(locs):
             #         cnf_save_path = cnf_save_fs[-1].path(locs)
