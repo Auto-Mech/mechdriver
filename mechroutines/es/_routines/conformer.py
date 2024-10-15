@@ -486,7 +486,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 f'Max sample num: 5*{nsamp} attempted, ending search',
                 'Run again if more samples desired.')
             break
-        print(f"Debug: ew iteration, nsampd - {nsampd}")
+        print(f"Debug: new iteration, nsampd - {nsampd}")
         # Run the conformer sampling
         if nsampd > 0:
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
@@ -1869,8 +1869,12 @@ def rng_loc_for_geo(geo, cnf_save_fs):
         checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = automol.geom.ring_fragments_geometry(locs_geo)
-        if frag_geo is None or frag_locs_geo is None:
-            continue
+        if frag_geo is None:
+            rid = locs[0]
+            break
+        else:
+            if frag_locs_geo is None:
+                continue
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
         
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
