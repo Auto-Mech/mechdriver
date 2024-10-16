@@ -2,6 +2,7 @@
 """
 
 import subprocess
+import tarfile
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -28,6 +29,7 @@ def run_adhoc(
     nodes: Sequence[str] | None = None,
     activation_hook: str | None = None,
     statuses: Sequence[Status] = (Status.TBD,),
+    archive_save: bool = False,
 ) -> None:
     """Runs subtasks in parallel on Ad Hoc cluster
 
@@ -37,6 +39,7 @@ def run_adhoc(
     :param nodes: A comma-separated list of nodes to run on
     :param activation_hook: Shell commands for activating the AutoMech environment on the remote
     :param statuses: A comma-separated list of status to run or re-run
+    :param archive_save: Archive the save filesystem after running?
     """
     path = Path(path)
     assert (
@@ -91,3 +94,8 @@ def run_adhoc(
                     "" if activation_hook is None else activation_hook,
                 ]
                 subprocess.run(run_args)
+
+    if archive_save:
+        archive_path = save_path.with_suffix(".tgz")
+        with tarfile.open(archive_path, "w:gz") as tar:
+            tar.add(save_path, arcname=save_path.name)

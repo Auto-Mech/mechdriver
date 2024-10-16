@@ -1,3 +1,5 @@
+import subprocess
+
 import click
 
 from .base import Status, check_log, run
@@ -106,15 +108,9 @@ def setup_(
 
 
 @subtasks_.command("run-adhoc")
+@click.argument("nodes", nargs=-1)
 @click.option(
     "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
-)
-@click.option(
-    "-n",
-    "--nodes",
-    default=None,
-    show_default=True,
-    help="A comma-separated list of nodes",
 )
 @click.option(
     "-a",
@@ -130,18 +126,40 @@ def setup_(
     show_default=True,
     help="A comma-separated list of statuses to run or re-run",
 )
+@click.option(
+    "-z",
+    "--archive-save",
+    default=False,
+    is_flag=True,
+    help="Archive the save filesystem after running?",
+)
 def run_adhoc_(
+    nodes: tuple[str, ...],
     path: str = SUBTASK_DIR,
-    nodes: str | None = None,
     activation_hook: str | None = None,
     statuses: str = f"{Status.TBD.value}",
+    archive_save: bool = False,
 ):
-    """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
+    """Run subtasks in parallel on an Ad Hoc SSH Cluster
+
+    Use a space-separated list of nodes:
+        csed-0008 csed-0009 csed-0010
+    or
+        csed-00{08..10}
+
+    """
+    # For convenience, grab the Pixi activation hook automatically, if using Pixi
+    # environment and activation hook is `None`
+    result = subprocess.run(["pixi", "shell-hook"], capture_output=True, text=True)
+    if activation_hook is None and result.stdout:
+        activation_hook = result.stdout
+
     run_adhoc(
         path=path,
-        nodes=None if nodes is None else nodes.split(","),
+        nodes=nodes,
         activation_hook=activation_hook,
         statuses=list(map(Status, statuses.split(","))),
+        archive_save=archive_save,
     )
 
 
