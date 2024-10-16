@@ -96,6 +96,45 @@ def run(
                 subprocess.run(run_args)
 
     if archive_save:
-        archive_path = save_path.with_suffix(".tgz")
-        with tarfile.open(archive_path, "w:gz") as tar:
-            tar.add(save_path, arcname=save_path.name)
+        tar_save_directory(path)
+
+
+def tar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
+    """Tar the save directory for a subtask run
+
+    :param path: The path where the AutoMech subtasks were set up
+    """
+    path = Path(path)
+    assert (
+        path.exists()
+    ), f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
+
+    info_path = path / INFO_FILE
+    info_dct = yaml.safe_load(info_path.read_text())
+    save_path = Path(info_dct[InfoKey.save_path])
+
+    archive_path = save_path.with_suffix(".tgz")
+    print(f"Tarring {save_path} into {archive_path}...")
+    with tarfile.open(archive_path, "w:gz") as tar:
+        tar.add(save_path, arcname=save_path.name)
+
+
+def untar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
+    """Un-tar the save directory for a subtask run, if it exists
+
+    :param path: The path where the AutoMech subtasks were set up
+    """
+    path = Path(path)
+    assert (
+        path.exists()
+    ), f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
+
+    info_path = path / INFO_FILE
+    info_dct = yaml.safe_load(info_path.read_text())
+    save_path = Path(info_dct[InfoKey.save_path])
+
+    archive_path = save_path.with_suffix(".tgz")
+    if archive_path.exists():
+        print(f"Un-tarring {archive_path} into {save_path}...")
+        with tarfile.open(archive_path, "r") as tar:
+            tar.extractall(save_path.parent)
