@@ -9,7 +9,7 @@ IFS="," read -ra SUBTASK_PATHS <<< "${4}"   # list of run directories
 IFS="," read -ra SUBTASK_LOGS <<< "${5}"    # list of worker counts
 IFS="," read -ra NODES <<< "${6}"           # list of nodes for running
 ACTIVATION_HOOK=${7}    # activation hook
-NWORK_MAX=1     # Maximum SSH login capacity for some nodes
+NWORK_MAX=10            # maximum SSH login capacity for some nodes
 
 echo "Working directory: ${WORK_PATH}"
 echo "Subtask memory: ${SUBTASK_MEM}"

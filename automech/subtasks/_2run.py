@@ -24,7 +24,7 @@ SCRIPT_DIR = Path(__file__).parent / "scripts"
 RUN_SCRIPT = str(SCRIPT_DIR / "run_adhoc.sh")
 
 
-def run_adhoc(
+def run(
     path: str | Path = SUBTASK_DIR,
     nodes: Sequence[str] | None = None,
     activation_hook: str | None = None,
