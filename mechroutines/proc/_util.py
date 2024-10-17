@@ -514,7 +514,7 @@ def remove_radrad_ts(obj_queue, spc_dct):
 
 
 def reconcile_spc_mod_and_proc_keyword_dcts(
-        tsk, spc_mod_dct, proc_keyword_dct, thy_dct):
+        tsk, spc_mod_dct, proc_keyword_dct, pes_mod_dct, thy_dct):
     spc_model = proc_keyword_dct.get('spc_model', 'global')
     kin_model = proc_keyword_dct.get('kin_model', 'global')
     if spc_model is None:
@@ -524,7 +524,7 @@ def reconcile_spc_mod_and_proc_keyword_dcts(
         print('No base kinetic model specified, defaulting to "global" in models.dat')
         kin_model = 'global'
     spc_mod_dct_i = spc_mod_dct[spc_model].copy()
-    pes_mod_dct_i = spc_mod_dct[kin_model].copy()
+    pes_mod_dct_i = pes_mod_dct[kin_model].copy()
     geo_lvl = proc_keyword_dct.get('geolvl', None)
     prop_lvl = proc_keyword_dct.get('proplvl', None)
     geo_tsks = [

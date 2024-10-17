@@ -14,7 +14,7 @@ from mechroutines.es.ts import ts_zma_locs
 
 # Functions to hand reading and formatting energies of single species
 def read_energy(spc_dct_i, pf_filesystems,
-                spc_model_dct_i, run_prefix,
+                spc_model_dct_i, run_prefix, spc_dct,
                 read_ene=True, read_zpe=True, conf=None, saddle=False):
     """ Get the energy for a species on a channel
     """
@@ -30,7 +30,7 @@ def read_energy(spc_dct_i, pf_filesystems,
     if read_zpe:
         e_zpe = zero_point_energy(
             spc_dct_i, pf_filesystems, spc_model_dct_i,
-            run_prefix, saddle=saddle)
+            spc_dct, run_prefix, saddle=saddle)
         ioprinter.info_message(f'Final ZPE: {e_zpe} Eh')
 
     # Return the total energy requested
@@ -98,7 +98,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
 
 def zero_point_energy(spc_dct_i,
                       pf_filesystems, spc_model_dct_i,
-                      run_prefix, saddle=False):
+                      spc_dct, run_prefix, saddle=False):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
@@ -113,7 +113,7 @@ def zero_point_energy(spc_dct_i,
         zpe = 0.0
     else:
         vib_anal_dct = vib.full_vib_analysis(
-            spc_dct_i, pf_filesystems, spc_model_dct_i,
+            spc_dct_i, pf_filesystems, spc_model_dct_i, spc_dct,
             run_prefix, zrxn=(None if not saddle else 'placeholder'))
         zpe = vib_anal_dct['anharm_zpe']
 

@@ -338,7 +338,7 @@ def enthalpy(
         # print(pf_filesystems)
         ene_abs = ene.read_energy(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
-            run_prefix, conf=(locs, locs_path, cnf_fs),
+            run_prefix, spc_dct, conf=(locs, locs_path, cnf_fs),
             read_ene=True, read_zpe=True, saddle=saddle)
         hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
             spc_dct, spc_name, ene_abs,

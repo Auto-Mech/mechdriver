@@ -268,7 +268,7 @@ def atm_data(spc_dct, spc_name,
         'Obtaining the electronic energy...', newline=1)
     ene_chnlvl = ene.read_energy(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        run_prefix, read_ene=True, read_zpe=False)
+        spc_dct, run_prefix, read_ene=True, read_zpe=False)
 
     hf0k, hf0k_trs, _, _ = basis.enthalpy_calculation(
         spc_dct, spc_name, ene_chnlvl,
@@ -396,7 +396,7 @@ def mol_data(spc_name, spc_dct,
     if calc_chn_ene:
         chn_ene = ene.read_energy(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
-            run_prefix, read_ene=True, read_zpe=False, saddle=zrxn is not None)
+            spc_dct, run_prefix, read_ene=True, read_zpe=False, saddle=zrxn is not None)
         ene_chnlvl = chn_ene + zpe
 
         zma = None
@@ -692,7 +692,7 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
             }
             reac_ene += ene.read_energy(
                 dct, pf_filesystems, new_spc_dct_i, run_prefix,
-                read_ene=True, read_zpe=True, saddle=False)
+                spc_dct, read_ene=True, read_zpe=True, saddle=False)
 
             ioprinter.debug_message('rpath', spc_mod_dct_i['rpath'][1])
             new_spc_dct_i = {
@@ -702,7 +702,7 @@ def _rpath_ene_data(ts_dct, frm_name, scn_vals,
             }
             ene_hs_sr_inf += ene.read_energy(
                 dct, pf_filesystems, new_spc_dct_i, run_prefix,
-                read_ene=True, read_zpe=False, saddle=True)
+                spc_dct, read_ene=True, read_zpe=False, saddle=True)
 
         mref_data = (ene_hs_sr_inf, ene_hs_sr_ref, ene_hs_mr_ref,
                      reac_ene, zpe_ref)

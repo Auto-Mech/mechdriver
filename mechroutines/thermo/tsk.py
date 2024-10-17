@@ -230,7 +230,7 @@ def _get_heat_of_formation(
         run_prefix, save_prefix, saddle=False, spc_locs=spc_locs)
     ene_spc = ene.read_energy(
         spc_dct[spc_name], pf_filesystems, spc_mod_dct_i,
-        run_prefix, read_ene=True, read_zpe=True, saddle=False)
+        spc_dct, run_prefix, read_ene=True, read_zpe=True, saddle=False)
     hf0k = thermfit.heatform.calc_hform_0k(
         ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
     return hf0k, chn_basis_ene_dct

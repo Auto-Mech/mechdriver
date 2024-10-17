@@ -20,7 +20,7 @@ def run_tsk(tsk, obj_queue,
 
     # Update spc_mod_dct from targetted levels in run.dat
     spc_mod_dct_i, pes_mod_dct_i = util.reconcile_spc_mod_and_proc_keyword_dcts(
-        tsk, spc_mod_dct, proc_keyword_dct, thy_dct)
+        tsk, spc_mod_dct, proc_keyword_dct, pes_mod_dct, thy_dct)
     # Print the head of the task
     ioprinter.output_task_header(tsk)
     ioprinter.output_keyword_list(proc_keyword_dct, thy_dct)

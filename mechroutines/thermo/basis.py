@@ -65,7 +65,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             h_basis_dct[ich] = read_energy(
                     spc_dct_i, pf_filesystems,
                     spc_model_dct_i, run_prefix,
-                    read_ene=True, read_zpe=True,
+                    spc_dct, read_ene=True, read_zpe=True,
                     saddle='ts' in name or 'TS' in name
                 )
         output_queue.put((h_basis_dct,))
@@ -122,7 +122,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             name=spc_name)
         h_spc = read_energy(
             spc_dct[spc_name], pf_filesystems,
-            spc_model_dct_i, run_prefix,
+            spc_model_dct_i, run_prefix, spc_dct,
             read_ene=True, read_zpe=True, saddle='ts' in spc_name)
         if h_spc is None:
             ioprinter.error_message(f'No energy found for {spc_name}')
