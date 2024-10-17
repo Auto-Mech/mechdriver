@@ -1,0 +1,32 @@
+
+input
+    run_prefix = ./run
+    save_prefix = ./save
+end input
+
+pes
+    1: 1
+end pes
+
+spc
+    1-5
+end spc
+
+els
+    spc init_geom     runlvl=dft    inplvl=dft
+    ts  find_ts       runlvl=dft    inplvl=dft
+    all conf_energy   runlvl=mp2    inplvl=dft
+    all conf_hess     runlvl=dft    inplvl=dft
+end els
+
+thermo
+    write_mess      kin_model=global  spc_model=global
+    run_mess        kin_model=global  spc_model=global
+    run_fits        kin_model=global  spc_model=global
+end thermo
+
+ktp
+    write_mess      kin_model=global  spc_model=global
+    run_mess
+    run_fits        kin_model=global  spc_model=global
+end ktp

@@ -1,0 +1,7 @@
+name,smiles,mult,charge
+C2H6,'CC',1,0
+C2H5,'C[CH2]',2,0
+H,'[H]',2,0
+H2,'[HH]',1,0
+CH4,'C',1,0
+

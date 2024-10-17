@@ -1,0 +1,59 @@
+
+kin global
+    pressures = (
+        0.1  1.0  10.0 100.0
+    )
+    rate_temps = (
+        500. 600. 700. 800. 900. 1000.
+        1100. 1200. 1300. 1400. 1500
+        1600. 1700. 1800. 1900. 2000.
+    )
+    therm_temps = (
+        200. 300. 400. 500. 600. 700. 800. 900. 1000. 1100. 1200.
+        1300. 1400. 1500. 1600. 1700. 1800. 1900. 2000. 2100. 2200.
+        2300. 2400. 2500. 2600. 2700. 2800. 2900. 3000.
+    )
+    rate_fit = (
+        fit_method = plog
+        pdep_temps = [500.0, 1000.0]
+        pdep_tol = 20.0
+        pdep_pval = 1.0
+        pdep_plow = None
+        pdep_phigh = None
+        arrfit_dbltol = 15.0
+    )
+    therm_fit = (
+        ref_scheme = basic
+        ref_enes = ANL0
+    )
+end kin
+
+spc global
+    ene = (
+        lvl1 = mp2
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = harm
+        geolvl = dft
+        scale = on
+    )
+    tors = (
+        mod = rigid
+        enelvl = dft
+        geolvl = dft
+    )
+    symm = (
+        mod = sampling
+        geolvl = dft
+    )
+    ts = (
+        tunnel = eckart
+        sadpt = fixed
+        wells = fake
+        nobar = pst
+    )
+end spc
+

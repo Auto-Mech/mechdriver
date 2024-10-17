@@ -1,7 +1,7 @@
 
 input
-    run_prefix = ./RUN
-    save_prefix = ./SAVE
+    run_prefix = ./run
+    save_prefix = ./save
 end input
 
 pes
@@ -9,14 +9,14 @@ pes
 end pes
 
 spc
-    5
+    1-5
 end spc
 
 els
-    spc init_geom     runlvl=wbsgs   inplvl=wbsgs
-    ts  find_ts       runlvl=wbsgs   inplvl=wbsgs
-    all conf_energy   runlvl=mp2dz   inplvl=wbsgs
-    all conf_hess     runlvl=wbsgs   inplvl=wbsgs
+    spc init_geom     runlvl=dft    inplvl=dft
+    ts  find_ts       runlvl=dft    inplvl=dft
+    all conf_energy   runlvl=mp2    inplvl=dft
+    all conf_hess     runlvl=dft    inplvl=dft
 end els
 
 thermo
