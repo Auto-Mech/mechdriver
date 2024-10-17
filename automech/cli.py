@@ -131,18 +131,18 @@ def subtasks_setup_(
     help="A comma-separated list of statuses to run or re-run",
 )
 @click.option(
-    "-z",
-    "--archive-save",
+    "-t",
+    "--tar",
     default=False,
     is_flag=True,
-    help="Archive the save filesystem after running?",
+    help="Tar the subtask data and save filesystem after running?",
 )
 def subtasks_run_(
     nodes: tuple[str, ...],
     path: str = subtasks.SUBTASK_DIR,
     activation_hook: str | None = None,
     statuses: str = f"{Status.TBD.value}",
-    archive_save: bool = False,
+    tar: bool = False,
 ):
     """Run subtasks in parallel on an Ad Hoc SSH Cluster
 
@@ -163,7 +163,7 @@ def subtasks_run_(
         nodes=nodes,
         activation_hook=activation_hook,
         statuses=list(map(Status, statuses.split(","))),
-        archive_save=archive_save,
+        tar=tar,
     )
 
 
