@@ -30,24 +30,24 @@ end kin
 
 spc global
     ene = (
-        lvl1 = mp2dz
+        lvl1 = mp2
     )
     rot = (
         mod = rigid
     )
     vib = (
         mod = harm
-        geolvl = wbsgs
+        geolvl = dft
         scale = on
     )
     tors = (
         mod = rigid
-        enelvl = wbsgs
-        geolvl = wbsgs
+        enelvl = dft
+        geolvl = dft
     )
     symm = (
         mod = sampling
-        geolvl = wbsgs
+        geolvl = dft
     )
     ts = (
         tunnel = eckart

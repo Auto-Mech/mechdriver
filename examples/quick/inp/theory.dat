@@ -1,17 +1,17 @@
-level wbsgs
-    method = b3lyp
-    basis = 6-31g*
+level dft
+    method = bp86
+    basis = def2-sv(p)
     orb_res = RU
     program = gaussian16
-    mem = 1.0
+    mem = 16.0
     nprocs = 1
 end level
 
-level mp2dz
+level mp2
     method = mp2
     basis = cc-pvdz
     orb_res = RR
     program = gaussian16
-    mem = 1.0
+    mem = 16.0
     nprocs = 1
 end level
