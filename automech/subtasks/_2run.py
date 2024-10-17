@@ -29,7 +29,7 @@ def run(
     nodes: Sequence[str] | None = None,
     activation_hook: str | None = None,
     statuses: Sequence[Status] = (Status.TBD,),
-    archive_save: bool = False,
+    tar: bool = False,
 ) -> None:
     """Runs subtasks in parallel on Ad Hoc cluster
 
@@ -39,7 +39,7 @@ def run(
     :param nodes: A comma-separated list of nodes to run on
     :param activation_hook: Shell commands for activating the AutoMech environment on the remote
     :param statuses: A comma-separated list of status to run or re-run
-    :param archive_save: Archive the save filesystem after running?
+    :param tar: Tar the subtask data and save filesystem after running?
     """
     path = Path(path)
     assert (
@@ -95,11 +95,11 @@ def run(
                 ]
                 subprocess.run(run_args)
 
-    if archive_save:
-        tar_save_directory(path)
+    if tar:
+        tar_subtask_data(path)
 
 
-def tar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
+def tar_subtask_data(path: str | Path = SUBTASK_DIR) -> None:
     """Tar the save directory for a subtask run
 
     :param path: The path where the AutoMech subtasks were set up
@@ -113,17 +113,17 @@ def tar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
     info_dct = yaml.safe_load(info_path.read_text())
     save_path = Path(info_dct[InfoKey.save_path])
 
-    archive_path = save_path.with_suffix(".tgz")
-    print(f"Tarring {save_path} into {archive_path}...")
-    with tarfile.open(archive_path, "w:gz") as tar:
-        tar.add(save_path, arcname=save_path.name)
+    tar_directory(path)
+    tar_directory(save_path)
 
 
-def untar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
+def untar_subtask_data(path: str | Path = SUBTASK_DIR) -> None:
     """Un-tar the save directory for a subtask run, if it exists
 
     :param path: The path where the AutoMech subtasks were set up
     """
+    untar_directory(path)
+
     path = Path(path)
     assert (
         path.exists()
@@ -133,8 +133,29 @@ def untar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
     info_dct = yaml.safe_load(info_path.read_text())
     save_path = Path(info_dct[InfoKey.save_path])
 
-    archive_path = save_path.with_suffix(".tgz")
-    if archive_path.exists():
-        print(f"Un-tarring {archive_path} into {save_path}...")
-        with tarfile.open(archive_path, "r") as tar:
-            tar.extractall(save_path.parent)
+    untar_directory(save_path)
+
+
+def tar_directory(dir_path: str | Path) -> None:
+    """Tar a directory in its current location
+
+    :param path: The path to a directory
+    """
+    dir_path = Path(dir_path)
+    tar_path = dir_path.with_suffix(".tgz")
+    print(f"Tarring {dir_path} into {tar_path}...")
+    with tarfile.open(tar_path, "w:gz") as tar:
+        tar.add(dir_path, arcname=dir_path.name)
+
+
+def untar_directory(dir_path: str | Path) -> None:
+    """Un-tar a directory in its current location
+
+    :param path: The path where the AutoMech subtasks were set up
+    """
+    dir_path = Path(dir_path)
+    tar_path = dir_path.with_suffix(".tgz")
+    if tar_path.exists():
+        print(f"Un-tarring {tar_path} into {dir_path}...")
+        with tarfile.open(tar_path, "r") as tar:
+            tar.extractall(dir_path.parent)
