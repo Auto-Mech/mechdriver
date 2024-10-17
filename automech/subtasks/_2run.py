@@ -2,6 +2,7 @@
 """
 
 import subprocess
+import tarfile
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -23,11 +24,12 @@ SCRIPT_DIR = Path(__file__).parent / "scripts"
 RUN_SCRIPT = str(SCRIPT_DIR / "run_adhoc.sh")
 
 
-def run_adhoc(
+def run(
     path: str | Path = SUBTASK_DIR,
     nodes: Sequence[str] | None = None,
     activation_hook: str | None = None,
     statuses: Sequence[Status] = (Status.TBD,),
+    archive_save: bool = False,
 ) -> None:
     """Runs subtasks in parallel on Ad Hoc cluster
 
@@ -37,6 +39,7 @@ def run_adhoc(
     :param nodes: A comma-separated list of nodes to run on
     :param activation_hook: Shell commands for activating the AutoMech environment on the remote
     :param statuses: A comma-separated list of status to run or re-run
+    :param archive_save: Archive the save filesystem after running?
     """
     path = Path(path)
     assert (
@@ -91,3 +94,47 @@ def run_adhoc(
                     "" if activation_hook is None else activation_hook,
                 ]
                 subprocess.run(run_args)
+
+    if archive_save:
+        tar_save_directory(path)
+
+
+def tar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
+    """Tar the save directory for a subtask run
+
+    :param path: The path where the AutoMech subtasks were set up
+    """
+    path = Path(path)
+    assert (
+        path.exists()
+    ), f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
+
+    info_path = path / INFO_FILE
+    info_dct = yaml.safe_load(info_path.read_text())
+    save_path = Path(info_dct[InfoKey.save_path])
+
+    archive_path = save_path.with_suffix(".tgz")
+    print(f"Tarring {save_path} into {archive_path}...")
+    with tarfile.open(archive_path, "w:gz") as tar:
+        tar.add(save_path, arcname=save_path.name)
+
+
+def untar_save_directory(path: str | Path = SUBTASK_DIR) -> None:
+    """Un-tar the save directory for a subtask run, if it exists
+
+    :param path: The path where the AutoMech subtasks were set up
+    """
+    path = Path(path)
+    assert (
+        path.exists()
+    ), f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
+
+    info_path = path / INFO_FILE
+    info_dct = yaml.safe_load(info_path.read_text())
+    save_path = Path(info_dct[InfoKey.save_path])
+
+    archive_path = save_path.with_suffix(".tgz")
+    if archive_path.exists():
+        print(f"Un-tarring {archive_path} into {save_path}...")
+        with tarfile.open(archive_path, "r") as tar:
+            tar.extractall(save_path.parent)

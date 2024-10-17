@@ -1,7 +1,9 @@
+import subprocess
+
 import click
 
+from . import subtasks
 from .base import Status, check_log, run
-from .subtasks import SUBTASK_DIR, run_adhoc, setup, status
 
 
 @click.group()
@@ -56,7 +58,7 @@ def subtasks_():
 @click.option(
     "-o",
     "--out-path",
-    default=SUBTASK_DIR,
+    default=subtasks.SUBTASK_DIR,
     show_default=True,
     help="The output path of the subtask directories",
 )
@@ -84,9 +86,9 @@ def subtasks_():
         "Options: els(=els-spc,els-pes), thermo, ktp"
     ),
 )
-def setup_(
+def subtasks_setup_(
     path: str = ".",
-    out_path: str = SUBTASK_DIR,
+    out_path: str = subtasks.SUBTASK_DIR,
     save_path: str | None = None,
     run_path: str | None = None,
     task_groups: str = "els,thermo,ktp",
@@ -96,7 +98,7 @@ def setup_(
     The AutoMech directory must contain an `inp/` subdirectory with the following
     required files: run.dat, theory.dat, models.dat, species.csv, mechanism.dat
     """
-    setup(
+    subtasks.setup(
         path=path,
         out_path=out_path,
         save_path=save_path,
@@ -105,16 +107,14 @@ def setup_(
     )
 
 
-@subtasks_.command("run-adhoc")
+@subtasks_.command("run")
+@click.argument("nodes", nargs=-1)
 @click.option(
-    "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
-)
-@click.option(
-    "-n",
-    "--nodes",
-    default=None,
+    "-p",
+    "--path",
+    default=subtasks.SUBTASK_DIR,
     show_default=True,
-    help="A comma-separated list of nodes",
+    help="The subtask directory",
 )
 @click.option(
     "-a",
@@ -130,24 +130,50 @@ def setup_(
     show_default=True,
     help="A comma-separated list of statuses to run or re-run",
 )
-def run_adhoc_(
-    path: str = SUBTASK_DIR,
-    nodes: str | None = None,
+@click.option(
+    "-z",
+    "--archive-save",
+    default=False,
+    is_flag=True,
+    help="Archive the save filesystem after running?",
+)
+def subtasks_run_(
+    nodes: tuple[str, ...],
+    path: str = subtasks.SUBTASK_DIR,
     activation_hook: str | None = None,
     statuses: str = f"{Status.TBD.value}",
+    archive_save: bool = False,
 ):
-    """Run subtasks in parallel on an Ad Hoc SSH Cluster"""
-    run_adhoc(
+    """Run subtasks in parallel on an Ad Hoc SSH Cluster
+
+    Use a space-separated list of nodes:
+        csed-0008 csed-0009 csed-0010
+    or
+        csed-00{08..10}
+
+    """
+    # For convenience, grab the Pixi activation hook automatically, if using Pixi
+    # environment and activation hook is `None`
+    result = subprocess.run(["pixi", "shell-hook"], capture_output=True, text=True)
+    if activation_hook is None and result.stdout:
+        activation_hook = result.stdout
+
+    subtasks.run(
         path=path,
-        nodes=None if nodes is None else nodes.split(","),
+        nodes=nodes,
         activation_hook=activation_hook,
         statuses=list(map(Status, statuses.split(","))),
+        archive_save=archive_save,
     )
 
 
 @subtasks_.command("status")
 @click.option(
-    "-p", "--path", default=SUBTASK_DIR, show_default=True, help="The subtask directory"
+    "-p",
+    "--path",
+    default=subtasks.SUBTASK_DIR,
+    show_default=True,
+    help="The subtask directory",
 )
 @click.option(
     "-c",
@@ -163,6 +189,8 @@ def run_adhoc_(
     show_default=True,
     help="Wrap to included this many subtask columns per row",
 )
-def status_(path: str = SUBTASK_DIR, check_file: str = "check.log", wrap: int = 18):
+def subtasks_status_(
+    path: str = subtasks.SUBTASK_DIR, check_file: str = "check.log", wrap: int = 18
+):
     """Check the status of running subtasks"""
-    status(path=path, check_file=check_file, wrap=wrap)
+    subtasks.status(path=path, check_file=check_file, wrap=wrap)

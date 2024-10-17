@@ -464,11 +464,15 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
 
     def _parse_block(run_dat, keyword):
         expr = block_expression(keyword, key="content")
-        content = expr.parseString(run_dat).get("content")
+        res, *_ = next(expr.scan_string(run_dat), [None])
+        if res is None:
+            return None
+
+        content = res.get("content")
         return format_block(content)
 
     run_dat = without_comments(run_dat)
-    return {
+    block_dct = {
         "input": _parse_block(run_dat, "input"),
         "pes": _parse_block(run_dat, "pes"),
         "spc": _parse_block(run_dat, "spc"),
@@ -476,6 +480,7 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
         "thermo": _parse_block(run_dat, "thermo"),
         "ktp": _parse_block(run_dat, "ktp"),
     }
+    return {k: v for k, v in block_dct.items() if v is not None}
 
 
 def form_run_dat(run_dct: dict[str, str]) -> str:
@@ -533,11 +538,11 @@ def subtask_keys_from_run_dict(
     if subtask_type is None:
         return [ALL_KEY]
 
-    if subtask_type == "spc":
+    if subtask_type == "spc" and "spc" in run_dct:
         spc_block = run_dct.get("spc")
         return list(map(str, parse_index_series(spc_block)))
 
-    if subtask_type == "pes":
+    if subtask_type == "pes" and "pes" in run_dct:
         pes_block = run_dct.get("pes")
 
         colon = pp.Suppress(pp.Literal(":"))
@@ -567,6 +572,9 @@ def task_lines_from_run_dict(
     :param subtask_type: The type of subtask: 'spc', 'pes', or `None`
     :return: A sequence of (task name, task line) pairs
     """
+    if task_type not in run_dct:
+        return []
+
     block = run_dct.get(task_type)
     lines = [line.strip() for line in block.splitlines()]
     if task_type == "els":
