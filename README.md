@@ -57,13 +57,13 @@ This will parse your `inp/` directory and create individual subdirectories for r
 
 (2.) If you are using the [amech-dev](https://github.com/Auto-Mech/amech-dev) Pixi environment, you can run the subtasks in parallel on a list of nodes as follows:
 ```
-pixi run subtasks csed-0008 csed-0009 csed-0010  # or csed-00{08..10}
+automech subtasks run csed-00{08..10}  # expands to csed-0008 csed-0009 csed-0010
 ```
-Otherwise, you can execute the subtasks in parallel as follows:
+If you are running in a different environment, you will need to pass in an activation hook as follows:
 ```
-automech subtasks run-adhoc -n <comma-separated list of nodes> -a <environment activation commands>
+automech subtasks run csed-00{08..10} -a <activation hook>
 ```
-Here, the list of nodes might be `csed-0008,csed-0009,csed-0010` and the activation command might be `"$(pixi shell-hook)"`.
+Where the activation hook contains the bash commands to activate your environment.
 
 (3.) To check the progress of your subtask run, you can use the following command:
 ```
