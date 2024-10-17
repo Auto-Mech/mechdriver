@@ -56,12 +56,12 @@ def _check_log(log_path: str | Path) -> tuple[Status, str | None]:
         status = Status.TBD
         return (status, line)
 
-    log = log_path.read_text()
+    log = log_path.read_text().strip()
     has_exit_message = re.search("EXITING AUTOMECHANIC", log)
     has_is_running_file = Path(f"{log_path}_IS_RUNNING").exists()
     if not has_exit_message:
         status = Status.RUNNING if has_is_running_file else Status.ERROR
-        line = log.strip().splitlines()[-1]
+        line = log.splitlines()[-1] if log else ''
         return (status, line)
 
     warning_match = re.search(r".*(?<!Future)Warning.*", log, flags=re.IGNORECASE)
