@@ -14,7 +14,7 @@ from mechroutines.es.ts import ts_zma_locs
 
 # Functions to hand reading and formatting energies of single species
 def read_energy(spc_dct_i, pf_filesystems,
-                spc_model_dct_i, run_prefix, spc_dct,
+                spc_model_dct_i, spc_dct, run_prefix,
                 read_ene=True, read_zpe=True, conf=None, saddle=False):
     """ Get the energy for a species on a channel
     """

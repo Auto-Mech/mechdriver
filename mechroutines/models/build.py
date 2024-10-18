@@ -350,7 +350,7 @@ def mol_data(spc_name, spc_dct,
         'Obtaining the vibrational frequencies and zpves...', newline=1)
     vib_anal_dct = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        run_prefix, zrxn=zrxn)
+        spc_dct, run_prefix, zrxn=zrxn)
 
     freqs = vib_anal_dct['fund_proj_RTimagTors']
     imag = vib_anal_dct['harm_imag']
