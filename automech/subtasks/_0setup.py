@@ -28,6 +28,7 @@ GROUP_TASK_AND_KEY_TYPE = {
     "thermo": ("thermo", "spc"),
     "ktp": ("ktp", "pes"),
 }
+COMBINED_TASK_GROUPS = ("thermo", "ktp")
 
 SUBTASK_DIR = "subtasks"
 INFO_FILE = "info.yaml"
@@ -243,12 +244,11 @@ def determine_task_list(
         for task_line in task_lines_from_run_dict(run_dct, task_type, key_type)
     ]
 
-    fit_idx = next((i for i, t in enumerate(tasks) if t.name == "run_fits"), None)
-    run_idx = next((i for i, t in enumerate(tasks) if t.name == "run_mess"), None)
-
-    if fit_idx is not None and run_idx is not None:
-        fit_task = tasks.pop(fit_idx)
-        tasks[run_idx].line += f"\n{fit_task.line}"
+    if tasks and task_type in COMBINED_TASK_GROUPS:
+        idx = next((i for i, t in enumerate(tasks) if t.name == "run_mess"), 0)
+        task = tasks[idx]
+        task.line = "\n".join(t.line for t in tasks)
+        tasks = [task]
 
     return tasks
 
