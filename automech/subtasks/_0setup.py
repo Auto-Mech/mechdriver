@@ -26,7 +26,7 @@ GROUP_TASK_AND_KEY_TYPE = {
     "els-spc": ("els", "spc"),
     "els-pes": ("els", "pes"),
     "thermo": ("thermo", "spc"),
-    "ktp": ("ktp", None),
+    "ktp": ("ktp", "pes"),
 }
 
 SUBTASK_DIR = "subtasks"
@@ -227,7 +227,7 @@ def determine_task_list(
     returning them in a table
 
     """
-    keys = subtask_keys_from_run_dict(run_dct, key_type)
+    keys = subtask_keys_from_run_dict(run_dct, task_type, key_type)
 
     tasks: list[Task] = [
         Task(
@@ -527,7 +527,7 @@ def filesystem_paths_from_run_dict(
 
 
 def subtask_keys_from_run_dict(
-    run_dct: dict[str, str], subtask_type: str | None = None
+    run_dct: dict[str, str], task_type: str, subtask_type: str | None = None
 ) -> list[str]:
     """Extract species indices from a run.dat dictionary
 
@@ -555,8 +555,12 @@ def subtask_keys_from_run_dict(
         keys = []
         for res in expr.parseString(pes_block):
             pidx = res.get("pes")
-            cidxs = parse_index_series(res.get("channels"))
-            keys.extend(f"{pidx}: {cidx}" for cidx in cidxs)
+            cidx_range = res.get("channels")
+            if task_type == "ktp":
+                keys.append(f"{pidx}: {cidx_range}")
+            else:
+                cidxs = parse_index_series(cidx_range)
+                keys.extend(f"{pidx}: {cidx}" for cidx in cidxs)
         return list(mit.unique_everseen(keys))
 
     return []
@@ -637,17 +641,19 @@ def parse_subtask_key(key: str) -> int | tuple[int, int] | str:
     """Parse a subtask key into its components
 
     Examples:
-        '1'     ->  1
-        '1: 2'  ->  (1, 2)
-        'all'   ->  'all'
+        '1'        ->  1        # species
+        '1: 2'     ->  (1, 2)   # channel
+        '1: 1-10'  ->  1        # PES
+        'all'      ->  'all'    # all
 
     :param key: The key to parse
     :return: The parsed components
     """
     spc_key = ppc.integer
     all_key = pp.Literal(ALL_KEY)
-    pes_key = ppc.integer + pp.Suppress(":") + ppc.integer
-    expr = (spc_key ^ all_key ^ pes_key) + pp.StringEnd()
+    chn_key = ppc.integer + pp.Suppress(":") + ppc.integer
+    pes_key = ppc.integer + pp.Suppress(":" + pp.SkipTo(pp.StringEnd()))
+    expr = (spc_key ^ all_key ^ chn_key ^ pes_key) + pp.StringEnd()
     res = expr.parseString(key).as_list()
     return res[0] if len(res) == 1 else tuple(res)
 
