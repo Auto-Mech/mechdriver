@@ -3,9 +3,11 @@
 
 import dataclasses
 import io
+import itertools
 import os
 import re
 import textwrap
+from collections import defaultdict
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -152,18 +154,6 @@ def setup_subtask_group(
     :return: A DataFrame of run paths, whose columns (subtasks) are independent and can
         be run in parallel, but whose rows (tasks) are potentially sequential
     """
-
-    def _subtask_directory(key):
-        id_str_ = "{:02d}".format
-        key_ = parse_subtask_key(key)
-        subtask_dir = key_
-        if isinstance(key_, tuple):
-            subtask_dir = "_".join(map(id_str_, key_))
-        if isinstance(key_, int):
-            subtask_dir = id_str_(key_)
-        assert isinstance(subtask_dir, str), f"Invalid subtask key: {key}"
-        return subtask_dir
-
     # Form a prefix for the task/subtask type
     if group_id is None:
         type_keys = [task_type] + ([] if key_type is None else [key_type])
@@ -195,7 +185,7 @@ def setup_subtask_group(
         task_run_dct[task_type] = task.line
         for key in task.subtask_keys:
             # Generate the subtask path
-            subtask_path = task_path / _subtask_directory(key)
+            subtask_path = task_path / format_subtask_key(key)
             subtask_path.mkdir(parents=True, exist_ok=True)
             # Generate the input file dictionary
             subtask_run_dct = task_run_dct.copy()
@@ -228,7 +218,10 @@ def determine_task_list(
     returning them in a table
 
     """
-    keys = subtask_keys_from_run_dict(run_dct, task_type, key_type)
+    subpes_dct = subpes_dict_from_mechanism_dat(file_dct.get("mechanism.dat"))
+    keys = subtask_keys_from_run_dict(
+        run_dct, task_type, key_type, subpes_dct=subpes_dct
+    )
 
     tasks: list[Task] = [
         Task(
@@ -454,6 +447,52 @@ def sample_count_from_inchi(
     return nsamp
 
 
+# Functions acting on mechanism.dat data
+def subpes_dict_from_mechanism_dat(mechanism_dat: str) -> dict[str, list[list[str]]] | None:
+    """Determine the groups of channels for each sub-PES from the mechanism.dat file
+
+    Structure of the return dictionary:
+
+        {'1': [['1', '2', '3'], ['4', '5', '6', '7', '8']],
+         '2': [['1'], ['2'], ['3']],
+         '3': [['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']],
+         ...}
+
+    where the keys are PES indices and the values are grouped channel indices.
+
+    :param mechanism_dat: The contents of the mechanism.dat file, as a string
+    :return: A dictionary mapping PESs onto groups of channels, by string index
+    """
+    # Define a parser to extract "pes.subpes.channel 1.2.3" data
+    comment_mark = pp.Char("!") | pp.Char("#")
+    sort_key = sort_val = pp.DelimitedList(
+        pp.Word(pp.alphanums), delim=".", combine=True, min=3
+    )
+    sort_item = pp.Suppress(...) + pp.Group(
+        pp.Suppress(comment_mark) + sort_key + sort_val + pp.Suppress(pp.LineEnd())
+    )
+    sort_items = pp.ZeroOrMore(sort_item)
+    results: list[str, str] = sort_items.parse_string(mechanism_dat).as_list()
+    if not results:
+        return None
+
+    # Create a DataFrame with "pes | subpes | channel" columns
+    sort_df = pandas.DataFrame.from_records(
+        [dict(zip(k.split("."), v.split("."), strict=True)) for k, v in results]
+    )
+    sort_df = sort_df.apply(pandas.to_numeric, axis=1)
+
+    if not all(k in sort_df for k in ("pes", "subpes", "channel")):
+        return None
+
+    # Create a dictionary with groups of channels by subpes
+    subpes_dct = defaultdict(list)
+    for (p, _), d in sort_df.groupby(["pes", "subpes"])["channel"]:
+        subpes_dct[p].append(d.to_list())
+
+    return dict(subpes_dct)
+
+
 # Functions acting on run.dat data
 def parse_run_dat(run_dat: str) -> dict[str, str]:
     """Parse a run.dat file into a dictionary of blocks
@@ -527,7 +566,10 @@ def filesystem_paths_from_run_dict(
 
 
 def subtask_keys_from_run_dict(
-    run_dct: dict[str, str], task_type: str, subtask_type: str | None = None
+    run_dct: dict[str, str],
+    task_type: str,
+    subtask_type: str | None = None,
+    subpes_dct: dict[str, list[list[str]]] | None = None,
 ) -> list[str]:
     """Extract species indices from a run.dat dictionary
 
@@ -556,10 +598,19 @@ def subtask_keys_from_run_dict(
         for res in expr.parseString(pes_block):
             pidx = res.get("pes")
             cidx_range = res.get("channels")
-            if task_type == "ktp":
+            cidxs = parse_index_series(cidx_range)
+            if task_type == "ktp" and subpes_dct is None:
                 keys.append(f"{pidx}: {cidx_range}")
+            elif task_type == "ktp":
+                assert pidx in subpes_dct
+                cidx_groups = [
+                    (x for x in xs if x in cidxs) for xs in subpes_dct.get(pidx)
+                ]
+                keys.extend(
+                    f"{pidx}: {format_index_series(cidx_group)}"
+                    for cidx_group in cidx_groups
+                )
             else:
-                cidxs = parse_index_series(cidx_range)
                 keys.extend(f"{pidx}: {cidx}" for cidx in cidxs)
         return list(mit.unique_everseen(keys))
 
@@ -637,25 +688,37 @@ def without_comments(inp: str) -> str:
     return re.sub(COMMENT_REGEX, "", inp)
 
 
-def parse_subtask_key(key: str) -> int | tuple[int, int] | str:
+def format_subtask_key(key: str) -> int | tuple[int, int] | str:
     """Parse a subtask key into its components
 
     Examples:
-        '1'        ->  1        # species
-        '1: 2'     ->  (1, 2)   # channel
-        '1: 1-10'  ->  1        # PES
-        'all'      ->  'all'    # all
+        '1'           ->  '01'          # species
+        '1: 2'        ->  '01_2'        # channel
+        '1: 1-10'     ->  '01_1-10'     # multi-channel
+        '1: 1-10,13'  ->  '01_1-10.13'  # multi-channel
+        'all'         ->  'all'         # all
 
     :param key: The key to parse
     :return: The parsed components
     """
-    spc_key = ppc.integer
-    all_key = pp.Literal(ALL_KEY)
-    chn_key = ppc.integer + pp.Suppress(":") + ppc.integer
-    pes_key = ppc.integer + pp.Suppress(":" + pp.SkipTo(pp.StringEnd()))
-    expr = (spc_key ^ all_key ^ chn_key ^ pes_key) + pp.StringEnd()
+    int_fmt_ = "{:02d}".format
+
+    chn_key = ppc.integer + pp.Suppress(":") + ppc.integer + pp.Suppress(pp.StringEnd())
+    pes_key = ppc.integer + pp.Suppress(":") + pp.SkipTo(pp.StringEnd())
+    spc_key = ppc.integer + pp.Suppress(pp.StringEnd())
+    all_key = pp.Literal(ALL_KEY) + pp.Suppress(pp.StringEnd())
+    expr = (chn_key | pes_key | spc_key | all_key) + pp.StringEnd()
     res = expr.parseString(key).as_list()
-    return res[0] if len(res) == 1 else tuple(res)
+
+    # Format integer values
+    res = [int_fmt_(x) if isinstance(x, int) else x for x in res]
+    assert all(isinstance(x, str) for x in res)
+
+    # Replace special characters
+    res = [x.replace(",", ".") for x in res]
+
+    # Join with underscores
+    return "_".join(res)
 
 
 def parse_index_series(inp: str) -> list[int]:
@@ -681,6 +744,35 @@ def parse_index_series(inp: str) -> list[int]:
             start, stop = res
             idxs.extend(range(start, stop + 1))
     return list(mit.unique_everseen(idxs))
+
+
+def format_index_series(idxs: Sequence[int]) -> str:
+    r"""Parse a sequence of indices from a string separated by commas and newlines,
+    with ranges indicated by 'x-y'
+
+    Example:
+        Input: (1, 3, 5, 6, 7, 8, 9, 11, 13, 14, 23, 27, 28, 29)
+        Output: '1,3,5-9,11,13-14,23,27-29'
+    """
+    if not idxs:
+        return ""
+
+    def _format_contiguous(idxs_: Sequence[int]) -> str:
+        if len(idxs_) > 1:
+            start_idx, *_, stop_idx = idxs_
+            return f"{start_idx}-{stop_idx}"
+
+        assert len(idxs_) == 1
+        (idx,) = idxs_
+        return f"{idx}"
+
+    idxs = sorted(idxs)
+    counter = itertools.count()
+    out = ",".join(
+        _format_contiguous(list(g))
+        for _, g in itertools.groupby(idxs, lambda idx: idx - next(counter))
+    )
+    return out
 
 
 def block_expression(keyword: str, key: str = "content") -> pp.ParseExpression:

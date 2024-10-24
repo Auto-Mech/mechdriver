@@ -1,7 +1,8 @@
-autochem: []
+autochem:
+- '6f5c0b1d Fix: Identify redundant dihedrals for linear fragments'
 autofile: []
 autoio: []
 mechanalyzer: []
 mechdriver:
-- 'ebcef177 New: Saving repo info on test setup'
+- '64b34701 New: Split up kTP tasks by sub-PES'
 username: avcopan
