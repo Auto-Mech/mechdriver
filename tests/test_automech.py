@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 DIR = Path(__file__).parent
-TESTS = [t["name"] for t in yaml.safe_load((DIR / "config.yaml").read_text())]
+TESTS = [t for t in yaml.safe_load((DIR / "config.yaml").read_text())]
 
 
 class Logger(object):

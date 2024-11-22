@@ -1,5 +1,4 @@
-**/*.log
-**/run
-**/save
-**/subtasks
-__pycache__/
+*
+!.gitignore
+!test_automech.py
+!config.yaml

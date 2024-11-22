@@ -28,7 +28,7 @@ def run(
     Assumes the subtasks were set up at this path using `automech subtasks setup`
 
     :param path: The path where the AutoMech subtasks were set up
-    :param nodes: A comma-separated list of nodes to run on
+    :param nodes: A list of nodes to run on
     :param activation_hook: Shell commands for activating the AutoMech environment on the remote
     :param statuses: A comma-separated list of status to run or re-run
     :param tar: Tar the subtask data and save filesystem after running?
@@ -53,8 +53,8 @@ def run_multiple(
 
     Assumes the subtasks were set up at this path using `automech subtasks setup`
 
-    :param path: The path where the AutoMech subtasks were set up
-    :param nodes: A comma-separated list of nodes to run on
+    :param paths: The paths where the AutoMech subtasks were set up
+    :param nodes: A list of nodes to run on
     :param activation_hook: Shell commands for activating the AutoMech environment on the remote
     :param statuses: A comma-separated list of status to run or re-run
     :param tar: Tar the subtask data and save filesystem after running?
