@@ -4,14 +4,16 @@
 import contextlib
 import os
 import sys
+import tarfile
 from pathlib import Path
 
 import automech
 import pytest
 import yaml
 
-DIR = Path(__file__).parent
-TESTS = [t for t in yaml.safe_load((DIR / "config.yaml").read_text())]
+TEST_ROOT_DIR = Path(__file__).parent
+TESTS = [t for t in yaml.safe_load((TEST_ROOT_DIR / "config.yaml").read_text())]
+ARCHIVE_FILE = TEST_ROOT_DIR / "archive.tgz"
 
 
 class Logger(object):
@@ -29,20 +31,27 @@ class Logger(object):
         pass
 
 
+def test_sign():
+    """Unpack archive and check provenance"""
+    os.chdir(TEST_ROOT_DIR)
+    if ARCHIVE_FILE.exists():
+        print(f"Unpacking {ARCHIVE_FILE}...")
+        with tarfile.open(ARCHIVE_FILE, "r") as tar:
+            tar.extractall()
+
+
 @pytest.mark.parametrize("name", TESTS)
 def test_workflow(name: str):
     """Test the entire workflow"""
-    print("Pause testing while figuing out new set-up")
-    pass
-    # print(f"Running in {name}...")
+    print(f"Running in {name}...")
 
-    # test_dir = DIR / name
-    # os.chdir(test_dir)
+    test_dir = TEST_ROOT_DIR / name
+    os.chdir(test_dir)
 
-    # with contextlib.redirect_stdout(Logger("out.log")):
-    #     automech.subtasks.untar_subtask_data()
-    #     automech.run()
+    with contextlib.redirect_stdout(Logger("out.log")):
+        automech.run()
 
 
 if __name__ == "__main__":
-    test_workflow("quick")
+    # test_workflow("quick")
+    test_sign()

@@ -2,3 +2,4 @@
 !.gitignore
 !test_automech.py
 !config.yaml
+!archive.tgz
