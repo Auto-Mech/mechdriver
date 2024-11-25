@@ -26,7 +26,7 @@ def status(
     :param check_file: Log file for writing paths to be checked
     :Param wrap: Wrap to include this many subtask columns per row
     """
-    path = Path(path)
+    path = Path(path).resolve()
     assert (
         path.exists()
     ), f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
@@ -39,7 +39,6 @@ def status(
         skeys = subtask_keys(tasks)
         kwidth = key_column_width(tasks)
         vwidth = value_column_width(tasks)
-        print(vwidth)
 
         print_long_row_guide(
             kwidth=kwidth, vwidth=vwidth, nvals=len(skeys), wrap=wrap, char="#"
@@ -73,8 +72,10 @@ def status(
 
             if line is not None:
                 check_lines.append(line)
+
     check_file: Path = Path(check_file)
-    check_file.write_text("\n".join(check_lines))
+    check_file_contents = "\n".join(check_lines)
+    check_file.write_text(f"{check_file_contents}\n" if check_file_contents else "")
 
 
 def log_paths_with_check_results(

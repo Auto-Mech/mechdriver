@@ -1,4 +1,4 @@
-name: test
+name: signed
 
 on: 
   push:
@@ -38,4 +38,4 @@ jobs:
       # Test
       - name: Test
         run: |
-          pixi run pytest -v tests/
+          pixi run pytest -v tests/ -k "signature"
