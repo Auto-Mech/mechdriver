@@ -268,7 +268,9 @@ def determine_task_list(
     for task_key, task_line in enumerate(task_lines):
         task_name = parse_task_name(task_line)
         task_path = Path(f"{group_id}_{task_key:02d}_{task_name}")
-        nworkers_lst = parse_subtasks_nworkers(task_line, file_dct, keys)
+        nworkers_lst = parse_subtasks_nworkers(
+            task_line, file_dct, keys, task_type=task_type, key_type=key_type
+        )
         subtasks = [
             Subtask(
                 key=key,
@@ -384,7 +386,11 @@ def parse_task_nprocs(task_line: str, file_dct: dict[str, str]) -> int:
 
 
 def parse_subtasks_nworkers(
-    task_line: str, file_dct: dict[str, str], subtask_keys: list[str]
+    task_line: str,
+    file_dct: dict[str, str],
+    subtask_keys: list[str],
+    task_type: str,
+    key_type: str | None = None,
 ) -> list[int]:
     """Read the memory and nprocs specs for a given task
 
@@ -395,23 +401,49 @@ def parse_subtasks_nworkers(
     """
     nworkers_lst = [1] * len(subtask_keys)
 
-    if task_line.startswith("spc"):
+    if task_type != "els":
+        return nworkers_lst
+
+    task_name = parse_task_name(task_line)
+    field_dct = parse_task_fields(task_line)
+
+    # Get the list of ChIs ordered by subtask key
+    spc_df = parse_species_csv(file_dct.get("species.csv"))
+    if "inchi" not in spc_df:
+        spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.inchi)
+
+    gras_lst = None
+    if key_type == "spc":
+        # Get the list of ChIs ordered by subtask key
+        chis = [spc_df.iloc[int(k) - 1]["inchi"] for k in subtask_keys]
+        gras_lst = [[automol.amchi.graph(c, stereo=False)] for c in chis]
+
+    if key_type == "pes":
         task_name = parse_task_name(task_line)
         field_dct = parse_task_fields(task_line)
 
-        # Get the list of ChIs ordered by subtask key
-        spc_df = parse_species_csv(file_dct.get("species.csv"))
-        if "inchi" not in spc_df:
-            spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.inchi)
-        chis = [spc_df.iloc[int(k) - 1]["inchi"] for k in subtask_keys]
+        chi_dct = dict(zip(spc_df["name"], spc_df["inchi"], strict=True))
+        rxn_dct = parse_mechanism_dat(file_dct.get("mechanism.dat"))
+        if rxn_dct:
+            rxns = [rxn_dct.get(k) for k in subtask_keys]
+            chis = [tuple(list(map(chi_dct.get, rgts)) for rgts in rxn) for rxn in rxns]
+            gras_lst = [
+                list(
+                    map(automol.reac.ts_graph, automol.reac.from_chis(*c, stereo=True))
+                )
+                for c in chis
+            ]
 
-        # Determine the number of workers per subtask
-        if task_name in ROTOR_TASKS:
-            nworkers_lst = list(map(rotor_count_from_inchi, chis))
-        if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
-            nmax = int(field_dct.get("cnf_range", "n100")[1:])
-            nsamp_lst = [sample_count_from_inchi(c, param_d=nmax) for c in chis]
-            nworkers_lst = [max((n - 1) // 2, 1) for n in nsamp_lst]
+    if gras_lst is None:
+        return nworkers_lst
+
+    # Determine the number of workers per subtask
+    if task_name in ROTOR_TASKS:
+        nworkers_lst = list(map(rotor_count_from_graphs, gras_lst))
+    if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
+        nmax = int(field_dct.get("cnf_range", "n100")[1:])
+        nsamp_lst = [sample_count_from_graphs(gs, param_d=nmax) for gs in gras_lst]
+        nworkers_lst = [max((n - 1) // 2, 1) for n in nsamp_lst]
 
     return nworkers_lst
 
@@ -450,13 +482,51 @@ def parse_species_csv(species_csv: str) -> pandas.DataFrame:
     return pandas.read_csv(io.StringIO(species_csv), quotechar="'")
 
 
-def rotor_count_from_inchi(chi: str) -> int:
-    """Determine species rotor count for a molecule from its InChI or AMChI string
+def rotor_count_from_graphs(gras: Sequence[object]) -> int:
+    """Determine the total rotor count for a sequence of graphs
 
-    :param chi: An InChI or AMChI string
+    :param gras: A sequence of molecule or TS graphs
     :return: The rotor count
     """
-    gra = automol.amchi.graph(chi, stereo=False)
+    return sum(map(rotor_count_from_graph, gras))
+
+
+def sample_count_from_graphs(
+    gras: Sequence[object],
+    param_a: int = 12,
+    param_b: int = 1,
+    param_c: int = 3,
+    param_d: int = 100,
+) -> int:
+    """Determine the total conformer sample count for a sequence of graphs
+
+    The parameters (a, b, c, d) are used to calculate the sample count as follows:
+    ```
+        nsamp = min(a + b * c^ntors, d)
+    ```
+    where `ntors` is the number of torsional degrees of freedom in the molecule.
+
+    :param gra: A molecule or TS graph
+    :param param_a: The `a` parameter used to calculate the sample count
+    :param param_b: The `b` parameter used to calculate the sample count
+    :param param_c: The `c` parameter used to calculate the sample count
+    :param param_d: The `d` parameter used to calculate the sample count
+    :return: The sample count
+    """
+    return sum(
+        sample_count_from_graph(
+            g, param_a=param_a, param_b=param_b, param_c=param_c, param_d=param_d
+        )
+        for g in gras
+    )
+
+
+def rotor_count_from_graph(gra: object) -> int:
+    """Determine the rotor count for a graph
+
+    :param gra: A molecule or TS graph
+    :return: The rotor count
+    """
     # If there are no torsions at all, return 1
     if not len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=True)):
         return 1
@@ -465,14 +535,14 @@ def rotor_count_from_inchi(chi: str) -> int:
     return nrotor
 
 
-def sample_count_from_inchi(
-    chi: str,
+def sample_count_from_graph(
+    gra: object,
     param_a: int = 12,
     param_b: int = 1,
     param_c: int = 3,
     param_d: int = 100,
 ) -> int:
-    """Determine species MC sample count for a molecule from its InChI or AMChI string
+    """Determine the conformer sample count for a graph
 
     The parameters (a, b, c, d) are used to calculate the sample count as follows:
     ```
@@ -480,14 +550,13 @@ def sample_count_from_inchi(
     ```
     where `ntors` is the number of torsional degrees of freedom in the molecule.
 
-    :param chi: An InChI or AMChI string
+    :param gra: A molecule or TS graph
     :param param_a: The `a` parameter used to calculate the sample count
     :param param_b: The `b` parameter used to calculate the sample count
     :param param_c: The `c` parameter used to calculate the sample count
     :param param_d: The `d` parameter used to calculate the sample count
     :return: The sample count
     """
-    gra = automol.amchi.graph(chi, stereo=False)
     # If there are no torsions at all, return 1
     if not len(automol.graph.rotational_bond_keys(gra, with_ch_rotors=True)):
         return 1
@@ -498,6 +567,58 @@ def sample_count_from_inchi(
 
 
 # Functions acting on mechanism.dat data
+def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[str]]]:
+    """Parse the mechanism.dat file into a list of dictionaries.
+
+    {
+        "1: 2": (["C2H6", "OH"], ["C2H5", "H2O"]),
+        ...
+    }
+
+    :param mechanism_dat: The contents of the mechanism.dat file, as a string
+    :return: A list of information for each reaction
+    """
+
+    class Key:
+        eq = "eq"
+        arrh = "arrh"
+        comment = "comment"
+
+    sort_key = sort_val = pp.DelimitedList(
+        pp.Word(pp.alphanums, exclude_chars="."), delim=".", min=3
+    )
+    sort_expr = pp.Group(sort_key) + pp.Group(sort_val)
+
+    comm_mark = pp.Suppress(pp.Char("!") ^ pp.Char("#"))
+    comm_expr = pp.SkipTo(pp.LineEnd())
+    arrh_expr = pp.WordStart() + ppc.number[3]
+    eq_expr = pp.SkipTo(arrh_expr).set_parse_action(lambda t: str.rstrip(t[0]))
+    reac_expr = (
+        eq_expr(Key.eq) + arrh_expr(Key.arrh) + comm_mark + comm_expr(Key.comment)
+    )
+
+    reac_block = re.search(
+        "REACTIONS(.*?)END", mechanism_dat, flags=re.M | re.S | re.I
+    ).group(1)
+    reac_dct = {}
+    for line in reac_block.splitlines():
+        if reac_expr.matches(line):
+            res = reac_expr.parse_string(line)
+            eq = res.get(Key.eq)
+            comment = res.get(Key.comment)
+            sort_info = dict(
+                zip(*sort_expr.parse_string(comment).as_list(), strict=True)
+            )
+            pes = int(sort_info.get("pes"))
+            channel = int(sort_info.get("channel"))
+            reac_dct[f"{pes}: {channel}"] = tuple(
+                [s.strip() for s in re.split("\+(?!\s*\+)", r)]
+                for r in re.split("=|=>|<=>", eq)
+            )
+
+    return reac_dct
+
+
 def subpes_dict_from_mechanism_dat(
     mechanism_dat: str,
 ) -> dict[str, list[list[str]]] | None:
@@ -620,7 +741,7 @@ def filesystem_paths_from_run_dict(
 def subtask_keys_from_run_dict(
     run_dct: dict[str, str],
     task_type: str,
-    subtask_type: str | None = None,
+    key_type: str | None = None,
     subpes_dct: dict[str, list[list[str]]] | None = None,
 ) -> list[str]:
     """Extract species indices from a run.dat dictionary
@@ -629,14 +750,14 @@ def subtask_keys_from_run_dict(
     :return: A sequence of indices for each individual species
     """
 
-    if subtask_type is None:
+    if key_type is None:
         return [ALL_KEY]
 
-    if subtask_type == "spc" and "spc" in run_dct:
+    if key_type == "spc" and "spc" in run_dct:
         spc_block = run_dct.get("spc")
         return list(map(str, parse_index_series(spc_block)))
 
-    if subtask_type == "pes" and "pes" in run_dct:
+    if key_type == "pes" and "pes" in run_dct:
         pes_block = run_dct.get("pes")
 
         colon = pp.Suppress(pp.Literal(":"))
@@ -670,13 +791,13 @@ def subtask_keys_from_run_dict(
 
 
 def task_lines_from_run_dict(
-    run_dct: dict[str, str], task_type: str, subtask_type: str | None = None
+    run_dct: dict[str, str], task_type: str, key_type: str | None = None
 ) -> list[str]:
     """Extract electronic structure tasks from  of a run.dat dictionary
 
     :param run_dct: The dictionary of a parsed run.dat file
     :param task_type: The type of task: 'els', 'thermo', or 'ktp'
-    :param subtask_type: The type of subtask: 'spc', 'pes', or `None`
+    :param key_type: The type of subtask: 'spc', 'pes', or `None`
     :return: A sequence of (task name, task line) pairs
     """
     if task_type not in run_dct:
@@ -686,8 +807,8 @@ def task_lines_from_run_dict(
     lines = [line.strip() for line in block.splitlines()]
     if task_type == "els":
         types = ("spc", "pes")
-        assert subtask_type in types, f"Subtask type {subtask_type} not in {types}"
-        start_key = "ts" if subtask_type == "pes" else "spc"
+        assert key_type in types, f"Subtask type {key_type} not in {types}"
+        start_key = "ts" if key_type == "pes" else "spc"
         lines = [
             line
             for line in lines
@@ -717,8 +838,8 @@ def without_comments(inp: str) -> str:
     return re.sub(COMMENT_REGEX, "", inp)
 
 
-def format_subtask_key(key: str) -> int | tuple[int, int] | str:
-    """Parse a subtask key into its components
+def format_subtask_key(key: str) -> str:
+    """Format a subtask key
 
     Examples:
         '1'           ->  '01'          # species
