@@ -171,7 +171,7 @@ def subtasks_run_(
 
 
 @subtasks_.command("status")
-@click.argument("path")
+@click.argument("path", default=".")
 @click.option(
     "-n",
     "--dir-name",
