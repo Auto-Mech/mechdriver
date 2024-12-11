@@ -8,7 +8,6 @@ import tarfile
 import textwrap
 import warnings
 from collections import defaultdict
-from collections.abc import Sequence
 from pathlib import Path
 
 import yaml
@@ -23,8 +22,7 @@ EXCLUDE_GREP_REGEX = r"\|".join(
         r"Merge \S* into \S*",
     )
 )
-EXCLUDE_GREP_ARGS = ["--invert-grep", "--grep", EXCLUDE_GREP_REGEX]
-EXCLUDE_COMMAND_DCT = {"mechdriver": EXCLUDE_GREP_ARGS}
+EXCLUDE_GREP_ARGS = ("--invert-grep", "--grep", EXCLUDE_GREP_REGEX)
 
 
 # exceptions
@@ -131,7 +129,7 @@ class TestUtils:
         output_dct = {}
         for repo in Provenance.model_fields:
             repo_dir = self.src_dir / repo
-            full_command = command + command_dct.get(repo, [])
+            full_command = [*command, *command_dct.get(repo, [])]
             output_dct[repo] = subprocess.check_output(
                 full_command, text=True, cwd=repo_dir
             ).strip()
@@ -158,7 +156,8 @@ class TestUtils:
         :return: One-line summaries of most recent commits
         """
         prov_dct = self.repos_output(
-            ["git", "log", "--oneline", "-1"], command_dct=EXCLUDE_COMMAND_DCT
+            ["git", "log", "--oneline", "-1"],
+            command_dct={"mechdriver": EXCLUDE_GREP_ARGS},
         )
         return Provenance(**prov_dct)
 
@@ -260,7 +259,7 @@ class TestUtils:
         in the provenance file."""
         prov = self.read_provenance()
         command_dct = defaultdict(list)
-        command_dct.update(EXCLUDE_COMMAND_DCT)
+        command_dct["mechdriver"].extend(EXCLUDE_GREP_ARGS)
         for module, commit_line in dict(prov).items():
             commit_hash = commit_hash_from_line(commit_line)
             command_dct[module].append(f"{commit_hash}..HEAD")
@@ -293,7 +292,8 @@ class TestUtils:
             else:
                 print("Thank you for your honesty.")
                 print("Please re-run the tests using `pixi run test local`.")
-                return
+                sys.exit()
+
         return overrides
 
     def sign_tests(self) -> None:
