@@ -187,7 +187,7 @@ class TestUtils:
 
     def commit_test_archive(self) -> None:
         """Commit the test archive to the MechDriver git repo."""
-        subprocess.run(["git", "checkout", "--", "."], cwd=self.mechdriver_dir)
+        subprocess.run(["git", "reset"], cwd=self.mechdriver_dir)
         subprocess.run(["git", "add", str(self.archive_file)], cwd=self.mechdriver_dir)
         subprocess.run(
             ["git", "commit", "-m", ARCHIVE_COMMIT_MESSAGE], cwd=self.mechdriver_dir
