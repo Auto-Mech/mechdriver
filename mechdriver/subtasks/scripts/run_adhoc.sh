@@ -8,7 +8,7 @@ SUBTASK_NPROCS=${3}     # number of cores required per job
 IFS="," read -ra SUBTASK_PATHS <<< "${4}"   # list of run directories
 IFS="," read -ra SUBTASK_LOGS <<< "${5}"    # list of worker counts
 IFS="," read -ra NODES <<< "${6}"           # list of nodes for running
-ACTIVATION_HOOK=${7}    # activation hook
+ACTIVATION_HOOK=$(printf '%q ' "${7}")    # activation hook
 NWORK_MAX=10            # maximum SSH login capacity for some nodes
 
 echo "Working directories: ${WORK_PATHS[@]}"
@@ -45,7 +45,7 @@ parallel --sshlogin ${SSHLOGIN} "
 (
     cd {1};
     touch ${IS_RUNNING_FILE};
-    eval ${ACTIVATION_HOOK@Q} &&
+    eval ${ACTIVATION_HOOK} &&
     printf \"Host: \$(hostname)\n| Working directory: \${PWD}\n| Command: ${RUN_COMMAND}\n\" &&
     ${RUN_COMMAND};
     rm ${IS_RUNNING_FILE};
