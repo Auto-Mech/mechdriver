@@ -1,5 +1,4 @@
-""" Standalone script to break an AutoMech input into subtasks for parallel execution
-"""
+"""Standalone script to break an AutoMech input into subtasks for parallel execution"""
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -123,9 +122,9 @@ def setup(
     if "els" in task_group_keys:
         idx = task_group_keys.index("els")
         task_group_keys[idx : idx + 1] = ("els-spc", "els-pes")
-    assert all(
-        g in GROUP_ID for g in task_group_keys
-    ), f"{task_group_keys} not in {GROUP_ID}"
+    assert all(g in GROUP_ID for g in task_group_keys), (
+        f"{task_group_keys} not in {GROUP_ID}"
+    )
 
     # Read input files from source path
     path = Path(path)
@@ -136,10 +135,10 @@ def setup(
     run_dct = util.parse_run_dat(file_dct.get("run.dat"))
 
     # Set the run and save paths
-    save_path, run_path = util.filesystem_paths_from_run_dict(
+    inp_dct = util.input_arguments_from_run_dict(
         run_dct, save_path=save_path, run_path=run_path
     )
-    run_dct["input"] = f"run_prefix = {run_path}\nsave_prefix = {save_path}"
+    run_dct["input"] = "\n".join(f"{k} = {v}" for k, v in inp_dct.items())
 
     # Create the path for the subtask directories
     dir_path = path / dir_name
@@ -166,8 +165,8 @@ def setup(
     print(f"Writing subtask information to {info_path}")
     print()
     info = SubtasksInfo(
-        save_path=str(save_path),
-        run_path=str(run_path),
+        save_path=inp_dct.get("save_prefix"),
+        run_path=inp_dct.get("run_prefix"),
         task_groups=task_groups,
     )
     info_path.write_text(yaml.safe_dump(info.model_dump()))

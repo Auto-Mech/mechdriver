@@ -1,5 +1,4 @@
-""" Standalone script to break an AutoMech input into subtasks for parallel execution
-"""
+"""Standalone script to break an AutoMech input into subtasks for parallel execution"""
 
 import io
 import itertools
@@ -467,13 +466,13 @@ def form_run_dat(run_dct: dict[str, str]) -> str:
     return run_dat
 
 
-def filesystem_paths_from_run_dict(
+def input_arguments_from_run_dict(
     run_dct: dict[str, str],
     save_path: str | Path | None = None,
     run_path: str | Path | None = None,
-) -> str:
+) -> dict[str, str]:
     """Get the input block of a run dictionary, with absolute paths for the RUN and SAVE
-    directories
+    directories.
 
     :param run_dct: The dictionary of a parsed run.dat file
     :param save_path: The path to the save filesystem
@@ -482,18 +481,34 @@ def filesystem_paths_from_run_dict(
         (if `None`, the value in run.dat is used.)
     :return: The input block, with absolute paths
     """
+    inp_block = run_dct.get("input")
+    inp_block = without_comments(inp_block)
+    lines = inp_block.strip().splitlines()
+    inp_dct = dict(
+        line.replace(" ", "").split("=", maxsplit=1) for line in lines if "=" in line
+    )
+    inp_dct["save_prefix"] = save_path or inp_dct.get("save_prefix")
+    inp_dct["run_prefix"] = run_path or inp_dct.get("run_prefix")
+    return inp_dct
 
-    def _extract_path(key: str) -> str:
-        inp_block = run_dct.get("input")
-        inp_block = without_comments(inp_block)
-        word = pp.Word(pp.printables, exclude_chars="=")
-        field = pp.Suppress(... + pp.Literal(f"{key}_prefix") + pp.Literal("="))
-        expr = field + word("path")
-        return expr.parseString(inp_block).get("path")
 
-    save_path = _extract_path("save") if save_path is None else save_path
-    run_path = _extract_path("run") if run_path is None else run_path
-    return save_path, run_path
+def filesystem_paths_from_run_dict(
+    run_dct: dict[str, str],
+    save_path: str | Path | None = None,
+    run_path: str | Path | None = None,
+) -> tuple[str, str]:
+    """Get the input block of a run dictionary, with absolute paths for the RUN and SAVE
+    directories.
+
+    :param run_dct: The dictionary of a parsed run.dat file
+    :param save_path: The path to the save filesystem
+        (if `None`, the value in run.dat is used.)
+    :param run_path: The path to the run filesystem
+        (if `None`, the value in run.dat is used.)
+    :return: The input block, with absolute paths
+    """
+    inp_dct = input_arguments_from_run_dict(run_dct, save_path=save_path, run_path=run_path)
+    return inp_dct.get("save_prefix"), inp_dct.get("run_prefix")
 
 
 def subtask_keys_from_run_dict(
@@ -600,7 +615,6 @@ def task_method_and_basis(
         task_line = next(line for line in task_lines if task_key in line)
         field_dct = parse_task_fields(task_line)
         runlvl = field_dct.get("runlvl")
-
 
     thy_dct = thys_dct.get(runlvl)
     method = thy_dct.get("method")
