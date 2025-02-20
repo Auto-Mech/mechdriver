@@ -1,6 +1,7 @@
 """Utility functions for testing."""
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -8,6 +9,7 @@ import tarfile
 import textwrap
 import warnings
 from collections import defaultdict
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import yaml
@@ -118,6 +120,7 @@ class TestUtils:
         self,
         command: list[str],
         command_dct: dict[str, list[str]] | None = None,
+        process_output_: Callable[[str, str], str] = lambda x, _: x,
     ) -> dict[str, str]:
         """Get output from a command in each repo
 
@@ -130,9 +133,8 @@ class TestUtils:
         for repo in Provenance.model_fields:
             repo_dir = self.src_dir / repo
             full_command = [*command, *command_dct.get(repo, [])]
-            output_dct[repo] = subprocess.check_output(
-                full_command, text=True, cwd=repo_dir
-            ).strip()
+            out = subprocess.check_output(full_command, text=True, cwd=repo_dir).strip()
+            output_dct[repo] = process_output_(out, repo)
         return output_dct
 
     def check_for_uncommited_python_changes(self, throw_error: bool = False) -> None:
@@ -156,17 +158,18 @@ class TestUtils:
         :return: One-line summaries of most recent commits
         """
         prov_dct = self.repos_output(
-            ["git", "log", "--oneline", "-1"],
-            command_dct={"mechdriver": EXCLUDE_GREP_ARGS},
+            ["git", "log", "--oneline"],
+            process_output_=first_commit_line_from_log,
         )
         return Provenance(**prov_dct)
 
     def current_mechdriver_commit(self, hash_only: bool = False) -> str:
-        line = subprocess.check_output(
-            ["git", "log", "--oneline", "-1", *EXCLUDE_GREP_ARGS],
+        log = subprocess.check_output(
+            ["git", "log", "--oneline"],
             text=True,
             cwd=self.mechdriver_dir,
         )
+        line = first_commit_line_from_log(log, repo="mechdriver")
         if hash_only:
             return commit_hash_from_line(line)
         return line
@@ -184,7 +187,7 @@ class TestUtils:
 
     def commit_test_archive(self) -> None:
         """Commit the test archive to the MechDriver git repo."""
-        subprocess.run(["git", "restore", "--staged", "."], cwd=self.mechdriver_dir)
+        subprocess.run(["git", "reset"], cwd=self.mechdriver_dir)
         subprocess.run(["git", "add", str(self.archive_file)], cwd=self.mechdriver_dir)
         subprocess.run(
             ["git", "commit", "-m", ARCHIVE_COMMIT_MESSAGE], cwd=self.mechdriver_dir
@@ -259,12 +262,13 @@ class TestUtils:
         in the provenance file."""
         prov = self.read_provenance()
         command_dct = defaultdict(list)
-        command_dct["mechdriver"].extend(EXCLUDE_GREP_ARGS)
         for module, commit_line in dict(prov).items():
             commit_hash = commit_hash_from_line(commit_line)
             command_dct[module].append(f"{commit_hash}..HEAD")
         diff_dct = self.repos_output(
-            ["git", "log", "--oneline"], command_dct=command_dct
+            ["git", "log", "--oneline"],
+            command_dct=command_dct,
+            process_output_=first_commit_line_from_log,
         )
         diff_dct = {k: v.splitlines() for k, v in diff_dct.items() if v}
         return diff_dct
@@ -376,3 +380,28 @@ def commit_hash_from_line(line: str) -> str:
     :return: The commit hash
     """
     return line.split()[0]
+
+
+def first_commit_line_from_log(
+    log: str,
+    repo: str,
+    skip: Sequence[str] = (
+        re.escape(ARCHIVE_COMMIT_MESSAGE),
+        r"Merge pull request \S* from \S*",
+        r"Merge \S* into \S*",
+    ),
+) -> str:
+    """Get the first commit line from the log (oneline) output.
+
+    :param log: Log output
+    :param skip: Regexes to skip
+    :return: The first commit line
+    """
+    if not log:
+        return log
+
+    lines = log.splitlines()
+    if repo != "mechdriver":
+        return lines[0]
+
+    return next((line for line in lines if not re.search("|".join(skip), line)), "")
