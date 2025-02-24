@@ -345,7 +345,7 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
         comment = "comment"
 
     sort_key = sort_val = pp.DelimitedList(
-        pp.Word(pp.alphanums, exclude_chars="."), delim=".", min=3
+        pp.Word(pp.alphanums, exclude_chars="._"), delim=".", min=3
     )
     sort_expr = pp.Group(sort_key) + pp.Group(sort_val)
 
@@ -367,7 +367,7 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
             eq = res.get(Key.eq)
             comment = res.get(Key.comment)
             sort_info = dict(
-                zip(*sort_expr.parse_string(comment).as_list())#, strict=True)
+                zip(*sort_expr.parse_string(comment).as_list(), strict=True)
             )
             pes = int(sort_info.get("pes"))
             channel = int(sort_info.get("channel"))
