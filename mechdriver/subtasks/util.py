@@ -209,12 +209,13 @@ def parse_species_csv(species_csv: str) -> pandas.DataFrame:
         spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.chi)
 
     if "canon_enant_ich" not in spc_df:
-        try:
-            spc_df["canon_enant_ich"] = spc_df["inchi"].apply(
-                automol.chi.canonical_enantiomer
-            )
-        except AssertionError:
-            spc_df["canon_enant_ich"] = spc_df["inchi"]
+        for spc in spc_df.index:
+            try:
+                spc_df["canon_enant_ich"][spc] = spc_df["inchi"][spc].apply(
+                    automol.chi.canonical_enantiomer
+                )
+            except AssertionError:
+                spc_df["canon_enant_ich"][spc] = spc_df["inchi"][spc]
 
     return spc_df
 
@@ -345,7 +346,7 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
         comment = "comment"
 
     sort_key = sort_val = pp.DelimitedList(
-        pp.Word(pp.alphanums, exclude_chars="._"), delim=".", min=3
+        pp.Word(pp.alphanums + "_", exclude_chars="."), delim=".", min=3
     )
     sort_expr = pp.Group(sort_key) + pp.Group(sort_val)
 
@@ -366,6 +367,7 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
             res = reac_expr.parse_string(line)
             eq = res.get(Key.eq)
             comment = res.get(Key.comment)
+            print(comment)
             sort_info = dict(
                 zip(*sort_expr.parse_string(comment).as_list(), strict=True)
             )
@@ -399,7 +401,7 @@ def subpes_dict_from_mechanism_dat(
     # Define a parser to extract "pes.subpes.channel 1.2.3" data
     comment_mark = pp.Char("!") | pp.Char("#")
     sort_key = sort_val = pp.DelimitedList(
-        pp.Word(pp.alphanums), delim=".", combine=True, min=3
+        pp.Word(pp.alphanums + "_"), delim=".", combine=True, min=3
     )
     sort_item = pp.Suppress(...) + pp.Group(
         pp.Suppress(comment_mark) + sort_key + sort_val + pp.Suppress(pp.LineEnd())
