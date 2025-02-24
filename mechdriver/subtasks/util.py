@@ -211,11 +211,9 @@ def parse_species_csv(species_csv: str) -> pandas.DataFrame:
     if "canon_enant_ich" not in spc_df:
         for spc in spc_df.index:
             try:
-                spc_df["canon_enant_ich"][spc] = spc_df["inchi"][spc].apply(
-                    automol.chi.canonical_enantiomer
-                )
+                spc_df.loc[spc, "canon_enant_ich"] = automol.chi.canonical_enantiomer(spc_df["inchi"][spc])
             except AssertionError:
-                spc_df["canon_enant_ich"][spc] = spc_df["inchi"][spc]
+                spc_df.loc[spc, "canon_enant_ich"] = spc_df["inchi"][spc]
 
     return spc_df
 
