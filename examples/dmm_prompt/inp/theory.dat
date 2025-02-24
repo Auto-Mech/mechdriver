@@ -1,0 +1,26 @@
+
+level dft0
+    method = b3lyp
+    basis = 6-31g
+    orb_res = RU #restricted for close shell, unrestricted for open shell
+    program = gaussian16
+    mem = 16.0
+    nprocs = 4
+ end level
+level dft
+    method = b3lyp
+    basis = 6-311+g**
+    orb_res = RU #restricted for close shell, unrestricted for open shell
+    program = gaussian16 
+    mem = 16.0
+    nprocs = 4
+ end level
+level mp2
+    method = mp2
+    basis = cc-pvdz
+    orb_res = RR
+    program = gaussian16
+    mem = 16.0
+    nprocs = 4
+ end level 
+

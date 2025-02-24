@@ -1,0 +1,59 @@
+input 
+    run_prefix = ./run 
+    save_prefix = ./save
+end input 
+
+pes 
+104: 6,7
+95: 1-5 
+end pes
+
+#spc
+17
+21
+22
+4
+11
+8
+1
+31
+41
+30
+14
+end spc
+
+els
+#this is executed in the order they are specified 
+    spc init_geom  runlvl=dft0 inplvl=dft0 
+#    ts  find_ts runlvl=dft0 inplvl=dft0
+    # all conf_energy runlvl=mp2 inplvl=dft #dft geom as input + spe at mp2     
+    spc conf_opt  runlvl=dft inplvl=dft0
+    spc conf_energy runlvl=dft inplvl=dft #dft geom as input + spe at mp2     
+    all conf_opt  runlvl=dft inplvl=dft0
+    all conf_energy runlvl=dft inplvl=dft #dft geom as input + spe at mp2     
+    # add another all conf_energy here
+    spc conf_hess  runlvl=dft inplvl=dft
+    spc hr_scan runlvl=dft0 inplvl=dft0 tors_model=1dhrfa
+    all conf_hess  runlvl=dft inplvl=dft
+    all hr_scan runlvl=dft0 inplvl=dft0 tors_model=1dhrfa
+end els 
+
+#thermo 
+     write_mess  kin_model=global  spc_model=global
+     run_mess  kin_model=global  spc_model=global
+     run_fits  kin_model=global  spc_model=global
+end thermo
+
+ktp
+    write_mess   kin_model=global  spc_model=global well_extension=True
+    run_mess  kin_model=global  spc_model=global
+    run_fits  kin_model=global  spc_model=global
+end ktp
+
+#proc 
+     spc geo  geolvl=dft  proplvl=dft cnf_range=all
+     spc freqs  geolvl=dft  proplvl=dft cnf_range=all
+     spc energy  geolvl=dft  proplvl=dft
+     spc energy  geolvl=dft  proplvl=mp2
+end proc
+
