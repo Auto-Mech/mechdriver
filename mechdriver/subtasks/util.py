@@ -367,7 +367,7 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
             eq = res.get(Key.eq)
             comment = res.get(Key.comment)
             sort_info = dict(
-                zip(*sort_expr.parse_string(comment).as_list(), strict=True)
+                zip(*sort_expr.parse_string(comment).as_list())#, strict=True)
             )
             pes = int(sort_info.get("pes"))
             channel = int(sort_info.get("channel"))
