@@ -468,8 +468,7 @@ def form_run_dat(run_dct: dict[str, str]) -> str:
     for key in keys:
         if key in run_dct:
             run_dat += f"{key}\n{format_block(run_dct.get(key))}\nend {key}\n\n"
-    print(run_dat)
-    exit()
+
     return run_dat
 
 
@@ -535,8 +534,10 @@ def subtask_keys_from_run_dict(
 
     if key_type == "spc" and "spc" in run_dct and run_dct.get("spc").strip():
         spc_block = run_dct.get("spc")
+        print(spc_block)
+        print(list(map(str, parse_index_series(spc_block))))
         return list(map(str, parse_index_series(spc_block)))
-
+    exit()
     if key_type == "pes" and "pes" in run_dct and run_dct.get("pes").strip():
         pes_block = run_dct.get("pes")
 

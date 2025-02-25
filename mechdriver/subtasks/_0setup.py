@@ -281,5 +281,5 @@ def determine_task_list(
         task = tasks[idx]
         task.line = "\n".join(t.line for t in tasks)
         tasks = [task]
-
+    print(tasks)
     return tasks
