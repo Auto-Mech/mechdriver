@@ -535,7 +535,7 @@ def subtask_keys_from_run_dict(
     if key_type == "spc" and "spc" in run_dct and run_dct.get("spc").strip():
         spc_block = run_dct.get("spc")
         return list(map(str, parse_index_series(spc_block)))
-    exit()
+
     if key_type == "pes" and "pes" in run_dct and run_dct.get("pes").strip():
         pes_block = run_dct.get("pes")
 
