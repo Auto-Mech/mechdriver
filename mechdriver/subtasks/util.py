@@ -437,14 +437,14 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
     def _parse_block(run_dat, keyword):
         expr = block_expression(keyword, key="content")
         res, *_ = next(expr.scan_string(run_dat), [None])
-        print(expr, res)
+
         if res is None:
             return None
         content = res.get("content")
         return format_block(content)
 
     run_dat = without_comments(run_dat)
-    print(run_dat)
+
     block_dct = {
         "input": _parse_block(run_dat, "input"),
         "pes": _parse_block(run_dat, "pes"),
@@ -453,6 +453,7 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
         "thermo": _parse_block(run_dat, "thermo"),
         "ktp": _parse_block(run_dat, "ktp"),
     }
+    print(block_dct)
     exit()
     return {k: v for k, v in block_dct.items() if v is not None}
 
