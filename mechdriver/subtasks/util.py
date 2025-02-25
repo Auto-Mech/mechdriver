@@ -28,11 +28,12 @@ SAMP_TASKS = ("conf_samp",)
 def read_input_files(run_dir: str | Path) -> dict[str, str]:
     inp_dir = Path(run_dir) / "inp"
     return {
-        "run.dat": (inp_dir / "run.dat").read_text(),
-        "theory.dat": (inp_dir / "theory.dat").read_text(),
-        "models.dat": (inp_dir / "models.dat").read_text(),
-        "mechanism.dat": (inp_dir / "mechanism.dat").read_text(),
-        "species.csv": (inp_dir / "species.csv").read_text(),
+        fname: (inp_dir / fname).read_text() 
+        for fname in [
+            "run.dat", "theory.dat", "models.dat", 
+            "mechanism.dat", "species.csv", "pes_groups.dat"
+        ] 
+        if (inp_dir / fname).exists()
     }
 
 
