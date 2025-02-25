@@ -14,7 +14,11 @@ from . import fs
 
 
 def display(
-    task_key: str, subtask_key: str, path: str | Path = ".", runlvl: str | None = None
+    task_key: str,
+    subtask_key: str,
+    path: str | Path = ".",
+    runlvl: str | None = None,
+    animate: bool = True,
 ) -> None:
     """Display results for a task.
 
@@ -41,13 +45,20 @@ def _display_init_geom(task_path: str) -> None:
 
 def _display_conf_hess(task_path: str) -> None:
     cnf_fs = autofile.fs.conformer(task_path)
+    geo = norm_coo = None
     for cnf_loc in cnf_fs[-1].existing():
+        path = cnf_fs[-1].path(cnf_loc)
+        print("----")
+        print(path)
         geo = cnf_fs[-1].file.geometry.read(cnf_loc)
         hess = cnf_fs[-1].file.hessian.read(cnf_loc)
         freqs, norm_coos = automol.geom.vibrational_analysis(geo, hess)
+        norm_coo = norm_coos[:, 0]
         print("Lowest frequency mode:")
         print(f"  frequency: {freqs[0]}")
-        automol.geom.display(geo, mode=norm_coos[:, 0])
+        print()
+    if geo is not None:
+        automol.geom.display(geo, mode=norm_coo)
 
 
 def _display_find_ts(task_path: str) -> None:
@@ -62,7 +73,7 @@ def _display_find_ts(task_path: str) -> None:
                 geos, comments = zip(*traj)
                 enes, coords = zip(*map(parse_scan_trajectory_comment, comments))
                 # Plot the energy
-                pyplot.plot(coords, enes, marker='o')
+                pyplot.plot(coords, enes, marker="o")
                 pyplot.show()
                 # Show structures
                 print(f"Coordinate {coords[0]} geometry: ")
@@ -89,6 +100,7 @@ def _display_rpath_scan(task_path: str) -> None:
 TASK_DISPLAY_FUNCTION = {
     "find_ts": _display_find_ts,
     "conf_hess": _display_conf_hess,
+    "conf_opt": _display_conf_hess,
     "rpath_scan": _display_rpath_scan,
     "init_geom": _display_init_geom,
 }
