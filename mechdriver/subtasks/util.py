@@ -534,8 +534,6 @@ def subtask_keys_from_run_dict(
 
     if key_type == "spc" and "spc" in run_dct and run_dct.get("spc").strip():
         spc_block = run_dct.get("spc")
-        print(spc_block)
-        print(list(map(str, parse_index_series(spc_block))))
         return list(map(str, parse_index_series(spc_block)))
     exit()
     if key_type == "pes" and "pes" in run_dct and run_dct.get("pes").strip():
@@ -714,10 +712,11 @@ def parse_index_series(inp: str) -> list[int]:
 
     dash = pp.Suppress(pp.Literal("-"))
     entry = ppc.integer ^ pp.Group(ppc.integer + dash + ppc.integer)
-    delim = pp.LineEnd() ^ pp.Literal(",")
+    #delim = pp.LineEnd() ^ pp.Literal(",")
+    delim = pp.White() | pp.Literal(",")
     expr = pp.DelimitedList(entry, delim=delim)
     idxs = []
-    for res in expr.parseString(inp).as_list():
+    for res in expr.parseString(inp, parse_all=True).as_list():
         if isinstance(res, int):
             idxs.append(res)
         else:
