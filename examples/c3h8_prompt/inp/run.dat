@@ -6,6 +6,7 @@ end input
 pes 
 1:1-5
 2:1-2
+3:1-2
 end pes
 
 spc
@@ -22,11 +23,6 @@ els
     all hr_scan runlvl=pm3 inplvl=pm3 tors_model=1dhrfa
 end els 
 
-#thermo 
-     write_mess  kin_model=global  spc_model=global
-     run_mess  kin_model=global  spc_model=global
-     run_fits  kin_model=global  spc_model=global
-end thermo
 
 ktp
     write_mess   kin_model=global  spc_model=global well_extension=True
@@ -34,10 +30,4 @@ ktp
     run_fits  kin_model=global  spc_model=global 
 end ktp
 
-#proc 
-     spc geo  geolvl=dft  proplvl=dft cnf_range=all
-     spc freqs  geolvl=dft  proplvl=dft cnf_range=all
-     spc energy  geolvl=dft  proplvl=dft
-     spc energy  geolvl=dft  proplvl=mp2
-end proc
 
