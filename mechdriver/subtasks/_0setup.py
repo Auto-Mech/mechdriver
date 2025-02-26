@@ -14,7 +14,7 @@ GROUP_TASK_AND_KEY_TYPE = {
     "els-spc": ("els", "spc"),
     "els-pes": ("els", "pes"),
     "thermo": ("thermo", "spc"),
-    "ktp": ("ktp", "pes"),
+    "ktp": ("ktp", None),
 }
 COMBINED_TASK_GROUPS = ("thermo", "ktp")
 
