@@ -396,9 +396,8 @@ def _check_freqs(imags):
             status = 'fail'
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
-                ioprinter.warning_message(
-                    f'Mode {idx+1} {imag} cm-1 is low,')
-                ioprinter.debug_message(
+                lowstr = f'Mode {idx+1} {imag} cm-1 is low,'
+                ioprinter.error_message(
                     lowstr + ' will not be considered for imaginary freq count')
             elif 50.0 < imag <= 200.0:
                 lowstr = f'Mode {idx+1} {imag} cm-1 is low,'
