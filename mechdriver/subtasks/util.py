@@ -414,7 +414,7 @@ def subpes_dict_from_mechanism_dat(
     sort_df = pandas.DataFrame.from_records(
         [dict(zip(k.split("."), v.split("."), strict=True)) for k, v in results]
     )
-    sort_df = sort_df.apply(pandas.to_numeric, axis=1)
+    sort_df = sort_df.apply(pandas.to_numeric, axis=1, errors='coerce')
 
     if not all(k in sort_df for k in ("pes", "subpes", "channel")):
         return None
