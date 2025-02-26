@@ -1,0 +1,12 @@
+'name','smiles','inchi','mult','charge'
+'C2H4','C=C','InChI=1S/C2H4/c1-2/h1-2H2',1,0
+'C3H6','CC=C','InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3',1,0
+'C3H8','CCC','InChI=1S/C3H8/c1-3-2/h3H2,1-2H3',1,0
+'CH3','[CH3]','InChI=1S/CH3/h1H3',2,0
+'H','[H]','InChI=1S/H',2,0
+'H2','[H][H]','InChI=1S/H2/h1H',1,0
+'H2O','O','InChI=1S/H2O/h1H2',1,0
+'IC3H7','C[CH]C','InChI=1S/C3H7/c1-3-2/h3H,1-2H3',2,0
+'NC3H7','[CH2]CC','InChI=1S/C3H7/c1-3-2/h1,3H2,2H3',2,0
+'OH','[OH]','InChI=1S/HO/h1H',2,0
+'CH4','C','InChI=1S/CH4/h1H4',1,0

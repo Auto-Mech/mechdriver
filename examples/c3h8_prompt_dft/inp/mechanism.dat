@@ -1,0 +1,95 @@
+ELEMENTS
+
+C
+H
+O
+
+END
+
+
+SPECIES
+
+C2H4      ! SMILES: C=C             ChI: InChI=1S/C2H4/c1-2/h1-2H2
+C3H6      ! SMILES: CC=C            ChI: InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3
+C3H8      ! SMILES: CCC             ChI: InChI=1S/C3H8/c1-3-2/h3H2,1-2H3
+CH3       ! SMILES: [CH3]           ChI: InChI=1S/CH3/h1H3
+H         ! SMILES: [H]             ChI: InChI=1S/H
+H2        ! SMILES: [H][H]          ChI: InChI=1S/H2/h1H
+H2O       ! SMILES: O               ChI: InChI=1S/H2O/h1H2
+IC3H7     ! SMILES: C[CH]C          ChI: InChI=1S/C3H7/c1-3-2/h3H,1-2H3
+NC3H7     ! SMILES: [CH2]CC         ChI: InChI=1S/C3H7/c1-3-2/h1,3H2,2H3
+OH        ! SMILES: [OH]            ChI: InChI=1S/HO/h1H
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+NC3H7 = IC3H7                    1.000E+00     1.000        1  # pes.subpes.channel.submech_prompt  1.1.1.RAD_DECO_NC3H7
+
+C3H6 + H = NC3H7                 1.040E+49   -11.500    15359  # pes.subpes.channel.submech_prompt  1.1.2.RAD_DECO_NC3H7
+  PLOG /             1.300E-03   7.990E+81   -23.161    22239 /
+  PLOG /             1.300E-03   1.850E+26    -5.830     3866 /
+  PLOG /             4.000E-02   4.240E+68   -18.427    19665 /
+  PLOG /             4.000E-02   2.820E+30    -6.490     5471 /
+  PLOG /             1.000E+00   1.040E+49   -11.500    15359 /
+  PLOG /             1.000E+00   3.780E+28    -5.570     5625 /
+  PLOG /             1.000E+01   6.200E+41    -8.892    14637 /
+  PLOG /             1.000E+01   1.460E+25    -4.280     5248 /
+  PLOG /             1.000E+02   4.220E+27    -4.390     9346 /
+  PLOG /             1.000E+02   1.000E-10     0.000        0 /
+
+C3H6 + H = IC3H7                 3.260E+61   -14.940    20161  # pes.subpes.channel.submech_prompt  1.1.3.RAD_DECO_IC3H7
+  PLOG /             1.300E-03   1.350E+44   -10.680     8196 /
+  PLOG /             1.300E-03   2.170E+130  -32.580   136140 /
+  PLOG /             4.000E-02   2.110E+57   -14.230    15147 /
+  PLOG /             4.000E-02   2.250E+29    -5.840     4242 /
+  PLOG /             1.000E+00   3.260E+61   -14.940    20161 /
+  PLOG /             1.000E+00   1.060E+30    -5.630     5613 /
+  PLOG /             1.000E+01   5.300E+56   -13.120    20667 /
+  PLOG /             1.000E+01   6.110E+26    -4.440     5182 /
+  PLOG /             1.000E+02   1.110E+50   -10.800    20202 /
+  PLOG /             1.000E+02   2.730E+23    -3.260     4597 /
+
+C3H6 + H = C2H4 + CH3            2.670E+12     0.470     5431  # pes.subpes.channel.submech_prompt  1.1.4.
+  PLOG /             1.300E-03   1.540E+09     1.350     2542 /
+  PLOG /             1.300E-03   1.000E-10     0.000        0 /
+  PLOG /             4.000E-02   7.880E+10     0.870     3600 /
+  PLOG /             4.000E-02   1.000E-10     0.000        0 /
+  PLOG /             1.000E+00   2.670E+12     0.470     5431 /
+  PLOG /             1.000E+00   1.000E-10     0.000        0 /
+  PLOG /             1.000E+01   9.250E+22    -2.600    12898 /
+  PLOG /             1.000E+01   1.240E+05     2.520     3679 /
+  PLOG /             1.000E+02   1.320E+23    -2.420    16500 /
+  PLOG /             1.000E+02   2.510E+03     2.910     3981 /
+
+C2H4 + CH3 = NC3H7               7.670E+47   -11.170    22366  # pes.subpes.channel.submech_prompt  1.1.5.RAD_DECO_NC3H7
+  PLOG /             1.300E-03   8.670E+48   -12.540    18206 /
+  PLOG /             1.300E-03   1.120E+43   -11.300    13080 /
+  PLOG /             4.000E-02   1.060E+49   -12.040    20001 /
+  PLOG /             4.000E-02   7.280E+39    -9.880    13164 /
+  PLOG /             1.000E+00   7.670E+47   -11.170    22366 /
+  PLOG /             1.000E+00   2.600E+33    -7.460    12416 /
+  PLOG /             1.000E+01   1.810E+45   -10.030    23769 /
+  PLOG /             1.000E+01   3.850E+27    -5.380    11455 /
+  PLOG /             1.000E+02   2.040E+40    -8.250    24214 /
+  PLOG /             1.000E+02   1.660E+21    -3.170    10241 /
+
+C3H8 + H = IC3H7 + H2            3.060E+04     2.800     3473  # pes.subpes.channel.submech_prompt  2.1.1.RAD_GEN_IC3H7
+  DUP
+C3H8 + H = IC3H7 + H2            5.730E+13     0.100    10600
+  DUP
+
+C3H8 + H = NC3H7 + H2            1.290E+04     2.930     5246  # pes.subpes.channel.submech_prompt  2.2.2.RAD_GEN_NC3H7
+  DUP
+C3H8 + H = NC3H7 + H2            1.470E+10     1.310    10300
+  DUP
+
+C3H8 + OH = IC3H7 + H2O          3.738E+05     2.305     -561  # pes.subpes.channel.submech_prompt  3.1.1.RAD_GEN_IC3H7
+
+C3H8 + OH = NC3H7 + H2O          6.865E+06     2.000      677  # pes.subpes.channel.submech_prompt  3.2.2.RAD_GEN_NC3H7
+
+
+
+END
+
