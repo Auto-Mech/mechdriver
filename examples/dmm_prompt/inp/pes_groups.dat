@@ -1,6 +1,6 @@
 grp 1 
-	 idxs = [104:6, 104:7, 95:1] 
-	 peds = [['OH+DMM=H2O+DMM-R2'], ['OH+DMM=H2O+DMM-R1'], []] 
+	 idxs = [97:7, 97:8, 95:1] 
+	 peds = [['H+DMM=H2+DMM-R2'], ['H+DMM=H2+DMM-R1'], []] 
 	 hot = [[], [], ['DMM-R1', 'DMM-R2']] 
 	 modeltype = rovib_dos 
 	 bf_threshold = 0.1 
