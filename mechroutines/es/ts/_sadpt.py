@@ -142,7 +142,8 @@ def search(ini_zma, spc_dct, tsname,
         viable = automol.reac.similar_saddle_point_structure(
             opt_zma, ts_zma, ts_dct['zrxn'], sens=60.)
         if not viable:
-            print('transition state does not have viable structure')
+            ioprinter.error_message(
+                'transition state does not have viable structure')
         else:
             status = assess_saddle_point(opt_ret, hess_ret,
                                          runfs_dct, cnf_locs)
