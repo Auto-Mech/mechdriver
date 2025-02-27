@@ -387,8 +387,8 @@ def _check_freqs(imags):
 
     ioprinter.checking('the imaginary frequencies of the saddle point...')
     if len(imags) < 1:
-        ioprinter.warning_message('No imaginary modes for geometry')
-        status = 'fail'
+        ioprinter.error_message('No imaginary modes for geometry')
+        status = False #not a saddle point
     else:
         if len(imags) > 1:
             ioprinter.warning_message(
@@ -426,7 +426,7 @@ def _check_freqs(imags):
             status = True
         elif big_imag == 0:
             ioprinter.error_message(
-                'no bin enough imaginary mode for saddle point')
+                'no big enough imaginary mode for saddle point')
             status = False
 
     return status
