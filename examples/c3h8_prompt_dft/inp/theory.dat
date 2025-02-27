@@ -1,7 +1,7 @@
 
 level dft0
     method = b3lyp
-    basis = 6-31g
+    basis = 6-31g*
     orb_res = RU
     program = gaussian16 
     mem = 16.0
