@@ -6,3 +6,11 @@ grp 1
 	 bf_threshold = 0.1 
 end grp 
 
+grp 2
+         idxs = [2:2, 1:1] 
+         peds = [['C3H8+H=NC3H7+H2'], []] 
+         hot = [[], ['NC3H7']] 
+         modeltype = rovib_dos 
+         bf_threshold = 0.1 
+end grp 
+
