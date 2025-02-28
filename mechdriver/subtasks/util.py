@@ -713,10 +713,10 @@ def parse_index_series(inp: str) -> list[int]:
 
     dash = pp.Suppress(pp.Literal("-"))
     entry = ppc.integer ^ pp.Group(ppc.integer + dash + ppc.integer)
-    #delim = pp.LineEnd() ^ pp.Literal(",")
-    delim = pp.Suppress(pp.White() | ",")
-    # expr = pp.DelimitedList(entry, delim=delim)
-    expr = pp.OneOrMore(entry + pp.Optional(delim))
+    delim = pp.WordEnd() ^ pp.Literal(",")
+    #delim = pp.Suppress(pp.White() | ",")
+    expr = pp.DelimitedList(entry, delim=delim)
+    # expr = pp.OneOrMore(entry + pp.Optional(delim))
     idxs = []
     for res in expr.parseString(inp).as_list():
         if isinstance(res, int):
