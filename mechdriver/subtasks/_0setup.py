@@ -258,7 +258,7 @@ def determine_task_list(
         nworkers_lst = util.parse_subtasks_nworkers(
             task_line, file_dct, keys, task_type=task_type, key_type=key_type
         )
-        if "pes_groups.dat" in file_dct:
+        if "pes_groups.dat" in file_dct and task_type == "ktp":
             subtasks = [
                 Subtask(
                     key=run_dct.get("pes"),
