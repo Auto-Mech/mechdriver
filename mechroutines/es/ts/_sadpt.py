@@ -142,7 +142,8 @@ def search(ini_zma, spc_dct, tsname,
         viable = automol.reac.similar_saddle_point_structure(
             opt_zma, ts_zma, ts_dct['zrxn'], sens=60.)
         if not viable:
-            print('transition state does not have viable structure')
+            ioprinter.error_message(
+                'transition state does not have viable structure')
         else:
             status = assess_saddle_point(opt_ret, hess_ret,
                                          runfs_dct, cnf_locs)
@@ -387,8 +388,8 @@ def _check_freqs(imags):
 
     ioprinter.checking('the imaginary frequencies of the saddle point...')
     if len(imags) < 1:
-        ioprinter.warning_message('No imaginary modes for geometry')
-        status = 'fail'
+        ioprinter.error_message('No imaginary modes for geometry')
+        status = False #not a saddle point
     else:
         if len(imags) > 1:
             ioprinter.warning_message(
@@ -396,8 +397,9 @@ def _check_freqs(imags):
             status = 'fail'
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
-                ioprinter.warning_message(
-                    f'Mode {idx+1} {imag} cm-1 is low,')
+                lowstr = f'Mode {idx+1} {imag} cm-1 is low,'
+                ioprinter.error_message(
+                    lowstr + ' will not be considered for imaginary freq count')
             elif 50.0 < imag <= 200.0:
                 lowstr = f'Mode {idx+1} {imag} cm-1 is low,'
                 ioprinter.debug_message(
@@ -424,6 +426,8 @@ def _check_freqs(imags):
         elif big_imag == 1:
             status = True
         elif big_imag == 0:
+            ioprinter.error_message(
+                'no big enough imaginary mode for saddle point')
             status = False
 
     return status

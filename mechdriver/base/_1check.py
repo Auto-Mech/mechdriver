@@ -62,8 +62,11 @@ def _check_log(log_path: str | Path) -> tuple[Status, str | None]:
         return (status, line)
 
     warning_match = re.search(r".*(?<!Future)Warning.*", log, flags=re.IGNORECASE)
+    error_match = re.search(r"ERROR", log)
     status = Status.WARNING if warning_match else Status.OK
+    status = Status.ERROR if error_match else status
     line = warning_match.group(0) if warning_match else None
+    line = error_match.group(0) if error_match else line
     return (status, line)
 
 

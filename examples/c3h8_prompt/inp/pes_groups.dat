@@ -1,0 +1,16 @@
+grp 1 
+	 idxs = [2:1, 2:2, 1:1] 
+	 peds = [['C3H8+H=IC3H7+H2'], ['C3H8+H=NC3H7+H2'], []] 
+	 hot = [[], [], ['IC3H7', 'NC3H7']] 
+	 modeltype = rovib_dos 
+	 bf_threshold = 0.1 
+end grp 
+
+grp 2 
+	 idxs = [3:1, 3:2, 1:1] 
+	 peds = [['C3H8+OH=IC3H7+H2O'], ['C3H8+OH=NC3H7+H2O'], []] 
+	 hot = [[], [], ['IC3H7', 'NC3H7']] 
+	 modeltype = rovib_dos 
+	 bf_threshold = 0.1 
+end grp 
+

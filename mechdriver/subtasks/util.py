@@ -28,11 +28,12 @@ SAMP_TASKS = ("conf_samp",)
 def read_input_files(run_dir: str | Path) -> dict[str, str]:
     inp_dir = Path(run_dir) / "inp"
     return {
-        "run.dat": (inp_dir / "run.dat").read_text(),
-        "theory.dat": (inp_dir / "theory.dat").read_text(),
-        "models.dat": (inp_dir / "models.dat").read_text(),
-        "mechanism.dat": (inp_dir / "mechanism.dat").read_text(),
-        "species.csv": (inp_dir / "species.csv").read_text(),
+        fname: (inp_dir / fname).read_text() 
+        for fname in [
+            "run.dat", "theory.dat", "models.dat", 
+            "mechanism.dat", "species.csv", "pes_groups.dat"
+        ] 
+        if (inp_dir / fname).exists()
     }
 
 
@@ -208,10 +209,12 @@ def parse_species_csv(species_csv: str) -> pandas.DataFrame:
     if "inchi" not in spc_df:
         spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.chi)
 
-    if "canon_enant_ich" not in spc_df:
-        spc_df["canon_enant_ich"] = spc_df["inchi"].apply(
-            automol.chi.canonical_enantiomer
-        )
+    #if "canon_enant_ich" not in spc_df:
+    #    for spc in spc_df.index:
+    #        try:
+    #            spc_df.loc[spc, "canon_enant_ich"] = automol.chi.canonical_enantiomer(spc_df["inchi"][spc])
+    #        except AssertionError:
+    #           spc_df.loc[spc, "canon_enant_ich"] = spc_df["inchi"][spc]
 
     return spc_df
 
@@ -342,7 +345,7 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
         comment = "comment"
 
     sort_key = sort_val = pp.DelimitedList(
-        pp.Word(pp.alphanums, exclude_chars="."), delim=".", min=3
+        pp.Word(pp.alphanums + "_", exclude_chars="."), delim=".", min=3
     )
     sort_expr = pp.Group(sort_key) + pp.Group(sort_val)
 
@@ -364,7 +367,8 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
             eq = res.get(Key.eq)
             comment = res.get(Key.comment)
             sort_info = dict(
-                zip(*sort_expr.parse_string(comment).as_list(), strict=True)
+                itertools.zip_longest(*sort_expr.parse_string(comment).as_list(),
+                                      fillvalue='MISSING')
             )
             pes = int(sort_info.get("pes"))
             channel = int(sort_info.get("channel"))
@@ -396,7 +400,7 @@ def subpes_dict_from_mechanism_dat(
     # Define a parser to extract "pes.subpes.channel 1.2.3" data
     comment_mark = pp.Char("!") | pp.Char("#")
     sort_key = sort_val = pp.DelimitedList(
-        pp.Word(pp.alphanums), delim=".", combine=True, min=3
+        pp.Word(pp.alphanums + "_"), delim=".", combine=True, min=3
     )
     sort_item = pp.Suppress(...) + pp.Group(
         pp.Suppress(comment_mark) + sort_key + sort_val + pp.Suppress(pp.LineEnd())
@@ -410,7 +414,7 @@ def subpes_dict_from_mechanism_dat(
     sort_df = pandas.DataFrame.from_records(
         [dict(zip(k.split("."), v.split("."), strict=True)) for k, v in results]
     )
-    sort_df = sort_df.apply(pandas.to_numeric, axis=1)
+    sort_df = sort_df.apply(pandas.to_numeric, axis=1, errors='coerce')
 
     if not all(k in sort_df for k in ("pes", "subpes", "channel")):
         return None
@@ -434,13 +438,14 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
     def _parse_block(run_dat, keyword):
         expr = block_expression(keyword, key="content")
         res, *_ = next(expr.scan_string(run_dat), [None])
+
         if res is None:
             return None
-
         content = res.get("content")
         return format_block(content)
 
     run_dat = without_comments(run_dat)
+
     block_dct = {
         "input": _parse_block(run_dat, "input"),
         "pes": _parse_block(run_dat, "pes"),
@@ -449,6 +454,7 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
         "thermo": _parse_block(run_dat, "thermo"),
         "ktp": _parse_block(run_dat, "ktp"),
     }
+
     return {k: v for k, v in block_dct.items() if v is not None}
 
 
@@ -463,6 +469,7 @@ def form_run_dat(run_dct: dict[str, str]) -> str:
     for key in keys:
         if key in run_dct:
             run_dat += f"{key}\n{format_block(run_dct.get(key))}\nend {key}\n\n"
+
     return run_dat
 
 
@@ -706,8 +713,10 @@ def parse_index_series(inp: str) -> list[int]:
 
     dash = pp.Suppress(pp.Literal("-"))
     entry = ppc.integer ^ pp.Group(ppc.integer + dash + ppc.integer)
-    delim = pp.LineEnd() ^ pp.Literal(",")
+    delim = pp.WordEnd() ^ pp.Literal(",")
+    #delim = pp.Suppress(pp.White() | ",")
     expr = pp.DelimitedList(entry, delim=delim)
+    # expr = pp.OneOrMore(entry + pp.Optional(delim))
     idxs = []
     for res in expr.parseString(inp).as_list():
         if isinstance(res, int):
