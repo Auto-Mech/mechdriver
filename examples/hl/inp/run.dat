@@ -1,8 +1,10 @@
-
 input
     run_prefix = ./run
     save_prefix = ./save
 end input
+
+pes
+end pes
 
 spc
     1-5
@@ -23,3 +25,6 @@ thermo
     run_mess        kin_model=global  spc_model=global
     run_fits        kin_model=global  spc_model=global
 end thermo
+
+ktp
+end ktp
