@@ -1,0 +1,25 @@
+
+input
+    run_prefix = ./run
+    save_prefix = ./save
+end input
+
+spc
+    1-5
+end spc
+
+els
+    spc init_geom     runlvl=pm3    inplvl=pm3
+    spc conf_samp     runlvl=pm3    inplvl=pm3
+    spc conf_opt     runlvl=pm3    inplvl=pm3
+    all conf_hess     runlvl=pm3    inplvl=pm3
+    all conf_vpt2     runlvl=pm3    inplvl=pm3
+    all conf_energy   cnf_range=n2 runlvl=dft    inplvl=pm3
+    all hr_scan model=1dhr runlvl=pm3  inplvl=pm3
+end els
+
+thermo
+    write_mess      kin_model=global  spc_model=global
+    run_mess        kin_model=global  spc_model=global
+    run_fits        kin_model=global  spc_model=global
+end thermo
