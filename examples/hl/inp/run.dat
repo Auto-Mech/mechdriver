@@ -17,7 +17,7 @@ els
     all conf_hess     runlvl=pm3    inplvl=pm3
     all conf_vpt2     runlvl=pm3    inplvl=pm3
     all conf_energy   cnf_range=n2 runlvl=dft    inplvl=pm3
-    all hr_scan model=1dhr runlvl=pm3  inplvl=pm3
+    all hr_scan tors_model=1dhr runlvl=pm3  inplvl=pm3
 end els
 
 thermo
