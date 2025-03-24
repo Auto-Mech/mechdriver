@@ -1095,11 +1095,13 @@ def hr_tsk(job, spc_dct, spc_name,
                     geo = ini_scn_save_fs[-1].file.geometry.read(locs)
                     zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
                     ini_scn_run_fs[-1].create(locs)
+                    if job in ('hess', 'vpt2'):
+                        kwargs['correct_vals'] = False
                     ES_TSKS[job](
                         zma, geo, spc_info, mod_thy_info,
                         ini_scn_run_fs, ini_scn_save_fs, locs, run_prefix,
                         script_str, overwrite,
-                        zrxn=zrxn,
+                        zrxn=zrxn, method_dct=method_dct,
                         retryfail=retryfail, **kwargs)
                     ioprinter.obj('vspace')
 
