@@ -146,7 +146,7 @@ def run(pes_rlst, spc_rlst,
         for idx, nasa_str in ckin_nasa_str_dct.items():
             ioprinter.print_thermo(
                 spc_dct, nasa_str,
-                spc_locs_dct, idx, spc_mods[0])
+                spc_locs_dct, idx, spc_mods[0], pes_mod_dct_i['therm_temps'])
 
             # Write all of the NASA polynomial strings
             writer.ckin.write_nasa_file(
