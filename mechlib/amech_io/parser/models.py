@@ -163,7 +163,7 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
         if isinstance(lvl_val, str):
             lvl_val = lvl_val.replace(',','*').split('*')
         if len(lvl_val) > 1:
-            val_inf = (lvl_val[0], tinfo.from_dct(thy_dct.get(lvl_val[1])))
+            val_inf = (float(lvl_val[0]), tinfo.from_dct(thy_dct.get(lvl_val[1])))
         else:
             val_inf = (1.00, tinfo.from_dct(thy_dct.get(lvl_val[0])))
 
