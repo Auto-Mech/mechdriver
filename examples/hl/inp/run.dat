@@ -34,8 +34,8 @@ thermo
     run_mess        kin_model=model_1dhrfa_fund spc_model=model_1dhrfa_fund
     write_mess      kin_model=model_1dhrhl  spc_model=model_1dhrhl
     run_mess        kin_model=model_1dhrhl  spc_model=model_1dhrhl
-    write_mess      kin_model=model_1dhrva  spc_model=model_1dhrva
-    run_mess        kin_model=model_1dhrva  spc_model=model_1dhrva
+    ! write_mess      kin_model=model_1dhrva  spc_model=model_1dhrva
+    ! run_mess        kin_model=model_1dhrva  spc_model=model_1dhrva
 end thermo
 
 ktp
