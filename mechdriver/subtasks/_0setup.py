@@ -16,7 +16,7 @@ GROUP_TASK_AND_KEY_TYPE = {
     "thermo": ("thermo", "spc"),
     "ktp": ("ktp", "pes"),
 }
-COMBINED_TASK_GROUPS = ("thermo", "ktp")
+COMBINED_TASK_GROUPS = ()#"thermo", "ktp")
 
 SUBTASK_DIR = "subtasks"
 INFO_FILE = "info.yaml"
