@@ -440,12 +440,16 @@ def remove_modes_from_mat(mat, modes, dim=1):
     INPUTS:
     :param xmat: anharmonic constant matrix
     :param modes: the modes to delete from the matrix
+    :param dim: 1 for rows, 0 for columns, 2 for both
     :xmat  - anharmonic constant matrix with columns and rows deleted
     """
     modes.sort()
     mat = numpy.array(mat)
     for index in modes[::-1]:
-        mat = numpy.delete(mat, index, 0)
+        if dim > 0:
+            mat = numpy.delete(mat, index, 0)
+        else:
+            mat = numpy.delete(mat, index, 1)
         if dim > 1:
             mat = numpy.delete(mat, index, 1)
     mat = tuple([tuple(row) for row in mat])
@@ -567,6 +571,7 @@ def fund_frequencies(
     # read in mats
     xmat = read_anharmon_matrix(pf_filesystems)
     rovib_mat, rot_dists = rot.read_rotational_values(pf_filesystems)
+    geo = rot.read_geom(pf_filesystems)
 
     # zero out values that blow up vpt2, often umbrella modes
     lambda_mat = compute_lambda(unproj_hfreqs, xmat)
@@ -588,6 +593,8 @@ def fund_frequencies(
     tors_proj_modes = predict_hind_modes(proj_hfreqs, unproj_hfreqs)
     xmat = remove_modes_from_mat(xmat, tors_proj_modes, dim=2)
     rovib_mat = remove_modes_from_mat(rovib_mat, tors_proj_modes)
+    if automol.geom.is_linear(geo):
+        rovib_mat = remove_modes_from_mat(rovib_mat, [0], dim=0)
     proj_ffreqs = anharm_freqs(proj_hfreqs, xmat)
 
     return (
