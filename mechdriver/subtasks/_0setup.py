@@ -8,13 +8,15 @@ import yaml
 
 from . import util
 
-DEFAULT_TASK_GROUPS = ("els", "thermo", "ktp")
-GROUP_ID = {"els-spc": 0, "els-pes": 1, "thermo": 2, "ktp": 3}
+DEFAULT_TASK_GROUPS = ("els", "thermo", "ktp", "proc")
+GROUP_ID = {"els-spc": 0, "els-pes": 1, "thermo": 2, "ktp": 3, "proc-spc": 4, "proc-pes": 5}
 GROUP_TASK_AND_KEY_TYPE = {
     "els-spc": ("els", "spc"),
     "els-pes": ("els", "pes"),
     "thermo": ("thermo", "spc"),
     "ktp": ("ktp", "pes"),
+    "proc-spc": ("proc", "spc"),
+    "proc-pes": ("proc", "pes"),
 }
 COMBINED_TASK_GROUPS = ()#"thermo", "ktp")
 
@@ -122,6 +124,9 @@ def setup(
     if "els" in task_group_keys:
         idx = task_group_keys.index("els")
         task_group_keys[idx : idx + 1] = ("els-spc", "els-pes")
+    if "proc" in task_group_keys:
+        idx = task_group_keys.index("proc")
+        task_group_keys[idx : idx + 1] = ("proc-spc", "proc-pes")
     assert all(g in GROUP_ID for g in task_group_keys), (
         f"{task_group_keys} not in {GROUP_ID}"
     )
