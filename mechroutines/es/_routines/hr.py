@@ -26,7 +26,6 @@ def hindered_rotor_scans(
             job=elstruct.Job.OPTIMIZATION)
         scn_typ = 'relaxed'
         update_guess = True
-        backstep = True
         reverse_sweep = True
     else:
         script_str, kwargs = qchem_params(
@@ -35,9 +34,9 @@ def hindered_rotor_scans(
             job=elstruct.Job.ENERGY)
         scn_typ = 'rigid'
         update_guess = False
-        backstep = False
         reverse_sweep = False
 
+    backstep = False if tors_model in ['1dhrfa', 'mdhr', 'mdhrv'] else True
     # backstep = False
     run_tors_names = automol.data.rotor.rotors_torsion_names(rotors)
     run_tors_grids = automol.data.rotor.rotors_torsion_grids(rotors, increment=increment)

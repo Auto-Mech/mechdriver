@@ -44,20 +44,13 @@ def full_vib_analysis(
 
     rotors, mdhr_dct, zma_locs = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i, spc_dct)
-    # Squash the rotor potentials as necessary
-    if rotors is not None:
-        if typ.squash_tors_pot(spc_mod_dct_i):
-            for rotor in rotors:
-                pot = automol.data.rotor.potential(rotor)
-                pot = automol.data.potent.squash(pot)
-                automol.data.rotor.set_potential(rotor, pot, in_place=True)
-    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
+    if typ.nonrigid_tors(spc_mod_dct_i, rotors, mdhr_dct=mdhr_dct):
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
         tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
         [_, hr_str, _, prot_str, _] = tors_strs
         ret = tors_projected_freqs(
             pf_filesystems, hr_str, prot_str, run_prefix,
-            zrxn=zrxn, zma_locs=zma_locs)
+            zrxn=zrxn, zma_locs=zma_locs, mdhr_dct=mdhr_dct)
 
         if ret is not None:
             proj_hfreqs, unproj_hfreqs, tors_freqs, imag, disps = ret
@@ -226,7 +219,8 @@ def read_anharmon_matrix(pf_filesystems):
 
 
 def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
-                         prefix, zrxn=None, conf=None, zma_locs=None):
+                         prefix, zrxn=None, conf=None, zma_locs=None, 
+                         mdhr_dct=None):
     """ Get the projected frequencies from harmonic frequencies,
         which requires projrot run
 
@@ -257,14 +251,19 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459,
     dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 3.023,
                         ('C', 'O'): 3.7807}
-    proj_inf = autorun.projected_frequencies(
-        mess_script_str, projrot_script_str, vib_path,
-        mess_hr_str, projrot_hr_str,
-        tors_geo, harm_geo, hess,
-        dist_cutoff_dct1=dist_cutoff_dct1,
-        dist_cutoff_dct2=dist_cutoff_dct2,
-        saddle=(zrxn is not None))
-
+    if mdhr_dct is None:
+        proj_inf = autorun.projected_frequencies(
+            mess_script_str, projrot_script_str, vib_path,
+            mess_hr_str, projrot_hr_str,
+            tors_geo, harm_geo, hess,
+            dist_cutoff_dct1=dist_cutoff_dct1,
+            dist_cutoff_dct2=dist_cutoff_dct2,
+            saddle=(zrxn is not None))
+    else:
+        rt_freqs, hrproj_freqs, rt_imag_freq, _ = autorun.projrot.frequencies(
+            projrot_script_str, vib_path, [harm_geo], [[]], [hess],
+            rotors_str=projrot_hr_str)
+        proj_inf = (hrproj_freqs, rt_imag_freq, [], rt_freqs, [])
     # Obtain the displacements
     disp_path = os.path.join(vib_path, 'DISP')
     harm_disps = autorun.projrot.displacements(

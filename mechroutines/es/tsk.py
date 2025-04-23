@@ -528,7 +528,6 @@ def conformer_tsk(job, spc_dct, spc_name,
                 ini_cnf_run_fs[-1].create(ini_locs)
                 geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
                 ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
-                print('Running task for geometry at ', geo_save_path)
                 geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
                 zma_locs = (0,)
                 if saddle:
@@ -892,8 +891,11 @@ def hr_tsk(job, spc_dct, spc_name,
         zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
         if ini_zma_save_fs[-1].file.torsions.exists(zma_locs):
             tors_lst = ini_zma_save_fs[-1].file.torsions.read(zma_locs)
+            tor_names_lst=(
+                spc_dct_i.get('tors_names', None)
+                if 'md' in tors_model else None)
             rotors = automol.data.rotor.rotors_from_data(
-                zma, tors_lst, multi='md' in tors_model)
+                zma, tors_lst, tor_names_lst=tor_names_lst, multi='md' in tors_model)
         else:
             rotors = ()
         zrxn = spc_dct_i.get('zrxn', None)
@@ -969,6 +971,7 @@ def hr_tsk(job, spc_dct, spc_name,
             cnf_run_path = cnf_run_fs[-1].path(min_locs)
 
             # scan) Get the runlvl zma and torsion info
+            # scan) from the run filesystem
             zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
             zma_locs = (0,)
@@ -977,19 +980,14 @@ def hr_tsk(job, spc_dct, spc_name,
             zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
             if zma_save_fs[-1].file.torsions.exists(zma_locs):
                 tors_lst = zma_save_fs[-1].file.torsions.read(zma_locs)
+                tor_names_lst=(
+                    spc_dct_i.get('tors_names', None)
+                    if 'md' in tors_model else None)
                 rotors = automol.data.rotor.rotors_from_data(
-                    zma, tors_lst, multi='md' in tors_model)
+                    zma, tors_lst, tor_names_lst=tor_names_lst, multi='md' in tors_model)
             else:
                 rotors = ()
-            if 'fa' in tors_model:
-                scn = 'CSCAN'
-            elif 'f' in tors_model:
-                if len(rotors) > 1:
-                    scn = 'CSCAN'
-                else:
-                    scn = 'SCAN'
-            else:
-                scn = 'SCAN'
+            
             scn_run_fs, scn_save_fs = build_fs(
                 cnf_run_path, cnf_save_path, scn,
                 zma_locs=zma_locs)
@@ -1016,6 +1014,8 @@ def hr_tsk(job, spc_dct, spc_name,
 
             zrxn = spc_dct_i.get('zrxn', None)
 
+            # For all but job == 'scan', the rotors are built based on
+            # the ini level of theory
             run_tors_names = automol.data.rotor.rotors_torsion_names(rotors)
             run_tors_grids = automol.data.rotor.rotors_torsion_grids(
                 rotors, increment=increment)
@@ -1078,27 +1078,29 @@ def hr_tsk(job, spc_dct, spc_name,
             ini_scn_run_fs, ini_scn_save_fs = build_fs(
                 ini_cnf_run_path, ini_cnf_save_path, scn,
                 zma_locs=zma_locs)
-            run_tors_names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
+            run_tors_names = automol.data.rotor.rotors_torsion_names(rotors)
+            if job in ('grad', 'hess', 'vpt2') and len(run_tors_names) > 1:
+                run_tors_names = (run_tors_names[0],)
+                ioprinter.info_message(
+                    f'running only the first listed rotor {run_tors_names[0]} for {job}')
+            const_names = automol.zmat.set_constraint_names(
+                zma, run_tors_names, tors_model)
             for tors_names in run_tors_names:
-
                 # Set the constraint dct and filesys for the scan
-                const_names = automol.zmat.set_constraint_names(
-                    zma, [run_tors_names], tors_model)
                 constraint_dct = automol.zmat.constraint_dict(
                     zma, const_names, tors_names)
-
                 # get the scn_locs, maybe get a function?
                 _, scn_locs = scan.scan_locs(
-                    ini_scn_save_fs, (tors_names,),
+                    ini_scn_save_fs, tors_names,
                     constraint_dct=constraint_dct)
                 for locs in scn_locs:
-                    geo = ini_scn_save_fs[-1].file.geometry.read(locs)
-                    zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
+                    scn_geo = ini_scn_save_fs[-1].file.geometry.read(locs)
+                    scn_zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
                     ini_scn_run_fs[-1].create(locs)
                     if job in ('hess', 'vpt2'):
                         kwargs['correct_vals'] = False
                     ES_TSKS[job](
-                        zma, geo, spc_info, mod_thy_info,
+                        scn_zma, scn_geo, spc_info, mod_thy_info,
                         ini_scn_run_fs, ini_scn_save_fs, locs, run_prefix,
                         script_str, overwrite,
                         zrxn=zrxn, method_dct=method_dct,
