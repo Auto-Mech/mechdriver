@@ -1,0 +1,16 @@
+level pm3
+    method = pm3
+    orb_res = RU
+    program = gaussian16
+    mem = 20.0
+    nprocs = 2
+end level
+
+level dft
+    method = bp86
+    basis = def2-sv(p)
+    orb_res = RU
+    program = gaussian16
+    mem = 20.0
+    nprocs = 2
+end level
