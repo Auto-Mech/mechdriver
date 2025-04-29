@@ -1,5 +1,4 @@
-""" Standalone script to run AutoMech subtasks in parallel on an Ad Hoc SSH Cluster
-"""
+"""Standalone script to run AutoMech subtasks in parallel on an Ad Hoc SSH Cluster"""
 
 import itertools
 from collections.abc import Sequence
@@ -12,13 +11,43 @@ from ..base import Status, check_log, colored_status_string
 from ._0setup import INFO_FILE, SUBTASK_DIR, SubtasksInfo, Task
 
 
+def status_multiple(
+    paths: Sequence[str | Path] = (".",),
+    dir_name: str = SUBTASK_DIR,
+    check_file: str | Path = "check.log",
+    wrap: int = 18,
+) -> None:
+    """Check the status of multiple running subtask sets.
+
+    Assumes the subtasks were set up at this path using `automech subtasks setup`
+
+    :param paths: The paths where the AutoMech subtasks were set up
+    :param check_file: Log file for writing paths to be checked
+    :Param wrap: Wrap to include this many subtask columns per row
+    """
+    check_file = Path(check_file)
+    paths = list(map(Path, paths))
+    check_file_texts = []
+    for path in paths:
+        print(f"Checking status in {path}...\n")
+        check_file_text = status(
+            path=path, dir_name=dir_name, wrap=wrap, write_check_file=False
+        )
+        if check_file_text:
+            check_file_texts.append(check_file_text)
+
+    check_file_text = "\n\n".join(check_file_texts)
+    check_file.write_text(f"{check_file_text}\n" if check_file_text else "")
+
+
 def status(
     path: str | Path = ".",
     dir_name: str = SUBTASK_DIR,
     check_file: str = "check.log",
     wrap: int = 18,
-) -> None:
-    """Check the status of running subtasks
+    write_check_file: bool = True,
+) -> str:
+    """Check the status of running subtasks.
 
     Assumes the subtasks were set up at this path using `automech subtasks setup`
 
@@ -27,9 +56,9 @@ def status(
     :Param wrap: Wrap to include this many subtask columns per row
     """
     path = Path(path).resolve()
-    assert (
-        path.exists()
-    ), f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
+    assert path.exists(), (
+        f"Path not found: {path}.\nDid you run `automech subtasks setup` first?"
+    )
 
     info_file = path / dir_name / INFO_FILE
     info = SubtasksInfo(**yaml.safe_load(info_file.read_text()))
@@ -74,8 +103,12 @@ def status(
                 check_lines.append(line)
 
     check_file: Path = Path(check_file)
-    check_file_contents = "\n".join(check_lines)
-    check_file.write_text(f"{check_file_contents}\n" if check_file_contents else "")
+    check_file_text = "\n".join(check_lines)
+
+    if write_check_file:
+        check_file.write_text(f"{check_file_text}\n" if check_file_text else "")
+
+    return check_file_text
 
 
 def log_paths_with_check_results(

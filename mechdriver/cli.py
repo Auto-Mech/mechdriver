@@ -2,8 +2,7 @@ import subprocess
 
 import click
 
-from . import subtasks
-from . import tools
+from . import subtasks, tools
 from .base import Status, check_log, run
 
 
@@ -172,7 +171,7 @@ def subtasks_run_(
 
 
 @subtasks_.command("status")
-@click.argument("path", default=".")
+@click.argument("paths", nargs=-1)
 @click.option(
     "-n",
     "--dir-name",
@@ -195,13 +194,17 @@ def subtasks_run_(
     help="Wrap to included this many subtask columns per row",
 )
 def subtasks_status_(
-    path: str = ".",
+    paths: tuple[str, ...],
     dir_name=subtasks.SUBTASK_DIR,
     check_file: str = "check.log",
     wrap: int = 18,
 ):
     """Check the status of running subtasks"""
-    subtasks.status(path=path, dir_name=dir_name, check_file=check_file, wrap=wrap)
+    paths = paths if paths else (".",)
+    subtasks.status_multiple(
+        paths=paths, dir_name=dir_name, check_file=check_file, wrap=wrap
+    )
+
 
 @main.command()
 @click.option(
