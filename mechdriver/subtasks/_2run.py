@@ -1,5 +1,4 @@
-""" Standalone script to run AutoMech subtasks in parallel on an Ad Hoc SSH Cluster
-"""
+"""Standalone script to run AutoMech subtasks in parallel on an Ad Hoc SSH Cluster"""
 
 import itertools
 import subprocess
@@ -64,9 +63,9 @@ def run_multiple(
     dir_paths = [p / dir_name for p in paths]
     info_files = [d / INFO_FILE for d in dir_paths]
     for dir_path in dir_paths:
-        assert (
-            dir_path.exists()
-        ), f"Path not found: {dir_path}.\nDid you run `automech subtasks setup` first?"
+        assert dir_path.exists(), (
+            f"Path not found: {dir_path}.\nDid you run `automech subtasks setup` first?"
+        )
 
     # Read in subtask information
     infos = [SubtasksInfo(**yaml.safe_load(f.read_text())) for f in info_files]
@@ -94,8 +93,9 @@ def run_multiple(
             nprocs = max(nprocs, task.nprocs)
             for subtask in task.subtasks:
                 subtask_path = dir_name / subtask.path
+                subtask_path_abs = path / subtask_path
                 status = parse_subtask_status(
-                    log_paths_with_check_results(subtask_path)
+                    log_paths_with_check_results(subtask_path_abs)
                 )
                 if status in statuses:
                     work_paths.extend([path] * subtask.nworkers)
