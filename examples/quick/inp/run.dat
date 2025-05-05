@@ -34,6 +34,6 @@ end thermo
 
 ktp
     write_mess      kin_model=global  spc_model=global
-    run_mess
+    run_mess        kin_model=global  spc_model=global
     run_fits        kin_model=global  spc_model=global
 end ktp
