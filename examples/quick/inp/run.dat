@@ -23,7 +23,6 @@ proc
     all energy geolvl=pm3 proplvl=pm3
     all geo geolvl=pm3 proplvl=pm3
     all freqs geolvl=pm3 proplvl=pm3
-    all date geolvl=pm3 proplvl=pm3
 end proc
 
 thermo
