@@ -263,6 +263,15 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         rt_freqs, hrproj_freqs, rt_imag_freq, _ = autorun.projrot.frequencies(
             projrot_script_str, vib_path, [harm_geo], [[]], [hess],
             rotors_str=projrot_hr_str)
+        if zrxn is not None:
+            if len(rt_imag_freq) > 1:
+                print(
+                    'There is more than one imaginary frequency')
+            rt_imag_freq = max(rt_imag_freq)
+        else:
+            for _ in rt_imag_freq:
+                rt_freqs += (0.00001,)
+            rt_imag_freq = None
         proj_inf = (hrproj_freqs, rt_imag_freq, [], rt_freqs, [])
     # Obtain the displacements
     disp_path = os.path.join(vib_path, 'DISP')
@@ -270,7 +279,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         projrot_script_str, disp_path, [harm_geo], [[]], [hess])
 
     proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
-
+    
     return proj_freqs, harm_freqs, tors_freqs, proj_imag, harm_disps
 
 

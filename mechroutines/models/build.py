@@ -428,12 +428,12 @@ def mol_data(spc_name, spc_dct,
             'mess_hr_str', 'mess_multi_strs', 'mdhr_dat',
             'xmat', 'rovib_coups', 'rot_dists',
             'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl', 'ene_tsref',
-            'edown_str', 'collid_freq_str']
+            'edown_str', 'collid_freq_str', 'spc_name']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
             mess_hr_str, mess_multi_strs, mdhr_dat,
             xmat, rovib_coups, rot_dists,
             hf0k, ene_reflvl, zpe, hf0k_trs,
-            edown_str, collid_freq_str]
+            edown_str, collid_freq_str, spc_name]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct, chn_basis_ene_dct
