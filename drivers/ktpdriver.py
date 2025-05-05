@@ -79,8 +79,11 @@ def run(pes_rlst, pes_grp_dct,
             
         if write_rate_tsk is not None:
             proc_tsk = write_rate_tsk
-        else:
+        elif run_fit_tsk is not None:
             proc_tsk = run_fit_tsk
+        else:
+            proc_tsk = run_rate_tsk
+        
         spc_dct, all_rxn_lst, all_instab_chnls, label_dct = _process(
             proc_tsk, ktp_tsk_lst, pes_grp_rlst,
             spc_mod_dct, spc_dct, glob_dct,
