@@ -194,7 +194,10 @@ def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
             for key in csv_data['allfreq']:
                 fin_csv_data[key+'_RTFreq'] = csv_data['allfreq'][key]
         # print(fin_csv_data)
-        ncols = max([len(x) for x in fin_csv_data.values()])
+        if fin_csv_data.values():
+            ncols = max([len(x) for x in fin_csv_data.values()])
+        else:
+            ncols = 0
         dframe = pandas.DataFrame.from_dict(
             fin_csv_data, orient='index',
             columns=['Path', 'ZPVE [A.U.]', *[''] * (ncols-2)])
