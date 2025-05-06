@@ -21,7 +21,7 @@ els
     all hr_scan tors_model=1dhrfa runlvl=pm3  inplvl=pm3
     all hr_scan tors_model=mdhrv runlvl=pm3  inplvl=pm3
     all hr_energy tors_model=1dhr runlvl=dft  inplvl=pm3
-    all hr_hess tors_model=m1dhrv runlvl=pm3  inplvl=pm3
+    all hr_hess tors_model=mdhrv runlvl=pm3  inplvl=pm3
     #all hr_scan tors_model=mdhr runlvl=pm3  inplvl=pm3
 end els
 
