@@ -1,0 +1,4 @@
+REACTIONS
+    CH4 + OH = CH3 + H2O   1.0  0.0  0.0  # pes.subpes.channel 1.1.1
+END
+
