@@ -1,0 +1,5 @@
+name,smiles,mult,charge
+propanol,'CCCO',1,0
+methane,'C',1,0
+water,'O',1,0
+hyd2,'[H][H]',1,0

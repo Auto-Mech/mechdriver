@@ -19,6 +19,12 @@ els
     all conf_hess     runlvl=pm3    inplvl=pm3
 end els
 
+proc
+    all energy geolvl=pm3 proplvl=pm3
+    all geo geolvl=pm3 proplvl=pm3
+    all freqs geolvl=pm3 proplvl=pm3
+end proc
+
 thermo
     write_mess      kin_model=global  spc_model=global
     run_mess        kin_model=global  spc_model=global
@@ -27,6 +33,6 @@ end thermo
 
 ktp
     write_mess      kin_model=global  spc_model=global
-    run_mess
+    run_mess        kin_model=global  spc_model=global
     run_fits        kin_model=global  spc_model=global
 end ktp

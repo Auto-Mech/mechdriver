@@ -1,0 +1,44 @@
+input
+    run_prefix = ./run
+    save_prefix = ./save
+end input
+
+pes
+end pes
+
+spc
+    2,4-5
+end spc
+
+els
+    spc init_geom     runlvl=pm3    inplvl=pm3
+    spc conf_samp     runlvl=pm3    inplvl=pm3 
+    spc conf_hess     runlvl=pm3    inplvl=pm3 cnf_range=n100 
+    spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=min_noHB
+    spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=n2_HB
+    spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=union(n1, n2)
+    spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=e0.5 sort=freqs(pm3),sp(pm3),gibbs(1000)
+    spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=min sort=freqs(pm3),sp(pm3),enthalpy(300)
+    all conf_opt      runlvl=pm3    inplvl=pm3 cnf_range=n2 sort=freqs(pm3),sp(dft),gibbs(1000)
+    all conf_hess     runlvl=pm3    inplvl=pm3 cnf_range=n2 sort=freqs(pm3),sp(dft),gibbs(1000)
+end els
+
+thermo
+    write_mess      kin_model=global spc_model=global cnf_range=n2 sort=freqs(pm3),sp(dft),gibbs(1000)
+    run_mess        kin_model=global spc_model=global cnf_range=n2 sort=freqs(pm3),sp(dft),gibbs(1000)
+    run_fits        kin_model=global spc_model=global cnf_range=n2 sort=freqs(pm3),sp(dft),gibbs(1000)
+end thermo 
+
+proc
+   spc geo cnf_range=all
+   spc energy cnf_range=all
+   spc freqs cnf_range=all scale=off
+   spc date cnf_range=all
+   spc coeffs cnf_range=min
+   spc messpf_inp cnf_range=min
+   spc pf cnf_range=min
+   spc sidata cnf_range=min
+end proc
+
+ktp
+end ktp

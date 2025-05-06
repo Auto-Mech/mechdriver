@@ -43,17 +43,19 @@ def rate_paths(pes_dct, run_prefix, prefix=''):
     return rate_path_dct
 
 
-def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix, spc_grp_dct):
+def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix, spc_grp_dct, pes_mod_name):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
 
     thm_path_dct = {}
+    nasa_prefix = 'NASA'
+    pf_prefix = 'PF'
     for spc_name in spc_locs_dct:
         spc_thm_path_dct = {}
         spc_info = sinfo.from_dct(spc_dct[spc_name], canonical=True)
         spc_formula = automol.chi.formula_layer(spc_info[0])
-        thm_prefix = [spc_formula, automol.chi.inchi_key(spc_info[0])]
+        thm_prefix = [spc_formula, automol.chi.inchi_key(spc_info[0]), pes_mod_name]
         spc_locs_lst = spc_locs_dct[spc_name]
         for sidx, spc_locs in enumerate(spc_locs_lst, start=1):
             spc_mod_thm_path_dct = {}
@@ -61,27 +63,27 @@ def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix, spc_grp_dct):
                 idx = sidx * 10 + midx
                 spc_mod_thm_path_dct[mod] = (
                     job_path(
-                        run_prefix, 'MESS', 'PF',
+                        run_prefix, 'MESS', pf_prefix,
                         thm_prefix, locs_id=idx),
                     job_path(
-                        run_prefix, 'THERM', 'NASA',
+                        run_prefix, 'THERM', nasa_prefix,
                         thm_prefix, locs_id=idx)
                 )
             spc_mod_thm_path_dct['mod_total'] = (
                 job_path(
-                    run_prefix, 'MESS', 'PF',
+                    run_prefix, 'MESS', pf_prefix,
                     thm_prefix, locs_id=sidx),
                 job_path(
-                    run_prefix, 'THERM', 'NASA',
+                    run_prefix, 'THERM', nasa_prefix,
                     thm_prefix, locs_id=sidx)
             )
             spc_thm_path_dct[tuple(spc_locs)] = spc_mod_thm_path_dct
         spc_thm_path_dct['spc_total'] = (
             job_path(
-                run_prefix, 'MESS', 'PF',
+                run_prefix, 'MESS', pf_prefix,
                 thm_prefix, locs_id=0),
             job_path(
-                run_prefix, 'THERM', 'NASA',
+                run_prefix, 'THERM', nasa_prefix,
                 thm_prefix, locs_id=0)
         )
         thm_path_dct[spc_name] = spc_thm_path_dct
@@ -92,10 +94,10 @@ def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix, spc_grp_dct):
             thm_prefix = [spc_formula, automol.chi.inchi_key(spc_info[0])]
             spc_thm_path_dct = {'spc_group': (
                 job_path(
-                    run_prefix, 'MESS', 'PF',
+                    run_prefix, 'MESS', pf_prefix,
                     thm_prefix, locs_id=1000),
                 job_path(
-                    run_prefix, 'THERM', 'NASA',
+                    run_prefix, 'THERM', nasa_prefix,
                     thm_prefix, locs_id=1000)
             )}
             thm_path_dct[grp_name] = spc_thm_path_dct

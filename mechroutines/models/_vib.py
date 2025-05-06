@@ -44,20 +44,13 @@ def full_vib_analysis(
 
     rotors, mdhr_dct, zma_locs = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i, spc_dct)
-    # Squash the rotor potentials as necessary
-    if rotors is not None:
-        if typ.squash_tors_pot(spc_mod_dct_i):
-            for rotor in rotors:
-                pot = automol.data.rotor.potential(rotor)
-                pot = automol.data.potent.squash(pot)
-                automol.data.rotor.set_potential(rotor, pot, in_place=True)
-    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
+    if typ.nonrigid_tors(spc_mod_dct_i, rotors, mdhr_dct=mdhr_dct):
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
         tors_strs = tors.make_hr_strings(rotors, mdhr_dct=mdhr_dct)
         [_, hr_str, _, prot_str, _] = tors_strs
         ret = tors_projected_freqs(
             pf_filesystems, hr_str, prot_str, run_prefix,
-            zrxn=zrxn, zma_locs=zma_locs)
+            zrxn=zrxn, zma_locs=zma_locs, mdhr_dct=mdhr_dct)
 
         if ret is not None:
             proj_hfreqs, unproj_hfreqs, tors_freqs, imag, disps = ret
@@ -226,7 +219,8 @@ def read_anharmon_matrix(pf_filesystems):
 
 
 def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
-                         prefix, zrxn=None, conf=None, zma_locs=None):
+                         prefix, zrxn=None, conf=None, zma_locs=None, 
+                         mdhr_dct=None):
     """ Get the projected frequencies from harmonic frequencies,
         which requires projrot run
 
@@ -257,21 +251,35 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459,
     dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 3.023,
                         ('C', 'O'): 3.7807}
-    proj_inf = autorun.projected_frequencies(
-        mess_script_str, projrot_script_str, vib_path,
-        mess_hr_str, projrot_hr_str,
-        tors_geo, harm_geo, hess,
-        dist_cutoff_dct1=dist_cutoff_dct1,
-        dist_cutoff_dct2=dist_cutoff_dct2,
-        saddle=(zrxn is not None))
-
+    if mdhr_dct is None:
+        proj_inf = autorun.projected_frequencies(
+            mess_script_str, projrot_script_str, vib_path,
+            mess_hr_str, projrot_hr_str,
+            tors_geo, harm_geo, hess,
+            dist_cutoff_dct1=dist_cutoff_dct1,
+            dist_cutoff_dct2=dist_cutoff_dct2,
+            saddle=(zrxn is not None))
+    else:
+        rt_freqs, hrproj_freqs, rt_imag_freq, _ = autorun.projrot.frequencies(
+            projrot_script_str, vib_path, [harm_geo], [[]], [hess],
+            rotors_str=projrot_hr_str)
+        if zrxn is not None:
+            if len(rt_imag_freq) > 1:
+                print(
+                    'There is more than one imaginary frequency')
+            rt_imag_freq = max(rt_imag_freq)
+        else:
+            for _ in rt_imag_freq:
+                rt_freqs += (0.00001,)
+            rt_imag_freq = None
+        proj_inf = (hrproj_freqs, rt_imag_freq, [], rt_freqs, [])
     # Obtain the displacements
     disp_path = os.path.join(vib_path, 'DISP')
     harm_disps = autorun.projrot.displacements(
         projrot_script_str, disp_path, [harm_geo], [[]], [hess])
 
     proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
-
+    
     return proj_freqs, harm_freqs, tors_freqs, proj_imag, harm_disps
 
 
@@ -440,12 +448,16 @@ def remove_modes_from_mat(mat, modes, dim=1):
     INPUTS:
     :param xmat: anharmonic constant matrix
     :param modes: the modes to delete from the matrix
+    :param dim: 1 for rows, 0 for columns, 2 for both
     :xmat  - anharmonic constant matrix with columns and rows deleted
     """
     modes.sort()
     mat = numpy.array(mat)
     for index in modes[::-1]:
-        mat = numpy.delete(mat, index, 0)
+        if dim > 0:
+            mat = numpy.delete(mat, index, 0)
+        else:
+            mat = numpy.delete(mat, index, 1)
         if dim > 1:
             mat = numpy.delete(mat, index, 1)
     mat = tuple([tuple(row) for row in mat])
@@ -567,6 +579,7 @@ def fund_frequencies(
     # read in mats
     xmat = read_anharmon_matrix(pf_filesystems)
     rovib_mat, rot_dists = rot.read_rotational_values(pf_filesystems)
+    geo = rot.read_geom(pf_filesystems)
 
     # zero out values that blow up vpt2, often umbrella modes
     lambda_mat = compute_lambda(unproj_hfreqs, xmat)
@@ -588,6 +601,8 @@ def fund_frequencies(
     tors_proj_modes = predict_hind_modes(proj_hfreqs, unproj_hfreqs)
     xmat = remove_modes_from_mat(xmat, tors_proj_modes, dim=2)
     rovib_mat = remove_modes_from_mat(rovib_mat, tors_proj_modes)
+    if automol.geom.is_linear(geo):
+        rovib_mat = remove_modes_from_mat(rovib_mat, [0], dim=0)
     proj_ffreqs = anharm_freqs(proj_hfreqs, xmat)
 
     return (

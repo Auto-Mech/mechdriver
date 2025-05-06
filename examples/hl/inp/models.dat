@@ -1,0 +1,342 @@
+kin global
+    pressures = (
+        1.0  
+    )
+    rate_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    therm_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    rate_fit = (
+        fit_method = plog
+        pdep_temps = [500.0, 1000.0]
+        pdep_tol = 20.0
+        pdep_pval = 1.0
+        pdep_plow = None
+        pdep_phigh = None
+        arrfit_dbltol = 15.0
+    )
+    therm_fit = (
+        ref_scheme = cbh1
+        ref_enes = ANL0
+    )
+end kin
+
+spc global
+    ene = (
+        lvl1 = 1.5*dft
+        lvl2 = -.5*pm3
+    )
+    rot = (
+        mod = harm
+    )
+    vib = (
+        mod = harm
+        geolvl = pm3
+        vpt2lvl = pm3
+        scale = off
+    )
+    tors = (
+        mod = rigid
+        enelvl = pm3
+        geolvl = pm3
+        scale=off
+    )
+    symm = (
+        mod = HCO_model
+        geolvl = pm3
+    )
+    ts = (
+        tunnel = eckart
+        sadpt = fixed
+        wells = fake
+        nobar = pst
+    )
+end spc
+
+kin model_1dhr_rovib
+    pressures = (
+        1.0  
+    )
+    rate_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    therm_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    rate_fit = (
+        fit_method = plog
+        pdep_temps = [500.0, 1000.0]
+        pdep_tol = 20.0
+        pdep_pval = 1.0
+        pdep_plow = None
+        pdep_phigh = None
+        arrfit_dbltol = 15.0
+    )
+    therm_fit = (
+        ref_scheme = cbh1
+        ref_enes = ANL0
+    )
+end kin
+
+spc model_1dhr_rovib
+    ene = (
+        lvl1 = 1.5*dft
+        lvl2 = -.5*pm3
+    )
+    rot = (
+        mod = vpt2
+    )
+    vib = (
+        mod = vpt2
+        geolvl = pm3
+        vpt2lvl = pm3
+        scale = off
+    )
+    tors = (
+        mod = 1dhr
+        enelvl = pm3
+        geolvl = pm3
+        scale=on
+    )
+    symm = (
+        mod = HCO_model
+        geolvl = pm3
+    )
+    ts = (
+        tunnel = eckart
+        sadpt = fixed
+        wells = fake
+        nobar = pst
+    )
+end spc
+
+kin model_1dhrf_vpt2
+    pressures = (
+        1.0  
+    )
+    rate_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    therm_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    rate_fit = (
+        fit_method = plog
+        pdep_temps = [500.0, 1000.0]
+        pdep_tol = 20.0
+        pdep_pval = 1.0
+        pdep_plow = None
+        pdep_phigh = None
+        arrfit_dbltol = 15.0
+    )
+    therm_fit = (
+        ref_scheme = cbh1
+        ref_enes = ANL0
+    )
+end kin
+
+spc model_1dhrf_vpt2
+    ene = (
+        lvl1 = 1.5*dft
+        lvl2 = -.5*pm3
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = vpt2
+        geolvl = pm3
+        vpt2lvl = pm3
+        scale = off
+    )
+    tors = (
+        mod = 1dhrf
+        enelvl = pm3
+        geolvl = pm3
+        scale=off
+    )
+    symm = (
+        mod = HCO_model
+        geolvl = pm3
+    )
+    ts = (
+        tunnel = eckart
+        sadpt = fixed
+        wells = fake
+        nobar = pst
+    )
+end spc
+
+kin model_1dhrfa_fund
+    pressures = (
+        1.0  
+    )
+    rate_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    therm_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    rate_fit = (
+        fit_method = plog
+        pdep_temps = [500.0, 1000.0]
+        pdep_tol = 20.0
+        pdep_pval = 1.0
+        pdep_plow = None
+        pdep_phigh = None
+        arrfit_dbltol = 15.0
+    )
+    therm_fit = (
+        ref_scheme = cbh1
+        ref_enes = ANL0
+    )
+end kin
+
+spc model_1dhrfa_fund
+    ene = (
+        lvl1 = 1.5*dft
+        lvl2 = -.5*pm3
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = fund
+        geolvl = pm3
+        vpt2lvl = pm3
+        scale = off
+    )
+    tors = (
+        mod = 1dhrfa
+        enelvl = pm3
+        geolvl = pm3
+        scale=off
+    )
+    symm = (
+        mod = HCO_model
+        geolvl = pm3
+    )
+    ts = (
+        tunnel = eckart
+        sadpt = fixed
+        wells = fake
+        nobar = pst
+    )
+end spc
+
+kin model_1dhrhl
+    pressures = (
+        1.0  
+    )
+    rate_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    therm_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    rate_fit = (
+        fit_method = plog
+        pdep_temps = [500.0, 1000.0]
+        pdep_tol = 20.0
+        pdep_pval = 1.0
+        pdep_plow = None
+        pdep_phigh = None
+        arrfit_dbltol = 15.0
+    )
+    therm_fit = (
+        ref_scheme = cbh1
+        ref_enes = ANL0
+    )
+end kin
+
+spc model_1dhrhl
+    ene = (
+        lvl1 = 1.5*dft
+        lvl2 = -.5*pm3
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = harm
+        geolvl = pm3
+        vpt2lvl = pm3
+        scale = off
+    )
+    tors = (
+        mod = 1dhr
+        geolvl = pm3
+        enelvl = dft
+        scale=off
+    )
+    symm = (
+        mod = HCO_model
+        geolvl = pm3
+    )
+    ts = (
+        tunnel = eckart
+        sadpt = fixed
+        wells = fake
+        nobar = pst
+    )
+end spc
+
+kin model_1dhrva
+    pressures = (
+        1.0  
+    )
+    rate_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    therm_temps = (
+        200. 300. 400. 600. 800. 1000. 1200. 1400. 1600. 
+    )
+    rate_fit = (
+        fit_method = plog
+        pdep_temps = [500.0, 1000.0]
+        pdep_tol = 20.0
+        pdep_pval = 1.0
+        pdep_plow = None
+        pdep_phigh = None
+        arrfit_dbltol = 15.0
+    )
+    therm_fit = (
+        ref_scheme = cbh1
+        ref_enes = ANL0
+    )
+end kin
+
+spc model_1dhrva
+    ene = (
+        lvl1 = 1.5*dft
+        lvl2 = -.5*pm3
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = harm
+        geolvl = pm3
+        vpt2lvl = pm3
+        scale = off
+    )
+    tors = (
+        mod = mdhrv
+        enelvl = pm3
+        geolvl = pm3
+        scale=off
+    )
+    symm = (
+        mod = HCO_model
+        geolvl = pm3
+    )
+    ts = (
+        tunnel = eckart
+        sadpt = fixed
+        wells = fake
+        nobar = pst
+    )
+end spc
+

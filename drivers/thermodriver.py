@@ -66,7 +66,7 @@ def run(pes_rlst, spc_rlst,
     # ------------------------------------------------ #
     # PREPARE INFORMATION TO PASS TO THERMDRIVER TASKS #
     # ------------------------------------------------ #
-
+    print(therm_tsk_lst)
     # Parse Tasks
     write_messpf_tsk = parser.run.extract_task('write_mess', therm_tsk_lst)
     run_messpf_tsk = parser.run.extract_task('run_mess', therm_tsk_lst)
@@ -78,20 +78,23 @@ def run(pes_rlst, spc_rlst,
         cnf_range = write_messpf_tsk[-1]['cnf_range']
         sort_str = write_messpf_tsk[-1]['sort']
         nprocs = write_messpf_tsk[-1]['nprocs']
+        _, pes_mod = parser.models.extract_models(write_messpf_tsk)
     elif run_fit_tsk is not None:
         cnf_range = run_fit_tsk[-1]['cnf_range']
         sort_str = run_fit_tsk[-1]['sort']
         nprocs = run_fit_tsk[-1]['nprocs']
+        _, pes_mod = parser.models.extract_models(run_fit_tsk)
     else:
         cnf_range = run_messpf_tsk[-1]['cnf_range']
         sort_str = run_messpf_tsk[-1]['sort']
         nprocs = run_messpf_tsk[-1]['nprocs']
+        _, pes_mod = parser.models.extract_models(run_messpf_tsk)
     ret = _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst,
         run_fit_tsk,
         spc_dct, thy_dct,
         save_prefix, run_prefix,
-        cnf_range, sort_str, nprocs=nprocs)
+        cnf_range, sort_str, nprocs=nprocs, pes_mod=pes_mod)
     spc_grp_dct, spc_locs_dct, thm_paths_dct, sort_info_lst = ret
 
     # ----------------------------------- #
@@ -130,12 +133,12 @@ def run(pes_rlst, spc_rlst,
         tsk_key_dct = run_fit_tsk[-1]
         if tsk_key_dct['combine'] == 'stereo':
             spc_dct = thermo_tasks.multi_species_pf(
-                run_messpf_tsk, spc_locs_dct, spc_dct,
+                run_fit_tsk, spc_locs_dct, spc_dct,
                 thm_paths_dct, spc_grp_dct)
         else:
             # spc_grp_dct = {name: (name,) for name in spc_locs_dct}
             spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
-                run_messpf_tsk, spc_locs_dct, spc_dct,
+                run_fit_tsk, spc_locs_dct, spc_dct,
                 thm_paths_dct)
 
         # Write the NASA polynomials in CHEMKIN format
@@ -146,7 +149,7 @@ def run(pes_rlst, spc_rlst,
         for idx, nasa_str in ckin_nasa_str_dct.items():
             ioprinter.print_thermo(
                 spc_dct, nasa_str,
-                spc_locs_dct, idx, spc_mods[0])
+                spc_locs_dct, idx, spc_mods[0], pes_mod_dct_i['therm_temps'])
 
             # Write all of the NASA polynomial strings
             writer.ckin.write_nasa_file(
@@ -159,7 +162,7 @@ def _set_spc_queue(
         spc_dct, thy_dct,
         save_prefix, run_prefix,
         cnf_range='min', sort_str=None, spc_grp_dct=None,
-        nprocs=1):
+        nprocs=1, pes_mod=''):
     """ Determine the list of species to do thermo on
     """
     # Build various species lists
@@ -187,7 +190,7 @@ def _set_spc_queue(
         cnf_range, sort_info_lst, nprocs=nprocs)
     thm_paths = thermo_paths(
         spc_dct, spc_locs_dct, spc_mods, run_prefix,
-        spc_grp_dct)
+        spc_grp_dct, pes_mod)
 
     return spc_grp_dct, spc_locs_dct, thm_paths, sort_info_lst
 

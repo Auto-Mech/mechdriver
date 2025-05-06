@@ -1,0 +1,40 @@
+input
+    run_prefix = ./run
+    save_prefix = ./save
+end input
+
+pes
+end pes
+
+spc
+    2,4-5
+end spc
+
+els
+    spc init_geom     runlvl=pm3    inplvl=pm3
+    spc conf_opt      runlvl=pm3    inplvl=pm3 
+    all conf_hess     runlvl=pm3    inplvl=pm3 
+    all conf_vpt2     runlvl=pm3    inplvl=pm3
+    all conf_energy   runlvl=dft    inplvl=pm3
+    all hr_scan tors_model=1dhr   runlvl=pm3  inplvl=pm3
+    all hr_scan tors_model=1dhrf  runlvl=pm3  inplvl=pm3
+    all hr_scan tors_model=1dhrfa runlvl=pm3  inplvl=pm3
+    all hr_energy tors_model=1dhr runlvl=dft  inplvl=pm3
+    all hr_hess tors_model=1dhr runlvl=pm3  inplvl=pm3
+    #all hr_scan tors_model=mdhr runlvl=pm3  inplvl=pm3
+end els
+
+thermo
+    write_mess      kin_model=model_1dhr_rovib  spc_model=model_1dhr_rovib
+    run_mess        kin_model=model_1dhr_rovib  spc_model=model_1dhr_rovib
+    run_fits        kin_model=model_1dhr_rovib  spc_model=model_1dhr_rovib
+    write_mess      kin_model=model_1dhrf_vpt2 spc_model=model_1dhrf_vpt2
+    run_mess        kin_model=model_1dhrf_vpt2 spc_model=model_1dhrf_vpt2
+    write_mess      kin_model=model_1dhrfa_fund spc_model=model_1dhrfa_fund
+    run_mess        kin_model=model_1dhrfa_fund spc_model=model_1dhrfa_fund
+    write_mess      kin_model=model_1dhrhl  spc_model=model_1dhrhl
+    run_mess        kin_model=model_1dhrhl  spc_model=model_1dhrhl
+end thermo
+
+ktp
+end ktp

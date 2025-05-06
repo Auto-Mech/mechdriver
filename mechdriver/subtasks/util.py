@@ -166,7 +166,7 @@ def parse_subtasks_nworkers(
     if task_name in ROTOR_TASKS:
         nworkers_lst = list(map(rotor_count_from_graphs, gras_lst))
     if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
-        nmax = int(field_dct.get("cnf_range", "n100")[1:])
+        nmax = int(field_dct.get("cnf_range", "n100").split('_')[0][1:])
         nsamp_lst = [sample_count_from_graphs(gs, param_d=nmax) for gs in gras_lst]
         nworkers_lst = [max((n - 1) // 2, 1) for n in nsamp_lst]
 
@@ -453,6 +453,7 @@ def parse_run_dat(run_dat: str) -> dict[str, str]:
         "els": _parse_block(run_dat, "els"),
         "thermo": _parse_block(run_dat, "thermo"),
         "ktp": _parse_block(run_dat, "ktp"),
+        "proc": _parse_block(run_dat, "proc"),
     }
 
     return {k: v for k, v in block_dct.items() if v is not None}
@@ -464,7 +465,7 @@ def form_run_dat(run_dct: dict[str, str]) -> str:
     :param run_dct: The dictionary of a parsed run.dat file
     :return: The run.dat file contents, as a string
     """
-    keys = ["input", "spc", "pes", "els", "thermo", "ktp"]
+    keys = ["input", "spc", "pes", "els", "thermo", "ktp", "proc"]
     run_dat = ""
     for key in keys:
         if key in run_dct:
@@ -585,7 +586,7 @@ def task_lines_from_run_dict(
 
     block = run_dct.get(task_type)
     lines = [line.strip() for line in block.splitlines()]
-    if task_type == "els":
+    if task_type == "els" or task_type == "proc":
         types = ("spc", "pes")
         assert key_type in types, f"Subtask type {key_type} not in {types}"
         start_key = "ts" if key_type == "pes" else "spc"

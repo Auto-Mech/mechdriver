@@ -421,7 +421,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                         ioprinter.info_message(
                             f" - Save path: {geo_save_path}")
 
-                        if thy_info[0] == 'gaussian09':
+                        if 'gaussian' in thy_info[0]:
                             _hess_grad(inf_obj.prog, out_str, geo_save_fs,
                                        geo_save_path, locs, overwrite)
                         _hess_freqs(geo, geo_save_fs, geo_save_path,

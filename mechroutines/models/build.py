@@ -364,9 +364,10 @@ def mol_data(spc_name, spc_dct,
         rot_dists = vib_anal_dct['rot_dists']
 
     # Get the torsion strings
-    allr_str = tors_strs[0]
+    mess_multi_strs = tors_strs[0]
+    mess_hr_str = tors_strs[1]
     mdhr_dat = tors_strs[4]
-
+    print('mdhr_dat', mdhr_dat)
     # Obtain symmetry factor
     ioprinter.info_message(
         'Determining the symmetry factor...', newline=1)
@@ -424,15 +425,15 @@ def mol_data(spc_name, spc_dct,
 
     # Create info dictionary
     keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
-            'mess_hr_str', 'mdhr_dat',
+            'mess_hr_str', 'mess_multi_strs', 'mdhr_dat',
             'xmat', 'rovib_coups', 'rot_dists',
             'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl', 'ene_tsref',
-            'edown_str', 'collid_freq_str']
+            'edown_str', 'collid_freq_str', 'spc_name']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
-            allr_str, mdhr_dat,
+            mess_hr_str, mess_multi_strs, mdhr_dat,
             xmat, rovib_coups, rot_dists,
             hf0k, ene_reflvl, zpe, hf0k_trs,
-            edown_str, collid_freq_str]
+            edown_str, collid_freq_str, spc_name]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct, chn_basis_ene_dct

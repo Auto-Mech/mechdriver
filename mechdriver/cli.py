@@ -77,7 +77,7 @@ def subtasks_():
 @click.option(
     "-g",
     "--task-groups",
-    default="els,thermo,ktp",
+    default="els,thermo,ktp,proc",
     show_default=True,
     help=(
         "The task groups to set up, as a comma-separated list.\n"

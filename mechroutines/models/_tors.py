@@ -65,6 +65,7 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                     spc_dct_i.get('tors_names', None)
                     if 'md' in tors_model else None),
                 multi='md' in tors_model)
+        
         # Read the potential grids
         if read_potentials and rotors is not None:
             rotors, mdhr_dct = _read_potentials(
@@ -79,7 +80,6 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                 pot = automol.data.rotor.potential(rotor)
                 pot = automol.data.potent.squash(pot)
                 automol.data.rotor.set_potential(rotor, pot, in_place=True)
-
     return rotors, mdhr_dct, zma_locs
 
 
@@ -92,12 +92,12 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     _ = run_path
 
     # Convert the rotor objects indexing to be in geoms
+    is_mdhrv = 'v' in tors_model
     increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
     rotor_zma = automol.data.rotor.rotors_zmatrix(rotors)
 
     # Determine base-line rotor non-specific info for constraints
     all_tors_names = automol.data.rotor.rotors_torsion_names(rotors)
-    print('rotor names', all_tors_names)
     const_names = automol.zmat.set_constraint_names(
         rotor_zma, all_tors_names, tors_model)
 
@@ -105,6 +105,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     rotor_grids = automol.data.rotor.rotors_torsion_grids(rotors, increment=increment)
 
     multi_idx = None
+    projrot_str = ''
     for ridx, rotor in enumerate(rotors):
         tor_lst = automol.data.rotor.torsions(rotor)
         tor_grids = automol.data.rotor.torsion_grids(rotor)
@@ -133,9 +134,18 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 pot_obj = automol.data.potent.clean(pot_obj)
                 pot_obj = automol.data.potent.zero_coordinates_values(pot_obj)
                 automol.data.rotor.set_potential(rotor, pot_obj, in_place=True)
+            
+            if tors_model == 'mdhrv':
+                projrot_str += projrot_io.writer.rotors(
+                    axis=automol.data.tors.axis(tor),
+                    group=automol.data.tors.groups(tor)[0])
+    
+    # if not md rotor was found, just use the first 1d rotor for the vibrationally-adiabatic
+    # information
+    if multi_idx is None and is_mdhrv:
+        multi_idx = 0
 
     if multi_idx is not None:
-        is_mdhrv = 'v' in tors_model
 
         mdhr_name = automol.data.rotor.rotors_torsion_names(rotors)[multi_idx]
         mdhr_grid = automol.data.rotor.rotors_torsion_grids(rotors, increment=increment)[multi_idx]
@@ -150,18 +160,18 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
             read_hess=is_mdhrv,
             read_energy_backstep=False,
             remove_bad_points=True)
-
+        
         if is_mdhrv:
             script_str = autorun.SCRIPT_DCT['projrot']
             freqs = autorun.projrot.pot_frequencies(
-                script_str, geoms, grads, hessians, run_path)
+                script_str, geoms, grads, hessians, run_path, rotors_str=projrot_str)
         else:
             freqs = None
 
         mdhr_dct = {'pot': pot, 'freqs': freqs}
     else:
         mdhr_dct = None
-
+    
     return rotors, mdhr_dct
 
 
@@ -219,9 +229,8 @@ def make_hr_strings(rotors, mdhr_dct=None):
         :return mess_allrot_str: combination of intl and hr strs
         :return mess_hr_str: all 1dhr strs
     """
-
     # Initialize empty strings
-    mess_allr_str = ''
+    mess_multi_str = ['', '']
     mess_hr_str, mess_flux_str, projrot_str = '', '', ''
     mdhr_dat = ''
 
@@ -231,52 +240,55 @@ def make_hr_strings(rotors, mdhr_dct=None):
 
     # Get the number of rotors
     numrotors = len(rotors)
-    for rotor in rotors:
-        multirotor = automol.data.rotor.dimension(rotor)
-
+    for idx, rotor in enumerate(rotors):
+        dimension= automol.data.rotor.dimension(rotor)
         for torsion in automol.data.rotor.torsions(rotor, key_typ="geom"):
 
             # Write the rotor strings
-            hr_str, ir_str, flux_str, prot_str = _tors_strs(torsion, rotor, geo)
+            hr_str, ir_str, flux_str, prot_str = _tors_strs(torsion, rotor, geo, mdrotor=dimension > 1)
             # mess_allr_str += hr_str
-            mess_hr_str += hr_str
             mess_flux_str += flux_str
             projrot_str += prot_str
 
             # For MDHR, add the appropriate string
             if mdhr_dct is not None:
-                if ((numrotors > 1 and multirotor) or numrotors == 1):
-                    mess_allr_str += ir_str
+                if idx == 0:
+                    mess_multi_str[0] += ir_str
                 else:
-                    mess_allr_str += hr_str
+                    mess_multi_str[1] += hr_str
             else:
-                mess_allr_str += hr_str
-
+                mess_hr_str += hr_str
     # Write the mdhr dat string
     if mdhr_dct is not None:
+        # nrot is zero instead of numrotors because we have already
+        # projected out the torsional frequencies, numrotors was 
+        # also incorrect, it should be numtorsions if frequencies
+        # are not already projected 
         mdhr_dat = mess_io.writer.mdhr_data(
-            mdhr_dct['pot'], freqs=mdhr_dct['freqs'], nrot=numrotors)
+            mdhr_dct['pot'], freqs=mdhr_dct['freqs'], nrot=0)
+    return mess_multi_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
 
-    return mess_allr_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
 
-
-def _tors_strs(torsion, rotor, geo):
+def _tors_strs(torsion, rotor, geo, mdrotor=False):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
-    pot = automol.data.rotor.potential(rotor)
-    pot_dct = automol.data.potent.dict_(pot)
 
-    mess_hr_str = mess_io.writer.rotor_hindered(
-        group=automol.data.tors.groups(torsion)[0],
-        axis=automol.data.tors.axis(torsion),
-        symmetry=automol.data.tors.symmetry(torsion),
-        potential=pot_dct,
-        hmin=None,
-        hmax=None,
-        lvl_ene_max=None,
-        therm_pow_max=None,
-        geo=geo,
-        rotor_id=automol.data.tors.name(torsion))
+    if mdrotor:
+        mess_hr_str = ''
+    else:
+        pot = automol.data.rotor.potential(rotor)
+        pot_dct = automol.data.potent.dict_(pot)
+        mess_hr_str = mess_io.writer.rotor_hindered(
+            group=automol.data.tors.groups(torsion)[0],
+            axis=automol.data.tors.axis(torsion),
+            symmetry=automol.data.tors.symmetry(torsion),
+            potential=pot_dct,
+            hmin=None,
+            hmax=None,
+            lvl_ene_max=None,
+            therm_pow_max=None,
+            geo=geo,
+            rotor_id=automol.data.tors.name(torsion))
 
     mess_ir_str = mess_io.writer.rotor_internal(
         group=automol.data.tors.groups(torsion)[0],
@@ -284,7 +296,7 @@ def _tors_strs(torsion, rotor, geo):
         symmetry=automol.data.tors.symmetry(torsion),
         grid_size=50,
         mass_exp_size=5,
-        pot_exp_size=11,
+        pot_exp_size=len(pot_dct.keys()),
         hmin=13,
         hmax=101,
         geo=None,

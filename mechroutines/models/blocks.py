@@ -74,16 +74,18 @@ def species_block(inf_dct):
 
     # Build the appropriate core string
     if inf_dct['mdhr_dat']:
+        spc_name = inf_dct.get('spc_name', '')
+        mdhr_file = f'mdhr_pot_{spc_name}.dat'
         core_str = mess_io.writer.core_multirotor(
             geo=inf_dct['geom'],
             sym_factor=inf_dct['sym_factor'],
-            pot_surf_file='mdhr_pot.dat',
-            int_rot_str=inf_dct['mess_hr_str'],
+            pot_surf_file=mdhr_file,
+            int_rot_str=inf_dct['mess_multi_strs'][0],
             interp_emax=100,
             quant_lvl_emax=9
         )
-        hind_rot_str = ''
-        dat_dct['mdhr_pot.dat'] = inf_dct['mdhr_dat']
+        dat_dct[mdhr_file] = inf_dct['mdhr_dat']
+        hind_rot_str = inf_dct['mess_multi_strs'][1]
     else:
         core_str = mess_io.writer.core_rigidrotor(
             geo=inf_dct['geom'],
@@ -100,7 +102,7 @@ def species_block(inf_dct):
     spc_str = mess_io.writer.molecule(
         core=core_str,
         elec_levels=inf_dct['elec_levels'],
-        freqs=inf_dct['freqs'],
+        freqs=inf_dct['freqs'] if not inf_dct['mdhr_dat'] else (),
         hind_rot=hind_rot_str,
         xmat=inf_dct['xmat'],
         rovib_coups=inf_dct['rovib_coups'],

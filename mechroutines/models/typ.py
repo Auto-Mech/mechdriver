@@ -21,7 +21,7 @@ def nonrigid_rotations(spc_mod_dct_i):
     return bool(rot_model == 'vpt2')
 
 
-def nonrigid_tors(spc_mod_dct_i, rotors):
+def nonrigid_tors(spc_mod_dct_i, rotors, mdhr_dct=None):
     """ Determine if internal rotation portions of the vibrational
         partition function both can and should be treated with some
         non-rigid torsion model.
@@ -32,6 +32,10 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
 
         :param spc_mod_dct_i: species partition function models
         :type spc_mod_dct_i: dict[str: str]
+        :param rotors: internal rotor data
+        :type rotors: dict[str: str]
+        :param mdhr_dct: dictionary of the rotor model
+        :type mdhr_dct: dict[str:  dict[tuple: float]]
         :rtype: bool
     """
     vib_model = spc_mod_dct_i['vib']['mod']
@@ -43,7 +47,7 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
     )
     tau_hr_model = bool('tau' in tors_model and vib_model != 'vib')
     if has_tors:
-        if not automol.data.rotor.rotors_have_potentials(rotors):
+        if not automol.data.rotor.rotors_have_potentials(rotors) and mdhr_dct is None:
             print('WARNING: empty potential will crash MESS so using rigid model instead')
             has_tors = False
         
