@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
-import autofile
 import automol
+
+import autofile
 
 from . import util
 
@@ -32,9 +33,9 @@ def task_paths(
     :return: The species or reaction path
     """
     sub_path = subtask_path(subtask_key, path=path, run=run)
-    assert (
-        sub_path.exists()
-    ), f"Path for {subtask_key} {path} does not exist: {sub_path}"
+    assert sub_path.exists(), (
+        f"Path for {subtask_key} {path} does not exist: {sub_path}"
+    )
 
     # Determine the method and basis
     file_dct = util.read_input_files(path)
@@ -43,11 +44,16 @@ def task_paths(
         file_dct, task_key, key_type, runlvl=runlvl
     )
 
+    def _eq(val1: str | None, val2: str | None) -> bool:
+        if val1 is None or val2 is None:
+            return val1 == val2
+        return val1.lower() == val2.lower()
+
     thy_fs = autofile.fs.theory(sub_path)
     thy_loc = next(
         loc
         for loc in thy_fs[-1].existing()
-        if loc[0].lower() == method.lower() and loc[1].lower() == basis.lower()
+        if _eq(loc[0], method) and _eq(loc[1], basis)
     )
     thy_path = Path(thy_fs[-1].path(thy_loc))
 
@@ -77,7 +83,8 @@ def subtask_path(subtask_key: str, path: str | Path = ".", run: bool = False) ->
 
     if util.is_species_subtask_key(subtask_key):
         spc_idx = int(subtask_key) - 1
-        spc_locs = list(spc_df[["canon_enant_ich", "charge", "mult"]].iloc[spc_idx])
+        spc_locs = list(spc_df[["inchi", "charge", "mult"]].iloc[spc_idx])
+        spc_locs[0] = automol.chi.canonical_enantiomer(spc_locs[0])
         spc_fs = autofile.fs.species(root_path)
         return Path(spc_fs[-1].path(spc_locs))
 
