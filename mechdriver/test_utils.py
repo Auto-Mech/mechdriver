@@ -329,7 +329,7 @@ class TestUtils:
 class Logger(object):
     def __init__(self, file_name: str = "out.log"):
         self.stdout = sys.stdout
-        self.file = open(file_name, "a")
+        self.file = open(file_name, "w")
 
     def write(self, message):
         self.stdout.write(message)
