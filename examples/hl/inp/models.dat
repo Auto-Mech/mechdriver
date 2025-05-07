@@ -283,7 +283,7 @@ spc model_1dhrhl
     )
 end spc
 
-kin model_1dhrva
+kin model_mdhrv
     pressures = (
         1.0  
     )
@@ -308,7 +308,7 @@ kin model_1dhrva
     )
 end kin
 
-spc model_1dhrva
+spc model_mdhrv
     ene = (
         lvl1 = 1.5*dft
         lvl2 = -.5*pm3

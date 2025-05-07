@@ -367,7 +367,6 @@ def mol_data(spc_name, spc_dct,
     mess_multi_strs = tors_strs[0]
     mess_hr_str = tors_strs[1]
     mdhr_dat = tors_strs[4]
-    print('mdhr_dat', mdhr_dat)
     # Obtain symmetry factor
     ioprinter.info_message(
         'Determining the symmetry factor...', newline=1)

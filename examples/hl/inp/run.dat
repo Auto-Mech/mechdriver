@@ -19,8 +19,9 @@ els
     all hr_scan tors_model=1dhr   runlvl=pm3  inplvl=pm3
     all hr_scan tors_model=1dhrf  runlvl=pm3  inplvl=pm3
     all hr_scan tors_model=1dhrfa runlvl=pm3  inplvl=pm3
+    all hr_scan tors_model=mdhrv runlvl=pm3  inplvl=pm3
     all hr_energy tors_model=1dhr runlvl=dft  inplvl=pm3
-    all hr_hess tors_model=1dhr runlvl=pm3  inplvl=pm3
+    all hr_hess tors_model=mdhrv runlvl=pm3  inplvl=pm3
     #all hr_scan tors_model=mdhr runlvl=pm3  inplvl=pm3
 end els
 
@@ -34,6 +35,8 @@ thermo
     run_mess        kin_model=model_1dhrfa_fund spc_model=model_1dhrfa_fund
     write_mess      kin_model=model_1dhrhl  spc_model=model_1dhrhl
     run_mess        kin_model=model_1dhrhl  spc_model=model_1dhrhl
+    write_mess      kin_model=model_mdhrv  spc_model=model_mdhrv
+    run_mess        kin_model=model_mdhrv  spc_model=model_mdhrv
 end thermo
 
 ktp
