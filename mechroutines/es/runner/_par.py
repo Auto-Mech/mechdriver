@@ -126,8 +126,8 @@ def _gaussian(method_dct, prog, job=None, geo=None, spc_info=None):
             ],
         })
     elif job in (elstruct.Job.IRCF, elstruct.Job.IRCR):
-        irc_pts = method_dct.get('nirc', 12)
-        irc_step = 30
+        irc_pts = method_dct.get('nirc', 30)
+        irc_step = 15
         irc_dir = 'forward' if job == elstruct.Job.IRCF else 'reverse'
         kwargs.update({
             'job_options': [

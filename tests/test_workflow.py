@@ -39,12 +39,12 @@ def test_signature():
 
 @pytest.mark.parametrize("test_dir", TEST_DIRS)
 def test_workflow(test_dir: str):
-    """Test the entire workflow"""
+    """Test the entire workflow."""
     print(f"Running in {test_dir}...")
-    os.chdir(test_dir)
 
-    with contextlib.redirect_stdout(test_utils.Logger("out.log")):
-        mechdriver.run()
+    with contextlib.chdir(TEST_UTILS.tests_dir / test_dir):
+        with contextlib.redirect_stdout(test_utils.Logger("out.log")):
+            mechdriver.run()
 
 
 if __name__ == "__main__":

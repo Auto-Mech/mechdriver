@@ -42,4 +42,4 @@ jobs:
       # Test
       - name: Test
         run: |
-          pixi run pytest -n auto -v tests/ -k "not signature"
+          pixi run pytest -v tests/ -k "not signature"
