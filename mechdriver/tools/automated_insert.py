@@ -1,7 +1,7 @@
 """ Add a species or TS to your database
 usiing a log or xyz file
 """
-
+from pathlib import Path
 import sys
 import autofile
 import automol
@@ -813,8 +813,7 @@ def get_zrxn(geo, rxn_info, rxn_class):
     else:
         print(
             'The reactants and products found for the transition state' +
-            ' did not match those specified in user input',
-            ts_ichs, rxn_ichs)
+            ' did not match those specified in user input')
         sys.exit()
     return std_zrxn, ts_zma, ts_geo, rxn_info
 
@@ -845,7 +844,43 @@ def main(insert_dct):
         rxn_info, spc_info, rxn_class = parse_user_reaction(insert_dct)
         # user has to have specified the reaction class or the breaking/forming bonds
         # if the later, it will be inserted as an unclassified reaction
-        if insert_dct['breaking_bonds'] is not None or insert_dct['forming_bonds'] is not None:
+        graph_file = insert_dct.get("graph_file")
+        if graph_file:
+            rxn = automol.reac.from_string(Path(graph_file).read_text())
+
+            # Get geometry and z-matrix views
+            grxn = automol.reac.with_structures(rxn, "geom")
+            zrxn = automol.reac.with_structures(rxn, "zmat")
+
+            # Add given structure and update other view
+            if geo is not None:
+                grxn = automol.reac.update_structures(grxn, ts_struc=geo)
+                zrxn = automol.reac.with_structures(grxn, "zmat")
+            elif zma is not None:
+                zrxn = automol.reac.update_structures(zrxn, ts_struc=zma)
+                grxn = automol.reac.with_structures(grxn, "geom")
+            else:
+                raise ValueError(
+                    f"Must have geometry or z-matrix:\ngeo = {geo}\nzma = {zma}"
+                )
+
+            # Extract both structures, which should now be consistent
+            geo = automol.reac.ts_structure(grxn)
+            zma = automol.reac.ts_structure(zrxn)
+
+            # Check that geometry is consistent
+            ggra = automol.reac.ts_graph(grxn)
+            assert automol.graph.geometry_matches(
+                ggra, geo, stereo=False, check_ts_bonds=False
+            ), f"ggra = {ggra}\ngeo = {geo}"
+
+            # Check that z-matrix is consistent
+            zgra = automol.reac.ts_graph(zrxn)
+            assert automol.graph.zmatrix_matches(
+                zgra, zma, stereo=False, check_ts_bonds=False
+            ), f"zgra = {zgra}\nzma = {zma}"
+
+        elif insert_dct['breaking_bonds'] is not None or insert_dct['forming_bonds'] is not None:
             zrxn, zma, geo, rxn_info = build_zrxn_from_geo(
                 geo, rxn_info, rxn_class, insert_dct['rct_gra'],
                 insert_dct['breaking_bonds'], insert_dct['forming_bonds'])
@@ -1015,6 +1050,7 @@ def parse_script_options(script_input_file):
         'input_file': None,
         'output_file': None,
         'output_type': 'optimization',
+        'graph_file': None,
         'ts_locs': None,
         'ts_mult': None,
         'rxn_class': None,
