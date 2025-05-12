@@ -22,6 +22,7 @@ DEFAULT_MEM = 20
 
 ROTOR_TASKS = ("hr_scan",)
 SAMP_TASKS = ("conf_samp",)
+INP_DIR_TASKS = ("conf_energy",)
 
 
 # Functions acting on the run directory as a whole
@@ -83,9 +84,9 @@ def parse_task_memory(task_line: str, file_dct: dict[str, str]) -> int:
     mem = DEFAULT_MEM
 
     if "runlvl" in field_dct:
-        runlvl = field_dct.get("runlvl")
+        lvl = field_dct.get("runlvl")
         theory_dct = parse_theory_dat(file_dct.get("theory.dat"))
-        mem = int(float(theory_dct.get(runlvl).get("mem")))
+        mem = int(float(theory_dct.get(lvl).get("mem")))
 
     return mem
 
@@ -105,9 +106,9 @@ def parse_task_nprocs(task_line: str, file_dct: dict[str, str]) -> int:
         nprocs = int(float(field_dct.get("nprocs")))
 
     if "runlvl" in field_dct:
-        runlvl = field_dct.get("runlvl")
+        lvl = field_dct.get("runlvl")
         theory_dct = parse_theory_dat(file_dct.get("theory.dat"))
-        nprocs = int(float(theory_dct.get(runlvl).get("nprocs")))
+        nprocs = int(float(theory_dct.get(lvl).get("nprocs")))
 
     return nprocs
 
@@ -603,7 +604,8 @@ def task_method_and_basis(
     file_dct: dict[str, str],
     task_key: str,
     key_type: str,
-    runlvl: str | None = None,
+    lvl: str | None = None,
+    root: bool = True
 ) -> tuple[str, str]:
     """Extract the method and basis of a task from a file dictionary
 
@@ -611,20 +613,23 @@ def task_method_and_basis(
     :param task_key: Task key
     :param subtask_key: Subtask key
     :param key_type: The type of subtask: 'spc', 'pes', or `None`
+    :param root: Whether to return the root method/basis (inp level for SP energies)
     :return: A sequence of (task name, task line) pairs
     """
     run_dct = parse_run_dat(file_dct.get("run.dat"))
     thys_dct = parse_theory_dat(file_dct.get("theory.dat"))
 
-    if runlvl is None:
+    key = "inplvl" if root and task_key in INP_DIR_TASKS else "runlvl"
+
+    if lvl is None:
         task_lines = task_lines_from_run_dict(
             run_dct, task_type="els", key_type=key_type
         )
         task_line = next(line for line in task_lines if task_key in line)
         field_dct = parse_task_fields(task_line)
-        runlvl = field_dct.get("runlvl")
+        lvl = field_dct.get(key)
 
-    thy_dct = thys_dct.get(runlvl)
+    thy_dct = thys_dct.get(lvl)
     method = thy_dct.get("method")
     basis = thy_dct.get("basis")
     return (method, basis)

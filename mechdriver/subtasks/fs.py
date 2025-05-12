@@ -18,11 +18,38 @@ def conformer_filesystem_from_task_path(task_path: str):
     return autofile.fs.conformer(task_path)
 
 
+def task_method_and_basis(
+    task_key: str,
+    subtask_key: str,
+    path: str | Path = ".",
+    lvl: str | None = None,
+    run: bool = False,
+) -> list[Path]:
+    """Determine the subtask (species or reaction) method and basis.
+
+    :param subtask_key: Subtask key
+    :param path: Path to AutoMech run directory, containing `inp/` folder
+    :param run: Whether to do this for the run filesystem, instead of the save
+    :return: The species or reaction path
+    """
+    sub_path = subtask_path(subtask_key, path=path, run=run)
+    assert sub_path.exists(), (
+        f"Path for {subtask_key} {path} does not exist: {sub_path}"
+    )
+
+    # Determine the method and basis
+    file_dct = util.read_input_files(path)
+    key_type = util.subtask_key_type(subtask_key)
+    return util.task_method_and_basis(
+        file_dct, task_key, key_type, lvl=lvl, root=False
+    )
+
+
 def task_paths(
     task_key: str,
     subtask_key: str,
     path: str | Path = ".",
-    runlvl: str | None = None,
+    lvl: str | None = None,
     run: bool = False,
 ) -> list[Path]:
     """Determine the subtask (species or reaction) filesystem path.
@@ -41,7 +68,7 @@ def task_paths(
     file_dct = util.read_input_files(path)
     key_type = util.subtask_key_type(subtask_key)
     method, basis = util.task_method_and_basis(
-        file_dct, task_key, key_type, runlvl=runlvl
+        file_dct, task_key, key_type, lvl=lvl, root=True
     )
 
     def _eq(val1: str | None, val2: str | None) -> bool:

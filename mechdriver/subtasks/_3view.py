@@ -17,7 +17,7 @@ def display(
     task_key: str,
     subtask_key: str,
     path: str | Path = ".",
-    runlvl: str | None = None,
+    lvl: str | None = None,
     animate: bool = True,
 ) -> None:
     """Display results for a task.
@@ -25,25 +25,39 @@ def display(
     :param task_key: Task key
     :param subtask_key: Subtask key
     :param path: Path to AutoMech run directory, containing `inp/` folder
-    :param runlvl: Specify the run level (needed if there are duplicate tasks)
+    :param lvl: Specify the level (needed if there are duplicate tasks)
     """
     if not task_has_display_function(task_key):
         raise NotImplementedError(f"Display for {task_key} is not yet implemented...")
 
+    method, basis = fs.task_method_and_basis(task_key, subtask_key, path=path, lvl=lvl)
     disp_ = task_display_function(task_key)
 
-    for task_path in fs.task_paths(task_key, subtask_key, path=path, runlvl=runlvl):
-        disp_(task_path)
+    for task_path in fs.task_paths(task_key, subtask_key, path=path, lvl=lvl):
+        disp_(task_path, method=method, basis=basis)
 
 
-def _display_init_geom(task_path: str) -> None:
+def _display_init_geom(task_path: str, method: str | None = None, basis: str | None = None) -> None:
     cnf_fs = autofile.fs.conformer(task_path)
     for cnf_loc in cnf_fs[-1].existing():
         geo = cnf_fs[-1].file.geometry.read(cnf_loc)
         automol.geom.display(geo)
 
 
-def _display_conf_hess(task_path: str) -> None:
+def _display_conf_energy(task_path: str, method: str | None = None, basis: str | None = None) -> None:
+    cnf_fs = autofile.fs.conformer(task_path)
+    print(f"method: {method}")
+    print(f"basis: {basis}")
+    for cnf_loc in cnf_fs[-1].existing():
+        cnf_path = cnf_fs[-1].path(cnf_loc)
+        print(f"conformer: {cnf_path}")
+        sp_fs = autofile.fs.single_point(cnf_path)
+        sp_loc = next(loc for loc in sp_fs[-1].existing() if loc[:2] == [method, basis])
+        energy = sp_fs[-1].file.energy.read(sp_loc)
+        print(f"energy: {energy}")
+
+
+def _display_conf_hess(task_path: str, method: str | None = None, basis: str | None = None) -> None:
     cnf_fs = autofile.fs.conformer(task_path)
     geo = norm_coo = None
     for cnf_loc in cnf_fs[-1].existing():
@@ -61,7 +75,7 @@ def _display_conf_hess(task_path: str) -> None:
         automol.geom.display(geo, mode=norm_coo)
 
 
-def _display_find_ts(task_path: str) -> None:
+def _display_find_ts(task_path: str, method: str | None = None, basis: str | None = None) -> None:
     _display_conf_hess(task_path)
     zma_fs = autofile.fs.zmatrix(task_path)
     for zma_loc in zma_fs[-1].existing():
@@ -84,7 +98,7 @@ def _display_find_ts(task_path: str) -> None:
                 automol.geom.display(geos[-1])
 
 
-def _display_rpath_scan(task_path: str) -> None:
+def _display_rpath_scan(task_path: str, method: str | None = None, basis: str | None = None) -> None:
     """Display results for a "find_ts" task.
 
     :param task_path: Task path
@@ -101,6 +115,7 @@ TASK_DISPLAY_FUNCTION = {
     "find_ts": _display_find_ts,
     "conf_hess": _display_conf_hess,
     "conf_opt": _display_conf_hess,
+    "conf_energy": _display_conf_energy,
     "rpath_scan": _display_rpath_scan,
     "init_geom": _display_init_geom,
 }
