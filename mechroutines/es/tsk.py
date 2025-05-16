@@ -421,16 +421,23 @@ def conformer_tsk(job, spc_dct, spc_name,
         # ioprinter.debug_message(
         #    'uni lst that has similar ring', uni_cnf_locs_lst)
 
-        for locs in uni_rng_locs_lst:
-            # Obtain the zma from ini loc
-            ini_cnf_save_path = ini_cnf_save_fs[-1].path(locs)
+        for locs in uni_rng_locs_lst + uni_cnf_locs_lst:
+
+            # Set ring/conformer identifiers for runlvl geo
+            if locs in uni_rng_locs_lst:
+                rid, cid = locs
+                ini_locs = cid
+            else:
+                ini_locs, rid = locs
+                cid = autofile.schema.generate_new_conformer_id()
+
+            ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
             zma_locs = (0,)
             if saddle:
                 zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
-
             zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
-
+            
             # Check if the instability files exist
             if ini_zma_save_fs[-1].file.instability.exists(zma_locs):
                 print("Lower-level geometry is unstable...")
@@ -451,25 +458,6 @@ def conformer_tsk(job, spc_dct, spc_name,
                     retryfail=retryfail, zrxn=zrxn,
                     use_locs=locs, resave=resave,
                     **kwargs)
-
-        for locs in uni_cnf_locs_lst:
-            ini_locs, rid = locs
-            # Obtain the zma from ini loc
-            ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
-            ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-            zma_locs = (0,)
-            if saddle:
-                zma_locs = ts_zma_locs(spc_dct, spc_name, ini_zma_save_fs)
-            zma = ini_zma_save_fs[-1].file.zmatrix.read(zma_locs)
-            # obtain conformer filesys associated with ring at the runlevel
-            cid = autofile.schema.generate_new_conformer_id()
-            conformer.single_conformer(
-                zma, spc_info, mod_thy_info,
-                cnf_run_fs, cnf_save_fs,
-                script_str, overwrite,
-                retryfail=retryfail, zrxn=zrxn,
-                use_locs=(rid, cid), resave=resave,
-                **kwargs)
 
         # print all geometres within cnfrange
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
