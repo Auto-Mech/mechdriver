@@ -427,11 +427,9 @@ def conformer_tsk(job, spc_dct, spc_name,
             if locs in uni_rng_locs_lst:
                 rid, cid = locs
                 ini_locs = locs
-                print('unique ring conformer found', rid, cid, ini_locs)
             else:
                 ini_locs, rid = locs
                 cid = autofile.schema.generate_new_conformer_id()
-                print('unique conformer found', rid, cid, ini_locs)
 
             ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
