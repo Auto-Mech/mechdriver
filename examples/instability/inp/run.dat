@@ -2,7 +2,6 @@
 input
     run_prefix = ./run
     save_prefix = ./save
-    canonical = True
 end input
 
 spc
