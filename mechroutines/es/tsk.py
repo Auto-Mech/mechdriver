@@ -426,10 +426,12 @@ def conformer_tsk(job, spc_dct, spc_name,
             # Set ring/conformer identifiers for runlvl geo
             if locs in uni_rng_locs_lst:
                 rid, cid = locs
-                ini_locs = cid
+                ini_locs = locs
+                print('unique ring conformer found', rid, cid, ini_locs)
             else:
                 ini_locs, rid = locs
                 cid = autofile.schema.generate_new_conformer_id()
+                print('unique conformer found', rid, cid, ini_locs)
 
             ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
@@ -445,7 +447,6 @@ def conformer_tsk(job, spc_dct, spc_name,
 
                 # Determine if there is an instability, if so return prods
                 instab_zmas = automol.reac.instability_product_zmas(zma)
-                (rid, cid,) = locs
                 filesys.save.instability(
                     zma, instab_zmas, cnf_save_fs,
                     rng_locs=(rid,), tors_locs=(cid,), zma_locs=(0,))
@@ -456,7 +457,7 @@ def conformer_tsk(job, spc_dct, spc_name,
                     cnf_run_fs, cnf_save_fs,
                     script_str, overwrite,
                     retryfail=retryfail, zrxn=zrxn,
-                    use_locs=locs, resave=resave,
+                    use_locs=(rid, cid,), resave=resave,
                     **kwargs)
 
         # print all geometres within cnfrange
