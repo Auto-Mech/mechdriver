@@ -1,0 +1,9 @@
+REACTIONS
+
+C4e2E + HO2 = C4y2p3R0    1.0  0.0  0.0   # pes.subpes.channel  1.1.1
+C4e2Z + HO2 = C4y2p3R0    1.0  0.0  0.0   # pes.subpes.channel  1.1.2
+C4e2E + HO2 = C4y2p3R1    1.0  0.0  0.0   # pes.subpes.channel  1.2.3
+C4e2Z + HO2 = C4y2p3R1    1.0  0.0  0.0   # pes.subpes.channel  1.2.4
+
+END
+
