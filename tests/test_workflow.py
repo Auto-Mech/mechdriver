@@ -14,7 +14,13 @@ from mechdriver.test_utils import InvalidSignatureError
 ROOT_DIR = Path(__file__).parent.parent
 TEST_UTILS = test_utils.TestUtils(ROOT_DIR)
 TEST_DIRS = [n for n in yaml.safe_load(TEST_UTILS.config_file.read_text())]
-
+OTHER_TEST_DIRS = []
+PROMPT_TEST_DIRS = []
+for test_dir in TEST_DIRS:
+    if "prompt" in test_dir:
+        PROMPT_TEST_DIRS.append(test_dir)
+    else:
+        OTHER_TEST_DIRS.append(test_dir)
 
 TEST_UTILS.extract_archived_tests()
 
@@ -37,8 +43,18 @@ def test_signature():
             raise InvalidSignatureError(f"\n   {signed_commit}\n!~ {current_commit}")
 
 
-@pytest.mark.parametrize("test_dir", TEST_DIRS)
-def test_workflow(test_dir: str):
+@pytest.mark.parametrize("test_dir", OTHER_TEST_DIRS)
+def test_other_workflow(test_dir: str):
+    """Test the entire workflow."""
+    print(f"Running in {test_dir}...")
+
+    with contextlib.chdir(TEST_UTILS.tests_dir / test_dir):
+        with contextlib.redirect_stdout(test_utils.Logger("out.log")):
+            mechdriver.run()
+
+
+@pytest.mark.parametrize("test_dir", PROMPT_TEST_DIRS)
+def test_prompt_workflow(test_dir: str):
     """Test the entire workflow."""
     print(f"Running in {test_dir}...")
 
