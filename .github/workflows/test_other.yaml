@@ -1,4 +1,4 @@
-name: test
+name: test-other
 
 on: 
   push:
@@ -42,4 +42,4 @@ jobs:
       # Test
       - name: Test
         run: |
-          pixi run pytest -v tests/ -k "not signature"
+          pixi run pytest -v tests/ -k "not signature and not prompt"
