@@ -2,14 +2,18 @@
 input
     run_prefix = ./run
     save_prefix = ./save
+    canonical = True
 end input
 
 spc
+    # Runs canonical enantiomers *only*
     1-7
 end spc
 
 pes
-    1: 1
+    # Runs non-canonical enantiomers *only*
+    # (To verify that `canonical = True` is working)
+    1: 3-4
 end pes
 
 els
