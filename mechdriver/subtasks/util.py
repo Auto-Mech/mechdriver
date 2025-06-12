@@ -586,7 +586,7 @@ def task_lines_from_run_dict(
         return []
 
     block = run_dct.get(task_type)
-    lines = [line.strip() for line in block.splitlines()]
+    lines = [line.strip() for line in block.strip().splitlines() if line]
     if task_type == "els" or task_type == "proc":
         types = ("spc", "pes")
         assert key_type in types, f"Subtask type {key_type} not in {types}"
