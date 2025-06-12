@@ -1,0 +1,9 @@
+REACTIONS
+H2V+OV=OHV+HV 2 2 2  # same
+OHV+OHV=OV+H2V 2 2 2  # unique to mech2
+H2V+O2V=HO2V+HV 2 2 2 # unique to mech2
+OHV=HV+OV 2 2 2  # reversed
+OHV(+M)=HV+OV(+M) 2 2 2  # reversed, with third body
+OHV+M=HV+OV+M 2 2 2  # same as above, but with no parentheses 
+H2V+O(S)V=HV+OHV 2 2 2  # flipped products ordering 
+END

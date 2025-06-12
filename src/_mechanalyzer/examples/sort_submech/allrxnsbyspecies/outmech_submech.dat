@@ -1,0 +1,2641 @@
+ELEMENTS
+
+C
+H
+O
+
+END
+
+
+SPECIES
+
+AC3H5OCH2           ! SMILES: [CH2]OCC=C               InChI: InChI=1S/C4H7O/c1-3-4-5-2/h3H,1-2,4H2
+C2H                 ! SMILES: C#[C]                    InChI: InChI=1S/C2H/c1-2/h1H
+C2H2                ! SMILES: C#C                      InChI: InChI=1S/C2H2/c1-2/h1-2H
+C2H2OH              ! SMILES: OC=[CH]                  InChI: InChI=1S/C2H3O/c1-2-3/h1-3H
+C2H3                ! SMILES: C=[CH]                   InChI: InChI=1S/C2H3/c1-2/h1H,2H2
+C2H3CHO             ! SMILES: C=CC=O                   InChI: InChI=1S/C3H4O/c1-2-3-4/h2-3H,1H2
+C2H3CHOCH2          ! SMILES: C=CC1CO1                 InChI: InChI=1S/C4H6O/c1-2-4-3-5-4/h2,4H,1,3H2
+C2H3CO              ! SMILES: C=C[C]=O                 InChI: InChI=1S/C3H3O/c1-2-3-4/h2H,1H2
+C2H3COCH3           ! SMILES: CC(=O)C=C                InChI: InChI=1S/C4H6O/c1-3-4(2)5/h3H,1H2,2H3
+C2H3O1-2            ! SMILES: O1[CH]C1                 InChI: InChI=1S/C2H3O/c1-2-3-1/h1H,2H2
+C2H3OH              ! SMILES: OC=C                     InChI: InChI=1S/C2H4O/c1-2-3/h2-3H,1H2
+C2H3OO              ! SMILES: [O]OC=C                  InChI: InChI=1S/C2H3O2/c1-2-4-3/h2H,1H2
+C2H3OOH             ! SMILES: OOC=C                    InChI: InChI=1S/C2H4O2/c1-2-4-3/h2-3H,1H2
+C2H4                ! SMILES: C=C                      InChI: InChI=1S/C2H4/c1-2/h1-2H2
+C2H4COCH2OH         ! SMILES: C[CH]C(=O)CO             InChI: InChI=1S/C4H7O2/c1-2-4(6)3-5/h2,5H,3H2,1H3
+C2H4O1-2            ! SMILES: O1CC1                    InChI: InChI=1S/C2H4O/c1-2-3-1/h1-2H2
+C2H4O2H             ! SMILES: [CH2]COO                 InChI: InChI=1S/C2H5O2/c1-2-4-3/h3H,1-2H2
+C2H5                ! SMILES: C[CH2]                   InChI: InChI=1S/C2H5/c1-2/h1H2,2H3
+C2H5CHCO            ! SMILES: CCC=C=O                  InChI: InChI=1S/C4H6O/c1-2-3-4-5/h3H,2H2,1H3
+C2H5CHO             ! SMILES: CCC=O                    InChI: InChI=1S/C3H6O/c1-2-3-4/h3H,2H2,1H3
+C2H5CHOHCO          ! SMILES: CCC([C]=O)O              InChI: InChI=1S/C4H7O2/c1-2-4(6)3-5/h4,6H,2H2,1H3
+C2H5CO              ! SMILES: CC[C]=O                  InChI: InChI=1S/C3H5O/c1-2-3-4/h2H2,1H3
+C2H5COCH2           ! SMILES: CCC(=O)[CH2]             InChI: InChI=1S/C4H7O/c1-3-4(2)5/h2-3H2,1H3
+C2H5COCH3           ! SMILES: CCC(=O)C                 InChI: InChI=1S/C4H8O/c1-3-4(2)5/h3H2,1-2H3
+C2H5O               ! SMILES: CC[O]                    InChI: InChI=1S/C2H5O/c1-2-3/h2H2,1H3
+C2H5O2              ! SMILES: CCO[O]                   InChI: InChI=1S/C2H5O2/c1-2-4-3/h2H2,1H3
+C2H5O2H             ! SMILES: CCOO                     InChI: InChI=1S/C2H6O2/c1-2-4-3/h3H,2H2,1H3
+C2H5OH              ! SMILES: CCO                      InChI: InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3
+C2H6                ! SMILES: CC                       InChI: InChI=1S/C2H6/c1-2/h1-2H3
+C3H3                ! SMILES: [CH2]C#C                 InChI: InChI=1S/C3H3/c1-3-2/h1H,2H2
+C3H4-A              ! SMILES: C=C=C                    InChI: InChI=1S/C3H4/c1-3-2/h1-2H2
+C3H4-P              ! SMILES: CC#C                     InChI: InChI=1S/C3H4/c1-3-2/h1H,2H3
+C3H5-A              ! SMILES: [CH2]C=C                 InChI: InChI=1S/C3H5/c1-3-2/h3H,1-2H2
+C3H5-S              ! SMILES: CC=[CH]                  InChI: InChI=1S/C3H5/c1-3-2/h1,3H,2H3
+C3H5-T              ! SMILES: C[C]=C                   InChI: InChI=1S/C3H5/c1-3-2/h1H2,2H3
+C3H5O               ! SMILES: [O]CC=C                  InChI: InChI=1S/C3H5O/c1-2-3-4/h2H,1,3H2
+C3H5O1-2OOH-3       ! SMILES: OOCC1CO1                 InChI: InChI=1S/C3H6O3/c4-6-2-3-1-5-3/h3-4H,1-2H2
+C3H5O1-3OOH-2       ! SMILES: OOC1COC1                 InChI: InChI=1S/C3H6O3/c4-6-3-1-5-2-3/h3-4H,1-2H2
+C3H5OH              ! SMILES: OCC=C                    InChI: InChI=1S/C3H6O/c1-2-3-4/h2,4H,1,3H2
+C3H6                ! SMILES: CC=C                     InChI: InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3
+C3H6CHO-1           ! SMILES: [CH2]CCC=O               InChI: InChI=1S/C4H7O/c1-2-3-4-5/h4H,1-3H2
+C3H6CHO-2           ! SMILES: C[CH]CC=O                InChI: InChI=1S/C4H7O/c1-2-3-4-5/h2,4H,3H2,1H3
+C3H6O1-2            ! SMILES: CC1CO1                   InChI: InChI=1S/C3H6O/c1-3-2-4-3/h3H,2H2,1H3
+C3H6O1-3            ! SMILES: C1CCO1                   InChI: InChI=1S/C3H6O/c1-2-4-3-1/h1-3H2
+C3H6OH1-1           ! SMILES: CC[CH]O                  InChI: InChI=1S/C3H7O/c1-2-3-4/h3-4H,2H2,1H3
+C3H6OH1-2           ! SMILES: C[CH]CO                  InChI: InChI=1S/C3H7O/c1-2-3-4/h2,4H,3H2,1H3
+C3H6OH2-1           ! SMILES: CC(O)[CH2]               InChI: InChI=1S/C3H7O/c1-3(2)4/h3-4H,1H2,2H3
+C3H6OOH1-2          ! SMILES: C[CH]COO                 InChI: InChI=1S/C3H7O2/c1-2-3-5-4/h2,4H,3H2,1H3
+C3H6OOH1-3          ! SMILES: [CH2]CCOO                InChI: InChI=1S/C3H7O2/c1-2-3-5-4/h4H,1-3H2
+C3H6OOH2-1          ! SMILES: OOC([CH2])C              InChI: InChI=1S/C3H7O2/c1-3(2)5-4/h3-4H,1H2,2H3
+C3H8                ! SMILES: CCC                      InChI: InChI=1S/C3H8/c1-3-2/h3H2,1-2H3
+C3KET12             ! SMILES: CC(C=O)OO                InChI: InChI=1S/C3H6O3/c1-3(2-4)6-5/h2-3,5H,1H3
+C3KET13             ! SMILES: OOCCC=O                  InChI: InChI=1S/C3H6O3/c4-2-1-3-6-5/h2,5H,1,3H2
+C3KET21             ! SMILES: CC(=O)COO                InChI: InChI=1S/C3H6O3/c1-3(4)2-6-5/h5H,2H2,1H3
+C4H10               ! SMILES: CCCC                     InChI: InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3
+C4H3-N              ! SMILES: [CH]=CC#C                InChI: InChI=1S/C4H3/c1-3-4-2/h1-3H
+C4H4                ! SMILES: C=CC#C                   InChI: InChI=1S/C4H4/c1-3-4-2/h1,4H,2H2
+C4H5-2              ! SMILES: CC#C[CH2]                InChI: InChI=1S/C4H5/c1-3-4-2/h1H2,2H3
+C4H5-I              ! SMILES: C=[C]C=C                 InChI: InChI=1S/C4H5/c1-3-4-2/h3H,1-2H2
+C4H5-N              ! SMILES: C=CC=[CH]                InChI: InChI=1S/C4H5/c1-3-4-2/h1,3-4H,2H2
+C4H5OH-13           ! SMILES: OC=CC=C                  InChI: InChI=1S/C4H6O/c1-2-3-4-5/h2-5H,1H2
+C4H6                ! SMILES: C=CC=C                   InChI: InChI=1S/C4H6/c1-3-4-2/h3-4H,1-2H2
+C4H612              ! SMILES: CC=C=C                   InChI: InChI=1S/C4H6/c1-3-4-2/h4H,1H2,2H3
+C4H6O1-3OOH4        ! SMILES: [O]C(C=C)COO             InChI: InChI=1S/C4H7O3/c1-2-4(5)3-7-6/h2,4,6H,1,3H2
+C4H6O23             ! SMILES: C1CC=CO1                 InChI: InChI=1S/C4H6O/c1-2-4-5-3-1/h1,3H,2,4H2
+C4H6OHOOH1-2-3      ! SMILES: OOC(C(=C)O)C             InChI: InChI=1S/C4H8O3/c1-3(5)4(2)7-6/h4-6H,1H2,2H3
+C4H6OHOOH1-4-3      ! SMILES: OCC(C=C)OO               InChI: InChI=1S/C4H8O3/c1-2-4(3-5)7-6/h2,4-6H,1,3H2
+C4H71-1             ! SMILES: CCC=[CH]                 InChI: InChI=1S/C4H7/c1-3-4-2/h1,3H,4H2,2H3
+C4H71-3             ! SMILES: C[CH]C=C                 InChI: InChI=1S/C4H7/c1-3-4-2/h3-4H,1H2,2H3
+C4H71-3,4OOH        ! SMILES: OOCC(OO)C[CH2]           InChI: InChI=1S/C4H9O4/c1-2-4(8-6)3-7-5/h4-6H,1-3H2
+C4H71-3OOH          ! SMILES: CC(C=C)OO                InChI: InChI=1S/C4H8O2/c1-3-4(2)6-5/h3-5H,1H2,2H3
+C4H71-4             ! SMILES: [CH2]CC=C                InChI: InChI=1S/C4H7/c1-3-4-2/h3H,1-2,4H2
+C4H71-4O2           ! SMILES: [O]OCCC=C                InChI: InChI=1S/C4H7O2/c1-2-3-4-6-5/h2H,1,3-4H2
+C4H71-4OOH          ! SMILES: OOCCC=C                  InChI: InChI=1S/C4H8O2/c1-2-3-4-6-5/h2,5H,1,3-4H2
+C4H71-O             ! SMILES: CC(C=C)[O]               InChI: InChI=1S/C4H7O/c1-3-4(2)5/h3-4H,1H2,2H3
+C4H72-2             ! SMILES: C[C]=CC                  InChI: InChI=1S/C4H7/c1-3-4-2/h3H,1-2H3
+C4H7O1-4            ! SMILES: [O]CCC=C                 InChI: InChI=1S/C4H7O/c1-2-3-4-5/h2H,1,3-4H2
+C4H7O2-1            ! SMILES: CC=CC[O]                 InChI: InChI=1S/C4H7O/c1-2-3-4-5/h2-3H,4H2,1H3
+C4H7O2-1,3OOH       ! SMILES: OOCC(C(OO)C)[O]          InChI: InChI=1S/C4H9O5/c1-3(9-7)4(5)2-8-6/h3-4,6-7H,2H2,1H3
+C4H8-1              ! SMILES: CCC=C                    InChI: InChI=1S/C4H8/c1-3-4-2/h3H,1,4H2,2H3
+C4H8-2              ! SMILES: CC=CC                    InChI: InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3
+C4H8OOH1-3          ! SMILES: C[CH]CCOO                InChI: InChI=1S/C4H9O2/c1-2-3-4-6-5/h2,5H,3-4H2,1H3
+C4H8OOH2-4          ! SMILES: CC(OO)C[CH2]             InChI: InChI=1S/C4H9O2/c1-3-4(2)6-5/h4-5H,1,3H2,2H3
+C6H101-3,3          ! SMILES: CC=C(C=C)C               InChI: InChI=1S/C6H10/c1-4-6(3)5-2/h4-5H,1H2,2-3H3
+C8H131-5,3-4,TA     ! SMILES: C=C[C](C(C=C)C)C         InChI: InChI=1S/C8H13/c1-5-7(3)8(4)6-2/h5-7H,1-2H2,3-4H3
+CC3H6               ! SMILES: C1CC1                    InChI: InChI=1S/C3H6/c1-2-3-1/h1-3H2
+CCY(COCC)OH         ! SMILES: OC1COC1C                 InChI: InChI=1S/C4H8O2/c1-3-4(5)2-6-3/h3-5H,2H2,1H3
+CH                  ! SMILES: [CH]                     InChI: InChI=1S/CH/h1H
+CH2                 ! SMILES: [CH2]                    InChI: InChI=1S/CH2/h1H2
+CH2(S)              ! SMILES: [CH2]                    InChI: InChI=1S/CH2/h1H2
+CH2CCH2OH           ! SMILES: OC[C]=C                  InChI: InChI=1S/C3H5O/c1-2-3-4/h4H,1,3H2
+CH2CH2CHO           ! SMILES: [CH2]CC=O                InChI: InChI=1S/C3H5O/c1-2-3-4/h3H,1-2H2
+CH2CH2COCH3         ! SMILES: [CH2]CC(=O)C             InChI: InChI=1S/C4H7O/c1-3-4(2)5/h1,3H2,2H3
+CH2CHCHCHO          ! SMILES: [CH2]C=CC=O              InChI: InChI=1S/C4H5O/c1-2-3-4-5/h2-4H,1H2
+CH2CHO              ! SMILES: [CH2]C=O                 InChI: InChI=1S/C2H3O/c1-2-3/h2H,1H2
+CH2CHOCH2           ! SMILES: [CH2]OC=C                InChI: InChI=1S/C3H5O/c1-3-4-2/h3H,1-2H2
+CH2CO               ! SMILES: C=C=O                    InChI: InChI=1S/C2H2O/c1-2-3/h1H2
+CH2COHCHO           ! SMILES: OC(=C)C=O                InChI: InChI=1S/C3H4O2/c1-3(5)2-4/h2,5H,1H2
+CH2COHCO            ! SMILES: OC(=C)[C]=O              InChI: InChI=1S/C3H3O2/c1-3(5)2-4/h5H,1H2
+CH2O                ! SMILES: C=O                      InChI: InChI=1S/CH2O/c1-2/h1H2
+CH2OCH2O2H          ! SMILES: [CH2]OCOO                InChI: InChI=1S/C2H5O3/c1-4-2-5-3/h3H,1-2H2
+CH2OCHO             ! SMILES: [CH2]OC=O                InChI: InChI=1S/C2H3O2/c1-4-2-3/h2H,1H2
+CH2OH               ! SMILES: [CH2]O                   InChI: InChI=1S/CH3O/c1-2/h2H,1H2
+CH3                 ! SMILES: [CH3]                    InChI: InChI=1S/CH3/h1H3
+CH3CHCO             ! SMILES: CC=C=O                   InChI: InChI=1S/C3H4O/c1-2-3-4/h2H,1H3
+CH3CHCOCH3          ! SMILES: C[CH]C(=O)C              InChI: InChI=1S/C4H7O/c1-3-4(2)5/h3H,1-2H3
+CH3CHO              ! SMILES: CC=O                     InChI: InChI=1S/C2H4O/c1-2-3/h2H,1H3
+CH3CO               ! SMILES: C[C]=O                   InChI: InChI=1S/C2H3O/c1-2-3/h1H3
+CH3CO2              ! SMILES: CC(=O)[O]                InChI: InChI=1S/C2H3O2/c1-2(3)4/h1H3
+CH3CO3              ! SMILES: CC(=O)O[O]               InChI: InChI=1S/C2H3O3/c1-2(3)5-4/h1H3
+CH3CO3H             ! SMILES: CC(=O)OO                 InChI: InChI=1S/C2H4O3/c1-2(3)5-4/h4H,1H3
+CH3COCH2O           ! SMILES: CC(=O)C[O]               InChI: InChI=1S/C3H5O2/c1-3(5)2-4/h2H2,1H3
+CH3COCH3            ! SMILES: CC(=O)C                  InChI: InChI=1S/C3H6O/c1-3(2)4/h1-2H3
+CH3COCOHCH3         ! SMILES: CC(=O)[C](O)C            InChI: InChI=1S/C4H7O2/c1-3(5)4(2)6/h5H,1-2H3
+CH3COHCO            ! SMILES: CC(=C=O)O                InChI: InChI=1S/C3H4O2/c1-3(5)2-4/h5H,1H3
+CH3O                ! SMILES: C[O]                     InChI: InChI=1S/CH3O/c1-2/h1H3
+CH3O2               ! SMILES: CO[O]                    InChI: InChI=1S/CH3O2/c1-3-2/h1H3
+CH3O2H              ! SMILES: COO                      InChI: InChI=1S/CH4O2/c1-3-2/h2H,1H3
+CH3OCH2             ! SMILES: CO[CH2]                  InChI: InChI=1S/C2H5O/c1-3-2/h1H2,2H3
+CH3OCH2O            ! SMILES: COC[O]                   InChI: InChI=1S/C2H5O2/c1-4-2-3/h2H2,1H3
+CH3OCH2O2           ! SMILES: COCO[O]                  InChI: InChI=1S/C2H5O3/c1-4-2-5-3/h2H2,1H3
+CH3OCH2O2H          ! SMILES: COCOO                    InChI: InChI=1S/C2H6O3/c1-4-2-5-3/h3H,2H2,1H3
+CH3OCH3             ! SMILES: COC                      InChI: InChI=1S/C2H6O/c1-3-2/h1-2H3
+CH3OCHO             ! SMILES: COC=O                    InChI: InChI=1S/C2H4O2/c1-4-2-3/h2H,1H3
+CH3OCO              ! SMILES: CO[C]=O                  InChI: InChI=1S/C2H3O2/c1-4-2-3/h1H3
+CH3OH               ! SMILES: CO                       InChI: InChI=1S/CH4O/c1-2/h2H,1H3
+CH4                 ! SMILES: C                        InChI: InChI=1S/CH4/h1H4
+CHCHO               ! SMILES: [CH]CO                   InChI: InChI=1S/C2H4O/c1-2-3/h1,3H,2H2
+CHOCHO              ! SMILES: O=CC=O                   InChI: InChI=1S/C2H2O2/c3-1-2-4/h1-2H
+CO                  ! SMILES: [C]=O                    InChI: InChI=1S/CO/c1-2
+CO2                 ! SMILES: O=C=O                    InChI: InChI=1S/CO2/c2-1-3
+COHQCYC(COC)        ! SMILES: CC1(CO1)C(OO)O           InChI: InChI=1S/C4H8O4/c1-4(2-7-4)3(5)8-6/h3,5-6H,2H2,1H3
+CY(CCCO)COH         ! SMILES: OCC1CCO1                 InChI: InChI=1S/C4H8O2/c5-3-4-1-2-6-4/h4-5H,1-3H2
+H                   ! SMILES: [H]                      InChI: InChI=1S/H
+H2                  ! SMILES: [H][H]                   InChI: InChI=1S/H2/h1H
+H2CC                ! SMILES: C=[C]                    InChI: InChI=1S/C2H2/c1-2/h1H2
+H2O                 ! SMILES: O                        InChI: InChI=1S/H2O/h1H2
+H2O2                ! SMILES: OO                       InChI: InChI=1S/H2O2/c1-2/h1-2H
+HCCOH               ! SMILES: OC#C                     InChI: InChI=1S/C2H2O/c1-2-3/h1,3H
+HCO                 ! SMILES: [CH]=O                   InChI: InChI=1S/CHO/c1-2/h1H
+HO2                 ! SMILES: O[O]                     InChI: InChI=1S/HO2/c1-2/h1H
+HO2CH2CHO           ! SMILES: OOCC=O                   InChI: InChI=1S/C2H4O3/c3-1-2-5-4/h1,4H,2H2
+HO2CH2CO            ! SMILES: OOC[C]=O                 InChI: InChI=1S/C2H3O3/c3-1-2-5-4/h4H,2H2
+HO2CHO              ! SMILES: OOC=O                    InChI: InChI=1S/CH2O3/c2-1-4-3/h1,3H
+HOC3H6O2            ! SMILES: OCC(O[O])C               InChI: InChI=1S/C3H7O3/c1-3(2-4)6-5/h3-4H,2H2,1H3
+HOCH2CHO            ! SMILES: OCC=O                    InChI: InChI=1S/C2H4O2/c3-1-2-4/h1,4H,2H2
+HOCH2CO             ! SMILES: OC[C]=O                  InChI: InChI=1S/C2H3O2/c3-1-2-4/h3H,1H2
+HOCHCHO             ! SMILES: O[CH]C=O                 InChI: InChI=1S/C2H3O2/c3-1-2-4/h1-3H
+HOCHO               ! SMILES: OC=O                     AMChI: AMChI=1/CH2O2/c2-1-3/h1,3H
+IC3H5OCH2           ! SMILES: [CH2]OC(=C)C             InChI: InChI=1S/C4H7O/c1-4(2)5-3/h1,3H2,2H3
+IC3H5OH             ! SMILES: CC(=C)O                  InChI: InChI=1S/C3H6O/c1-3(2)4/h4H,1H2,2H3
+IC3H6CHO            ! SMILES: O=CC([CH2])C             InChI: InChI=1S/C4H7O/c1-4(2)3-5/h3-4H,1H2,2H3
+IC3H6CO             ! SMILES: O=C=C(C)C                InChI: InChI=1S/C4H6O/c1-4(2)3-5/h1-2H3
+IC3H7               ! SMILES: C[CH]C                   InChI: InChI=1S/C3H7/c1-3-2/h3H,1-2H3
+IC3H7CHO            ! SMILES: O=CC(C)C                 InChI: InChI=1S/C4H8O/c1-4(2)3-5/h3-4H,1-2H3
+IC3H7CO             ! SMILES: O=[C]C(C)C               InChI: InChI=1S/C4H7O/c1-4(2)3-5/h4H,1-2H3
+IC3H7O              ! SMILES: CC([O])C                 InChI: InChI=1S/C3H7O/c1-3(2)4/h3H,1-2H3
+IC3H7O2             ! SMILES: [O]OC(C)C                InChI: InChI=1S/C3H7O2/c1-3(2)5-4/h3H,1-2H3
+IC3H7O2H            ! SMILES: OOC(C)C                  InChI: InChI=1S/C3H8O2/c1-3(2)5-4/h3-4H,1-2H3
+IC4H10              ! SMILES: CC(C)C                   InChI: InChI=1S/C4H10/c1-4(2)3/h4H,1-3H3
+IC4H7               ! SMILES: CC(=C)[CH2]              InChI: InChI=1S/C4H7/c1-4(2)3/h1-2H2,3H3
+IC4H7-I1            ! SMILES: CC(=[CH])C               InChI: InChI=1S/C4H7/c1-4(2)3/h1H,2-3H3
+IC4H7O              ! SMILES: CC(=C)C[O]               InChI: InChI=1S/C4H7O/c1-4(2)3-5/h1,3H2,2H3
+IC4H8               ! SMILES: CC(=C)C                  InChI: InChI=1S/C4H8/c1-4(2)3/h1H2,2-3H3
+IC4H8O2H-I          ! SMILES: OOCC([CH2])C             InChI: InChI=1S/C4H9O2/c1-4(2)3-6-5/h4-5H,1,3H2,2H3
+IC4H9               ! SMILES: CC([CH2])C               InChI: InChI=1S/C4H9/c1-4(2)3/h4H,1H2,2-3H3
+IC4H9O              ! SMILES: [O]CC(C)C                InChI: InChI=1S/C4H9O/c1-4(2)3-5/h4H,3H2,1-2H3
+IC4H9O2             ! SMILES: [O]OCC(C)C               InChI: InChI=1S/C4H9O2/c1-4(2)3-6-5/h4H,3H2,1-2H3
+IC4H9O2H            ! SMILES: OOCC(C)C                 InChI: InChI=1S/C4H10O2/c1-4(2)3-6-5/h4-5H,3H2,1-2H3
+NC3H7               ! SMILES: CC[CH2]                  InChI: InChI=1S/C3H7/c1-3-2/h1,3H2,2H3
+NC3H7CO             ! SMILES: CCC[C]=O                 InChI: InChI=1S/C4H7O/c1-2-3-4-5/h2-3H2,1H3
+NC3H7O              ! SMILES: CCC[O]                   InChI: InChI=1S/C3H7O/c1-2-3-4/h2-3H2,1H3
+NC3H7O2             ! SMILES: CCCO[O]                  InChI: InChI=1S/C3H7O2/c1-2-3-5-4/h2-3H2,1H3
+NC3H7O2H            ! SMILES: CCCOO                    InChI: InChI=1S/C3H8O2/c1-2-3-5-4/h4H,2-3H2,1H3
+NC4KET12OH          ! SMILES: CCC(C=O)O                InChI: InChI=1S/C4H8O2/c1-2-4(6)3-5/h3-4,6H,2H2,1H3
+NC4KET13            ! SMILES: CC(OO)CC=O               InChI: InChI=1S/C4H8O3/c1-4(7-6)2-3-5/h3-4,6H,2H2,1H3
+NC4KET13OH-2        ! SMILES: OOC(C(C=O)O)C            InChI: InChI=1S/C4H8O4/c1-3(8-7)4(6)2-5/h2-4,6-7H,1H3
+NC4KET21OH          ! SMILES: CCC(=O)CO                InChI: InChI=1S/C4H8O2/c1-2-4(6)3-5/h5H,2-3H2,1H3
+NC4KET23            ! SMILES: CC(C(=O)C)OO             InChI: InChI=1S/C4H8O3/c1-3(5)4(2)7-6/h4,6H,1-2H3
+NC4KET23OH          ! SMILES: CC(=O)C(O)C              InChI: InChI=1S/C4H8O2/c1-3(5)4(2)6/h3,5H,1-2H3
+O                   ! SMILES: [O]                      InChI: InChI=1S/O
+O2                  ! SMILES: [O][O]                   InChI: InChI=1S/O2/c1-2
+O2C2H4OH            ! SMILES: OCCO[O]                  InChI: InChI=1S/C2H5O3/c3-1-2-5-4/h3H,1-2H2
+O2CH2CHO            ! SMILES: [O]OCC=O                 InChI: InChI=1S/C2H3O3/c3-1-2-5-4/h1H,2H2
+O2CHO               ! SMILES: [O]OC=O                  InChI: InChI=1S/CHO3/c2-1-4-3/h1H
+OCHO                ! SMILES: [O]C=O                   InChI: InChI=1S/CHO2/c2-1-3/h1H
+OH                  ! SMILES: [OH]                     InChI: InChI=1S/HO/h1H
+PC2H4OH             ! SMILES: [CH2]CO                  InChI: InChI=1S/C2H5O/c1-2-3/h3H,1-2H2
+PC4H8OH-1           ! SMILES: CCC[CH]O                 InChI: InChI=1S/C4H9O/c1-2-3-4-5/h4-5H,2-3H2,1H3
+PC4H8OH-3           ! SMILES: C[CH]CCO                 InChI: InChI=1S/C4H9O/c1-2-3-4-5/h2,5H,3-4H2,1H3
+PC4H8OH-4           ! SMILES: [CH2]CCCO                InChI: InChI=1S/C4H9O/c1-2-3-4-5/h5H,1-4H2
+PC4H9               ! SMILES: CCC[CH2]                 InChI: InChI=1S/C4H9/c1-3-4-2/h1,3-4H2,2H3
+PC4H9O              ! SMILES: CCCC[O]                  InChI: InChI=1S/C4H9O/c1-2-3-4-5/h2-4H2,1H3
+PC4H9O2             ! SMILES: CCCCO[O]                 InChI: InChI=1S/C4H9O2/c1-2-3-4-6-5/h2-4H2,1H3
+PC4H9O2H            ! SMILES: CCCCOO                   InChI: InChI=1S/C4H10O2/c1-2-3-4-6-5/h5H,2-4H2,1H3
+PQC4H8OS            ! SMILES: CCC(COO)[O]              InChI: InChI=1S/C4H9O3/c1-2-4(5)3-7-6/h4,6H,2-3H2,1H3
+SC2H2OH             ! SMILES: O[C]=C                   InChI: InChI=1S/C2H3O/c1-2-3/h3H,1H2
+SC2H4OH             ! SMILES: C[CH]O                   InChI: InChI=1S/C2H5O/c1-2-3/h2-3H,1H3
+SC3H5CHO            ! SMILES: CC=CC=O                  InChI: InChI=1S/C4H6O/c1-2-3-4-5/h2-4H,1H3
+SC3H5CO             ! SMILES: CC=C[C]=O                InChI: InChI=1S/C4H5O/c1-2-3-4-5/h2-3H,1H3
+SC3H5OCH2-1         ! SMILES: [CH2]OC=CC               InChI: InChI=1S/C4H7O/c1-3-4-5-2/h3-4H,2H2,1H3
+SC3H5OH             ! SMILES: CC=CO                    InChI: InChI=1S/C3H6O/c1-2-3-4/h2-4H,1H3
+SC4H8OH-1           ! SMILES: CCC(O)[CH2]              InChI: InChI=1S/C4H9O/c1-3-4(2)5/h4-5H,2-3H2,1H3
+SC4H9               ! SMILES: C[CH]CC                  InChI: InChI=1S/C4H9/c1-3-4-2/h3H,4H2,1-2H3
+SC4H9O              ! SMILES: CCC([O])C                InChI: InChI=1S/C4H9O/c1-3-4(2)5/h4H,3H2,1-2H3
+SC4H9O2             ! SMILES: CC(O[O])CC               InChI: InChI=1S/C4H9O2/c1-3-4(2)6-5/h4H,3H2,1-2H3
+SC4H9O2H            ! SMILES: CC(OO)CC                 InChI: InChI=1S/C4H10O2/c1-3-4(2)6-5/h4-5H,3H2,1-2H3
+SQC4H7OHP-4         ! SMILES: [CH2]CC(OO)CO            InChI: InChI=1S/C4H9O3/c1-2-4(3-5)7-6/h4-6H,1-3H2
+SQC4H7OHS-4         ! SMILES: OOC(C(O)[CH2])C          InChI: InChI=1S/C4H9O3/c1-3(5)4(2)7-6/h3-6H,1H2,2H3
+SQC4H8OS            ! SMILES: OOC(C([O])C)C            InChI: InChI=1S/C4H9O3/c1-3(5)4(2)7-6/h3-4,6H,1-2H3
+TC4H9               ! SMILES: C[C](C)C                 InChI: InChI=1S/C4H9/c1-4(2)3/h1-3H3
+TC4H9O              ! SMILES: CC([O])(C)C              InChI: InChI=1S/C4H9O/c1-4(2,3)5/h1-3H3
+TC4H9O2             ! SMILES: [O]OC(C)(C)C             InChI: InChI=1S/C4H9O2/c1-4(2,3)6-5/h1-3H3
+TC4H9O2H            ! SMILES: OOC(C)(C)C               InChI: InChI=1S/C4H10O2/c1-4(2,3)6-5/h5H,1-3H3
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       FUEL
+!!!!!!!!!!!!!!!!!!!!!!!!!
+C2H4 (+M) = H2 + H2CC (+M)                              8.000E+12     0.440    88770  # pes.subpes  42.1
+  LOW  /                                                7.000E+50    -9.310    99860  /
+  TROE /   7.345E-01   1.800E+02   1.035E+03   5.417E+03 /
+  H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+
+C2H3 + H (+M) = C2H4 (+M)                               6.080E+12     0.270      280  # pes.subpes  42.1
+  LOW  /                                                1.400E+30    -3.860     3320  /
+  TROE /   7.820E-01   2.075E+02   2.663E+03   6.095E+03 /
+  H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   HE/0.700/   
+
+C2H4 + H (+M) = C2H5 (+M)                               9.569E+08     1.463     1355  # pes.subpes  43.1
+  LOW  /                                                1.419E+39    -6.642     5769  /
+  TROE /  -5.690E-01   2.990E+02  -9.147E+03   1.524E+02 /
+  H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+
+C2H4 + H = C2H3 + H2                                    5.070E+07     1.930    12950  # pes.subpes  43.2
+
+CH2(S) + CH3 = C2H4 + H                                 2.000E+13     0.000        0  # pes.subpes  43.3
+
+CH + CH4 = C2H4 + H                                     6.000E+13     0.000        0  # pes.subpes  43.4
+
+C2H5 + H = C2H4 + H2                                    2.000E+12     0.000        0  # pes.subpes  44.2
+
+C2H4 + O = CH2CHO + H                                   6.098E+06     1.880      183  # pes.subpes  49.3
+
+C2H4 + O = CH3 + HCO                                    7.453E+06     1.880      183  # pes.subpes  49.4
+
+C2H4 + OH = PC2H4OH                                     2.560E+36    -7.752     6946  # pes.subpes  50.1
+  PLOG /                                    1.000E-02   1.740E+43   -10.461     7699 /
+  PLOG /                                    2.500E-02   3.250E+37    -8.629     5215 /
+  PLOG /                                    1.000E-01   1.840E+35    -7.750     4909 /
+  PLOG /                                    1.000E+00   2.560E+36    -7.752     6946 /
+  PLOG /                                    1.000E+01   3.700E+33    -6.573     7606 /
+  PLOG /                                    1.000E+02   1.120E+26    -4.101     5757 /
+
+C2H4 + OH = CH3CHO + H                                  2.380E-02     3.910     1723  # pes.subpes  50.1
+  PLOG /                                    1.000E-02   2.370E-07     5.300    -2051 /
+  PLOG /                                    2.500E-02   8.730E-05     4.570     -618 /
+  PLOG /                                    1.000E-01   4.030E-01     3.540     1882 /
+  PLOG /                                    1.000E+00   2.380E-02     3.910     1723 /
+  PLOG /                                    1.000E+01   8.250E+08     1.010    10507 /
+  PLOG /                                    1.000E+02   6.800E+09     0.810    13867 /
+
+C2H4 + OH = CH3 + CH2O                                  1.780E+05     1.680     2060  # pes.subpes  50.1
+  PLOG /                                    1.000E-02   5.350E+00     2.920    -1733 /
+  PLOG /                                    2.500E-02   3.190E+01     2.710    -1172 /
+  PLOG /                                    1.000E-01   5.550E+02     2.360     -181 /
+  PLOG /                                    1.000E+00   1.780E+05     1.680     2060 /
+  PLOG /                                    1.000E+01   2.370E+09     0.560     6007 /
+  PLOG /                                    1.000E+02   2.760E+13    -0.500    11455 /
+
+C2H4 + OH = C2H3OH + H                                  3.190E+05     2.190     5256  # pes.subpes  50.1
+  PLOG /                                    1.000E-02   1.040E+04     2.600     4121 /
+  PLOG /                                    2.500E-02   1.070E+04     2.600     4129 /
+  PLOG /                                    1.000E-01   1.520E+04     2.560     4238 /
+  PLOG /                                    1.000E+00   3.190E+05     2.190     5256 /
+  PLOG /                                    1.000E+01   1.940E+08     1.430     7829 /
+  PLOG /                                    1.000E+02   8.550E+10     0.750    11491 /
+
+C2H4 + OH = C2H3 + H2O                                  2.230E+04     2.745     2216  # pes.subpes  50.5
+
+C2H5OH = C2H4 + H2O                                     5.230E+43    -8.900    81507  # pes.subpes  51.1
+  PLOG /                                    1.000E-03   3.410E+59   -14.200    83673 /
+  PLOG /                                    1.000E-02   2.620E+57   -13.300    85262 /
+  PLOG /                                    1.000E-01   1.650E+52   -11.500    84746 /
+  PLOG /                                    1.000E+00   5.230E+43    -8.900    81507 /
+  PLOG /                                    1.000E+01   4.590E+32    -5.600    76062 /
+  PLOG /                                    1.000E+02   3.840E+20    -2.060    69466 /
+
+C2H4 + O2 = C2H3 + HO2                                  4.220E+13     0.000    57623  # pes.subpes  56.4
+
+C2H5O2 = C2H4 + HO2                                     2.701E+37    -8.470    35840  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   1.782E+32    -7.100    32840 /
+  PLOG /                                    1.000E+00   2.701E+37    -8.470    35840 /
+  PLOG /                                    1.000E+01   1.980E+38    -8.460    37900 /
+
+C2H5 + O2 = C2H4 + HO2                                  1.843E+07     1.130     -721  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   2.094E+09     0.490     -391 /
+  PLOG /                                    1.000E+00   1.843E+07     1.130     -721 /
+  PLOG /                                    1.000E+01   7.561E+14    -1.010     4749 /
+
+C2H4O2H = C2H4 + HO2                                    6.825E+40    -9.610    23840  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   3.918E+40   -10.200    22250 /
+  PLOG /                                    1.000E+00   6.825E+40    -9.610    23840 /
+  PLOG /                                    1.000E+01   3.980E+34    -7.250    23250 /
+
+C2H4 + HO2 = C2H4O1-2 + OH                              3.345E+12     0.000    17190  # pes.subpes  57.1
+
+CH2(S) + C2H4 = CC3H6                                   1.350E+54   -13.000    18900  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   1.440E+51   -13.100    14200 /
+  PLOG /                                    1.000E-01   3.380E+54   -13.600    16500 /
+  PLOG /                                    1.000E+00   1.350E+54   -13.000    18900 /
+  PLOG /                                    1.000E+01   2.730E+47   -10.800    14200 /
+  PLOG /                                    1.000E+02   2.710E+50   -11.200    16700 /
+  DUP
+CH2(S) + C2H4 = CC3H6                                   1.810E+37    -8.550     5521
+  PLOG /                                    1.000E-02   6.160E+40   -10.500     5428 /
+  PLOG /                                    1.000E-01   6.930E+41   -10.300     6189 /
+  PLOG /                                    1.000E+00   1.810E+37    -8.550     5521 /
+  PLOG /                                    1.000E+01   4.260E+37    -8.320     4770 /
+  PLOG /                                    1.000E+02   4.680E+35    -7.370     4689 /
+  DUP
+
+CH2(S) + C2H4 = C3H6                                    2.130E+58   -13.500    20400  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   4.820E+57   -14.300    17100 /
+  PLOG /                                    1.000E-01   3.840E+59   -14.400    18400 /
+  PLOG /                                    1.000E+00   2.130E+58   -13.500    20400 /
+  PLOG /                                    1.000E+01   8.480E+52   -11.600    20700 /
+  PLOG /                                    1.000E+02   6.070E+47    -9.850    22100 /
+  DUP
+CH2(S) + C2H4 = C3H6                                    1.300E+40    -8.770     5864
+  PLOG /                                    1.000E-02   1.150E+45   -11.100     6145 /
+  PLOG /                                    1.000E-01   1.830E+45   -10.700     6638 /
+  PLOG /                                    1.000E+00   1.300E+40    -8.770     5864 /
+  PLOG /                                    1.000E+01   2.270E+32    -6.140     4318 /
+  PLOG /                                    1.000E+02   1.280E+24    -3.490     2530 /
+  DUP
+
+CH2(S) + C2H4 = C3H5-A + H                              4.440E+35    -6.550    13900  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   8.200E+19    -2.060     1150 /
+  PLOG /                                    1.000E-01   2.270E+21    -2.440     2650 /
+  PLOG /                                    1.000E+00   4.440E+35    -6.550    13900 /
+  PLOG /                                    1.000E+01   1.180E+28    -4.090    14000 /
+  PLOG /                                    1.000E+02   6.510E+26    -3.580    18900 /
+  DUP
+CH2(S) + C2H4 = C3H5-A + H                              3.890E+14    -0.420     1238
+  PLOG /                                    1.000E-02   1.080E+07     1.620    -3175 /
+  PLOG /                                    1.000E-01   1.370E+05     2.150    -3799 /
+  PLOG /                                    1.000E+00   3.890E+14    -0.420     1238 /
+  PLOG /                                    1.000E+01   2.450E+10     0.670      751 /
+  PLOG /                                    1.000E+02   1.810E+02     2.970     -746 /
+  DUP
+
+CH2(S) + C2H4 = C2H3 + CH3                              4.160E+24    -3.190     9760  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   1.770E+19    -1.940     6790 /
+  PLOG /                                    1.000E-01   1.680E+19    -1.800     4310 /
+  PLOG /                                    1.000E+00   4.160E+24    -3.190     9760 /
+  PLOG /                                    1.000E+01   7.890E+24    -3.070    13900 /
+  PLOG /                                    1.000E+02   7.360E+29    -4.280    23800 /
+  DUP
+CH2(S) + C2H4 = C2H3 + CH3                              4.920E+09     1.020      600
+  PLOG /                                    1.000E-02   4.300E+12     0.190     -110 /
+  PLOG /                                    1.000E-01   2.260E+11     0.540       48 /
+  PLOG /                                    1.000E+00   4.920E+09     1.020      600 /
+  PLOG /                                    1.000E+01   1.470E+08     1.330     1228 /
+  PLOG /                                    1.000E+02   8.110E+10     0.550     5506 /
+  DUP
+
+C3H6 + H = C2H4 + CH3                                   2.670E+12     0.470     5431  # pes.subpes  77.1
+  PLOG /                                    1.300E-03   1.540E+09     1.350     2542 /
+  PLOG /                                    4.000E-02   7.880E+10     0.870     3600 /
+  PLOG /                                    1.000E+00   2.670E+12     0.470     5431 /
+  PLOG /                                    1.000E+01   9.250E+22    -2.600    12898 /
+  PLOG /                                    1.000E+02   1.320E+23    -2.420    16500 /
+  DUP
+C3H6 + H = C2H4 + CH3                                   1.000E-10     0.000        0
+  PLOG /                                    1.300E-03   1.000E-10     0.000        0 /
+  PLOG /                                    4.000E-02   1.000E-10     0.000        0 /
+  PLOG /                                    1.000E+00   1.000E-10     0.000        0 /
+  PLOG /                                    1.000E+01   1.240E+05     2.520     3679 /
+  PLOG /                                    1.000E+02   2.510E+03     2.910     3981 /
+  DUP
+
+C2H4 + CH3 = NC3H7                                      7.670E+47   -11.170    22366  # pes.subpes  77.1
+  PLOG /                                    1.300E-03   8.670E+48   -12.540    18206 /
+  PLOG /                                    4.000E-02   1.060E+49   -12.040    20001 /
+  PLOG /                                    1.000E+00   7.670E+47   -11.170    22366 /
+  PLOG /                                    1.000E+01   1.810E+45   -10.030    23769 /
+  PLOG /                                    1.000E+02   2.040E+40    -8.250    24214 /
+  DUP
+C2H4 + CH3 = NC3H7                                      2.600E+33    -7.460    12416
+  PLOG /                                    1.300E-03   1.120E+43   -11.300    13080 /
+  PLOG /                                    4.000E-02   7.280E+39    -9.880    13164 /
+  PLOG /                                    1.000E+00   2.600E+33    -7.460    12416 /
+  PLOG /                                    1.000E+01   3.850E+27    -5.380    11455 /
+  PLOG /                                    1.000E+02   1.660E+21    -3.170    10241 /
+  DUP
+
+C2H4 + CH3 = C2H3 + CH4                                 9.760E+02     2.947    15148  # pes.subpes  77.3
+  DUP
+C2H4 + CH3 = C2H3 + CH4                                 8.130E-05     4.417     8836
+  DUP
+
+C2H5 + CH3 = CH4 + C2H4                                 1.180E+04     2.450    -2921  # pes.subpes  78.2
+
+C3H3 + OH = C2H4 + CO                                   1.000E+13     0.000        0  # pes.subpes  82.4
+
+C3H4-A + O = C2H4 + CO                                  2.000E+07     1.800     1000  # pes.subpes  82.9
+
+C3H4-P + O = C2H4 + CO                                  1.000E+13     0.000     2250  # pes.subpes  82.11
+
+CH2CO + CH2(S) = C2H4 + CO                              1.600E+14     0.000        0  # pes.subpes  82.14
+
+CH2CHOCH2 = C2H4 + HCO                                  1.440E+36    -7.760    28008  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   8.230E+26    -5.840    19357 /
+  PLOG /                                    1.000E-02   1.320E+29    -6.210    21294 /
+  PLOG /                                    1.000E-01   3.470E+32    -6.960    24197 /
+  PLOG /                                    1.000E+00   1.440E+36    -7.760    28008 /
+  PLOG /                                    1.000E+01   9.720E+37    -8.020    32395 /
+  PLOG /                                    1.000E+02   2.430E+31    -5.810    34296 /
+  PLOG /                                    1.000E+03   3.730E+14    -0.726    32008 /
+
+CH2CH2CHO = C2H4 + HCO                                  1.010E+34    -6.700    30018  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   2.900E+32    -7.240    25688 /
+  PLOG /                                    1.000E-02   5.300E+33    -7.280    27101 /
+  PLOG /                                    1.000E-01   2.000E+35    -7.410    29027 /
+  PLOG /                                    1.000E+00   1.010E+34    -6.700    30018 /
+  PLOG /                                    1.000E+01   9.760E+27    -4.630    28924 /
+  PLOG /                                    1.000E+02   2.110E+19    -1.850    26240 /
+  PLOG /                                    1.000E+03   1.590E+13     0.063    24086 /
+
+CH2CCH2OH = HCO + C2H4                                  9.240E+10     0.870    30460  # pes.subpes  83.1
+
+C3H5O = C2H4 + HCO                                      1.070E+24    -4.160    18985  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   6.620E+16    -2.840    13197 /
+  PLOG /                                    1.000E-02   1.260E+20    -3.530    15469 /
+  PLOG /                                    1.000E-01   2.130E+21    -3.640    16584 /
+  PLOG /                                    1.000E+00   1.070E+24    -4.160    18985 /
+  PLOG /                                    1.000E+01   8.420E+25    -4.400    22383 /
+  PLOG /                                    1.000E+02   1.860E+21    -2.730    23659 /
+  PLOG /                                    1.000E+03   4.750E+08     1.140    20922 /
+
+C2H3 + CH2O = C2H4 + HCO                                1.420E+10     0.209     3934  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   1.110E+07     1.090     1807 /
+  PLOG /                                    1.000E-02   2.470E+07     0.993     1995 /
+  PLOG /                                    1.000E-01   2.470E+08     0.704     2596 /
+  PLOG /                                    1.000E+00   1.420E+10     0.209     3934 /
+  PLOG /                                    1.000E+01   3.450E+13    -0.726     6944 /
+  PLOG /                                    1.000E+02   3.310E+14    -0.866    10966 /
+  PLOG /                                    1.000E+03   1.650E+01     3.170     9400 /
+
+C3H5-S + O = C2H4 + HCO                                 6.000E+13     0.000        0  # pes.subpes  83.10
+
+C3H6O1-2 = C2H4 + CH2O                                  6.000E+14     0.000    60000  # pes.subpes  84.3
+
+C3H6O1-3 = C2H4 + CH2O                                  6.000E+14     0.000    60000  # pes.subpes  84.4
+
+C3H5-S + OH => C2H4 + HCO + H                           5.000E+12     0.000        0  # pes.subpes  84.14
+
+C2H4 + CH3O = C2H3 + CH3OH                              1.200E+11     0.000     6750  # pes.subpes  85.8
+
+C3H4-A + HO2 => C2H4 + CO + OH                          1.000E+11     0.000    14000  # pes.subpes  91.18
+
+C3H4-P + HO2 => C2H4 + CO + OH                          3.000E+12     0.000    19000  # pes.subpes  91.20
+
+C3H5-S + HO2 => C2H4 + HCO + OH                         2.000E+13     0.000        0  # pes.subpes  92.9
+
+C3H6OOH1-3 => OH + CH2O + C2H4                          2.890E+09     1.300    26700  # pes.subpes  93.1
+
+C3H6OOH1-2 => C2H4 + CH2O + OH                          1.310E+33    -7.010    48120  # pes.subpes  93.1
+
+C2H4 + CH3O2 = C2H4O1-2 + CH3O                          2.820E+12     0.000    17110  # pes.subpes  93.3
+
+C2H4 + CH3O2 = C2H3 + CH3O2H                            8.590E+00     3.754    27132  # pes.subpes  93.4
+
+H2CC + C2H4 = C4H6                                      1.000E+12     0.000        0  # pes.subpes  110.1
+
+C2H3 + C2H3 = C2H2 + C2H4                               9.600E+11     0.000        0  # pes.subpes  110.2
+
+C4H71-4 = C2H4 + C2H3                                   2.840E+10     0.990    38999  # pes.subpes  111.1
+
+C4H6 + H = C2H4 + C2H3                                  1.460E+30    -4.340    21647  # pes.subpes  111.1
+  PLOG /                                    1.000E+00   1.460E+30    -4.340    21647 /
+  PLOG /                                    1.000E+01   5.450E+30    -4.510    21877 /
+
+C2H4 + C2H4 = C2H5 + C2H3                               4.820E+14     0.000    71530  # pes.subpes  112.4
+
+SC4H9 = C2H4 + C2H5                                     4.540E+42    -9.540    50839  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   8.300E+25    -5.750    39343 /
+  PLOG /                                    1.000E-02   4.120E+27    -5.940    39859 /
+  PLOG /                                    1.000E-01   5.570E+32    -7.100    43029 /
+  PLOG /                                    1.000E+00   4.540E+42    -9.540    50839 /
+  PLOG /                                    1.000E+01   1.060E+49   -10.900    58899 /
+  PLOG /                                    1.000E+02   9.940E+42    -8.700    61203 /
+
+PC4H9 = C2H4 + C2H5                                     7.470E+43    -9.670    38722  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   3.440E+34    -8.100    28397 /
+  PLOG /                                    1.000E-02   1.110E+39    -9.050    31891 /
+  PLOG /                                    1.000E-01   7.740E+42    -9.780    35771 /
+  PLOG /                                    1.000E+00   7.470E+43    -9.670    38722 /
+  PLOG /                                    1.000E+01   2.060E+39    -7.970    38955 /
+  PLOG /                                    1.000E+02   1.480E+29    -4.710    35950 /
+
+C4H8-2 + H = C2H4 + C2H5                                3.010E+17    -1.090    14023  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   8.960E+06     1.860     6209 /
+  PLOG /                                    1.000E-02   1.920E+07     1.770     6443 /
+  PLOG /                                    1.000E-01   3.970E+09     1.110     8097 /
+  PLOG /                                    1.000E+00   3.010E+17    -1.090    14023 /
+  PLOG /                                    1.000E+01   1.880E+29    -4.330    24297 /
+  PLOG /                                    1.000E+02   5.150E+33    -5.390    32601 /
+
+C4H8-1 + H = C2H4 + C2H5                                9.470E+16    -1.030    13413  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   2.550E+06     1.930     5564 /
+  PLOG /                                    1.000E-02   5.560E+06     1.830     5802 /
+  PLOG /                                    1.000E-01   1.210E+09     1.180     7472 /
+  PLOG /                                    1.000E+00   9.470E+16    -1.030    13413 /
+  PLOG /                                    1.000E+01   4.500E+28    -4.240    23618 /
+  PLOG /                                    1.000E+02   7.020E+32    -5.220    31754 /
+  DUP
+C4H8-1 + H = C2H4 + C2H5                                6.020E+15    -0.490     8452
+  PLOG /                                    1.000E-03   3.450E+07     1.810     2263 /
+  PLOG /                                    1.000E-02   8.060E+07     1.710     2522 /
+  PLOG /                                    1.000E-01   1.180E+10     1.100     4077 /
+  PLOG /                                    1.000E+00   6.020E+15    -0.490     8452 /
+  PLOG /                                    1.000E+01   7.580E+21    -2.140    14245 /
+  PLOG /                                    1.000E+02   2.290E+21    -1.870    17243 /
+  DUP
+
+C4H6O23 = C2H4 + CH2CO                                  5.750E+15     0.000    69300  # pes.subpes  119.1
+
+C4H612 + O = CH2CO + C2H4                               1.200E+08     1.650      327  # pes.subpes  119.15
+
+CH2CH2COCH3 = C2H4 + CH3CO                              1.590E+13     0.063    24086  # pes.subpes  120.1
+
+C4H71-O = C2H4 + CH3CO                                  4.750E+08     1.140    20922  # pes.subpes  120.1
+
+C2H3 + CH3CHO = C2H4 + CH3CO                            1.650E+01     3.170     9400  # pes.subpes  120.1
+
+C3H6CHO-1 = C2H4 + CH2CHO                               7.400E+11     0.000    21970  # pes.subpes  120.7
+
+C4H8OOH2-4 => OH + CH3CHO + C2H4                        3.080E+08     1.500    23500  # pes.subpes  130.2
+
+C2H4 + C2H5O2 = C2H4O1-2 + C2H5O                        2.820E+12     0.000    17110  # pes.subpes  130.9
+
+C2H4 + C2H5O2 = C2H3 + C2H5O2H                          8.590E+00     3.754    27132  # pes.subpes  130.10
+
+CY(CCCO)COH + H => C2H4 + HOCH2CO + H2                  5.000E+12     0.000        0  # pes.subpes  130.53
+
+C2H4 + CH3CO3 = C2H3 + CH3CO3H                          1.130E+13     0.000    30430  # pes.subpes  135.6
+
+CY(CCCO)COH + O => C2H4 + HOCH2CO + OH                  5.000E+12     0.000        0  # pes.subpes  136.33
+
+SQC4H7OHP-4 => OH + HOCH2CHO + C2H4                     3.080E+08     1.500    23500  # pes.subpes  137.2
+
+CY(CCCO)COH + OH => C2H4 + HOCH2CO + H2O                5.000E+12     0.000        0  # pes.subpes  137.55
+
+C4H71-3,4OOH => C2H4 + OH + HO2CH2CHO                   1.230E+09     1.300    24900  # pes.subpes  142.1
+
+CY(CCCO)COH + HO2 => C2H4 + HOCH2CO + H2O2              1.000E+13     0.000    15000  # pes.subpes  142.21
+
+C3H4-P + C2H3 = C3H3 + C2H4                             1.000E+12     0.000     7700  # pes.subpes  149.1
+
+C3H5-A + C2H3 = C3H4-A + C2H4                           1.000E+12     0.000        0  # pes.subpes  150.1
+
+C3H5-A + C2H5 = C2H4 + C3H6                             4.000E+11     0.000        0  # pes.subpes  152.2
+
+C3H8 + C2H3 = IC3H7 + C2H4                              1.000E+11     0.000    10400  # pes.subpes  153.2
+
+C3H8 + C2H3 = NC3H7 + C2H4                              1.000E+11     0.000    10400  # pes.subpes  153.3
+
+C2H3CHO + C2H3 = C2H3CO + C2H4                          1.740E+12     0.000     8440  # pes.subpes  157.1
+
+C2H5CHO + C2H3 = C2H5CO + C2H4                          1.700E+12     0.000     8440  # pes.subpes  159.1
+
+CH2COHCHO + C2H3 = CH2COHCO + C2H4                      1.740E+12     0.000     8440  # pes.subpes  164.1
+
+IC3H7O2 + C2H4 = IC3H7O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes  167.11
+
+NC3H7O2 + C2H4 = NC3H7O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes  167.13
+
+CY(CCCO)COH + CH3 => C2H4 + HOCH2CO + CH4               2.000E+11     0.000    10000  # pes.subpes  167.22
+
+CY(CCCO)COH + CH3O2 => C2H4 + HOCH2CO + CH3O2H          1.000E+13     0.000    19000  # pes.subpes  176.8
+
+C4H6 + C2H3 = C4H5-I + C2H4                             2.500E+13     0.000    19800  # pes.subpes  182.3
+
+C4H6 + C2H3 = C4H5-N + C2H4                             5.000E+13     0.000    22800  # pes.subpes  182.4
+
+C2H3 + C4H71-3 = C2H4 + C4H6                            3.980E+12     0.000        0  # pes.subpes  183.3
+
+C4H71-3 + C2H5 = C4H8-1 + C2H4                          2.590E+12     0.000     -131  # pes.subpes  184.2
+
+C4H10 + C2H3 = PC4H9 + C2H4                             1.000E+12     0.000    18000  # pes.subpes  185.3
+
+C4H10 + C2H3 = SC4H9 + C2H4                             8.000E+11     0.000    16800  # pes.subpes  185.4
+
+SC3H5CHO + C2H3 = CH2CHCHCHO + C2H4                     2.210E+00     3.500     4682  # pes.subpes  187.1
+
+SC3H5CHO + C2H3 = SC3H5CO + C2H4                        1.110E+00     3.500     4682  # pes.subpes  187.2
+
+C2H5COCH3 + C2H3 = C2H5COCH2 + C2H4                     6.150E+10     0.000     4278  # pes.subpes  188.1
+
+C2H5COCH3 + C2H3 = CH2CH2COCH3 + C2H4                   5.000E+11     0.000    10400  # pes.subpes  188.2
+
+C2H5COCH3 + C2H3 = CH3CHCOCH3 + C2H4                    3.000E+11     0.000     3400  # pes.subpes  188.3
+
+C4H71-4O2 + C2H4 = C4H71-4OOH + C2H3                    1.130E+13     0.000    30430  # pes.subpes  191.1
+
+NC4KET12OH + C2H3 = C2H5CHOHCO + C2H4                   3.256E+05     2.000     3966  # pes.subpes  191.2
+
+NC4KET21OH + C2H3 = C2H4COCH2OH + C2H4                  3.000E+11     0.000     3400  # pes.subpes  191.3
+
+NC4KET23OH + C2H3 = CH3COCOHCH3 + C2H4                  3.000E+11     0.000     3400  # pes.subpes  191.4
+
+IC4H9O2 + C2H4 = IC4H9O2H + C2H3                        8.590E+00     3.754    27132  # pes.subpes  193.4
+
+PC4H9O2 + C2H4 = PC4H9O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes  193.9
+
+SC4H9O2 + C2H4 = SC4H9O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes  193.10
+
+TC4H9O2 + C2H4 = TC4H9O2H + C2H3                        8.590E+00     3.754    27132  # pes.subpes  193.11
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       FUEL_ADD_CH3
+!!!!!!!!!!!!!!!!!!!!!!!!!
+C3H6 + H = NC3H7                                        1.040E+49   -11.500    15359  # pes.subpes  77.1
+  PLOG /                                    1.300E-03   7.990E+81   -23.161    22239 /
+  PLOG /                                    4.000E-02   4.240E+68   -18.427    19665 /
+  PLOG /                                    1.000E+00   1.040E+49   -11.500    15359 /
+  PLOG /                                    1.000E+01   6.200E+41    -8.892    14637 /
+  PLOG /                                    1.000E+02   1.000E-10     0.000        0 /
+  DUP
+C3H6 + H = NC3H7                                        3.780E+28    -5.570     5625
+  PLOG /                                    1.300E-03   1.850E+26    -5.830     3866 /
+  PLOG /                                    4.000E-02   2.820E+30    -6.490     5471 /
+  PLOG /                                    1.000E+00   3.780E+28    -5.570     5625 /
+  PLOG /                                    1.000E+01   1.460E+25    -4.280     5248 /
+  PLOG /                                    1.000E+02   4.220E+27    -4.390     9346 /
+  DUP
+
+C3H6 + H = IC3H7                                        3.260E+61   -14.940    20161  # pes.subpes  77.2
+  PLOG /                                    1.300E-03   1.350E+44   -10.680     8196 /
+  PLOG /                                    4.000E-02   2.110E+57   -14.230    15147 /
+  PLOG /                                    1.000E+00   3.260E+61   -14.940    20161 /
+  PLOG /                                    1.000E+01   5.300E+56   -13.120    20667 /
+  PLOG /                                    1.000E+02   1.110E+50   -10.800    20202 /
+  DUP
+C3H6 + H = IC3H7                                        1.060E+30    -5.630     5613
+  PLOG /                                    1.300E-03   2.170E+130  -32.580   136140 /
+  PLOG /                                    4.000E-02   2.250E+29    -5.840     4242 /
+  PLOG /                                    1.000E+00   1.060E+30    -5.630     5613 /
+  PLOG /                                    1.000E+01   6.110E+26    -4.440     5182 /
+  PLOG /                                    1.000E+02   2.730E+23    -3.260     4597 /
+  DUP
+
+NC3H7 + H = C3H8                                        1.000E+14     0.000        0  # pes.subpes  78.1
+
+IC3H7 + H = C3H8                                        1.000E+14     0.000        0  # pes.subpes  78.1
+
+C3H8 + H = IC3H7 + H2                                   1.300E+06     2.400     4471  # pes.subpes  79.2
+
+C3H8 + H = NC3H7 + H2                                   3.490E+05     2.690     6450  # pes.subpes  79.3
+
+IC3H7 + O = CH3CHO + CH3                                4.818E+13     0.000        0  # pes.subpes  85.22
+
+IC3H7 + O = CH3COCH3 + H                                4.818E+13     0.000        0  # pes.subpes  85.23
+
+C3H8 + O = IC3H7 + OH                                   5.490E+05     2.500     3140  # pes.subpes  86.1
+
+C3H8 + O = NC3H7 + OH                                   3.710E+06     2.400     5505  # pes.subpes  86.2
+
+IC3H7 + OH = C3H6 + H2O                                 2.410E+13     0.000        0  # pes.subpes  86.3
+
+C3H8 + OH = IC3H7 + H2O                                 4.670E+07     1.610      -35  # pes.subpes  87.5
+
+C3H8 + OH = NC3H7 + H2O                                 1.054E+10     0.970     1586  # pes.subpes  87.6
+
+NC3H7 + O2 = NC3H7O2                                    2.090E+13    -0.499     -938  # pes.subpes  93.1
+  PLOG /                                    1.000E-02   9.200E+08     0.405    -4399 /
+  PLOG /                                    1.000E-01   1.450E+14    -0.984    -1711 /
+  PLOG /                                    1.000E+00   2.090E+13    -0.499     -938 /
+  PLOG /                                    1.000E+01   1.150E+20    -2.420     2451 /
+  PLOG /                                    1.000E+02   2.070E+16    -1.300      803 /
+
+NC3H7 + O2 = C3H6 + HO2                                 1.312E-09     5.660     3050  # pes.subpes  93.1
+  DUP
+NC3H7 + O2 = C3H6 + HO2                                 8.047E+00     3.320     6470
+  DUP
+
+IC3H7 + O2 = IC3H7O2                                    1.540E+18    -2.020     -499  # pes.subpes  93.1
+  PLOG /                                    1.000E-02   7.330E+05     1.330    -6346 /
+  PLOG /                                    1.000E-01   2.240E+11    -0.105    -3698 /
+  PLOG /                                    1.000E+00   1.540E+18    -2.020     -499 /
+  PLOG /                                    1.000E+01   6.740E+27    -4.850     3780 /
+  PLOG /                                    1.000E+02   1.670E+29    -5.150     5036 /
+
+C3H6 + HO2 = IC3H7 + O2                                 1.000E+00     0.000        0  # pes.subpes  93.1
+  PLOG /                                    1.300E-02   1.020E+07     1.160    10273 /
+  PLOG /                                    9.869E-01   1.310E+20    -2.580    19078 /
+  PLOG /                                    9.870E+00   4.140E+28    -4.920    26212 /
+  PLOG /                                    9.869E+01   8.870E+22    -3.090    26586 /
+
+C3H8 + O2 = IC3H7 + HO2                                 2.000E+13     0.000    49640  # pes.subpes  94.4
+
+C3H8 + O2 = NC3H7 + HO2                                 6.000E+13     0.000    52290  # pes.subpes  94.5
+
+IC3H7 + HO2 = IC3H7O + OH                               7.000E+12     0.000    -1000  # pes.subpes  94.7
+
+NC3H7 + HO2 = NC3H7O + OH                               7.000E+12     0.000    -1000  # pes.subpes  94.8
+
+C3H8 + HO2 = IC3H7 + H2O2                               6.320E+01     3.370    13720  # pes.subpes  95.3
+
+C3H8 + HO2 = NC3H7 + H2O2                               4.080E+01     3.590    17160  # pes.subpes  95.4
+
+C4H10 (+M) = NC3H7 + CH3 (+M)                           6.600E+52   -10.626   100330  # pes.subpes  114.1
+  LOW  /                                                5.340E+17     0.000    42959  /
+  TROE /   9.502E-02   1.000E-20   5.348E+03   4.326E+03 /
+
+IC4H10 (+M) = CH3 + IC3H7 (+M)                          2.520E+31    -4.102    91495  # pes.subpes  114.2
+  LOW  /                                                2.410E+19     0.000    52576  /
+  TROE /   3.662E-01   8.153E+02   6.079E+01   1.000E+20 /
+
+C3H8 + CH3 = IC3H7 + CH4                                6.400E+04     2.170     7520  # pes.subpes  115.1
+
+C3H8 + CH3 = NC3H7 + CH4                                9.040E-01     3.650     7154  # pes.subpes  115.2
+
+IC3H7 + CO = IC3H7CO                                    1.500E+11     0.000     4810  # pes.subpes  120.13
+
+NC3H7CO = NC3H7 + CO                                    1.000E+11     0.000     9600  # pes.subpes  120.14
+
+C2H5CHCO + H = NC3H7 + CO                               4.400E+12     0.000     1459  # pes.subpes  120.16
+
+IC3H7 + HCO = IC3H7CHO                                  1.810E+13     0.000        0  # pes.subpes  121.1
+
+C4H8-1 + O = NC3H7 + HCO                                7.450E+06     1.880      183  # pes.subpes  121.7
+
+IC4H8 + O = IC3H7 + HCO                                 7.450E+06     1.880      183  # pes.subpes  121.12
+
+CH2O + IC3H7 = IC4H9O                                   5.000E+10     0.000     2330  # pes.subpes  122.8
+
+NC3H7 + CH2O = PC4H9O                                   5.000E+03     2.425     3239  # pes.subpes  122.12
+
+C3H8 + CH3O = IC3H7 + CH3OH                             3.000E+11     0.000     7000  # pes.subpes  124.3
+
+C3H8 + CH3O = NC3H7 + CH3OH                             3.000E+11     0.000     7000  # pes.subpes  124.4
+
+C2H5CHCO + OH = NC3H7 + CO2                             3.730E+12     0.000    -1010  # pes.subpes  128.13
+
+IC3H6CO + OH = IC3H7 + CO2                              1.730E+12     0.000    -1010  # pes.subpes  128.27
+
+IC3H7 + CH3O2 = IC3H7O + CH3O                           7.000E+12     0.000    -1000  # pes.subpes  131.7
+
+NC3H7 + CH3O2 = NC3H7O + CH3O                           7.000E+12     0.000    -1000  # pes.subpes  131.13
+
+C3H8 + CH3O2 = IC3H7 + CH3O2H                           1.019E+01     3.580    14810  # pes.subpes  132.2
+
+C3H8 + CH3O2 = NC3H7 + CH3O2H                           1.386E+00     3.970    18280  # pes.subpes  132.3
+
+C3H8 + O2CHO = IC3H7 + HO2CHO                           1.475E+04     2.600    13910  # pes.subpes  137.12
+
+C3H8 + O2CHO = NC3H7 + HO2CHO                           5.520E+04     2.550    16480  # pes.subpes  137.13
+
+C3H8 + C2H5O2 = IC3H7 + C2H5O2H                         1.019E+01     3.580    14810  # pes.subpes  169.1
+
+C3H8 + C2H5O2 = NC3H7 + C2H5O2H                         1.386E+00     3.970    18280  # pes.subpes  169.2
+
+C3H8 + CH3CO3 = IC3H7 + CH3CO3H                         2.000E+12     0.000    17000  # pes.subpes  172.5
+
+C3H8 + CH3CO3 = NC3H7 + CH3CO3H                         1.700E+13     0.000    20460  # pes.subpes  172.6
+
+C3H8 + C3H5-A = IC3H7 + C3H6                            7.940E+11     0.000    16200  # pes.subpes  185.1
+
+C3H8 + C3H5-A = NC3H7 + C3H6                            7.940E+11     0.000    20500  # pes.subpes  185.2
+
+C3H8 + IC3H7 = NC3H7 + C3H8                             3.000E+10     0.000    12900  # pes.subpes  186.1
+
+C2H5CHO + IC3H7 = C2H5CO + C3H8                         1.700E+12     0.000     8440  # pes.subpes  189.4
+
+C2H5CHO + NC3H7 = C2H5CO + C3H8                         1.700E+12     0.000     8440  # pes.subpes  189.5
+
+IC3H7O2 + IC3H7 = IC3H7O + IC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  194.1
+
+IC3H7O2 + NC3H7 = IC3H7O + NC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  194.2
+
+NC3H7O2 + IC3H7 = NC3H7O + IC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  194.4
+
+NC3H7O2 + NC3H7 = NC3H7O + NC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  194.5
+
+C3H8 + IC3H7O2 = IC3H7 + IC3H7O2H                       2.000E+12     0.000    17000  # pes.subpes  195.3
+
+C3H8 + IC3H7O2 = NC3H7 + IC3H7O2H                       1.700E+13     0.000    20460  # pes.subpes  195.4
+
+C3H8 + NC3H7O2 = IC3H7 + NC3H7O2H                       2.000E+12     0.000    17000  # pes.subpes  195.8
+
+C3H8 + NC3H7O2 = NC3H7 + NC3H7O2H                       1.700E+13     0.000    20460  # pes.subpes  195.9
+
+C4H71-4O2 + IC3H7 = C4H7O1-4 + IC3H7O                   7.000E+12     0.000    -1000  # pes.subpes  212.3
+
+C4H71-4O2 + NC3H7 = C4H7O1-4 + NC3H7O                   7.000E+12     0.000    -1000  # pes.subpes  212.4
+
+C4H71-4O2 + C3H8 = C4H71-4OOH + IC3H7                   2.000E+12     0.000    17000  # pes.subpes  213.1
+
+C4H71-4O2 + C3H8 = C4H71-4OOH + NC3H7                   1.700E+13     0.000    20460  # pes.subpes  213.2
+
+IC4H9O2 + IC3H7 = IC4H9O + IC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.3
+
+IC4H9O2 + NC3H7 = IC4H9O + NC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.4
+
+PC4H9O2 + IC3H7 = PC4H9O + IC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.7
+
+PC4H9O2 + NC3H7 = PC4H9O + NC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.8
+
+SC4H9O2 + IC3H7 = SC4H9O + IC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.11
+
+SC4H9O2 + NC3H7 = SC4H9O + NC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.12
+
+TC4H9O2 + IC3H7 = TC4H9O + IC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.15
+
+TC4H9O2 + NC3H7 = TC4H9O + NC3H7O                       7.000E+12     0.000    -1000  # pes.subpes  214.16
+
+IC4H9O2 + C3H8 = IC4H9O2H + IC3H7                       2.000E+12     0.000    17000  # pes.subpes  215.9
+
+IC4H9O2 + C3H8 = IC4H9O2H + NC3H7                       1.700E+13     0.000    20460  # pes.subpes  215.10
+
+PC4H9O2 + C3H8 = PC4H9O2H + IC3H7                       2.000E+12     0.000    17000  # pes.subpes  215.11
+
+PC4H9O2 + C3H8 = PC4H9O2H + NC3H7                       1.700E+13     0.000    20460  # pes.subpes  215.12
+
+SC4H9O2 + C3H8 = SC4H9O2H + IC3H7                       2.000E+12     0.000    17000  # pes.subpes  215.13
+
+SC4H9O2 + C3H8 = SC4H9O2H + NC3H7                       1.700E+13     0.000    20460  # pes.subpes  215.14
+
+TC4H9O2 + C3H8 = TC4H9O2H + IC3H7                       2.000E+12     0.000    17000  # pes.subpes  215.15
+
+TC4H9O2 + C3H8 = TC4H9O2H + NC3H7                       1.700E+13     0.000    20460  # pes.subpes  215.16
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       FUEL_ADD_H
+!!!!!!!!!!!!!!!!!!!!!!!!!
+CH3 + CH3 = H + C2H5                                    3.100E+14    -0.362    13372  # pes.subpes  44.1
+  PLOG /                                    1.000E-02   4.740E+12     0.105    10664 /
+  PLOG /                                    1.000E-01   2.570E+13    -0.096    11406 /
+  PLOG /                                    1.000E+00   3.100E+14    -0.362    13372 /
+  PLOG /                                    1.000E+01   2.150E+10     0.885    13532 /
+  PLOG /                                    1.000E+02   1.032E+02     3.230    11236 /
+
+C2H5 + H (+M) = C2H6 (+M)                               5.210E+17    -0.990     1580  # pes.subpes  44.1
+  LOW  /                                                1.990E+41    -7.080     6685  /
+  TROE /   8.420E-01   1.250E+02   2.219E+03   6.882E+03 /
+  H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   HE/0.700/   
+
+C2H6 + H = C2H5 + H2                                    1.150E+08     1.900     7530  # pes.subpes  45.1
+
+C2H5 + O = CH3CHO + H                                   1.100E+14     0.000        0  # pes.subpes  50.7
+
+C2H5OH = C2H5 + OH                                      4.460E+65   -14.900   112345  # pes.subpes  51.1
+  PLOG /                                    1.000E-03   8.100E+46   -11.300   111053 /
+  PLOG /                                    1.000E-02   1.860E+56   -13.500   107238 /
+  PLOG /                                    1.000E-01   4.650E+63   -15.000   109623 /
+  PLOG /                                    1.000E+00   4.460E+65   -14.900   112345 /
+  PLOG /                                    1.000E+01   2.790E+61   -13.400   113080 /
+  PLOG /                                    1.000E+02   6.170E+51   -10.300   109941 /
+
+C2H6 + O = C2H5 + OH                                    3.550E+06     2.400     5830  # pes.subpes  51.3
+
+C2H6 + OH = C2H5 + H2O                                  1.480E+07     1.900      950  # pes.subpes  52.4
+
+C2H5 + O2 = CH3CHO + OH                                 6.803E-02     3.570     2643  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   4.908E-06     4.760      254 /
+  PLOG /                                    1.000E+00   6.803E-02     3.570     2643 /
+  PLOG /                                    1.000E+01   8.265E+02     2.410     5285 /
+
+C2H5 + O2 = C2H5O2                                      9.362E+59   -15.280    14240  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   3.398E+53   -13.900     9279 /
+  PLOG /                                    1.000E+00   9.362E+59   -15.280    14240 /
+  PLOG /                                    1.000E+01   1.262E+60   -14.910    16240 /
+
+C2H5 + O2 = C2H4O2H                                     4.884E+33    -8.310     7710  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   2.103E+34    -9.010     5444 /
+  PLOG /                                    1.000E+00   4.884E+33    -8.310     7710 /
+  PLOG /                                    1.000E+01   1.705E+45   -11.490    14590 /
+
+C2H5 + O2 = C2H4O1-2 + OH                               2.438E+02     2.180      -62  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   1.303E+03     1.930     -503 /
+  PLOG /                                    1.000E+00   2.438E+02     2.180      -62 /
+  PLOG /                                    1.000E+01   4.621E+09     0.150     5409 /
+
+C2H5 + HO2 = C2H5O + OH                                 1.100E+13     0.000        0  # pes.subpes  58.2
+
+C2H6 + O2 = C2H5 + HO2                                  6.030E+13     0.000    51870  # pes.subpes  58.6
+
+C2H6 + HO2 = C2H5 + H2O2                                3.460E+01     3.610    16920  # pes.subpes  59.5
+
+C2H6 + CH = C2H5 + CH2                                  1.100E+14     0.000     -260  # pes.subpes  77.4
+
+IC3H7 + H = C2H5 + CH3                                  2.000E+13     0.000        0  # pes.subpes  78.1
+
+C3H8 (+M) = CH3 + C2H5 (+M)                             1.290E+37    -5.840    97380  # pes.subpes  78.1
+  LOW  /                                                5.640E+74   -15.740    98714  /
+  TROE /   3.100E-01   5.000E+01   3.000E+03   9.000E+03 /
+  H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   HE/0.700/   
+
+C2H6 + CH2(S) = C2H5 + CH3                              1.200E+14     0.000        0  # pes.subpes  78.3
+
+C2H6 + CH3 = C2H5 + CH4                                 5.550E-04     4.720     3231  # pes.subpes  79.1
+
+C2H5 + CO = C2H5CO                                      1.510E+11     0.000     4810  # pes.subpes  83.3
+
+CH2CO + CH3 = C2H5 + CO                                 4.769E+04     2.312     9468  # pes.subpes  83.12
+
+CH3CHCO + H = C2H5 + CO                                 4.400E+12     0.000     1459  # pes.subpes  83.13
+
+C2H5 + HCO = C2H5CHO                                    1.810E+13     0.000        0  # pes.subpes  84.1
+
+C3H6 + O = C2H5 + HCO                                   7.450E+06     1.880      183  # pes.subpes  84.8
+
+C2H5 + CH2O = NC3H7O                                    1.000E+11     0.000     3496  # pes.subpes  85.2
+
+C2H6 + CH3O = C2H5 + CH3OH                              2.410E+11     0.000     7090  # pes.subpes  87.4
+
+CH3CHCO + OH = C2H5 + CO2                               1.730E+12     0.000    -1010  # pes.subpes  91.15
+
+C2H5 + CH3O2 = C2H5O + CH3O                             8.000E+12     0.000    -1000  # pes.subpes  94.3
+
+C2H6 + CH3O2 = C2H5 + CH3O2H                            1.940E+01     3.640    17100  # pes.subpes  95.2
+
+C2H5 + C2H = C3H3 + CH3                                 1.810E+13     0.000        0  # pes.subpes  110.3
+
+C4H71-1 = C2H5 + C2H2                                   2.850E+12     0.680    33178  # pes.subpes  111.3
+
+C4H10 (+M) = C2H5 + C2H5 (+M)                           1.355E+37    -6.036    92929  # pes.subpes  114.1
+  LOW  /                                                4.720E+18     0.000    49578  /
+  TROE /   7.998E-02   1.000E-20   3.243E+04   4.858E+03 /
+
+C2H5COCH2 = CH2CO + C2H5                                1.000E+14     0.000    35000  # pes.subpes  120.6
+
+C4H8-1 + O => CH2CO + C2H5 + H                          3.050E+06     1.880      183  # pes.subpes  121.16
+
+C4H8-2 + O => CH2CO + C2H5 + H                          3.050E+06     1.880      183  # pes.subpes  121.18
+
+C2H3OH + C2H5 = SC4H8OH-1                               6.400E+06     1.671    10270  # pes.subpes  122.1
+
+C2H3OH + C2H5 = PC4H8OH-1                               3.000E+06     1.834     7338  # pes.subpes  122.2
+
+C2H5 + CH3CHO = SC4H9O                                  3.330E+10     0.000     6397  # pes.subpes  122.3
+
+C2H5OH + C2H5 = PC2H4OH + C2H6                          5.000E+10     0.000    13400  # pes.subpes  124.1
+
+C2H5OH + C2H5 = SC2H4OH + C2H6                          5.000E+10     0.000    10400  # pes.subpes  124.2
+
+C2H6 + C2H5O2 = C2H5 + C2H5O2H                          8.600E+00     3.760    17200  # pes.subpes  132.1
+
+PQC4H8OS = C2H5 + HO2CH2CHO                             2.670E+34    -6.630    22672  # pes.subpes  137.3
+
+CH3CO3 + C2H6 = CH3CO3H + C2H5                          1.700E+13     0.000    20460  # pes.subpes  137.11
+
+C3H5-A + C2H5 = C3H4-A + C2H6                           4.000E+11     0.000        0  # pes.subpes  152.1
+
+C3H6 + C2H5 = C3H5-A + C2H6                             1.000E+11     0.000     9800  # pes.subpes  153.1
+
+C3H8 + C2H5 = IC3H7 + C2H6                              1.000E+11     0.000    10400  # pes.subpes  154.1
+
+C3H8 + C2H5 = NC3H7 + C2H6                              1.000E+11     0.000    10400  # pes.subpes  154.2
+
+C2H5CHO + C2H5 = C2H5CO + C2H6                          1.000E+12     0.000     8000  # pes.subpes  161.1
+
+IC3H7O2 + C2H5 = IC3H7O + C2H5O                         7.000E+12     0.000    -1000  # pes.subpes  168.1
+
+NC3H7O2 + C2H5 = NC3H7O + C2H5O                         7.000E+12     0.000    -1000  # pes.subpes  168.4
+
+IC3H7O2 + C2H6 = IC3H7O2H + C2H5                        1.700E+13     0.000    20460  # pes.subpes  169.5
+
+NC3H7O2 + C2H6 = NC3H7O2H + C2H5                        1.700E+13     0.000    20460  # pes.subpes  169.9
+
+C2H5 + C4H71-3 = C4H6 + C2H6                            3.980E+12     0.000        0  # pes.subpes  184.1
+
+C4H10 + C2H5 = PC4H9 + C2H6                             1.580E+11     0.000    12300  # pes.subpes  186.2
+
+C4H10 + C2H5 = SC4H9 + C2H6                             1.000E+11     0.000    10400  # pes.subpes  186.3
+
+IC4H10 + C2H5 = IC4H9 + C2H6                            1.510E+12     0.000    10400  # pes.subpes  186.4
+
+IC4H10 + C2H5 = TC4H9 + C2H6                            1.000E+11     0.000     7900  # pes.subpes  186.5
+
+C2H5COCH3 + C2H5 = C2H5COCH2 + C2H6                     5.000E+10     0.000    11600  # pes.subpes  189.1
+
+C2H5COCH3 + C2H5 = CH2CH2COCH3 + C2H6                   5.000E+10     0.000    13400  # pes.subpes  189.2
+
+C2H5COCH3 + C2H5 = CH3CHCOCH3 + C2H6                    3.000E+10     0.000     8600  # pes.subpes  189.3
+
+C4H71-4O2 + C2H5 = C4H7O1-4 + C2H5O                     7.000E+12     0.000    -1000  # pes.subpes  192.2
+
+C4H71-4O2 + C2H6 = C4H71-4OOH + C2H5                    1.700E+13     0.000    20460  # pes.subpes  193.1
+
+NC4KET12OH + C2H5 = C2H5CHOHCO + C2H6                   7.360E+04     2.000     5917  # pes.subpes  193.6
+
+NC4KET21OH + C2H5 = C2H4COCH2OH + C2H6                  3.000E+10     0.000     8600  # pes.subpes  193.7
+
+NC4KET23OH + C2H5 = CH3COCOHCH3 + C2H6                  3.000E+10     0.000     8600  # pes.subpes  193.8
+
+IC4H9O2 + C2H5 = IC4H9O + C2H5O                         7.000E+12     0.000    -1000  # pes.subpes  194.3
+
+PC4H9O2 + C2H5 = PC4H9O + C2H5O                         7.000E+12     0.000    -1000  # pes.subpes  194.6
+
+SC4H9O2 + C2H5 = SC4H9O + C2H5O                         7.000E+12     0.000    -1000  # pes.subpes  194.7
+
+TC4H9O2 + C2H5 = TC4H9O + C2H5O                         7.000E+12     0.000    -1000  # pes.subpes  194.8
+
+IC4H9O2 + C2H6 = IC4H9O2H + C2H5                        1.700E+13     0.000    20460  # pes.subpes  195.7
+
+PC4H9O2 + C2H6 = PC4H9O2H + C2H5                        1.700E+13     0.000    20460  # pes.subpes  195.10
+
+SC4H9O2 + C2H6 = SC4H9O2H + C2H5                        1.700E+13     0.000    20460  # pes.subpes  195.11
+
+TC4H9O2 + C2H6 = TC4H9O2H + C2H5                        1.700E+13     0.000    20460  # pes.subpes  195.12
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       FUEL_ADD_O
+!!!!!!!!!!!!!!!!!!!!!!!!!
+CH3CHO (+M) = CH4 + CO (+M)                             2.720E+21    -1.740    86355  # pes.subpes  49.1
+  LOW  /                                                1.144E+58   -11.300    95912  /
+  TROE /   2.490E-03   7.181E+02   6.089E+00   3.780E+03 /
+
+CH3CHO (+M) = CH3 + HCO (+M)                            2.450E+22    -1.740    86355  # pes.subpes  49.1
+  LOW  /                                                1.030E+59   -11.300    95912  /
+  TROE /   2.490E-03   7.181E+02   6.089E+00   3.780E+03 /
+
+C2H4O1-2 = CH3CHO                                       7.407E+12     0.000    53800  # pes.subpes  49.1
+
+C2H4O1-2 = CH3 + HCO                                    3.630E+13     0.000    57200  # pes.subpes  49.1
+
+C2H3OH = CH3CHO                                         4.420E+42    -9.090    67069  # pes.subpes  49.1
+  PLOG /                                    1.000E-01   7.420E+46   -10.560    67420 /
+  PLOG /                                    1.000E+00   4.420E+42    -9.090    67069 /
+  PLOG /                                    1.000E+02   2.900E+27    -4.350    61613 /
+
+SC2H4OH = CH3CHO + H                                    5.360E+55   -13.150    51886  # pes.subpes  50.1
+  PLOG /                                    1.000E-03   5.690E+52   -13.380    45049 /
+  PLOG /                                    1.000E-02   3.290E+56   -14.120    48129 /
+  PLOG /                                    1.000E-01   8.580E+57   -14.160    50743 /
+  PLOG /                                    1.000E+00   5.360E+55   -13.150    51886 /
+  PLOG /                                    1.000E+01   1.660E+48   -10.640    50297 /
+  PLOG /                                    2.000E+01   8.260E+44    -9.590    49218 /
+  PLOG /                                    5.000E+01   1.010E+40    -8.060    47439 /
+  PLOG /                                    1.000E+02   1.100E+36    -6.840    45899 /
+
+SC2H4OH = C2H3OH + H                                    3.790E+53   -12.510    52560  # pes.subpes  50.1
+  PLOG /                                    1.000E-03   5.400E+46   -11.630    44323 /
+  PLOG /                                    1.000E-02   1.210E+51   -12.550    47240 /
+  PLOG /                                    1.000E-01   2.870E+54   -13.150    50702 /
+  PLOG /                                    1.000E+00   3.790E+53   -12.510    52560 /
+  PLOG /                                    1.000E+01   6.330E+46   -10.200    51441 /
+  PLOG /                                    2.000E+01   3.870E+43    -9.170    50440 /
+  PLOG /                                    5.000E+01   5.080E+38    -7.650    48713 /
+  PLOG /                                    1.000E+02   5.120E+34    -6.410    47182 /
+
+CH3CHO + H = C2H5O                                      4.610E+07     1.710     7090  # pes.subpes  50.1
+
+C2H3OH + H = PC2H4OH                                    3.010E+08     1.577     3670  # pes.subpes  50.1
+
+C2H3OH + H = C2H2OH + H2                                2.470E+07     2.030    15200  # pes.subpes  50.3
+
+C2H3OH + H = CH2CHO + H2                                1.480E+03     3.077     7220  # pes.subpes  50.4
+
+C2H4O1-2 + H = C2H3O1-2 + H2                            8.000E+13     0.000     9680  # pes.subpes  50.6
+
+CH3CHO + H = CH2CHO + H2                                2.720E+03     3.100     5210  # pes.subpes  50.9
+
+CH3CHO + H = CH3CO + H2                                 1.310E+05     2.580     1220  # pes.subpes  50.10
+
+C2H3OO = CHCHO + OH                                     3.790E+46   -10.720    51900  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   3.640E+49   -12.130    67420 /
+  PLOG /                                    1.000E-01   1.440E+36    -9.920    41220 /
+  PLOG /                                    3.160E-01   4.180E+40   -10.530    43670 /
+  PLOG /                                    1.000E+00   3.790E+46   -10.720    51900 /
+  PLOG /                                    3.160E+00   1.600E+49   -11.240    54150 /
+  PLOG /                                    1.000E+01   2.380E+51   -11.640    56980 /
+  PLOG /                                    3.160E+01   2.000E+54   -12.220    61840 /
+  PLOG /                                    1.000E+02   9.540E+195  -52.270   163500 /
+  DUP
+C2H3OO = CHCHO + OH                                     2.330E+124  -36.770    70100
+  PLOG /                                    1.000E-02   1.170E+56   -14.810    60700 /
+  PLOG /                                    1.000E-01   2.320E+40    -9.390    50420 /
+  PLOG /                                    3.160E-01   1.610E+43    -9.990    50290 /
+  PLOG /                                    1.000E+00   2.330E+124  -36.770    70100 /
+  PLOG /                                    3.160E+00   1.880E+103  -29.490    65410 /
+  PLOG /                                    1.000E+01   5.960E+86   -23.810    62170 /
+  PLOG /                                    3.160E+01   1.510E+57   -13.940    55390 /
+  PLOG /                                    1.000E+02   1.790E+34    -6.400    50000 /
+  DUP
+
+C2H3OH + O = CH2CHO + OH                                1.875E+06     1.900     -860  # pes.subpes  56.3
+
+CH3CHO + O = CH3CO + OH                                 5.940E+12     0.000     1868  # pes.subpes  56.7
+
+C2H5O2 = CH3CHO + OH                                    1.687E+36    -9.220    38700  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   1.237E+35    -9.420    36360 /
+  PLOG /                                    1.000E+00   1.687E+36    -9.220    38700 /
+  PLOG /                                    1.000E+01   2.520E+41   -10.200    43710 /
+
+C2H5O2 = C2H4O1-2 + OH                                  1.916E+43   -10.750    42400  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   5.778E+45   -11.900     4112 /
+  PLOG /                                    1.000E+00   1.916E+43   -10.750    42400 /
+  PLOG /                                    1.000E+01   3.965E+43   -10.460    45580 /
+
+C2H4O2H = CH3CHO + OH                                   5.520E+34    -9.880    26230  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   5.819E+26    -7.970    20860 /
+  PLOG /                                    1.000E+00   5.520E+34    -9.880    26230 /
+  PLOG /                                    1.000E+01   1.188E+34    -9.020    29210 /
+
+C2H4O2H = C2H4O1-2 + OH                                 1.224E+37    -8.320    21460  # pes.subpes  57.1
+  PLOG /                                    4.000E-02   8.959E+38    -9.400    20660 /
+  PLOG /                                    1.000E+00   1.224E+37    -8.320    21460 /
+  PLOG /                                    1.000E+01   8.848E+30    -6.080    20660 /
+
+C2H3OH + OH = CH2CHO + H2O                              3.330E+09     1.100      540  # pes.subpes  57.3
+
+C2H4O1-2 + OH = C2H3O1-2 + H2O                          1.780E+13     0.000     3610  # pes.subpes  57.4
+
+CH3CHO + OH = CH2CHO + H2O                              1.720E+05     2.400      815  # pes.subpes  57.5
+
+CH3CHO + OH = CH3 + HOCHO                               3.000E+15    -1.076        0  # pes.subpes  57.6
+
+CH3CHO + OH = CH3CO + H2O                               3.370E+12     0.000     -619  # pes.subpes  57.7
+
+C2H3OH + O2 = CH2CHO + HO2                              5.310E+11     0.210    39830  # pes.subpes  62.2
+
+CH3CHO + O2 = CH3CO + HO2                               3.010E+13     0.000    39150  # pes.subpes  62.3
+
+C2H3OH + HO2 = CH3CHO + HO2                             1.490E+05     1.670     6810  # pes.subpes  63.3
+
+C2H4O1-2 + HO2 = C2H3O1-2 + H2O2                        1.130E+13     0.000    30430  # pes.subpes  63.4
+
+C2H5O + O2 = CH3CHO + HO2                               4.280E+10     0.000     1097  # pes.subpes  63.5
+
+CH3CHO + HO2 = CH3CO + H2O2                             3.010E+12     0.000    11920  # pes.subpes  63.6
+
+SC2H4OH + O2 = C2H3OH + HO2                             7.620E+02     2.446     -296  # pes.subpes  63.11
+  PLOG /                                    1.000E-02   5.120E+02     2.496     -414 /
+  PLOG /                                    1.000E-01   5.330E+02     2.490     -402 /
+  PLOG /                                    1.000E+00   7.620E+02     2.446     -296 /
+  PLOG /                                    1.000E+01   8.920E+03     2.146      470 /
+  PLOG /                                    1.000E+02   4.380E+05     1.699     2330 /
+
+SC2H4OH + O2 = CH3CHO + HO2                             5.280E+17    -1.638      839  # pes.subpes  63.12
+  PLOG /                                    1.000E-02   5.260E+17    -1.637      838 /
+  PLOG /                                    1.000E-01   5.260E+17    -1.637      838 /
+  PLOG /                                    1.000E+00   5.280E+17    -1.638      839 /
+  PLOG /                                    1.000E+01   1.540E+18    -1.771     1120 /
+  PLOG /                                    1.000E+02   3.780E+20    -2.429     3090 /
+
+C2H3OH + CH3 = C3H6OH1-1                                2.040E+40    -8.250    24214  # pes.subpes  85.1
+  DUP
+C2H3OH + CH3 = C3H6OH1-1                                1.660E+21    -3.170    10241
+  DUP
+
+CH3 + CH3CHO = IC3H7O                                   1.000E+11     0.000     9256  # pes.subpes  85.5
+
+C2H3OH + CH3 = CH2CHO + CH4                             2.030E-08     5.900     1052  # pes.subpes  85.7
+
+C2H4O1-2 + CH3 = C2H3O1-2 + CH4                         1.070E+12     0.000    11830  # pes.subpes  85.9
+
+C3H6 + OH = C2H3OH + CH3                                1.130E+04     2.500     3238  # pes.subpes  85.12
+  PLOG /                                    1.300E-03   1.290E+06     1.650     1233 /
+  PLOG /                                    1.000E-02   1.820E+04     2.100     1162 /
+  PLOG /                                    1.300E-02   2.040E+03     2.480     1128 /
+  PLOG /                                    2.500E-02   2.880E+02     2.800     1152 /
+  PLOG /                                    1.000E-01   1.400E+01     3.210     1208 /
+  PLOG /                                    1.315E-01   7.710E+00     3.290     1216 /
+  PLOG /                                    1.000E+00   1.130E+04     2.500     3238 /
+  PLOG /                                    1.000E+01   2.410E+19    -1.740    13107 /
+  PLOG /                                    1.000E+02   3.300E-01     3.700     3665 /
+
+C3H6 + OH = CH3CHO + CH3                                3.160E-04     4.050    -1144  # pes.subpes  85.17
+  PLOG /                                    1.300E-03   6.930E+05     1.490     -536 /
+  PLOG /                                    1.000E-02   5.940E+03     2.010     -560 /
+  PLOG /                                    1.300E-02   1.100E+03     2.220     -680 /
+  PLOG /                                    2.500E-02   1.070E+02     2.500     -759 /
+  PLOG /                                    1.000E-01   7.830E-01     3.100     -919 /
+  PLOG /                                    1.315E-01   3.070E-01     3.220     -946 /
+  PLOG /                                    1.000E+00   3.160E-04     4.050    -1144 /
+  PLOG /                                    1.000E+01   7.590E-06     4.490     -680 /
+  PLOG /                                    1.000E+02   5.450E-05     4.220     1141 /
+
+CH3CHO + CH3 = CH3CO + CH4                              7.080E-04     4.580     1966  # pes.subpes  85.20
+
+CH3CHCO + O = CH3CHO + CO                               3.200E+12     0.000     -437  # pes.subpes  90.7
+
+C3H5-S + O2 = CH3CHO + HCO                              3.100E+31    -5.944     5748  # pes.subpes  91.10
+
+C2H4O1-2 + CH3O = C2H3O1-2 + CH3OH                      1.200E+11     0.000     6750  # pes.subpes  93.5
+
+C3KET12 => CH3CHO + HCO + OH                            9.500E+15     0.000    42540  # pes.subpes  98.6
+
+HOC3H6O2 => CH3CHO + CH2O + OH                          1.250E+10     0.000    18900  # pes.subpes  99.1
+
+C2H3OH + CH3O2 = CH2CHO + CH3O2H                        3.400E+03     2.500     8922  # pes.subpes  99.2
+
+C2H4O1-2 + CH3O2 = C2H3O1-2 + CH3O2H                    1.130E+13     0.000    30430  # pes.subpes  99.3
+
+CH3CHO + CH3O2 = CH3CO + CH3O2H                         3.010E+12     0.000    11920  # pes.subpes  99.11
+
+C4H6O23 = C2H2 + C2H4O1-2                               1.000E+16     0.000    75800  # pes.subpes  119.1
+
+C4H6 + O = C2H2 + C2H4O1-2                              1.000E+08     1.450     -860  # pes.subpes  119.10
+
+C2H3COCH3 + OH = CH3CHO + CH3CO                         1.000E+11     0.000        0  # pes.subpes  128.12
+
+CH3OCH2 + CH3CHO = CH3OCH3 + CH3CO                      1.260E+12     0.000     8499  # pes.subpes  130.27
+
+CCY(COCC)OH + H => C2H3OH + CH3CO + H2                  5.000E+12     0.000        0  # pes.subpes  130.49
+
+C4H6OHOOH1-2-3 => CH3CHO + SC2H2OH + OH                 1.050E+16     0.000    41600  # pes.subpes  136.4
+
+NC4KET13 => CH3CHO + CH2CHO + OH                        1.050E+16     0.000    43000  # pes.subpes  136.19
+
+NC4KET23 => CH3CHO + CH3CO + OH                         1.050E+16     0.000    41600  # pes.subpes  136.23
+
+CCY(COCC)OH + O => C2H3OH + CH3CO + OH                  5.000E+12     0.000        0  # pes.subpes  136.29
+
+SQC4H8OS => CH3CHO + CH3CHO + OH                        2.680E+13    -0.080    10790  # pes.subpes  137.4
+
+SQC4H7OHS-4 => OH + CH3CHO + C2H3OH                     3.080E+08     1.500    23500  # pes.subpes  137.4
+
+C2H4O1-2 + C2H5O2 = C2H3O1-2 + C2H5O2H                  1.130E+13     0.000    30430  # pes.subpes  137.6
+
+CCY(COCC)OH + OH => C2H3OH + CH3CO + H2O                5.000E+12     0.000        0  # pes.subpes  137.51
+
+CH3CHO + CH3CO3 = CH3CO + CH3CO3H                       3.010E+12     0.000    11920  # pes.subpes  140.1
+
+NC4KET13OH-2 => CH3CHO + HOCHCHO + OH                   1.050E+16     0.000    43000  # pes.subpes  141.5
+
+CH3OCH2O2 + CH3CHO = CH3OCH2O2H + CH3CO                 2.800E+12     0.000    13600  # pes.subpes  142.8
+
+CCY(COCC)OH + HO2 => C2H3OH + CH3CO + H2O2              1.000E+13     0.000    15000  # pes.subpes  142.17
+
+C4H7O2-1,3OOH => HO2CH2CHO + CH3CHO + OH                6.700E+39    -8.380    22782  # pes.subpes  146.2
+
+CCY(COCC)OH + CH3 => C2H3OH + CH3CO + CH4               2.000E+11     0.000    10000  # pes.subpes  167.18
+
+IC3H7O2 + CH3CHO = IC3H7O2H + CH3CO                     2.800E+12     0.000    13600  # pes.subpes  172.11
+
+NC3H7O2 + CH3CHO = NC3H7O2H + CH3CO                     2.800E+12     0.000    13600  # pes.subpes  172.20
+
+CCY(COCC)OH + CH3O2 => C2H3OH + CH3CO + CH3O2H          1.000E+13     0.000    19000  # pes.subpes  176.4
+
+C4H71-4O2 + CH3CHO = C4H71-4OOH + CH3CO                 2.800E+12     0.000    13600  # pes.subpes  196.1
+
+IC4H9O2 + CH3CHO = IC4H9O2H + CH3CO                     2.800E+12     0.000    13600  # pes.subpes  197.6
+
+PC4H9O2 + CH3CHO = PC4H9O2H + CH3CO                     2.800E+12     0.000    13600  # pes.subpes  197.9
+
+SC4H9O2 + CH3CHO = SC4H9O2H + CH3CO                     2.800E+12     0.000    13600  # pes.subpes  197.10
+
+TC4H9O2 + CH3CHO = TC4H9O2H + CH3CO                     2.800E+12     0.000    13600  # pes.subpes  197.11
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       FUEL_ADD_O2
+!!!!!!!!!!!!!!!!!!!!!!!!!
+C2H3OOH => CH2CO + H + OH                               1.590E+20    -1.500    42879  # pes.subpes  56.1
+
+C2H3OOH = CH2CHO + OH                                   8.400E+14     0.000    43000  # pes.subpes  56.1
+
+CH3OCO + H = CH3OCHO                                    1.000E+14     0.000        0  # pes.subpes  56.2
+
+CH3O + HCO = CH3OCHO                                    3.000E+13     0.000        0  # pes.subpes  56.2
+
+CH3 + OCHO = CH3OCHO                                    1.000E+13     0.000        0  # pes.subpes  56.2
+
+CH2OCHO + H = CH3OCHO                                   1.000E+14     0.000        0  # pes.subpes  56.2
+
+CH3OCH2O = CH3OCHO + H                                  3.300E+13     0.004    26136  # pes.subpes  57.2
+
+CH3OCHO + H = CH2OCHO + H2                              6.650E+05     2.540     6756  # pes.subpes  57.9
+
+CH3OCHO + H = CH3OCO + H2                               6.500E+05     2.400     4471  # pes.subpes  57.10
+
+HOCH2CHO + H = HOCH2CO + H2                             1.310E+05     2.580     1220  # pes.subpes  57.12
+
+CH3OCHO + O = CH2OCHO + OH                              9.800E+05     2.430     4750  # pes.subpes  62.4
+
+CH3OCHO + O = CH3OCO + OH                               2.755E+05     2.450     2830  # pes.subpes  62.5
+
+HOCH2CHO + O = HOCH2CO + OH                             5.940E+12     0.000     1868  # pes.subpes  62.7
+
+CH3OCHO + OH = CH2OCHO + H2O                            5.270E+09     0.970     1586  # pes.subpes  63.8
+
+CH3OCHO + OH = CH3OCO + H2O                             1.580E+07     1.800      934  # pes.subpes  63.9
+
+HOCH2CHO + OH = HOCH2CO + H2O                           3.370E+12     0.000     -619  # pes.subpes  63.10
+
+CH3OCHO + O2 = CH2OCHO + HO2                            2.050E+13     0.000    52000  # pes.subpes  67.2
+
+CH3OCHO + O2 = CH3OCO + HO2                             1.000E+13     0.000    49700  # pes.subpes  67.3
+
+HOCH2CHO + O2 = HOCH2CO + HO2                           3.010E+13     0.000    39150  # pes.subpes  67.5
+
+CH3OCH2O + O2 = CH3OCHO + HO2                           4.380E-19     9.500    -5501  # pes.subpes  68.1
+
+CH3OCHO + HO2 = CH2OCHO + H2O2                          2.380E+04     2.550    16490  # pes.subpes  68.2
+
+CH3OCHO + HO2 = CH3OCO + H2O2                           4.820E+03     2.600    13910  # pes.subpes  68.3
+
+HOCH2CHO + HO2 = HOCH2CO + H2O2                         3.010E+12     0.000    11920  # pes.subpes  68.4
+
+C3H6OOH2-1 = C2H3OOH + CH3                              8.560E+10     0.850    30700  # pes.subpes  93.1
+
+HOCH2CHO + CH3 = HOCH2CO + CH4                          7.080E-04     4.580     1966  # pes.subpes  93.11
+
+CH3OCHO + CH3 = CH2OCHO + CH4                           4.520E-01     3.650     7154  # pes.subpes  93.14
+
+CH3OCHO + CH3 = CH3OCO + CH4                            7.550E-01     3.460     5481  # pes.subpes  93.15
+
+CH3OCHO + HCO = CH2OCHO + CH2O                          1.025E+05     2.500    18430  # pes.subpes  97.6
+
+CH3OCHO + HCO = CH3OCO + CH2O                           5.400E+06     1.900    17010  # pes.subpes  97.7
+
+CH3OCHO + CH3O = CH3OCO + CH3OH                         5.480E+11     0.000     5000  # pes.subpes  99.13
+
+CH3OCHO + CH3O = CH2OCHO + CH3OH                        2.170E+11     0.000     6458  # pes.subpes  99.14
+
+CH3OCHO + CH3O2 = CH2OCHO + CH3O2H                      2.380E+04     2.550    16490  # pes.subpes  104.3
+
+CH3OCHO + CH3O2 = CH3OCO + CH3O2H                       4.820E+03     2.600    13910  # pes.subpes  104.4
+
+HOCH2CHO + CH3O2 = HOCH2CO + CH3O2H                     3.010E+12     0.000    11920  # pes.subpes  104.5
+
+HOCH2CHO + CH3CO3 = HOCH2CO + CH3CO3H                   3.010E+12     0.000    11920  # pes.subpes  145.1
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       FUEL_ADD_OH
+!!!!!!!!!!!!!!!!!!!!!!!!!
+SC2H4OH = PC2H4OH                                       5.820E+44   -10.340    55296  # pes.subpes  50.1
+  PLOG /                                    1.000E-03   2.650E+36    -8.860    51019 /
+  PLOG /                                    1.000E-02   3.560E+37    -8.890    51114 /
+  PLOG /                                    1.000E-01   4.140E+39    -9.190    51912 /
+  PLOG /                                    1.000E+00   5.820E+44   -10.340    55296 /
+  PLOG /                                    1.000E+01   4.260E+48   -11.060    59458 /
+  PLOG /                                    2.000E+01   8.840E+47   -10.740    59901 /
+  PLOG /                                    5.000E+01   2.230E+45    -9.840    59604 /
+  PLOG /                                    1.000E+02   1.700E+42    -8.830    58737 /
+
+SC2H4OH = C2H5O                                         1.810E+55   -13.310    53132  # pes.subpes  50.1
+  PLOG /                                    1.000E-03   5.480E+45   -11.630    44328 /
+  PLOG /                                    1.000E-02   2.540E+49   -12.370    46445 /
+  PLOG /                                    1.000E-01   1.650E+54   -13.400    50330 /
+  PLOG /                                    1.000E+00   1.810E+55   -13.310    53132 /
+  PLOG /                                    1.000E+01   4.580E+49   -11.320    52714 /
+  PLOG /                                    2.000E+01   4.110E+46   -10.330    51834 /
+  PLOG /                                    5.000E+01   6.680E+41    -8.830    50202 /
+  PLOG /                                    1.000E+02   6.540E+37    -7.580    48697 /
+
+CH3 + CH2O = C2H5O                                      3.000E+11     0.000     6336  # pes.subpes  50.1
+
+CH3OCH2 = CH3 + CH2O                                    4.229E+29    -5.610    28898  # pes.subpes  50.2
+  PLOG /                                    1.000E-02   7.494E+23    -4.515    25236 /
+  PLOG /                                    1.000E-01   6.921E+28    -5.727    27495 /
+  PLOG /                                    1.000E+00   4.229E+29    -5.610    28898 /
+  PLOG /                                    1.000E+01   6.608E+27    -4.707    29735 /
+  PLOG /                                    1.000E+02   2.659E+29    -4.936    31786 /
+
+C2H5OH + H = C2H5O + H2                                 9.450E+02     3.140     8701  # pes.subpes  52.1
+
+C2H5OH + H = PC2H4OH + H2                               5.310E+04     2.810     7490  # pes.subpes  52.2
+
+C2H5OH + H = SC2H4OH + H2                               8.790E+04     2.680     2910  # pes.subpes  52.3
+
+CH3OCH3 + H = CH3OCH2 + H2                              7.721E+06     2.090     3384  # pes.subpes  52.5
+
+C2H5O2H = C2H5O + OH                                    6.310E+14     0.000    42300  # pes.subpes  58.1
+
+C2H5OH + O = C2H5O + OH                                 1.460E-03     4.730     1727  # pes.subpes  58.3
+
+C2H5OH + O = PC2H4OH + OH                               9.690E+02     3.230     4658  # pes.subpes  58.4
+
+C2H5OH + O = SC2H4OH + OH                               1.450E+05     2.470      876  # pes.subpes  58.5
+
+CH3OCH3 + O = CH3OCH2 + OH                              7.750E+08     1.360     2250  # pes.subpes  58.11
+
+C2H5OH + OH = C2H5O + H2O                               5.810E-03     4.280    -3560  # pes.subpes  59.2
+
+C2H5OH + OH = PC2H4OH + H2O                             3.760E+03     2.780    -1810  # pes.subpes  59.3
+
+C2H5OH + OH = SC2H4OH + H2O                             7.520E+04     2.490    -1474  # pes.subpes  59.4
+
+CH3OCH3 + OH = CH3OCH2 + H2O                            9.350E+05     2.290     -781  # pes.subpes  59.7
+
+CH3OCH2 + O2 = CH3OCH2O2                                1.130E+28    -5.240     4088  # pes.subpes  63.1
+  PLOG /                                    1.000E-03   1.120E+18    -3.370    -4294 /
+  PLOG /                                    1.000E-02   1.330E+21    -3.950    -2615 /
+  PLOG /                                    1.000E+00   1.130E+28    -5.240     4088 /
+  PLOG /                                    2.000E+00   3.910E+27    -5.000     4512 /
+  PLOG /                                    1.000E+01   2.750E+24    -3.870     4290 /
+  PLOG /                                    2.000E+01   2.970E+22    -3.230     3781 /
+  PLOG /                                    5.000E+01   5.190E+19    -2.350     2908 /
+  PLOG /                                    1.000E+02   5.430E+17    -1.730     2210 /
+
+CH3OCH2 + O2 = CH2OCH2O2H                               2.810E+28    -5.630     7848  # pes.subpes  63.1
+  PLOG /                                    1.000E-03   5.080E+20    -4.390      469 /
+  PLOG /                                    1.000E-02   5.470E+23    -4.960     2183 /
+  PLOG /                                    1.000E+00   2.810E+28    -5.630     7848 /
+  PLOG /                                    2.000E+00   5.190E+27    -5.330     8144 /
+  PLOG /                                    1.000E+01   9.670E+24    -4.360     8417 /
+  PLOG /                                    2.000E+01   4.080E+23    -3.900     8494 /
+  PLOG /                                    5.000E+01   5.080E+21    -3.280     8585 /
+  PLOG /                                    1.000E+02   1.620E+20    -2.810     8619 /
+
+O2C2H4OH = PC2H4OH + O2                                 3.900E+16    -1.000    30000  # pes.subpes  63.2
+
+CH3OCH2 + O2 => CH2O + CH2O + OH                        2.040E+31    -5.760    11594  # pes.subpes  63.13
+  PLOG /                                    1.000E-03   8.010E+21    -3.180     3067 /
+  PLOG /                                    1.000E-02   1.730E+23    -3.550     4050 /
+  PLOG /                                    1.000E+00   2.040E+31    -5.760    11594 /
+  PLOG /                                    2.000E+00   5.990E+31    -5.870    12710 /
+  PLOG /                                    1.000E+01   9.390E+30    -5.590    14517 /
+  PLOG /                                    2.000E+01   1.090E+30    -5.300    15051 /
+  PLOG /                                    5.000E+01   3.580E+28    -4.880    15664 /
+  PLOG /                                    1.000E+02   2.410E+27    -4.550    16107 /
+
+C2H5OH + O2 = PC2H4OH + HO2                             2.000E+13     0.000    52800  # pes.subpes  64.2
+
+C2H5OH + O2 = SC2H4OH + HO2                             1.500E+13     0.000    50150  # pes.subpes  64.3
+
+CH3OCH3 + O2 = CH3OCH2 + HO2                            4.100E+13     0.000    44910  # pes.subpes  64.4
+
+C2H5OH + HO2 = C2H5O + H2O2                             6.470E-07     5.300    10533  # pes.subpes  65.1
+
+C2H5OH + HO2 = PC2H4OH + H2O2                           3.986E-02     4.300    15333  # pes.subpes  65.2
+
+C2H5OH + HO2 = SC2H4OH + H2O2                           2.450E-05     5.260     7475  # pes.subpes  65.3
+
+CH3OCH3 + HO2 = CH3OCH2 + H2O2                          3.170E-03     4.640    10556  # pes.subpes  65.5
+
+C2H5OH + CH3 = C2H5O + CH4                              2.035E+00     3.570     7721  # pes.subpes  87.1
+
+C2H5OH + CH3 = PC2H4OH + CH4                            3.300E+02     3.300    12290  # pes.subpes  87.2
+
+C2H5OH + CH3 = SC2H4OH + CH4                            1.993E+01     3.370     7634  # pes.subpes  87.3
+
+CH3OCH3 + CH3 = CH3OCH2 + CH4                           7.020E+00     3.780     9687  # pes.subpes  87.7
+
+CH3CHCO + OH = SC2H4OH + CO                             2.000E+12     0.000    -1010  # pes.subpes  91.16
+
+CH3COHCO + H = SC2H4OH + CO                             4.400E+12     0.000     1459  # pes.subpes  91.17
+
+CH3OCH2 + CH2O = CH3OCH3 + HCO                          5.490E+03     2.800     5862  # pes.subpes  93.13
+
+CH3OCH2 + CH3O = CH3OCH3 + CH2O                         2.410E+13     0.000        0  # pes.subpes  94.6
+
+CH3OCH3 + CH3O = CH3OCH2 + CH3OH                        6.020E+11     0.000     4074  # pes.subpes  95.5
+
+CH3COHCO + OH = SC2H4OH + CO2                           1.730E+12     0.000    -1010  # pes.subpes  97.5
+
+CH3OCH3 + OCHO = CH3OCH2 + HOCHO                        1.000E+13     0.000    17690  # pes.subpes  99.12
+
+C2H5OH + CH3O2 = C2H5O + CH3O2H                         3.236E-07     5.300    10533  # pes.subpes  100.2
+
+C2H5OH + CH3O2 = PC2H4OH + CH3O2H                       1.995E-02     4.300    15333  # pes.subpes  100.3
+
+C2H5OH + CH3O2 = SC2H4OH + CH3O2H                       1.225E-05     5.260     7475  # pes.subpes  100.4
+
+CH3OCH3 + CH3O2 = CH3OCH2 + CH3O2H                      1.268E-03     4.640    10556  # pes.subpes  100.5
+
+CH3OCH3 + O2CHO = CH3OCH2 + HO2CHO                      4.425E+04     2.600    13910  # pes.subpes  104.7
+
+CH3OCH3 + CH3OCH2O2 = CH3OCH2 + CH3OCH2O2H              5.000E+12     0.000    17690  # pes.subpes  144.1
+
+C2H5CHO + C2H5O = C2H5CO + C2H5OH                       6.026E+11     0.000     3300  # pes.subpes  167.1
+
+IC3H7O2 + C2H5O2 => IC3H7O + C2H5O + O2                 1.400E+16    -1.610     1860  # pes.subpes  177.1
+
+NC3H7O2 + C2H5O2 => NC3H7O + C2H5O + O2                 1.400E+16    -1.610     1860  # pes.subpes  177.3
+
+C4H10 + C2H5O = PC4H9 + C2H5OH                          3.000E+11     0.000     7000  # pes.subpes  190.1
+
+C4H10 + C2H5O = SC4H9 + C2H5OH                          6.000E+11     0.000     7000  # pes.subpes  190.2
+
+C4H71-3 + C2H5O2 = C4H71-O + C2H5O                      3.800E+12     0.000    -1200  # pes.subpes  192.1
+
+NC4KET12OH + C2H5O = C2H5CHOHCO + C2H5OH                6.030E+11     0.000     3300  # pes.subpes  197.8
+
+IC4H9O2 + C2H5OH = IC4H9O2H + PC2H4OH                   6.300E+12     0.000    19360  # pes.subpes  198.1
+
+IC4H9O2 + C2H5OH = IC4H9O2H + SC2H4OH                   4.200E+12     0.000    15000  # pes.subpes  198.2
+
+TC4H9O2 + C2H5OH = TC4H9O2H + PC2H4OH                   6.300E+12     0.000    19360  # pes.subpes  198.3
+
+TC4H9O2 + C2H5OH = TC4H9O2H + SC2H4OH                   4.200E+12     0.000    15000  # pes.subpes  198.4
+
+C4H71-4O2 + C2H5O2 => C4H7O1-4 + C2H5O + O2             1.400E+16    -1.610     1860  # pes.subpes  200.1
+
+IC4H9O2 + C2H5O2 => IC4H9O + C2H5O + O2                 1.400E+16    -1.610     1860  # pes.subpes  201.3
+
+PC4H9O2 + C2H5O2 => PC4H9O + C2H5O + O2                 1.400E+16    -1.610     1860  # pes.subpes  201.5
+
+SC4H9O2 + C2H5O2 => SC4H9O + C2H5O + O2                 1.400E+16    -1.610     1860  # pes.subpes  201.6
+
+TC4H9O2 + C2H5O2 => TC4H9O + C2H5O + O2                 1.400E+16    -1.610     1860  # pes.subpes  201.7
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       FUEL_RAD
+!!!!!!!!!!!!!!!!!!!!!!!!!
+C2H2 + H (+M) = C2H3 (+M)                               1.710E+10     1.266     2709  # pes.subpes  41.1
+  LOW  /                                                6.346E+31    -4.664     3780  /
+  TROE /   7.880E-01  -1.020E+04   1.000E-30 /
+  H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   HE/0.700/   
+
+C2H3 + H = H2CC + H2                                    6.000E+13     0.000        0  # pes.subpes  42.1
+
+C2H3 + H = C2H2 + H2                                    1.700E+14     0.000        0  # pes.subpes  42.2
+
+C2H3 + OH = C2H2 + H2O                                  3.011E+13     0.000        0  # pes.subpes  49.2
+
+C2H3 + O2 = CO + CH3O                                   1.030E+11    -0.330     -748  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   8.190E+18    -2.660     3201 /
+  PLOG /                                    1.000E-01   4.060E+14    -1.320      886 /
+  PLOG /                                    3.160E-01   4.340E+14    -1.330      901 /
+  PLOG /                                    1.000E+00   1.030E+11    -0.330     -748 /
+  PLOG /                                    3.160E+00   1.890E+12    -3.000    -8995 /
+  PLOG /                                    1.000E+01   1.930E+24    -5.630        2 /
+  PLOG /                                    3.160E+01   1.100E+18    -2.220     5178 /
+  PLOG /                                    1.000E+02   5.790E+32    -6.450    16810 /
+  DUP
+C2H3 + O2 = CO + CH3O                                   5.770E+21    -3.540     4772
+  PLOG /                                    1.000E-02   1.290E+09     0.180    -1717 /
+  PLOG /                                    1.000E-01   5.990E+11    -2.930    -9564 /
+  PLOG /                                    3.160E-01   2.910E+11    -2.930   -10120 /
+  PLOG /                                    1.000E+00   5.770E+21    -3.540     4772 /
+  PLOG /                                    3.160E+00   4.990E+15    -1.620     1849 /
+  PLOG /                                    1.000E+01   9.330E+16    -1.960     3324 /
+  PLOG /                                    3.160E+01   1.020E+72   -20.690    15860 /
+  PLOG /                                    1.000E+02   1.100E+09     0.310     1024 /
+  DUP
+
+C2H3 + O2 = CHOCHO + H                                  3.730E+15    -1.290     1441  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   4.790E+14    -1.030      912 /
+  PLOG /                                    1.000E-01   5.030E+14    -1.040      922 /
+  PLOG /                                    3.160E-01   6.430E+14    -1.070      983 /
+  PLOG /                                    1.000E+00   3.730E+15    -1.290     1441 /
+  PLOG /                                    3.160E+00   2.440E+18    -2.130     3234 /
+  PLOG /                                    1.000E+01   1.300E+15    -1.090     2393 /
+  PLOG /                                    3.160E+01   3.570E+33    -6.500    14910 /
+  PLOG /                                    1.000E+02   3.280E+31    -5.760    16250 /
+  DUP
+C2H3 + O2 = CHOCHO + H                                  4.980E-01     3.150    -5496
+  PLOG /                                    1.000E-02   2.800E-04     4.040    -7019 /
+  PLOG /                                    1.000E-01   3.450E-04     4.010    -6978 /
+  PLOG /                                    3.160E-01   9.730E-04     3.890    -6768 /
+  PLOG /                                    1.000E+00   4.980E-01     3.150    -5496 /
+  PLOG /                                    3.160E+00   1.340E+05     1.670    -2931 /
+  PLOG /                                    1.000E+01   4.500E+15    -3.080    -4836 /
+  PLOG /                                    3.160E+01   3.840E+10     0.220      941 /
+  PLOG /                                    1.000E+02   2.750E+08     0.830      858 /
+  DUP
+
+C2H3 + O2 = CHCHO + OH                                  2.750E+14    -1.830        5  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   3.910E+11    -0.110     2131 /
+  PLOG /                                    1.000E-01   1.130E+09     0.550       46 /
+  PLOG /                                    3.160E-01   8.460E+08     0.560        1 /
+  PLOG /                                    1.000E+00   2.750E+14    -1.830        5 /
+  PLOG /                                    3.160E+00   2.580E+20    -2.840     7530 /
+  PLOG /                                    1.000E+01   9.180E+14    -2.260       -0 /
+  PLOG /                                    3.160E+01   6.110E+25    -4.210    13050 /
+  PLOG /                                    1.000E+02   1.650E+30    -5.350    18430 /
+  DUP
+C2H3 + O2 = CHCHO + OH                                  4.990E+11    -0.140     1995
+  PLOG /                                    1.000E-02   9.910E+11    -0.660       -1 /
+  PLOG /                                    1.000E-01   6.940E+14    -1.160     4542 /
+  PLOG /                                    3.160E-01   2.790E+13    -0.720     3479 /
+  PLOG /                                    1.000E+00   4.990E+11    -0.140     1995 /
+  PLOG /                                    3.160E+00   2.350E+10     0.230     1573 /
+  PLOG /                                    1.000E+01   1.700E+14    -0.820     4450 /
+  PLOG /                                    3.160E+01   1.420E+11     0.050     3774 /
+  PLOG /                                    1.000E+02   3.170E+11    -0.020     5338 /
+  DUP
+
+C2H3 + O2 = CH2O + HCO                                  2.730E+35    -7.320    11820  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   2.490E+36    -7.600    12640 /
+  PLOG /                                    1.000E-01   2.430E+36    -7.600    12610 /
+  PLOG /                                    3.160E-01   1.950E+36    -7.570    12490 /
+  PLOG /                                    1.000E+00   2.730E+35    -7.320    11820 /
+  PLOG /                                    3.160E+00   1.430E+36    -7.470    12460 /
+  PLOG /                                    1.000E+01   5.180E+35    -7.200    13430 /
+  PLOG /                                    3.160E+01   3.190E+20    -2.570     5578 /
+  PLOG /                                    1.000E+02   2.730E+33    -6.280    16000 /
+  DUP
+C2H3 + O2 = CH2O + HCO                                  6.080E+15    -1.310      646
+  PLOG /                                    1.000E-02   4.540E+15    -1.280      515 /
+  PLOG /                                    1.000E-01   4.590E+15    -1.280      513 /
+  PLOG /                                    3.160E-01   4.810E+15    -1.290      521 /
+  PLOG /                                    1.000E+00   6.080E+15    -1.310      646 /
+  PLOG /                                    3.160E+00   9.450E+15    -1.360     1066 /
+  PLOG /                                    1.000E+01   2.560E+15    -1.180     1429 /
+  PLOG /                                    3.160E+01   1.030E+69   -19.230    14760 /
+  PLOG /                                    1.000E+02   4.210E+10     0.190      831 /
+  DUP
+
+C2H3 + O2 = CH2CO + OH                                  1.060E+03     2.390     6180  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   8.660E+02     2.410     6061 /
+  PLOG /                                    1.000E-01   8.910E+02     2.410     6078 /
+  PLOG /                                    3.160E-01   9.430E+02     2.400     6112 /
+  PLOG /                                    1.000E+00   1.060E+03     2.390     6180 /
+  PLOG /                                    3.160E+00   1.090E+03     2.380     6179 /
+  PLOG /                                    1.000E+01   1.390E+03     2.360     6074 /
+  PLOG /                                    3.160E+01   2.490E+06     1.420     8480 /
+  PLOG /                                    1.000E+02   1.660E+10     0.360    12010 /
+  DUP
+C2H3 + O2 = CH2CO + OH                                  5.260E-01     3.010     1777
+  PLOG /                                    1.000E-02   1.820E-01     3.120     1331 /
+  PLOG /                                    1.000E-01   2.070E-01     3.110     1383 /
+  PLOG /                                    3.160E-01   2.710E-01     3.080     1496 /
+  PLOG /                                    1.000E+00   5.260E-01     3.010     1777 /
+  PLOG /                                    3.160E+00   1.370E+00     2.900     2225 /
+  PLOG /                                    1.000E+01   4.190E-01     2.930     2052 /
+  PLOG /                                    3.160E+01   1.190E-04     4.210     2043 /
+  PLOG /                                    1.000E+02   1.300E-03     3.970     3414 /
+  DUP
+
+C2H3 + O2 = CH2CHO + O                                  7.100E+20    -2.650     6489  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   7.880E+20    -2.670     6742 /
+  PLOG /                                    1.000E-01   7.720E+20    -2.670     6713 /
+  PLOG /                                    3.160E-01   9.870E+20    -2.700     6724 /
+  PLOG /                                    1.000E+00   7.100E+20    -2.650     6489 /
+  PLOG /                                    3.160E+00   4.500E+20    -2.530     6406 /
+  PLOG /                                    1.000E+01   1.760E+23    -3.220     8697 /
+  PLOG /                                    3.160E+01   3.140E+25    -3.770    11530 /
+  PLOG /                                    1.000E+02   1.020E+26    -3.800    13910 /
+  DUP
+C2H3 + O2 = CH2CHO + O                                  2.020E+10     0.580       38
+  PLOG /                                    1.000E-02   1.360E+10     0.620     -278 /
+  PLOG /                                    1.000E-01   1.420E+10     0.620     -248 /
+  PLOG /                                    3.160E-01   1.660E+10     0.600     -162 /
+  PLOG /                                    1.000E+00   2.020E+10     0.580       38 /
+  PLOG /                                    3.160E+00   9.750E+09     0.670      248 /
+  PLOG /                                    1.000E+01   7.340E+09     0.720      778 /
+  PLOG /                                    3.160E+01   1.570E+09     0.920     1219 /
+  PLOG /                                    1.000E+02   7.850E+07     1.280     1401 /
+  DUP
+
+C2H3 + O2 = C2H3OO                                      3.340E+61   -15.790    20150  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   1.550E+24    -5.450     9662 /
+  PLOG /                                    1.000E-01   3.480E+56   -15.010    19160 /
+  PLOG /                                    3.160E-01   1.250E+64   -16.970    21290 /
+  PLOG /                                    1.000E+00   3.340E+61   -15.790    20150 /
+  PLOG /                                    3.160E+00   7.340E+53   -13.110    17300 /
+  PLOG /                                    1.000E+01   4.160E+48   -11.210    16000 /
+  PLOG /                                    3.160E+01   2.330E+43    -9.380    14810 /
+  PLOG /                                    1.000E+02   3.410E+39    -8.040    14360 /
+  DUP
+C2H3 + O2 = C2H3OO                                      6.130E+28    -5.890     3154
+  PLOG /                                    1.000E-02   1.780E-09     4.150    -4707 /
+  PLOG /                                    1.000E-01   2.360E+22    -4.520     2839 /
+  PLOG /                                    3.160E-01   2.000E+26    -5.430     2725 /
+  PLOG /                                    1.000E+00   6.130E+28    -5.890     3154 /
+  PLOG /                                    3.160E+00   2.140E+29    -5.800     3520 /
+  PLOG /                                    1.000E+01   3.480E+28    -5.370     3636 /
+  PLOG /                                    3.160E+01   3.320E+27    -4.950     3610 /
+  PLOG /                                    1.000E+02   1.030E+27    -4.720     3680 /
+  DUP
+
+C2H3 + O2 = C2H2 + HO2                                  2.150E+07     1.190     3367  # pes.subpes  55.6
+  PLOG /                                    1.000E-02   1.080E+07     1.280     3322 /
+  PLOG /                                    1.000E-01   7.750E+06     1.330     3216 /
+  PLOG /                                    3.160E-01   1.210E+07     1.270     3311 /
+  PLOG /                                    1.000E+00   2.150E+07     1.190     3367 /
+  PLOG /                                    3.160E+00   1.130E+08     1.000     3695 /
+  PLOG /                                    1.000E+01   1.310E+11     0.120     5872 /
+  PLOG /                                    3.160E+01   1.190E+09     0.820     5617 /
+  PLOG /                                    1.000E+02   1.060E+17    -1.450    12230 /
+  DUP
+C2H3 + O2 = C2H2 + HO2                                  4.600E+01     2.760     -493
+  PLOG /                                    1.000E-02   4.760E+01     2.750     -796 /
+  PLOG /                                    1.000E-01   5.160E+01     2.730     -768 /
+  PLOG /                                    3.160E-01   5.550E+01     2.730     -658 /
+  PLOG /                                    1.000E+00   4.600E+01     2.760     -493 /
+  PLOG /                                    3.160E+00   3.750E+00     3.070     -601 /
+  PLOG /                                    1.000E+01   5.480E+00     3.070       86 /
+  PLOG /                                    3.160E+01   4.470E+08     0.000      955 /
+  PLOG /                                    1.000E+02   2.020E+01     2.940     1847 /
+  DUP
+
+C2H3 + O2 = CO2 + CH3                                   7.250E+31    -6.700    10440  # pes.subpes  55.7
+  PLOG /                                    1.000E-02   2.370E+35    -7.760    12630 /
+  PLOG /                                    1.000E-01   1.730E+35    -7.720    12520 /
+  PLOG /                                    3.160E-01   4.470E+34    -7.550    12140 /
+  PLOG /                                    1.000E+00   7.250E+31    -6.700    10440 /
+  PLOG /                                    3.160E+00   3.630E+35    -7.750    12830 /
+  PLOG /                                    1.000E+01   2.090E+35    -7.530    14050 /
+  PLOG /                                    3.160E+01   3.840E+18    -2.440     5408 /
+  PLOG /                                    1.000E+02   1.210E+32    -6.320    16190 /
+  DUP
+C2H3 + O2 = CO2 + CH3                                   5.320E+13    -1.140      447
+  PLOG /                                    1.000E-02   6.270E+13    -1.160      406 /
+  PLOG /                                    1.000E-01   6.240E+13    -1.160      401 /
+  PLOG /                                    3.160E-01   6.120E+13    -1.160      397 /
+  PLOG /                                    1.000E+00   5.320E+13    -1.140      447 /
+  PLOG /                                    3.160E+00   1.450E+14    -1.260      988 /
+  PLOG /                                    1.000E+01   5.020E+13    -1.110     1409 /
+  PLOG /                                    3.160E+01   1.400E+70   -20.110    15430 /
+  PLOG /                                    1.000E+02   9.210E+08     0.250      855 /
+  DUP
+
+C2H3 + O2 => CH2O + H + CO                              6.360E+35    -7.320    11820  # pes.subpes  55.11
+  PLOG /                                    1.000E-02   5.820E+36    -7.600    12640 /
+  PLOG /                                    1.000E-01   5.660E+36    -7.600    12610 /
+  PLOG /                                    3.160E-01   4.550E+36    -7.570    12490 /
+  PLOG /                                    1.000E+00   6.360E+35    -7.320    11820 /
+  PLOG /                                    3.160E+00   3.350E+36    -7.470    12460 /
+  PLOG /                                    1.000E+01   1.210E+36    -7.200    13430 /
+  PLOG /                                    3.160E+01   7.430E+20    -2.570     5578 /
+  PLOG /                                    1.000E+02   6.360E+33    -6.280    16000 /
+  DUP
+C2H3 + O2 => CH2O + H + CO                              1.420E+16    -1.310      646
+  PLOG /                                    1.000E-02   1.060E+16    -1.280      515 /
+  PLOG /                                    1.000E-01   1.070E+16    -1.280      513 /
+  PLOG /                                    3.160E-01   1.130E+16    -1.290      521 /
+  PLOG /                                    1.000E+00   1.420E+16    -1.310      646 /
+  PLOG /                                    3.160E+00   2.200E+16    -1.360     1066 /
+  PLOG /                                    1.000E+01   5.980E+15    -1.180     1429 /
+  PLOG /                                    3.160E+01   2.390E+69   -19.230    14760 /
+  PLOG /                                    1.000E+02   9.810E+10     0.190      831 /
+  DUP
+
+CC3H6 = C2H3 + CH3                                      1.000E+70   -15.700   122000  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   8.310E+64   -15.100   111000 /
+  PLOG /                                    1.000E-01   8.290E+64   -14.700   114000 /
+  PLOG /                                    1.000E+00   1.000E+70   -15.700   122000 /
+  PLOG /                                    1.000E+01   1.660E+67   -14.600   124000 /
+  PLOG /                                    1.000E+02   7.870E+62   -13.100   127000 /
+  DUP
+CC3H6 = C2H3 + CH3                                      3.390E+50   -10.600   104220
+  PLOG /                                    1.000E-02   1.510E+49   -11.000    99748 /
+  PLOG /                                    1.000E-01   1.050E+45    -9.460    99275 /
+  PLOG /                                    1.000E+00   3.390E+50   -10.600   104220 /
+  PLOG /                                    1.000E+01   1.760E+47    -9.430   104930 /
+  PLOG /                                    1.000E+02   1.880E+39    -6.930   103980 /
+  DUP
+
+C3H6 = C2H3 + CH3                                       5.800E+75   -17.200   134000  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   1.880E+78   -18.700   130000 /
+  PLOG /                                    1.000E-01   8.730E+76   -17.900   132000 /
+  PLOG /                                    1.000E+00   5.800E+75   -17.200   134000 /
+  PLOG /                                    1.000E+01   8.120E+71   -15.800   136000 /
+  PLOG /                                    1.000E+02   2.150E+64   -13.400   135000 /
+  DUP
+C3H6 = C2H3 + CH3                                       6.700E+54   -11.800   113840
+  PLOG /                                    1.000E-02   1.690E+59   -13.600   113290 /
+  PLOG /                                    1.000E-01   2.000E+60   -13.700   114890 /
+  PLOG /                                    1.000E+00   6.700E+54   -11.800   113840 /
+  PLOG /                                    1.000E+01   1.060E+47    -9.270   111510 /
+  PLOG /                                    1.000E+02   7.290E+38    -6.700   108740 /
+  DUP
+
+C3H5-T + H = C2H3 + CH3                                 2.010E+24    -2.860    10900  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   3.310E+16    -0.690     5200 /
+  PLOG /                                    1.000E-01   9.040E+16    -0.810     4800 /
+  PLOG /                                    1.000E+00   2.010E+24    -2.860    10900 /
+  PLOG /                                    1.000E+01   2.750E+26    -3.310    15800 /
+  PLOG /                                    1.000E+02   3.150E+32    -4.830    26000 /
+  DUP
+C3H5-T + H = C2H3 + CH3                                 9.970E+08     1.360     1596
+  PLOG /                                    1.000E-02   8.040E+13    -0.140     1150 /
+  PLOG /                                    1.000E-01   7.170E+10     0.670      674 /
+  PLOG /                                    1.000E+00   9.970E+08     1.360     1596 /
+  PLOG /                                    1.000E+01   7.410E+07     1.570     2109 /
+  PLOG /                                    1.000E+02   2.700E+12     0.320     6792 /
+  DUP
+
+C2H3 + CH3 (+M) = C3H6 (+M)                             2.500E+13     0.000        0  # pes.subpes  76.1
+  LOW  /                                                4.270E+58   -11.940     9770  /
+  TROE /   1.750E-01   1.341E+03   6.000E+04   1.014E+04 /
+
+C2H3 + CH3 = C3H5-A + H                                 5.300E+29    -4.570    14400  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   4.120E+29    -4.950     8000 /
+  PLOG /                                    1.000E-01   4.860E+30    -5.030    11300 /
+  PLOG /                                    1.000E+00   5.300E+29    -4.570    14400 /
+  PLOG /                                    1.000E+01   1.320E+30    -4.540    19300 /
+  PLOG /                                    1.000E+02   5.160E+28    -4.030    23800 /
+  DUP
+C2H3 + CH3 = C3H5-A + H                                 4.480E+10     0.600     1422
+  PLOG /                                    1.000E-02   5.730E+15    -0.770     1196 /
+  PLOG /                                    1.000E-01   2.060E+13    -0.074     1429 /
+  PLOG /                                    1.000E+00   4.480E+10     0.600     1422 /
+  PLOG /                                    1.000E+01   4.100E+06     1.710     1057 /
+  PLOG /                                    1.000E+02   1.370E-01     3.910     -354 /
+  DUP
+
+C2H3 + CH3 = CH4 + C2H2                                 3.920E+11     0.000        0  # pes.subpes  76.2
+
+C2H3 + CO = C2H3CO                                      1.510E+11     0.000     4810  # pes.subpes  81.1
+
+C2H2 + HCO = C2H3 + CO                                  1.000E+07     2.000     6000  # pes.subpes  81.3
+
+C2H3 + HCO = C2H3CHO                                    1.810E+13     0.000        0  # pes.subpes  82.1
+
+C3H3 + OH = C2H3 + HCO                                  1.000E+13     0.000        0  # pes.subpes  82.3
+
+C3H4-P + O = C2H3 + HCO                                 3.200E+12     0.000     2010  # pes.subpes  82.10
+
+CH2CHOCH2 = C2H3 + CH2O                                 1.830E+34    -6.940    30690  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   3.300E+09    -0.638    19748 /
+  PLOG /                                    1.000E-02   3.360E+21    -3.900    23945 /
+  PLOG /                                    1.000E-01   2.910E+29    -5.900    27250 /
+  PLOG /                                    1.000E+00   1.830E+34    -6.940    30690 /
+  PLOG /                                    1.000E+01   9.720E+33    -6.500    33002 /
+  PLOG /                                    1.000E+02   2.680E+27    -4.260    33306 /
+  PLOG /                                    1.000E+03   8.810E+14    -0.326    31553 /
+
+CH2CH2CHO = C2H3 + CH2O                                 8.040E+35    -8.310    46920  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   6.890E-69    21.500     2638 /
+  PLOG /                                    1.000E-02   5.340E-33    11.100    16749 /
+  PLOG /                                    1.000E-01   6.110E+26    -6.010    44117 /
+  PLOG /                                    1.000E+00   8.040E+35    -8.310    46920 /
+  PLOG /                                    1.000E+01   5.520E+40    -9.190    50509 /
+  PLOG /                                    1.000E+02   5.850E+35    -7.180    52038 /
+  PLOG /                                    1.000E+03   1.930E+19    -1.940    48440 /
+
+CH2CCH2OH = CH2O + C2H3                                 9.240E+10     0.870    30460  # pes.subpes  83.1
+
+C3H5O = C2H3 + CH2O                                     1.070E+26    -4.560    24623  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   7.260E+06     0.182    17816 /
+  PLOG /                                    1.000E-02   6.970E+16    -2.500    20879 /
+  PLOG /                                    1.000E-01   6.640E+23    -4.230    23565 /
+  PLOG /                                    1.000E+00   1.070E+26    -4.560    24623 /
+  PLOG /                                    1.000E+01   6.500E+29    -5.370    26645 /
+  PLOG /                                    1.000E+02   4.630E+31    -5.590    28915 /
+  PLOG /                                    1.000E+03   8.520E+25    -3.610    27863 /
+
+C2H3 + CH2O = C2H3CHO + H                               1.750E+07     1.450     3428  # pes.subpes  83.1
+  PLOG /                                    1.000E-03   2.600E+04     2.260     1510 /
+  PLOG /                                    1.000E-02   5.130E+04     2.170     1676 /
+  PLOG /                                    1.000E-01   3.990E+05     1.910     2218 /
+  PLOG /                                    1.000E+00   1.750E+07     1.450     3428 /
+  PLOG /                                    1.000E+01   1.350E+09     0.933     5173 /
+  PLOG /                                    1.000E+02   2.240E+11     0.357     8001 /
+  PLOG /                                    1.000E+03   6.010E+05     2.090     7896 /
+
+C3H6O1-2 + H => CH2O + C2H3 + H2                        2.630E+07     2.000     5000  # pes.subpes  85.24
+
+C3H6O1-3 + H => CH2O + C2H3 + H2                        2.630E+07     2.000     5000  # pes.subpes  85.25
+
+C3H3 + HO2 => OH + CO + C2H3                            8.000E+11     0.000        0  # pes.subpes  90.8
+
+C3H6O1-2 + O => CH2O + C2H3 + OH                        8.430E+13     0.000     5200  # pes.subpes  92.11
+
+C3H6O1-3 + O => CH2O + C2H3 + OH                        8.430E+13     0.000     5200  # pes.subpes  92.12
+
+C3H6O1-2 + OH => CH2O + C2H3 + H2O                      5.000E+12     0.000        0  # pes.subpes  93.16
+
+C3H6O1-3 + OH => CH2O + C2H3 + H2O                      5.000E+12     0.000        0  # pes.subpes  93.17
+
+C3H6O1-2 + HO2 => CH2O + C2H3 + H2O2                    1.000E+13     0.000    15000  # pes.subpes  99.18
+
+C3H6O1-3 + HO2 => CH2O + C2H3 + H2O2                    1.000E+13     0.000    15000  # pes.subpes  99.19
+
+C2H3 + C2H2 = C4H5-N                                    9.300E+38    -8.760    12000  # pes.subpes  109.1
+  PLOG /                                    1.320E-02   1.100E+31    -7.140     5600 /
+  PLOG /                                    2.630E-02   1.100E+32    -7.330     6200 /
+  PLOG /                                    1.200E-01   2.400E+31    -6.950     5600 /
+  PLOG /                                    1.000E+00   9.300E+38    -8.760    12000 /
+  PLOG /                                    1.000E+01   8.100E+37    -8.090    13400 /
+
+C2H3 + C2H2 = C4H5-I                                    1.600E+46   -10.980    18600  # pes.subpes  109.1
+  PLOG /                                    1.320E-02   5.000E+34    -8.420     7900 /
+  PLOG /                                    2.630E-02   2.100E+36    -8.780     9100 /
+  PLOG /                                    1.200E-01   1.000E+37    -8.770     9800 /
+  PLOG /                                    1.000E+00   1.600E+46   -10.980    18600 /
+  PLOG /                                    1.000E+01   5.100E+53   -12.640    28800 /
+
+C2H3 + C2H2 = C4H4 + H                                  2.000E+18    -1.680    10600  # pes.subpes  109.1
+  PLOG /                                    1.320E-02   7.200E+13    -0.480     6100 /
+  PLOG /                                    2.630E-02   5.000E+14    -0.710     6700 /
+  PLOG /                                    1.200E-01   4.600E+16    -1.250     8400 /
+  PLOG /                                    1.000E+00   2.000E+18    -1.680    10600 /
+  PLOG /                                    1.000E+01   4.900E+16    -1.130    11800 /
+
+C2H3 + C2H3 = C4H6                                      1.500E+42    -8.840    12483  # pes.subpes  110.1
+  PLOG /                                    2.630E-02   7.000E+57   -13.820    17629 /
+  PLOG /                                    1.200E-01   1.500E+52   -11.970    16056 /
+  PLOG /                                    1.000E+00   1.500E+42    -8.840    12483 /
+
+C2H3 + C2H3 = C4H5-N + H                                2.400E+20    -2.040    15361  # pes.subpes  110.1
+  PLOG /                                    2.630E-02   1.100E+24    -3.280    12395 /
+  PLOG /                                    1.200E-01   4.600E+24    -3.380    14650 /
+  PLOG /                                    1.000E+00   2.400E+20    -2.040    15361 /
+
+C2H3 + C2H3 = C4H5-I + H                                1.200E+22    -2.440    13654  # pes.subpes  110.1
+  PLOG /                                    2.630E-02   1.500E+30    -4.950    12958 /
+  PLOG /                                    1.200E-01   7.200E+28    -4.490    14273 /
+  PLOG /                                    1.000E+00   1.200E+22    -2.440    13654 /
+
+C2H5 + C2H3 (+M) = C4H8-1 (+M)                          1.500E+13     0.000        0  # pes.subpes  112.1
+  LOW  /                                                1.550E+56   -11.790     8984  /
+  TROE /   1.980E-01   2.278E+03   6.000E+04   5.723E+03 /
+  H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+
+C4H5OH-13 = C2H3 + CH2CHO                               2.816E+24    -2.381    90130  # pes.subpes  119.2
+
+CH2CH2COCH3 = C2H3 + CH3CHO                             1.930E+19    -1.940    48440  # pes.subpes  120.1
+
+C4H71-O = C2H3 + CH3CHO                                 8.520E+25    -3.610    27863  # pes.subpes  120.1
+
+C2H3CHOCH2 + H => C2H3 + CH2CO + H2                     5.000E+12     0.000        0  # pes.subpes  120.31
+
+C3H6O1-2 + CH3 => CH2O + C2H3 + CH4                     2.000E+11     0.000    10000  # pes.subpes  122.40
+
+C3H6O1-3 + CH3 => CH2O + C2H3 + CH4                     2.000E+11     0.000    10000  # pes.subpes  122.41
+
+C2H3CHOCH2 + O => C2H3 + CH2CO + OH                     5.000E+12     0.000        0  # pes.subpes  127.9
+
+C4H5-I + HO2 => C2H3 + CH2CO + OH                       6.600E+12     0.000        0  # pes.subpes  127.11
+
+C4H5-N + HO2 => C2H3 + CH2CO + OH                       6.600E+12     0.000        0  # pes.subpes  127.12
+
+C2H3CHOCH2 + OH => C2H3 + CH2CO + H2O                   5.000E+12     0.000        0  # pes.subpes  128.33
+
+C2H3COCH3 + OH => CH2CO + C2H3 + H2O                    5.100E+11     0.000     1192  # pes.subpes  128.34
+
+C4H71-3OOH => CH3CHO + C2H3 + OH                        1.050E+16     0.000    41600  # pes.subpes  129.3
+
+C4H6O1-3OOH4 = C2H3 + HO2CH2CHO                         2.670E+34    -6.630    22672  # pes.subpes  135.3
+
+C2H3CHOCH2 + HO2 => C2H3 + CH2CO + H2O2                 1.000E+13     0.000    15000  # pes.subpes  135.12
+
+C2H3COCH3 + HO2 => CH2CO + C2H3 + H2O2                  8.500E+12     0.000    20460  # pes.subpes  135.14
+
+C4H6OHOOH1-4-3 => HOCH2CHO + C2H3 + OH                  1.050E+16     0.000    41600  # pes.subpes  136.6
+
+C3H6O1-2 + CH3O2 => CH2O + C2H3 + CH3O2H                1.000E+13     0.000    19000  # pes.subpes  137.41
+
+C3H6O1-3 + CH3O2 => CH2O + C2H3 + CH3O2H                1.000E+13     0.000    19000  # pes.subpes  137.42
+
+COHQCYC(COC) => HOCHO + CH2O + C2H3 + OH                1.590E+20    -1.500    42879  # pes.subpes  141.11
+
+C2H3CHOCH2 + CH3 => C2H3 + CH2CO + CH4                  2.000E+11     0.000    10000  # pes.subpes  159.7
+
+C2H3CHOCH2 + CH3O2 => C2H3 + CH2CO + CH3O2H             1.000E+13     0.000    19000  # pes.subpes  170.5
+
+C2H3COCH3 + CH3O2 => CH2CO + C2H3 + CH3O2H              3.010E+12     0.000    17580  # pes.subpes  170.7
+
+C4H3-N + C2H3 = C3H3 + C3H3                             4.000E+12     0.000        0  # pes.subpes  179.1
+
+C6H101-3,3 = C2H3 + C4H72-2                             2.500E+15     0.000    99500  # pes.subpes  183.1
+
+C6H101-3,3 + C2H3 = C8H131-5,3-4,TA                     4.400E+04     2.480     6130  # pes.subpes  221.3
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       R_CH3
+!!!!!!!!!!!!!!!!!!!!!!!!!
+CC3H6 = C3H5-A + H                                      5.070E+64   -14.300   112000  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   2.330E+63   -14.600   103000 /
+  PLOG /                                    1.000E-01   7.030E+63   -14.400   107000 /
+  PLOG /                                    1.000E+00   5.070E+64   -14.300   112000 /
+  PLOG /                                    1.000E+01   4.920E+61   -13.200   115000 /
+  PLOG /                                    1.000E+02   4.820E+57   -11.700   118000 /
+  DUP
+CC3H6 = C3H5-A + H                                      8.230E+43    -8.880    92907
+  PLOG /                                    1.000E-02   1.120E+40    -8.370    85836 /
+  PLOG /                                    1.000E-01   1.060E+41    -8.330    88499 /
+  PLOG /                                    1.000E+00   8.230E+43    -8.880    92907 /
+  PLOG /                                    1.000E+01   1.270E+39    -7.330    93401 /
+  PLOG /                                    1.000E+02   1.450E+28    -4.020    90995 /
+  DUP
+
+C3H6 = CC3H6                                            6.140E+68   -16.200   106000  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   1.260E+64   -15.600    95000 /
+  PLOG /                                    1.000E-01   3.940E+67   -16.200   101000 /
+  PLOG /                                    1.000E+00   6.140E+68   -16.200   106000 /
+  PLOG /                                    1.000E+01   9.700E+66   -15.300   109000 /
+  PLOG /                                    1.000E+02   1.450E+62   -13.600   110000 /
+  DUP
+C3H6 = CC3H6                                            1.150E+47   -10.600    85502
+  PLOG /                                    1.000E-02   4.840E+41    -9.620    79528 /
+  PLOG /                                    1.000E-01   8.070E+44   -10.200    82671 /
+  PLOG /                                    1.000E+00   1.150E+47   -10.600    85502 /
+  PLOG /                                    1.000E+01   1.330E+39    -7.980    83303 /
+  PLOG /                                    1.000E+02   4.970E+31    -5.600    80987 /
+  DUP
+
+C3H6 = C3H5-S + H                                       7.710E+69   -16.090   140000  # pes.subpes  76.1
+
+C3H6 = C3H5-A + H                                       1.080E+71   -15.900   124860  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   9.160E+74   -17.600   120000 /
+  PLOG /                                    1.000E-01   1.730E+70   -16.000   120000 /
+  PLOG /                                    1.000E+00   1.080E+71   -15.900   124860 /
+  PLOG /                                    1.000E+01   6.400E+65   -14.200   125000 /
+  PLOG /                                    1.000E+02   8.050E+56   -11.500   122000 /
+  DUP
+C3H6 = C3H5-A + H                                       6.280E+42    -8.510    98004
+  PLOG /                                    1.000E-02   2.980E+54   -12.300   101200 /
+  PLOG /                                    1.000E-01   1.370E+43    -8.870    96365 /
+  PLOG /                                    1.000E+00   6.280E+42    -8.510    98004 /
+  PLOG /                                    1.000E+01   4.730E+35    -6.260    95644 /
+  PLOG /                                    1.000E+02   4.340E+28    -4.060    93114 /
+  DUP
+
+C3H5-T + H = C3H6                                       2.310E+60   -14.000    21900  # pes.subpes  76.1
+  PLOG /                                    1.000E-02   4.960E+60   -15.200    18000 /
+  PLOG /                                    1.000E-01   3.200E+62   -15.100    20100 /
+  PLOG /                                    1.000E+00   2.310E+60   -14.000    21900 /
+  PLOG /                                    1.000E+01   3.690E+54   -12.000    22100 /
+  PLOG /                                    1.000E+02   1.150E+50   -10.400    23300 /
+  DUP
+C3H5-T + H = C3H6                                       1.090E+40    -8.660     6448
+  PLOG /                                    1.000E-02   1.490E+48   -12.000     7203 /
+  PLOG /                                    1.000E-01   6.760E+46   -11.100     7630 /
+  PLOG /                                    1.000E+00   1.090E+40    -8.660     6448 /
+  PLOG /                                    1.000E+01   2.380E+31    -5.730     4506 /
+  PLOG /                                    1.000E+02   5.690E+25    -3.830     3250 /
+  DUP
+
+C3H6 + H = C3H5-A + H2                                  3.644E+05     2.455     4361  # pes.subpes  77.5
+
+C3H6 + H = C3H5-S + H2                                  5.101E+02     3.234    12357  # pes.subpes  77.6
+  DUP
+C3H6 + H = C3H5-S + H2                                  3.969E+02     3.252    12007
+  DUP
+
+C3H6 + H = C3H5-T + H2                                  1.498E+02     3.381     8910  # pes.subpes  77.7
+
+C3H6 + O = C3H5-A + OH                                  5.240E+11     0.700     5884  # pes.subpes  84.9
+
+C3H6 + O = C3H5-S + OH                                  1.200E+11     0.700     8959  # pes.subpes  84.10
+
+C3H6 + O = C3H5-T + OH                                  6.030E+10     0.700     7632  # pes.subpes  84.11
+
+C3H6 + O => CH2CO + CH3 + H                             3.050E+06     1.880      183  # pes.subpes  84.16
+
+C3H6 + O => CH3CHCO + H + H                             3.050E+06     1.880      183  # pes.subpes  84.17
+
+C3H6 + OH = C3H6OH1-2                                   1.950E+59   -14.170    23079  # pes.subpes  85.3
+  PLOG /                                    1.300E-03   2.300E+78   -20.700    32402 /
+  PLOG /                                    1.000E-02   2.740E+77   -20.000    33874 /
+  PLOG /                                    1.300E-02   1.070E+76   -19.580    32874 /
+  PLOG /                                    2.500E-02   3.680E+73   -18.790    31361 /
+  PLOG /                                    1.000E-01   1.040E+68   -17.010    27909 /
+  PLOG /                                    1.315E-01   7.230E+66   -16.640    27162 /
+  PLOG /                                    1.000E+00   1.950E+59   -14.170    23079 /
+  PLOG /                                    1.000E+01   7.580E+53   -12.230    22976 /
+  PLOG /                                    1.000E+02   1.430E+48   -10.230    23772 /
+  DUP
+C3H6 + OH = C3H6OH1-2                                   1.550E+50   -12.040    11493
+  PLOG /                                    1.300E-03   6.410E+59   -15.840    11594 /
+  PLOG /                                    1.000E-02   7.280E+59   -15.510    12898 /
+  PLOG /                                    1.300E-02   2.790E+59   -15.340    12913 /
+  PLOG /                                    2.500E-02   2.650E+58   -14.930    12936 /
+  PLOG /                                    1.000E-01   1.350E+56   -14.040    12945 /
+  PLOG /                                    1.315E-01   3.980E+55   -13.850    12887 /
+  PLOG /                                    1.000E+00   1.550E+50   -12.040    11493 /
+  PLOG /                                    1.000E+01   6.410E+41    -9.350     8921 /
+  PLOG /                                    1.000E+02   2.300E+32    -6.310     6088 /
+  DUP
+
+C3H6 + OH = IC3H5OH + H                                 7.650E-07     5.050      874  # pes.subpes  85.4
+  PLOG /                                    1.300E-03   2.870E+00     2.920      625 /
+  PLOG /                                    1.000E-02   4.840E-01     2.980      704 /
+  PLOG /                                    1.300E-02   3.130E-01     3.040      721 /
+  PLOG /                                    2.500E-02   9.330E-03     3.620      677 /
+  PLOG /                                    1.000E-01   4.640E-05     4.480      687 /
+  PLOG /                                    1.315E-01   2.710E-05     4.560      707 /
+  PLOG /                                    1.000E+00   7.650E-07     5.050      874 /
+  PLOG /                                    1.000E+01   2.640E+15    -0.800    12728 /
+  PLOG /                                    1.000E+02   4.870E-04     4.320     4020 /
+
+C3H6 + OH = C3H6OH2-1                                   5.180E+49   -12.040    11493  # pes.subpes  85.4
+  PLOG /                                    1.300E-03   2.140E+59   -15.840    11594 /
+  PLOG /                                    1.000E-02   2.430E+59   -15.510    12898 /
+  PLOG /                                    1.300E-02   9.300E+58   -15.340    12913 /
+  PLOG /                                    2.500E-02   8.830E+57   -14.930    12936 /
+  PLOG /                                    1.000E-01   4.500E+55   -14.040    12945 /
+  PLOG /                                    1.315E-01   1.330E+55   -13.850    12887 /
+  PLOG /                                    1.000E+00   5.180E+49   -12.040    11493 /
+  PLOG /                                    1.000E+01   2.140E+41    -9.350     8921 /
+  PLOG /                                    1.000E+02   7.650E+31    -6.310     6088 /
+  DUP
+C3H6 + OH = C3H6OH2-1                                   6.500E+58   -14.170    23079
+  PLOG /                                    1.300E-03   7.680E+77   -20.700    32402 /
+  PLOG /                                    1.000E-02   9.130E+76   -20.000    33874 /
+  PLOG /                                    1.300E-02   3.550E+75   -19.580    32874 /
+  PLOG /                                    2.500E-02   1.230E+73   -18.790    31361 /
+  PLOG /                                    1.000E-01   3.450E+67   -17.010    27909 /
+  PLOG /                                    1.315E-01   2.410E+66   -16.640    27162 /
+  PLOG /                                    1.000E+00   6.500E+58   -14.170    23079 /
+  PLOG /                                    1.000E+01   2.530E+53   -12.230    22976 /
+  PLOG /                                    1.000E+02   4.780E+47   -10.230    23772 /
+  DUP
+
+C3H6 + OH = C3H5-A + H2O                                4.460E+06     2.072     1051  # pes.subpes  85.13
+
+C3H6 + OH = C3H5-S + H2O                                1.860E+05     2.369     2502  # pes.subpes  85.14
+
+C3H6 + OH = C3H5-T + H2O                                1.800E+06     1.979     2235  # pes.subpes  85.15
+
+C3H6 + OH = C3H5OH + H                                  9.150E+07     1.420    10087  # pes.subpes  85.16
+  PLOG /                                    1.300E-03   2.670E+13     0.050    10611 /
+  PLOG /                                    1.000E-02   2.750E+13     0.050    10623 /
+  PLOG /                                    1.300E-02   2.870E+13     0.040    10634 /
+  PLOG /                                    2.500E-02   1.590E+14    -0.160    11125 /
+  PLOG /                                    1.000E-01   3.100E+14    -0.220    11407 /
+  PLOG /                                    1.315E-01   3.780E+14    -0.240    11458 /
+  PLOG /                                    1.000E+00   9.150E+07     1.420    10087 /
+  PLOG /                                    1.000E+01   3.660E+05     2.140    10410 /
+  PLOG /                                    1.000E+02   8.190E+02     2.840    10481 /
+
+C3H6 + OH = SC3H5OH + H                                 1.030E+02     2.830     4530  # pes.subpes  85.18
+  PLOG /                                    1.300E-03   3.470E+06     1.530     4288 /
+  PLOG /                                    1.000E-02   1.080E+07     1.340     4576 /
+  PLOG /                                    1.300E-02   9.760E+06     1.330     4589 /
+  PLOG /                                    2.500E-02   5.140E+06     1.360     4594 /
+  PLOG /                                    1.000E-01   3.130E+05     1.690     4603 /
+  PLOG /                                    1.315E-01   1.390E+05     1.800     4603 /
+  PLOG /                                    1.000E+00   1.030E+02     2.830     4530 /
+  PLOG /                                    1.000E+01   3.400E-02     3.890     4390 /
+  PLOG /                                    1.000E+02   4.460E-06     5.030     4132 /
+
+C3H6 + O2 = C3H5-A + HO2                                5.960E+19    -1.670    46192  # pes.subpes  92.3
+
+C3H6 + O2 = C3H5-S + HO2                                2.000E+13     0.000    62270  # pes.subpes  92.4
+
+C3H6 + O2 = C3H5-T + HO2                                1.000E+13     0.000    58770  # pes.subpes  92.5
+
+NC3H7O2 = C3H6 + HO2                                    6.240E+08     1.250    29600  # pes.subpes  93.1
+
+IC3H7O2 = C3H6 + HO2                                    1.224E+09     1.280    30000  # pes.subpes  93.1
+
+C3H6OOH1-2 = C3H6 + HO2                                 2.340E+10     0.770    15300  # pes.subpes  93.1
+
+C3H6 + HO2 = C3H6OOH2-1                                 1.000E+00     0.000        0  # pes.subpes  93.1
+  PLOG /                                    1.300E-02   1.310E+13    -1.840     8561 /
+  PLOG /                                    9.869E-01   5.930E+17    -2.610    11533 /
+  PLOG /                                    9.870E+00   8.340E+24    -4.400    16440 /
+  PLOG /                                    9.869E+01   3.750E+23    -3.680    17965 /
+
+C3H6 + HO2 = C3H6O1-2 + OH                              1.000E+00     0.000        0  # pes.subpes  93.1
+  PLOG /                                    1.300E-02   3.730E+03     2.640    11173 /
+  PLOG /                                    9.869E-01   1.780E+12     0.110    16137 /
+  PLOG /                                    9.870E+00   3.900E+17    -1.400    20077 /
+  PLOG /                                    9.869E+01   1.130E+19    -1.680    23587 /
+
+C3H6 + HO2 = C3H5-A + H2O2                              3.070E-02     4.403    13547  # pes.subpes  93.8
+
+C3H6 + HO2 = C3H5-S + H2O2                              9.570E+02     3.059    20799  # pes.subpes  93.9
+
+C3H6 + HO2 = C3H5-T + H2O2                              1.560E+04     2.820    24428  # pes.subpes  93.10
+
+IC4H9 = C3H6 + CH3                                      6.750E+44   -10.070    37209  # pes.subpes  113.1
+  PLOG /                                    1.000E-01   3.150E+41    -9.500    33486 /
+  PLOG /                                    1.000E+00   6.750E+44   -10.070    37209 /
+  PLOG /                                    1.000E+01   7.790E+44    -9.700    39751 /
+  PLOG /                                    1.000E+02   3.610E+39    -7.780    39583 /
+
+IC4H8 + H = C3H6 + CH3                                  8.900E+11     0.470     5431  # pes.subpes  113.1
+  PLOG /                                    1.300E-03   5.130E+08     1.350     2542 /
+  PLOG /                                    4.000E-02   2.630E+10     0.870     3600 /
+  PLOG /                                    1.000E+00   8.900E+11     0.470     5431 /
+  PLOG /                                    1.000E+01   3.080E+22    -2.600    12898 /
+  PLOG /                                    1.000E+02   4.400E+22    -2.420    16500 /
+  DUP
+IC4H8 + H = C3H6 + CH3                                  1.340E+06     0.470     5431
+  PLOG /                                    1.300E-03   7.700E+02     1.350     2542 /
+  PLOG /                                    4.000E-02   3.940E+04     0.870     3600 /
+  PLOG /                                    1.000E+00   1.340E+06     0.470     5431 /
+  PLOG /                                    1.000E+01   4.130E+04     2.520     3679 /
+  PLOG /                                    1.000E+02   8.370E+02     2.910     3981 /
+  DUP
+
+SC4H9 = C3H6 + CH3                                      4.740E+44    -9.850    41841  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   2.890E+40    -9.760    33601 /
+  PLOG /                                    1.000E-02   1.800E+44   -10.500    37007 /
+  PLOG /                                    1.000E-01   2.510E+46   -10.730    40237 /
+  PLOG /                                    1.000E+00   4.740E+44    -9.850    41841 /
+  PLOG /                                    1.000E+01   3.790E+37    -7.440    40604 /
+  PLOG /                                    1.000E+02   4.790E+26    -4.010    36898 /
+
+PC4H9 = C3H6 + CH3                                      2.050E+42    -9.610    46415  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   3.710E+25    -5.810    34965 /
+  PLOG /                                    1.000E-02   1.850E+27    -6.010    35481 /
+  PLOG /                                    1.000E-01   2.460E+32    -7.160    38637 /
+  PLOG /                                    1.000E+00   2.050E+42    -9.610    46415 /
+  PLOG /                                    1.000E+01   4.980E+48   -10.970    54456 /
+  PLOG /                                    1.000E+02   2.230E+42    -8.680    56601 /
+
+C4H8-2 + H = C3H6 + CH3                                 2.910E+19    -1.390     9365  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   6.390E+09     1.290     1834 /
+  PLOG /                                    1.000E-02   2.600E+10     1.120     2267 /
+  PLOG /                                    1.000E-01   2.480E+13     0.290     4456 /
+  PLOG /                                    1.000E+00   2.910E+19    -1.390     9365 /
+  PLOG /                                    1.000E+01   6.130E+23    -2.530    14463 /
+  PLOG /                                    1.000E+02   1.230E+20    -1.350    15762 /
+
+C4H8-1 + H = C3H6 + CH3                                 4.570E+19    -1.540     9061  # pes.subpes  113.2
+  PLOG /                                    1.000E-03   7.830E+09     1.170     1442 /
+  PLOG /                                    1.000E-02   3.390E+10     1.000     1895 /
+  PLOG /                                    1.000E-01   3.700E+13     0.140     4127 /
+  PLOG /                                    1.000E+00   4.570E+19    -1.540     9061 /
+  PLOG /                                    1.000E+01   8.570E+23    -2.660    14140 /
+  PLOG /                                    1.000E+02   1.320E+20    -1.460    15383 /
+  DUP
+C4H8-1 + H = C3H6 + CH3                                 1.210E+16    -0.990    13175
+  PLOG /                                    1.000E-03   1.800E+06     1.760     5900 /
+  PLOG /                                    1.000E-02   3.460E+06     1.680     6100 /
+  PLOG /                                    1.000E-01   4.020E+08     1.100     7574 /
+  PLOG /                                    1.000E+00   1.210E+16    -0.990    13175 /
+  PLOG /                                    1.000E+01   7.140E+27    -4.230    23319 /
+  PLOG /                                    1.000E+02   1.000E+33    -5.490    31922 /
+  DUP
+
+C3H6 + CH3 = C3H5-A + CH4                               2.210E+00     3.500     5675  # pes.subpes  113.3
+
+C3H6 + CH3 = C3H5-S + CH4                               1.348E+00     3.500    12850  # pes.subpes  113.4
+
+C3H6 + CH3 = C3H5-T + CH4                               8.400E-01     3.500    11660  # pes.subpes  113.5
+
+SC3H5CHO = C3H6 + CO                                    3.900E+14     0.000    69000  # pes.subpes  119.1
+
+C3H5-A + HCO = C3H6 + CO                                6.000E+13     0.000        0  # pes.subpes  119.4
+
+C3H5-S + HCO = C3H6 + CO                                9.000E+13     0.000        0  # pes.subpes  119.5
+
+C3H5-T + HCO = C3H6 + CO                                9.000E+13     0.000        0  # pes.subpes  119.6
+
+AC3H5OCH2 = C3H6 + HCO                                  3.730E+14    -0.726    32008  # pes.subpes  120.1
+
+SC3H5OCH2-1 = C3H6 + HCO                                3.730E+14    -0.726    32008  # pes.subpes  120.2
+
+SC3H5CHO + H = C3H6 + HCO                               4.000E+21    -2.390    11180  # pes.subpes  120.2
+
+C4H7O2-1 = C3H6 + HCO                                   4.750E+08     1.140    20922  # pes.subpes  120.2
+
+C3H6CHO-2 = C3H6 + HCO                                  1.590E+13     0.063    24086  # pes.subpes  120.2
+
+C3H5-S + CH2O = C3H6 + HCO                              1.650E+01     3.170     9400  # pes.subpes  120.2
+
+IC4H7O = C3H6 + HCO                                     1.070E+24    -4.160    18985  # pes.subpes  120.3
+  PLOG /                                    1.000E-03   6.620E+16    -2.840    13197 /
+  PLOG /                                    1.000E-02   1.260E+20    -3.530    15469 /
+  PLOG /                                    1.000E-01   2.130E+21    -3.640    16584 /
+  PLOG /                                    1.000E+00   1.070E+24    -4.160    18985 /
+  PLOG /                                    1.000E+01   8.420E+25    -4.400    22383 /
+  PLOG /                                    1.000E+02   1.860E+21    -2.730    23659 /
+  PLOG /                                    1.000E+03   4.750E+08     1.140    20922 /
+
+IC3H6CHO = C3H6 + HCO                                   1.010E+34    -6.700    30018  # pes.subpes  120.3
+  PLOG /                                    1.000E-03   2.900E+32    -7.240    25688 /
+  PLOG /                                    1.000E-02   5.300E+33    -7.280    27101 /
+  PLOG /                                    1.000E-01   2.000E+35    -7.410    29027 /
+  PLOG /                                    1.000E+00   1.010E+34    -6.700    30018 /
+  PLOG /                                    1.000E+01   9.760E+27    -4.630    28924 /
+  PLOG /                                    1.000E+02   2.110E+19    -1.850    26240 /
+  PLOG /                                    1.000E+03   1.590E+13     0.063    24086 /
+
+IC3H5OCH2 = C3H6 + HCO                                  1.440E+36    -7.760    28008  # pes.subpes  120.3
+  PLOG /                                    1.000E-03   8.230E+26    -5.840    19357 /
+  PLOG /                                    1.000E-02   1.320E+29    -6.210    21294 /
+  PLOG /                                    1.000E-01   3.470E+32    -6.960    24197 /
+  PLOG /                                    1.000E+00   1.440E+36    -7.760    28008 /
+  PLOG /                                    1.000E+01   9.720E+37    -8.020    32395 /
+  PLOG /                                    1.000E+02   2.430E+31    -5.810    34296 /
+  PLOG /                                    1.000E+03   3.730E+14    -0.726    32008 /
+
+C3H5-T + CH2O = C3H6 + HCO                              1.420E+10     0.209     3934  # pes.subpes  120.3
+  PLOG /                                    1.000E-03   1.110E+07     1.090     1807 /
+  PLOG /                                    1.000E-02   2.470E+07     0.993     1995 /
+  PLOG /                                    1.000E-01   2.470E+08     0.704     2596 /
+  PLOG /                                    1.000E+00   1.420E+10     0.209     3934 /
+  PLOG /                                    1.000E+01   3.450E+13    -0.726     6944 /
+  PLOG /                                    1.000E+02   3.310E+14    -0.866    10966 /
+  PLOG /                                    1.000E+03   1.650E+01     3.170     9400 /
+
+IC4H7-I1 + O = C3H6 + HCO                               6.000E+13     0.000        0  # pes.subpes  120.27
+
+IC4H7-I1 + OH => C3H6 + HCO + H                         5.000E+12     0.000        0  # pes.subpes  121.20
+
+C3H6 + CH2OH = PC4H8OH-4                                7.000E+03     2.427     7064  # pes.subpes  122.1
+
+C3H6 + CH2OH = PC4H8OH-3                                7.000E+03     2.427     7064  # pes.subpes  122.1
+
+C3H6 + CH3O = C3H5-A + CH3OH                            8.400E+10     0.000     2600  # pes.subpes  122.18
+
+C2H5CHCO + O = C3H6 + CO2                               3.200E+12     0.000     -437  # pes.subpes  127.1
+
+IC4H7-I1 + HO2 => C3H6 + HCO + OH                       2.000E+13     0.000        0  # pes.subpes  129.28
+
+IC4H8O2H-I => OH + CH2O + C3H6                          8.451E+15    -0.680    29170  # pes.subpes  130.1
+
+C4H8OOH1-3 => OH + CH2O + C3H6                          1.230E+09     1.300    24900  # pes.subpes  130.2
+
+C3H6 + CH3O2 = C3H5-A + CH3O2H                          7.680E-02     4.403    13547  # pes.subpes  130.11
+
+C3H6 + C2H5O2 = C3H5-A + C2H5O2H                        7.680E-02     4.403    13547  # pes.subpes  167.5
+
+C3H6 + CH3CO3 = C3H5-A + CH3CO3H                        7.680E-02     4.403    13547  # pes.subpes  170.1
+
+C3H4-A + C3H5-A = C3H3 + C3H6                           2.000E+11     0.000     7700  # pes.subpes  182.1
+
+C3H4-P + C3H5-A = C3H3 + C3H6                           3.000E+12     0.000     7700  # pes.subpes  182.2
+
+C3H5-A + C3H5-A = C3H4-A + C3H6                         4.770E+40    -9.300    12470  # pes.subpes  183.2
+  PLOG /                                    1.000E+00   4.770E+40    -9.300    12470 /
+  PLOG /                                    4.000E+00   3.970E+32    -6.800     9180 /
+  PLOG /                                    1.000E+01   1.460E+28    -5.500     7410 /
+
+C2H5CHO + C3H5-A = C2H5CO + C3H6                        1.700E+12     0.000     8440  # pes.subpes  188.4
+
+C3H6 + IC3H7O2 = C3H5-A + IC3H7O2H                      7.680E-02     4.403    13547  # pes.subpes  193.3
+
+C3H6 + NC3H7O2 = C3H5-A + NC3H7O2H                      7.680E-02     4.403    13547  # pes.subpes  193.5
+
+C4H6 + C3H5-A = C4H5-I + C3H6                           5.000E+12     0.000    19500  # pes.subpes  205.1
+
+C4H6 + C3H5-A = C4H5-N + C3H6                           1.000E+13     0.000    22500  # pes.subpes  205.2
+
+C3H5-A + C4H71-3 = C3H6 + C4H6                          6.310E+12     0.000        0  # pes.subpes  206.1
+
+C4H8-1 + C3H5-A = C4H71-3 + C3H6                        7.900E+10     0.000    12400  # pes.subpes  207.1
+
+IC4H8 + C3H5-A = IC4H7 + C3H6                           7.940E+11     0.000    20500  # pes.subpes  207.2
+
+IC4H8 + C3H5-S = IC4H7 + C3H6                           7.940E+11     0.000    20500  # pes.subpes  207.3
+
+IC4H8 + C3H5-T = IC4H7 + C3H6                           7.940E+11     0.000    20500  # pes.subpes  207.4
+
+C4H10 + C3H5-A = PC4H9 + C3H6                           7.940E+11     0.000    20500  # pes.subpes  208.1
+
+C4H10 + C3H5-A = SC4H9 + C3H6                           3.160E+11     0.000    16400  # pes.subpes  208.2
+
+C4H71-4O2 + C3H6 = C4H71-4OOH + C3H5-A                  5.350E-02     4.207    13288  # pes.subpes  211.1
+
+IC4H9O2 + C3H6 = IC4H9O2H + C3H5-A                      5.350E-02     4.207    13288  # pes.subpes  213.8
+
+PC4H9O2 + C3H6 = PC4H9O2H + C3H5-A                      5.350E-02     4.207    13288  # pes.subpes  213.10
+
+SC4H9O2 + C3H6 = SC4H9O2H + C3H5-A                      5.350E-02     4.207    13288  # pes.subpes  213.11
+
+TC4H9O2 + C3H6 = TC4H9O2H + C3H5-A                      5.350E-02     4.207    13288  # pes.subpes  213.12
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       R_O
+!!!!!!!!!!!!!!!!!!!!!!!!!
+CH3CO (+M) = CH3 + CO (+M)                              1.070E+12     0.630    16900  # pes.subpes  48.1
+  LOW  /                                                5.650E+18    -0.970    14600  /
+  TROE /   6.290E-01   8.730E+09   5.520E+00   7.600E+07 /
+
+CH3CO (+M) = CH2CO + H (+M)                             9.413E+07     1.917    44987  # pes.subpes  48.1
+  LOW  /                                                1.516E+51   -10.270    55390  /
+  TROE /   6.009E-01   8.103E+09   6.677E+02   5.000E+09 /
+
+CH2CHO (+M) = CH3 + CO (+M)                             2.930E+12     0.290    40300  # pes.subpes  48.1
+  LOW  /                                                9.520E+33    -5.070    41300  /
+  TROE /   7.130E-17   1.150E+03   4.990E+09   1.790E+09 /
+
+CH2CHO (+M) = CH2CO + H (+M)                            1.430E+15    -0.150    45600  # pes.subpes  48.1
+  LOW  /                                                6.000E+29    -3.800    43424  /
+  TROE /   9.850E-01   3.930E+02   9.800E+09   5.000E+09 /
+
+C2H3O1-2 = CH3CO                                        8.500E+14     0.000    14000  # pes.subpes  48.1
+
+C2H3O1-2 = CH2CHO                                       1.000E+14     0.000    14000  # pes.subpes  48.1
+
+SC2H2OH = HCCOH + H                                     5.400E+46   -11.630    44323  # pes.subpes  48.2
+
+SC2H2OH = CH2CO + H                                     5.690E+52   -13.380    45049  # pes.subpes  48.2
+
+SC2H2OH = C2H2OH                                        2.650E+36    -8.860    51019  # pes.subpes  48.2
+
+C2H2 + OH = C2H2OH                                      1.387E+31    -6.087     6348  # pes.subpes  48.2
+  PLOG /                                    1.000E-02   3.913E+32    -7.126     5824 /
+  PLOG /                                    2.500E-02   1.067E+32    -6.847     5508 /
+  PLOG /                                    1.000E-01   1.646E+32    -6.717     5822 /
+  PLOG /                                    1.000E+00   1.387E+31    -6.087     6348 /
+  PLOG /                                    1.000E+01   2.892E+29    -5.288     7055 /
+  PLOG /                                    1.000E+02   1.367E+25    -3.754     6543 /
+
+CH3CO + H = CH2CO + H2                                  2.000E+13     0.000        0  # pes.subpes  49.5
+
+C2H3OO = CH2CHO + O                                     7.620E+81   -21.280    65080  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   2.700E+180  -48.190   169300 /
+  PLOG /                                    1.000E-01   3.900E+38    -8.690    42770 /
+  PLOG /                                    3.160E-01   4.570E+47   -11.210    47050 /
+  PLOG /                                    1.000E+00   7.620E+81   -21.280    65080 /
+  PLOG /                                    3.160E+00   1.860E+68   -16.830    60680 /
+  PLOG /                                    1.000E+01   2.020E+55   -12.690    55840 /
+  PLOG /                                    3.160E+01   1.110E+53   -11.790    56690 /
+  PLOG /                                    1.000E+02   4.300E+48   -10.310    56090 /
+  DUP
+C2H3OO = CH2CHO + O                                     2.390E+33    -6.620    41280
+  PLOG /                                    1.000E-02   1.470E+30    -6.640    41110 /
+  PLOG /                                    1.000E-01   9.650E-12     5.960    22890 /
+  PLOG /                                    3.160E-01   3.950E+22    -3.710    36270 /
+  PLOG /                                    1.000E+00   2.390E+33    -6.620    41280 /
+  PLOG /                                    3.160E+00   6.370E+31    -5.960    41260 /
+  PLOG /                                    1.000E+01   2.130E+29    -5.100    40710 /
+  PLOG /                                    3.160E+01   4.660E+27    -4.500    40530 /
+  PLOG /                                    1.000E+02   5.990E+25    -3.850    40120 /
+  DUP
+
+CH3CO + O = CH2CO + OH                                  2.000E+13     0.000        0  # pes.subpes  55.10
+
+CH2CHO + O2 = O2CH2CHO                                  7.800E+59   -15.400    17650  # pes.subpes  61.1
+  PLOG /                                    1.000E-02   1.580E+77   -21.900    19350 /
+  PLOG /                                    1.000E-01   3.880E+69   -18.840    19240 /
+  PLOG /                                    1.000E+00   7.800E+59   -15.400    17650 /
+  PLOG /                                    1.000E+01   3.050E+50   -12.200    15630 /
+
+CH2CHO + O2 = HO2CH2CO                                  6.650E+48   -15.550    17460  # pes.subpes  61.1
+  PLOG /                                    1.000E-02   3.640E+65   -21.870    19020 /
+  PLOG /                                    1.000E-01   3.640E+58   -19.000    19090 /
+  PLOG /                                    1.000E+00   6.650E+48   -15.550    17460 /
+  PLOG /                                    1.000E+01   4.800E+38   -12.140    14960 /
+
+CH2CHO + O2 = CH2CO + HO2                               2.510E+05     2.330    23800  # pes.subpes  61.1
+  PLOG /                                    1.000E-02   1.880E+05     2.370    23730 /
+  PLOG /                                    1.000E-01   1.880E+05     2.370    27370 /
+  PLOG /                                    1.000E+00   2.510E+05     2.330    23800 /
+  PLOG /                                    1.000E+01   7.050E+07     1.630    25290 /
+
+CH3CO + O2 = CH3CO3                                     1.200E+11     0.000    -1100  # pes.subpes  61.3
+
+SC2H2OH + O2 = CH2CO + HO2                              5.260E+17    -1.638      869  # pes.subpes  61.6
+
+SC2H2OH + O2 = HCCOH + HO2                              5.512E+03     2.495     -414  # pes.subpes  61.7
+
+CH2CHO + O2 => CH2O + CO + OH                           1.650E+19    -2.220    10340  # pes.subpes  61.8
+  PLOG /                                    1.000E-02   2.680E+17    -1.840     6530 /
+  PLOG /                                    1.000E-01   1.520E+20    -2.580     8980 /
+  PLOG /                                    1.000E+00   1.650E+19    -2.220    10340 /
+  PLOG /                                    1.000E+01   8.953E+13    -0.600    10120 /
+
+CH3COCH3 = CH3CO + CH3                                  1.310E+42    -7.657    94661  # pes.subpes  84.6
+  PLOG /                                    1.000E-02   2.050E+58   -12.796   100030 /
+  PLOG /                                    1.000E-01   3.300E+51   -10.574    98221 /
+  PLOG /                                    1.000E+00   1.310E+42    -7.657    94661 /
+  PLOG /                                    1.000E+01   2.160E+33    -4.989    90916 /
+  PLOG /                                    1.000E+02   9.400E+28    -3.669    89023 /
+
+CH3CO + CH3 = CH2CO + CH4                               5.000E+13     0.000        0  # pes.subpes  84.12
+
+SC2H2OH + CO = CH2COHCO                                 1.510E+11     0.000     4810  # pes.subpes  89.1
+
+SC2H2OH + HCO = CH2COHCHO                               1.810E+13     0.000        0  # pes.subpes  90.2
+
+CH3COCH2O = CH3CO + CH2O                                5.872E+20    -2.422    10536  # pes.subpes  91.1
+
+C3H5-A + O2 = CH3CO + CH2O                              1.190E+15    -1.010    20128  # pes.subpes  91.7
+  PLOG /                                    1.000E+00   1.190E+15    -1.010    20128 /
+  PLOG /                                    1.000E+01   7.140E+15    -1.210    21046 /
+
+C3H5-T + O2 = CH3CO + CH2O                              2.550E+20    -2.608     1566  # pes.subpes  91.12
+
+C3KET21 => CH2O + CH3CO + OH                            1.000E+16     0.000    43000  # pes.subpes  98.1
+
+C3H5O1-2OOH-3 => CH2CHO + CH2O + OH                     1.000E+16     0.000    43000  # pes.subpes  98.3
+
+C3H5O1-3OOH-2 => CH2CHO + CH2O + OH                     1.000E+16     0.000    43000  # pes.subpes  98.4
+
+C3KET13 => CH2O + CH2CHO + OH                           1.000E+16     0.000    43000  # pes.subpes  98.7
+
+C4H5-2 + O2 = CH3CO + CH2CO                             2.160E+10     0.000     2500  # pes.subpes  126.1
+
+C4H5-I + O2 = CH2CO + CH2CHO                            2.160E+10     0.000     2500  # pes.subpes  126.2
+
+C4H5-2 + HO2 => OH + C2H2 + CH3CO                       8.000E+11     0.000        0  # pes.subpes  127.10
+
+C2H3COCH3 + HO2 => CH2CHO + CH3CO + OH                  6.030E+09     0.000     7949  # pes.subpes  135.13
+
+C2H3COCH3 + CH3O2 => CH2CHO + CH3CO + CH3O              3.970E+11     0.000    17050  # pes.subpes  170.6
+
+!!!!!!!!!!!!!!!!!!!!!!!!!
+!       submech!       R_O2
+!!!!!!!!!!!!!!!!!!!!!!!!!
+CH3OCO = CH3O + CO                                      4.090E+05     0.810    21969  # pes.subpes  55.1
+  PLOG /                                    5.000E-02   1.030E+03     1.290    25401 /
+  PLOG /                                    1.000E+00   4.090E+05     0.810    21969 /
+  PLOG /                                    1.000E+01   9.020E+14    -1.720    21768 /
+  PLOG /                                    1.000E+02   2.825E+22    -3.440    23592 /
+
+CH3OCO = CH3 + CO2                                      1.250E+16    -1.830    11341  # pes.subpes  55.1
+  PLOG /                                    5.000E-02   9.720E+12    -1.310     9417 /
+  PLOG /                                    1.000E+00   1.250E+16    -1.830    11341 /
+  PLOG /                                    1.000E+01   1.040E+18    -2.100    12827 /
+  PLOG /                                    1.000E+02   8.690E+17    -1.810    13657 /
+
+CH3OCO = CH2OCHO                                        1.629E+12    -0.180    40670  # pes.subpes  55.1
+
+CH2O + HCO = CH2OCHO                                    1.500E+11     0.000    11900  # pes.subpes  55.1
+
+C2H3OO = CO + CH3O                                      3.830E+33    -7.200    35100  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   5.200E+33    -7.920    31320 /
+  PLOG /                                    1.000E-01   1.260E+98   -27.090    64060 /
+  PLOG /                                    3.160E-01   1.800E+33    -7.270    33760 /
+  PLOG /                                    1.000E+00   3.830E+33    -7.200    35100 /
+  PLOG /                                    3.160E+00   1.280E+79   -19.610    74870 /
+  PLOG /                                    1.000E+01   4.070E+32    -6.620    37210 /
+  PLOG /                                    3.160E+01   6.860E+44   -10.040    47030 /
+  PLOG /                                    1.000E+02   1.000E-10     0.000        0 /
+  DUP
+C2H3OO = CO + CH3O                                      1.190E-39    13.610    -1317
+  PLOG /                                    1.000E-02   2.310E+129  -41.860    45850 /
+  PLOG /                                    1.000E-01   2.420E+28    -5.990    30540 /
+  PLOG /                                    3.160E-01   8.690E-50    16.630    -3900 /
+  PLOG /                                    1.000E+00   1.190E-39    13.610    -1317 /
+  PLOG /                                    3.160E+00   8.800E+86   -23.080    61010 /
+  PLOG /                                    1.000E+01   1.270E+03     1.440    18660 /
+  PLOG /                                    3.160E+01   1.970E+17    -2.230    28590 /
+  PLOG /                                    1.000E+02   3.250E+04     1.694    23328 /
+  DUP
+
+C2H3OO = CHOCHO + H                                     1.480E+44   -10.120    40790  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   6.410E+80   -22.200    51750 /
+  PLOG /                                    1.000E-01   3.310E+65   -17.010    48090 /
+  PLOG /                                    3.160E-01   5.980E+51   -12.620    43000 /
+  PLOG /                                    1.000E+00   1.480E+44   -10.120    40790 /
+  PLOG /                                    3.160E+00   1.260E+59   -14.330    51390 /
+  PLOG /                                    1.000E+01   4.930E+26    -4.670    34320 /
+  PLOG /                                    3.160E+01   2.060E+33    -6.380    39520 /
+  PLOG /                                    1.000E+02   1.300E+32    -5.920    40660 /
+  DUP
+C2H3OO = CHOCHO + H                                     1.580E+19    -2.820    27620
+  PLOG /                                    1.000E-02   1.190E+28    -6.010    28740 /
+  PLOG /                                    1.000E-01   1.400E+25    -4.800    28940 /
+  PLOG /                                    3.160E-01   2.910E+20    -3.290    27550 /
+  PLOG /                                    1.000E+00   1.580E+19    -2.820    27620 /
+  PLOG /                                    3.160E+00   1.930E+22    -3.540    29980 /
+  PLOG /                                    1.000E+01   7.510E+29    -5.750    34490 /
+  PLOG /                                    3.160E+01   7.140E+61   -16.160    43280 /
+  PLOG /                                    1.000E+02   1.140E+19    -2.560    29670 /
+  DUP
+
+C2H3OO = CH2O + HCO                                     8.640E+33    -6.880    34370  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   1.660E+174  -55.520    60320 /
+  PLOG /                                    1.000E-01   9.030E+66   -17.250    48120 /
+  PLOG /                                    3.160E-01   1.820E+43    -9.870    37960 /
+  PLOG /                                    1.000E+00   8.640E+33    -6.880    34370 /
+  PLOG /                                    3.160E+00   7.290E+171  -43.530   191900 /
+  PLOG /                                    1.000E+01   1.030E+32    -6.060    35500 /
+  PLOG /                                    3.160E+01   1.850E+34    -6.570    38510 /
+  PLOG /                                    1.000E+02   5.700E+29    -5.190    36800 /
+  DUP
+C2H3OO = CH2O + HCO                                     1.060E+130  -39.380    54700
+  PLOG /                                    1.000E-02   2.270E+35    -7.970    31280 /
+  PLOG /                                    1.000E-01   2.080E+26    -4.960    28780 /
+  PLOG /                                    3.160E-01   1.450E+20    -3.080    26630 /
+  PLOG /                                    1.000E+00   1.060E+130  -39.380    54700 /
+  PLOG /                                    3.160E+00   2.350E+34    -6.870    35700 /
+  PLOG /                                    1.000E+01   2.180E+175  -53.780    68500 /
+  PLOG /                                    3.160E+01   1.070E+185  -54.220    88990 /
+  PLOG /                                    1.000E+02   4.680E+02     1.810    18100 /
+  DUP
+
+C2H3OO => CH2O + H + CO                                 2.020E+34    -6.880    34370  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   3.880E+174  -55.520    60320 /
+  PLOG /                                    1.000E-01   2.110E+67   -17.250    48120 /
+  PLOG /                                    3.160E-01   4.260E+43    -9.870    37960 /
+  PLOG /                                    1.000E+00   2.020E+34    -6.880    34370 /
+  PLOG /                                    3.160E+00   1.700E+172  -43.530   191900 /
+  PLOG /                                    1.000E+01   2.400E+32    -6.060    35500 /
+  PLOG /                                    3.160E+01   4.320E+34    -6.570    38510 /
+  PLOG /                                    1.000E+02   1.330E+30    -5.190    36800 /
+  DUP
+C2H3OO => CH2O + H + CO                                 2.460E+130  -39.380    54700
+  PLOG /                                    1.000E-02   5.290E+35    -7.970    31280 /
+  PLOG /                                    1.000E-01   4.850E+26    -4.960    28780 /
+  PLOG /                                    3.160E-01   3.370E+20    -3.080    26630 /
+  PLOG /                                    1.000E+00   2.460E+130  -39.380    54700 /
+  PLOG /                                    3.160E+00   5.490E+34    -6.870    35700 /
+  PLOG /                                    1.000E+01   5.090E+175  -53.780    68500 /
+  PLOG /                                    3.160E+01   2.490E+185  -54.220    88990 /
+  PLOG /                                    1.000E+02   1.090E+03     1.810    18100 /
+  DUP
+
+C2H3OO = CH2CO + OH                                     1.510E+19    -3.610    43060  # pes.subpes  55.2
+  PLOG /                                    1.000E-02   1.150E+47   -12.280    75330 /
+  PLOG /                                    1.000E-01   8.430E+09    -2.060    33720 /
+  PLOG /                                    3.160E-01   6.060E+04     0.170    34220 /
+  PLOG /                                    1.000E+00   1.510E+19    -3.610    43060 /
+  PLOG /                                    3.160E+00   2.130E+33    -7.390    51610 /
+  PLOG /                                    1.000E+01   4.440E+36    -7.990    54680 /
+  PLOG /                                    3.160E+01   1.190E+37    -7.800    56460 /
+  PLOG /                                    1.000E+02   9.080E+35    -7.210    57550 /
+  DUP
+C2H3OO = CH2CO + OH                                     3.180E+27    -7.760    37230
+  PLOG /                                    1.000E-02   2.310E+02    -0.730    25710 /
+  PLOG /                                    1.000E-01   1.830E-23     7.840    20190 /
+  PLOG /                                    3.160E-01   3.820E+63   -20.440    43420 /
+  PLOG /                                    1.000E+00   3.180E+27    -7.760    37230 /
+  PLOG /                                    3.160E+00   2.320E-05     3.470    31560 /
+  PLOG /                                    1.000E+01   1.060E-01     2.640    34160 /
+  PLOG /                                    3.160E+01   5.620E+02     1.700    36450 /
+  PLOG /                                    1.000E+02   1.110E+07     0.520    38670 /
+  DUP
+
+CH3CO2 +M = CH3 + CO2 +M                                4.400E+15     0.000    10500  # pes.subpes  55.3
+
+HOCH2CO = CH2OH + CO                                    1.070E+12     0.630    16900  # pes.subpes  55.4
+
+HOCHCHO + H = CHOCHO + H2                               9.450E+02     3.140     8701  # pes.subpes  56.9
+
+HOCHCHO + O = CHOCHO + OH                               1.460E-03     4.730     1727  # pes.subpes  61.5
+
+CH3CO3H = CH3CO2 + OH                                   5.010E+14     0.000    40150  # pes.subpes  62.1
+
+HOCHCHO + OH = CHOCHO + H2O                             5.810E-03     4.280    -3560  # pes.subpes  62.8
+
+HOCHCHO + HO2 = CHOCHO + H2O2                           6.470E-07     5.300    10533  # pes.subpes  67.4
+
+HOCHCHO + CH3 = CHOCHO + CH4                            2.035E+00     3.570     7721  # pes.subpes  92.6
+
+HOCHCHO + CH3O2 = CHOCHO + CH3O2H                       3.236E-07     5.300    10533  # pes.subpes  103.1
+
+IC3H7O2 + CH3CO3 => IC3H7O + CH3CO2 + O2                1.400E+16    -1.610     1860  # pes.subpes  178.1
+
+NC3H7O2 + CH3CO3 => NC3H7O + CH3CO2 + O2                1.400E+16    -1.610     1860  # pes.subpes  178.2
+
+C4H71-4O2 + CH3CO3 => C4H7O1-4 + CH3CO2 + O2            1.400E+16    -1.610     1860  # pes.subpes  202.1
+
+IC4H9O2 + CH3CO3 => IC4H9O + CH3CO2 + O2                1.400E+16    -1.610     1860  # pes.subpes  203.1
+
+PC4H9O2 + CH3CO3 => PC4H9O + CH3CO2 + O2                1.400E+16    -1.610     1860  # pes.subpes  203.2
+
+SC4H9O2 + CH3CO3 => SC4H9O + CH3CO2 + O2                1.400E+16    -1.610     1860  # pes.subpes  203.3
+
+TC4H9O2 + CH3CO3 => TC4H9O + CH3CO2 + O2                1.400E+16    -1.610     1860  # pes.subpes  203.4
+
+
+
+END
+

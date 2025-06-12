@@ -1,0 +1,12 @@
+isolate_submech # this section is not mandatory
+        C2H4
+end
+
+sort_mech
+    criteria = (
+        submech
+	subpes
+    )
+    n_criteria_headers = 1
+end
+

@@ -1,0 +1,11 @@
+name,smiles,mult
+R,'CC[CH2]',2
+O2,'[O=O]',3
+RO2,'CCCO[O]',2
+QOOH1,'[CH2]CCOO',2
+QOOH2,'C[CH]COO',2
+ALK,'CC=C',1
+EPO1,'',1
+EPO2,'',1
+HO2,'O[O]'2
+OH,'[OH]'2

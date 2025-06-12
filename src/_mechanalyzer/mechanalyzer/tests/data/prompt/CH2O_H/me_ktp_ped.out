@@ -1,0 +1,2823 @@
+Wells (G - ground energy, D - dissociation limit, kcal/mol):
+       W         G         D
+      W0        -6      -5.2
+
+Bimolecular Products (G - ground energy, kcal/mol):
+       P         G
+      RH      -5.2
+       R     -21.9
+
+Well-to-Bimolecular Barriers (H/G - barrier height/well depth, kcal/mol)
+       B         H  W         G  P
+      B0      -5.2 W0        -6 RH
+      B1         0 W0        -6  R
+
+Bound Groups: dissociation barrier (name/ground energy, kcal/mol): wells (name/ground energy, kcal/mol):
+     B0/-5.2:  W0/-6
+
+________________________________________________________________________________________
+
+Unimolecular Rate Units: 1/sec;  Bimolecular Rate Units: cm^3/sec
+
+______________________________________________________________________________________
+
+Species-Species Rate Tables:
+
+Temperature = 400 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.74e+13  5.55e+09
+RH        9.13e-10       ***       ***
+R         3.58e-23       ***       ***
+
+Temperature = 400 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   2.9e-13   2.9e-13
+R              ***  3.56e-23  3.56e-23
+
+Temperature = 400 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   2.9e-13   2.9e-13
+R              ***  3.56e-23  3.56e-23
+
+Temperature = 400 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   2.9e-13   2.9e-13
+R              ***  3.56e-23  3.56e-23
+
+Temperature = 400 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   2.9e-13   2.9e-13
+R              ***  3.56e-23  3.56e-23
+
+Temperature = 450 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***   1.9e+13  9.61e+09
+RH        9.31e-10       ***       ***
+R         5.33e-22       ***       ***
+
+Temperature = 450 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-13  4.69e-13
+R              ***  5.31e-22  5.31e-22
+
+Temperature = 450 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-13  4.69e-13
+R              ***  5.31e-22  5.31e-22
+
+Temperature = 450 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-13  4.69e-13
+R              ***  5.31e-22  5.31e-22
+
+Temperature = 450 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-13  4.69e-13
+R              ***  5.31e-22  5.31e-22
+
+Temperature = 500 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***     2e+13  1.53e+10
+RH        9.47e-10       ***       ***
+R         4.82e-21       ***       ***
+
+Temperature = 500 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.21e-13  7.21e-13
+R              ***  4.79e-21  4.79e-21
+
+Temperature = 500 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.21e-13  7.21e-13
+R              ***  4.79e-21  4.79e-21
+
+Temperature = 500 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.21e-13  7.21e-13
+R              ***  4.79e-21  4.79e-21
+
+Temperature = 500 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.21e-13  7.21e-13
+R              ***  4.79e-21  4.79e-21
+
+Temperature = 550 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  2.06e+13  2.28e+10
+RH        9.63e-10       ***       ***
+R            3e-20       ***       ***
+
+Temperature = 550 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.06e-12  1.06e-12
+R              ***  2.98e-20  2.98e-20
+
+Temperature = 550 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.06e-12  1.06e-12
+R              ***  2.98e-20  2.98e-20
+
+Temperature = 550 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.06e-12  1.06e-12
+R              ***  2.98e-20  2.98e-20
+
+Temperature = 550 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.06e-12  1.06e-12
+R              ***  2.98e-20  2.98e-20
+
+Temperature = 600 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  2.08e+13  3.23e+10
+RH        9.77e-10       ***       ***
+R         1.41e-19       ***       ***
+
+Temperature = 600 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   1.5e-12   1.5e-12
+R              ***   1.4e-19   1.4e-19
+
+Temperature = 600 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   1.5e-12   1.5e-12
+R              ***   1.4e-19   1.4e-19
+
+Temperature = 600 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   1.5e-12   1.5e-12
+R              ***   1.4e-19   1.4e-19
+
+Temperature = 600 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   1.5e-12   1.5e-12
+R              ***   1.4e-19   1.4e-19
+
+Temperature = 650 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  2.08e+13  4.36e+10
+RH         9.9e-10       ***       ***
+R         5.34e-19       ***       ***
+
+Temperature = 650 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.05e-12  2.05e-12
+R              ***  5.28e-19  5.28e-19
+
+Temperature = 650 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.05e-12  2.05e-12
+R              ***  5.28e-19  5.28e-19
+
+Temperature = 650 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.05e-12  2.05e-12
+R              ***  5.28e-19  5.28e-19
+
+Temperature = 650 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.05e-12  2.05e-12
+R              ***  5.28e-19  5.28e-19
+
+Temperature = 700 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  2.06e+13  5.68e+10
+RH           1e-09       ***       ***
+R          1.7e-18       ***       ***
+
+Temperature = 700 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.73e-12  2.73e-12
+R              ***  1.68e-18  1.68e-18
+
+Temperature = 700 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.73e-12  2.73e-12
+R              ***  1.68e-18  1.68e-18
+
+Temperature = 700 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.73e-12  2.73e-12
+R              ***  1.68e-18  1.68e-18
+
+Temperature = 700 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.73e-12  2.73e-12
+R              ***  1.68e-18  1.68e-18
+
+Temperature = 750 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  2.03e+13  7.18e+10
+RH        1.01e-09       ***       ***
+R         4.69e-18       ***       ***
+
+Temperature = 750 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.54e-12  3.54e-12
+R              ***  4.62e-18  4.62e-18
+
+Temperature = 750 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.54e-12  3.54e-12
+R              ***  4.62e-18  4.62e-18
+
+Temperature = 750 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.54e-12  3.54e-12
+R              ***  4.62e-18  4.62e-18
+
+Temperature = 750 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.54e-12  3.54e-12
+R              ***  4.62e-18  4.62e-18
+
+Temperature = 800 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.98e+13  8.84e+10
+RH        1.02e-09       ***       ***
+R         1.16e-17       ***       ***
+
+Temperature = 800 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.49e-12  4.49e-12
+R              ***  1.14e-17  1.14e-17
+
+Temperature = 800 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.49e-12  4.49e-12
+R              ***  1.14e-17  1.14e-17
+
+Temperature = 800 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.49e-12  4.49e-12
+R              ***  1.14e-17  1.14e-17
+
+Temperature = 800 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.49e-12  4.49e-12
+R              ***  1.14e-17  1.14e-17
+
+Temperature = 850 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.93e+13  1.07e+11
+RH        1.04e-09       ***       ***
+R         2.59e-17       ***       ***
+
+Temperature = 850 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   5.6e-12   5.6e-12
+R              ***  2.54e-17  2.54e-17
+
+Temperature = 850 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   5.6e-12   5.6e-12
+R              ***  2.54e-17  2.54e-17
+
+Temperature = 850 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   5.6e-12   5.6e-12
+R              ***  2.54e-17  2.54e-17
+
+Temperature = 850 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   5.6e-12   5.6e-12
+R              ***  2.54e-17  2.54e-17
+
+Temperature = 900 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.88e+13  1.26e+11
+RH        1.04e-09       ***       ***
+R         5.36e-17       ***       ***
+
+Temperature = 900 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.87e-12  6.87e-12
+R              ***  5.24e-17  5.24e-17
+
+Temperature = 900 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.87e-12  6.87e-12
+R              ***  5.24e-17  5.24e-17
+
+Temperature = 900 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.87e-12  6.87e-12
+R              ***  5.24e-17  5.24e-17
+
+Temperature = 900 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.87e-12  6.87e-12
+R              ***  5.24e-17  5.24e-17
+
+Temperature = 950 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.82e+13  1.47e+11
+RH        1.05e-09       ***       ***
+R         1.04e-16       ***       ***
+
+Temperature = 950 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   8.3e-12   8.3e-12
+R              ***  1.01e-16  1.01e-16
+
+Temperature = 950 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   8.3e-12   8.3e-12
+R              ***  1.01e-16  1.01e-16
+
+Temperature = 950 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   8.3e-12   8.3e-12
+R              ***  1.01e-16  1.01e-16
+
+Temperature = 950 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   8.3e-12   8.3e-12
+R              ***  1.01e-16  1.01e-16
+
+Temperature = 1e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.76e+13  1.68e+11
+RH        1.06e-09       ***       ***
+R         1.89e-16       ***       ***
+
+Temperature = 1e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   9.9e-12   9.9e-12
+R              ***  1.84e-16  1.84e-16
+
+Temperature = 1e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   9.9e-12   9.9e-12
+R              ***  1.84e-16  1.84e-16
+
+Temperature = 1e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   9.9e-12   9.9e-12
+R              ***  1.84e-16  1.84e-16
+
+Temperature = 1e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   9.9e-12   9.9e-12
+R              ***  1.84e-16  1.84e-16
+
+Temperature = 1.05e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***   1.7e+13  1.91e+11
+RH        1.07e-09       ***       ***
+R         3.28e-16       ***       ***
+
+Temperature = 1.05e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.17e-11  1.17e-11
+R              ***  3.18e-16  3.18e-16
+
+Temperature = 1.05e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.17e-11  1.17e-11
+R              ***  3.18e-16  3.18e-16
+
+Temperature = 1.05e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.17e-11  1.17e-11
+R              ***  3.18e-16  3.18e-16
+
+Temperature = 1.05e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.17e-11  1.17e-11
+R              ***  3.18e-16  3.18e-16
+
+Temperature = 1.1e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.64e+13  2.15e+11
+RH        1.08e-09       ***       ***
+R         5.46e-16       ***       ***
+
+Temperature = 1.1e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.36e-11  1.36e-11
+R              ***  5.27e-16  5.27e-16
+
+Temperature = 1.1e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.36e-11  1.36e-11
+R              ***  5.27e-16  5.27e-16
+
+Temperature = 1.1e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.36e-11  1.36e-11
+R              ***  5.27e-16  5.27e-16
+
+Temperature = 1.1e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.36e-11  1.36e-11
+R              ***  5.27e-16  5.27e-16
+
+Temperature = 1.15e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.58e+13  2.39e+11
+RH        1.09e-09       ***       ***
+R         8.72e-16       ***       ***
+
+Temperature = 1.15e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.58e-11  1.58e-11
+R              ***  8.39e-16  8.39e-16
+
+Temperature = 1.15e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.58e-11  1.58e-11
+R              ***  8.39e-16  8.39e-16
+
+Temperature = 1.15e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.58e-11  1.58e-11
+R              ***  8.39e-16  8.39e-16
+
+Temperature = 1.15e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.58e-11  1.58e-11
+R              ***  8.39e-16  8.39e-16
+
+Temperature = 1.2e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.53e+13  2.63e+11
+RH         1.1e-09       ***       ***
+R         1.35e-15       ***       ***
+
+Temperature = 1.2e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.81e-11  1.81e-11
+R              ***  1.29e-15  1.29e-15
+
+Temperature = 1.2e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.81e-11  1.81e-11
+R              ***  1.29e-15  1.29e-15
+
+Temperature = 1.2e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.81e-11  1.81e-11
+R              ***  1.29e-15  1.29e-15
+
+Temperature = 1.2e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  1.81e-11  1.81e-11
+R              ***  1.29e-15  1.29e-15
+
+Temperature = 1.25e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.47e+13  2.88e+11
+RH         1.1e-09       ***       ***
+R         2.02e-15       ***       ***
+
+Temperature = 1.25e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.06e-11  2.06e-11
+R              ***  1.93e-15  1.93e-15
+
+Temperature = 1.25e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.06e-11  2.06e-11
+R              ***  1.93e-15  1.93e-15
+
+Temperature = 1.25e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.06e-11  2.06e-11
+R              ***  1.93e-15  1.93e-15
+
+Temperature = 1.25e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.06e-11  2.06e-11
+R              ***  1.93e-15  1.93e-15
+
+Temperature = 1.3e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.42e+13  3.14e+11
+RH        1.11e-09       ***       ***
+R         2.96e-15       ***       ***
+
+Temperature = 1.3e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.33e-11  2.33e-11
+R              ***  2.81e-15  2.81e-15
+
+Temperature = 1.3e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.33e-11  2.33e-11
+R              ***  2.81e-15  2.81e-15
+
+Temperature = 1.3e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.33e-11  2.33e-11
+R              ***  2.81e-15  2.81e-15
+
+Temperature = 1.3e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.33e-11  2.33e-11
+R              ***  2.81e-15  2.81e-15
+
+Temperature = 1.35e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.37e+13  3.39e+11
+RH        1.12e-09       ***       ***
+R         4.22e-15       ***       ***
+
+Temperature = 1.35e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.61e-11  2.61e-11
+R              ***  3.99e-15  3.99e-15
+
+Temperature = 1.35e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.61e-11  2.61e-11
+R              ***  3.99e-15  3.99e-15
+
+Temperature = 1.35e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.61e-11  2.61e-11
+R              ***  3.99e-15  3.99e-15
+
+Temperature = 1.35e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.61e-11  2.61e-11
+R              ***  3.99e-15  3.99e-15
+
+Temperature = 1.4e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.33e+13  3.65e+11
+RH        1.12e-09       ***       ***
+R          5.9e-15       ***       ***
+
+Temperature = 1.4e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.91e-11  2.91e-11
+R              ***  5.55e-15  5.55e-15
+
+Temperature = 1.4e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.91e-11  2.91e-11
+R              ***  5.55e-15  5.55e-15
+
+Temperature = 1.4e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.91e-11  2.91e-11
+R              ***  5.55e-15  5.55e-15
+
+Temperature = 1.4e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  2.91e-11  2.91e-11
+R              ***  5.56e-15  5.56e-15
+
+Temperature = 1.45e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.28e+13  3.91e+11
+RH        1.13e-09       ***       ***
+R         8.08e-15       ***       ***
+
+Temperature = 1.45e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.23e-11  3.23e-11
+R              ***  7.57e-15  7.57e-15
+
+Temperature = 1.45e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.23e-11  3.23e-11
+R              ***  7.57e-15  7.57e-15
+
+Temperature = 1.45e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.23e-11  3.23e-11
+R              ***  7.57e-15  7.57e-15
+
+Temperature = 1.45e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.24e-11  3.24e-11
+R              ***  7.58e-15  7.58e-15
+
+Temperature = 1.5e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.24e+13  4.17e+11
+RH        1.14e-09       ***       ***
+R         1.09e-14       ***       ***
+
+Temperature = 1.5e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.57e-11  3.57e-11
+R              ***  1.01e-14  1.01e-14
+
+Temperature = 1.5e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.57e-11  3.57e-11
+R              ***  1.01e-14  1.01e-14
+
+Temperature = 1.5e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.57e-11  3.57e-11
+R              ***  1.01e-14  1.01e-14
+
+Temperature = 1.5e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.57e-11  3.57e-11
+R              ***  1.01e-14  1.01e-14
+
+Temperature = 1.55e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***   1.2e+13  4.43e+11
+RH        1.14e-09       ***       ***
+R         1.44e-14       ***       ***
+
+Temperature = 1.55e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.93e-11  3.93e-11
+R              ***  1.34e-14  1.34e-14
+
+Temperature = 1.55e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.93e-11  3.93e-11
+R              ***  1.34e-14  1.34e-14
+
+Temperature = 1.55e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.93e-11  3.93e-11
+R              ***  1.34e-14  1.34e-14
+
+Temperature = 1.55e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  3.93e-11  3.93e-11
+R              ***  1.34e-14  1.34e-14
+
+Temperature = 1.6e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.16e+13  4.68e+11
+RH        1.15e-09       ***       ***
+R         1.88e-14       ***       ***
+
+Temperature = 1.6e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   4.3e-11   4.3e-11
+R              ***  1.74e-14  1.74e-14
+
+Temperature = 1.6e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   4.3e-11   4.3e-11
+R              ***  1.74e-14  1.74e-14
+
+Temperature = 1.6e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   4.3e-11   4.3e-11
+R              ***  1.74e-14  1.74e-14
+
+Temperature = 1.6e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***   4.3e-11   4.3e-11
+R              ***  1.74e-14  1.74e-14
+
+Temperature = 1.65e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.12e+13  4.94e+11
+RH        1.16e-09       ***       ***
+R         2.43e-14       ***       ***
+
+Temperature = 1.65e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-11  4.69e-11
+R              ***  2.23e-14  2.23e-14
+
+Temperature = 1.65e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-11  4.69e-11
+R              ***  2.23e-14  2.23e-14
+
+Temperature = 1.65e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-11  4.69e-11
+R              ***  2.23e-14  2.23e-14
+
+Temperature = 1.65e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  4.69e-11  4.69e-11
+R              ***  2.23e-14  2.23e-14
+
+Temperature = 1.7e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.08e+13   5.2e+11
+RH        1.16e-09       ***       ***
+R         3.09e-14       ***       ***
+
+Temperature = 1.7e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.09e-11  5.09e-11
+R              ***  2.82e-14  2.82e-14
+
+Temperature = 1.7e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.09e-11  5.09e-11
+R              ***  2.82e-14  2.82e-14
+
+Temperature = 1.7e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.09e-11  5.09e-11
+R              ***  2.82e-14  2.82e-14
+
+Temperature = 1.7e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.09e-11  5.09e-11
+R              ***  2.82e-14  2.82e-14
+
+Temperature = 1.75e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.05e+13  5.45e+11
+RH        1.17e-09       ***       ***
+R         3.89e-14       ***       ***
+
+Temperature = 1.75e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.51e-11  5.51e-11
+R              ***  3.53e-14  3.53e-14
+
+Temperature = 1.75e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.51e-11  5.51e-11
+R              ***  3.53e-14  3.53e-14
+
+Temperature = 1.75e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.51e-11  5.51e-11
+R              ***  3.53e-14  3.53e-14
+
+Temperature = 1.75e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.51e-11  5.51e-11
+R              ***  3.53e-14  3.53e-14
+
+Temperature = 1.8e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  1.02e+13   5.7e+11
+RH        1.17e-09       ***       ***
+R         4.84e-14       ***       ***
+
+Temperature = 1.8e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.94e-11  5.94e-11
+R              ***  4.37e-14  4.37e-14
+
+Temperature = 1.8e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.94e-11  5.94e-11
+R              ***  4.37e-14  4.37e-14
+
+Temperature = 1.8e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.94e-11  5.94e-11
+R              ***  4.37e-14  4.37e-14
+
+Temperature = 1.8e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  5.95e-11  5.95e-11
+R              ***  4.37e-14  4.37e-14
+
+Temperature = 1.85e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  9.85e+12  5.95e+11
+RH        1.18e-09       ***       ***
+R         5.97e-14       ***       ***
+
+Temperature = 1.85e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.39e-11  6.39e-11
+R              ***  5.36e-14  5.36e-14
+
+Temperature = 1.85e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.39e-11  6.39e-11
+R              ***  5.36e-14  5.36e-14
+
+Temperature = 1.85e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.39e-11  6.39e-11
+R              ***  5.36e-14  5.36e-14
+
+Temperature = 1.85e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.39e-11  6.39e-11
+R              ***  5.36e-14  5.36e-14
+
+Temperature = 1.9e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  9.55e+12   6.2e+11
+RH        1.18e-09       ***       ***
+R          7.3e-14       ***       ***
+
+Temperature = 1.9e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.86e-11  6.86e-11
+R              ***  6.51e-14  6.51e-14
+
+Temperature = 1.9e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.86e-11  6.86e-11
+R              ***  6.51e-14  6.51e-14
+
+Temperature = 1.9e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.86e-11  6.86e-11
+R              ***  6.51e-14  6.51e-14
+
+Temperature = 1.9e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  6.86e-11  6.86e-11
+R              ***  6.52e-14  6.52e-14
+
+Temperature = 1.95e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***  9.27e+12  6.44e+11
+RH        1.19e-09       ***       ***
+R         8.85e-14       ***       ***
+
+Temperature = 1.95e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.33e-11  7.33e-11
+R              ***  7.85e-14  7.85e-14
+
+Temperature = 1.95e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.33e-11  7.33e-11
+R              ***  7.85e-14  7.85e-14
+
+Temperature = 1.95e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.33e-11  7.33e-11
+R              ***  7.85e-14  7.85e-14
+
+Temperature = 1.95e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.33e-11  7.33e-11
+R              ***  7.85e-14  7.85e-14
+
+Temperature = 2e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W0        RH         R
+W0             ***     9e+12  6.69e+11
+RH        1.19e-09       ***       ***
+R         1.06e-13       ***       ***
+
+Temperature = 2e+03 K    Pressure = 0.1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.82e-11  7.82e-11
+R              ***  9.39e-14  9.39e-14
+
+Temperature = 2e+03 K    Pressure = 1 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.82e-11  7.82e-11
+R              ***  9.39e-14  9.39e-14
+
+Temperature = 2e+03 K    Pressure = 10 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.82e-11  7.82e-11
+R              ***  9.39e-14  9.39e-14
+
+Temperature = 2e+03 K    Pressure = 100 atm
+
+From\To         W0        RH         R
+W0             ***       ***       ***
+RH             ***  7.82e-11  7.82e-11
+R              ***  9.39e-14  9.39e-14
+
+______________________________________________________________________________________
+
+High Pressure Rate Coefficients (Temperature-Species Rate Tables):
+
+Reactant = W0
+   T(K)        W0        RH         R
+    400       ***  1.74e+13  5.55e+09
+    450       ***   1.9e+13  9.61e+09
+    500       ***     2e+13  1.53e+10
+    550       ***  2.06e+13  2.28e+10
+    600       ***  2.08e+13  3.23e+10
+    650       ***  2.08e+13  4.36e+10
+    700       ***  2.06e+13  5.68e+10
+    750       ***  2.03e+13  7.18e+10
+    800       ***  1.98e+13  8.84e+10
+    850       ***  1.93e+13  1.07e+11
+    900       ***  1.88e+13  1.26e+11
+    950       ***  1.82e+13  1.47e+11
+  1e+03       ***  1.76e+13  1.68e+11
+1.05e+03       ***   1.7e+13  1.91e+11
+1.1e+03       ***  1.64e+13  2.15e+11
+1.15e+03       ***  1.58e+13  2.39e+11
+1.2e+03       ***  1.53e+13  2.63e+11
+1.25e+03       ***  1.47e+13  2.88e+11
+1.3e+03       ***  1.42e+13  3.14e+11
+1.35e+03       ***  1.37e+13  3.39e+11
+1.4e+03       ***  1.33e+13  3.65e+11
+1.45e+03       ***  1.28e+13  3.91e+11
+1.5e+03       ***  1.24e+13  4.17e+11
+1.55e+03       ***   1.2e+13  4.43e+11
+1.6e+03       ***  1.16e+13  4.68e+11
+1.65e+03       ***  1.12e+13  4.94e+11
+1.7e+03       ***  1.08e+13   5.2e+11
+1.75e+03       ***  1.05e+13  5.45e+11
+1.8e+03       ***  1.02e+13   5.7e+11
+1.85e+03       ***  9.85e+12  5.95e+11
+1.9e+03       ***  9.55e+12   6.2e+11
+1.95e+03       ***  9.27e+12  6.44e+11
+  2e+03       ***     9e+12  6.69e+11
+
+Reactant = RH
+   T(K)        W0        RH         R
+    400  9.13e-10       ***       ***
+    450  9.31e-10       ***       ***
+    500  9.47e-10       ***       ***
+    550  9.63e-10       ***       ***
+    600  9.77e-10       ***       ***
+    650   9.9e-10       ***       ***
+    700     1e-09       ***       ***
+    750  1.01e-09       ***       ***
+    800  1.02e-09       ***       ***
+    850  1.04e-09       ***       ***
+    900  1.04e-09       ***       ***
+    950  1.05e-09       ***       ***
+  1e+03  1.06e-09       ***       ***
+1.05e+03  1.07e-09       ***       ***
+1.1e+03  1.08e-09       ***       ***
+1.15e+03  1.09e-09       ***       ***
+1.2e+03   1.1e-09       ***       ***
+1.25e+03   1.1e-09       ***       ***
+1.3e+03  1.11e-09       ***       ***
+1.35e+03  1.12e-09       ***       ***
+1.4e+03  1.12e-09       ***       ***
+1.45e+03  1.13e-09       ***       ***
+1.5e+03  1.14e-09       ***       ***
+1.55e+03  1.14e-09       ***       ***
+1.6e+03  1.15e-09       ***       ***
+1.65e+03  1.16e-09       ***       ***
+1.7e+03  1.16e-09       ***       ***
+1.75e+03  1.17e-09       ***       ***
+1.8e+03  1.17e-09       ***       ***
+1.85e+03  1.18e-09       ***       ***
+1.9e+03  1.18e-09       ***       ***
+1.95e+03  1.19e-09       ***       ***
+  2e+03  1.19e-09       ***       ***
+
+Reactant = R
+   T(K)        W0        RH         R
+    400  3.58e-23       ***       ***
+    450  5.33e-22       ***       ***
+    500  4.82e-21       ***       ***
+    550     3e-20       ***       ***
+    600  1.41e-19       ***       ***
+    650  5.34e-19       ***       ***
+    700   1.7e-18       ***       ***
+    750  4.69e-18       ***       ***
+    800  1.16e-17       ***       ***
+    850  2.59e-17       ***       ***
+    900  5.36e-17       ***       ***
+    950  1.04e-16       ***       ***
+  1e+03  1.89e-16       ***       ***
+1.05e+03  3.28e-16       ***       ***
+1.1e+03  5.46e-16       ***       ***
+1.15e+03  8.72e-16       ***       ***
+1.2e+03  1.35e-15       ***       ***
+1.25e+03  2.02e-15       ***       ***
+1.3e+03  2.96e-15       ***       ***
+1.35e+03  4.22e-15       ***       ***
+1.4e+03   5.9e-15       ***       ***
+1.45e+03  8.08e-15       ***       ***
+1.5e+03  1.09e-14       ***       ***
+1.55e+03  1.44e-14       ***       ***
+1.6e+03  1.88e-14       ***       ***
+1.65e+03  2.43e-14       ***       ***
+1.7e+03  3.09e-14       ***       ***
+1.75e+03  3.89e-14       ***       ***
+1.8e+03  4.84e-14       ***       ***
+1.85e+03  5.97e-14       ***       ***
+1.9e+03   7.3e-14       ***       ***
+1.95e+03  8.85e-14       ***       ***
+  2e+03  1.06e-13       ***       ***
+
+Capture/Escape Rate Coefficients:
+
+   T(K)        W0        RH         R
+    400  1.74e+13  9.13e-10  3.58e-23
+    450   1.9e+13  9.31e-10  5.33e-22
+    500     2e+13  9.47e-10  4.82e-21
+    550  2.06e+13  9.63e-10     3e-20
+    600  2.09e+13  9.77e-10  1.41e-19
+    650  2.09e+13   9.9e-10  5.34e-19
+    700  2.07e+13     1e-09   1.7e-18
+    750  2.03e+13  1.01e-09  4.69e-18
+    800  1.99e+13  1.02e-09  1.16e-17
+    850  1.94e+13  1.04e-09  2.59e-17
+    900  1.89e+13  1.04e-09  5.36e-17
+    950  1.83e+13  1.05e-09  1.04e-16
+  1e+03  1.78e+13  1.06e-09  1.89e-16
+1.05e+03  1.72e+13  1.07e-09  3.28e-16
+1.1e+03  1.66e+13  1.08e-09  5.46e-16
+1.15e+03  1.61e+13  1.09e-09  8.72e-16
+1.2e+03  1.55e+13   1.1e-09  1.35e-15
+1.25e+03   1.5e+13   1.1e-09  2.02e-15
+1.3e+03  1.45e+13  1.11e-09  2.96e-15
+1.35e+03  1.41e+13  1.12e-09  4.22e-15
+1.4e+03  1.36e+13  1.12e-09   5.9e-15
+1.45e+03  1.32e+13  1.13e-09  8.08e-15
+1.5e+03  1.28e+13  1.14e-09  1.09e-14
+1.55e+03  1.24e+13  1.14e-09  1.44e-14
+1.6e+03   1.2e+13  1.15e-09  1.88e-14
+1.65e+03  1.17e+13  1.16e-09  2.43e-14
+1.7e+03  1.13e+13  1.16e-09  3.09e-14
+1.75e+03   1.1e+13  1.17e-09  3.89e-14
+1.8e+03  1.07e+13  1.17e-09  4.84e-14
+1.85e+03  1.04e+13  1.18e-09  5.97e-14
+1.9e+03  1.02e+13  1.18e-09   7.3e-14
+1.95e+03  9.91e+12  1.19e-09  8.85e-14
+  2e+03  9.67e+12  1.19e-09  1.06e-13
+
+______________________________________________________________________________________
+
+Pressure-Species Rate Tables:
+
+Reactant = W0   Temperature = 400 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.74e+13  5.55e+09  1.74e+13
+
+Reactant = W0   Temperature = 450 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O   1.9e+13  9.61e+09   1.9e+13
+
+Reactant = W0   Temperature = 500 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O     2e+13  1.53e+10     2e+13
+
+Reactant = W0   Temperature = 550 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  2.06e+13  2.28e+10  2.06e+13
+
+Reactant = W0   Temperature = 600 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  2.08e+13  3.23e+10  2.09e+13
+
+Reactant = W0   Temperature = 650 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  2.08e+13  4.36e+10  2.09e+13
+
+Reactant = W0   Temperature = 700 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  2.06e+13  5.68e+10  2.07e+13
+
+Reactant = W0   Temperature = 750 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  2.03e+13  7.18e+10  2.03e+13
+
+Reactant = W0   Temperature = 800 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.98e+13  8.84e+10  1.99e+13
+
+Reactant = W0   Temperature = 850 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.93e+13  1.07e+11  1.94e+13
+
+Reactant = W0   Temperature = 900 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.88e+13  1.26e+11  1.89e+13
+
+Reactant = W0   Temperature = 950 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.82e+13  1.47e+11  1.83e+13
+
+Reactant = W0   Temperature = 1e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.76e+13  1.68e+11  1.78e+13
+
+Reactant = W0   Temperature = 1.05e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O   1.7e+13  1.91e+11  1.72e+13
+
+Reactant = W0   Temperature = 1.1e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.64e+13  2.15e+11  1.66e+13
+
+Reactant = W0   Temperature = 1.15e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.58e+13  2.39e+11  1.61e+13
+
+Reactant = W0   Temperature = 1.2e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.53e+13  2.63e+11  1.55e+13
+
+Reactant = W0   Temperature = 1.25e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.47e+13  2.88e+11   1.5e+13
+
+Reactant = W0   Temperature = 1.3e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.42e+13  3.14e+11  1.45e+13
+
+Reactant = W0   Temperature = 1.35e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.37e+13  3.39e+11  1.41e+13
+
+Reactant = W0   Temperature = 1.4e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.33e+13  3.65e+11  1.36e+13
+
+Reactant = W0   Temperature = 1.45e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.28e+13  3.91e+11  1.32e+13
+
+Reactant = W0   Temperature = 1.5e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.24e+13  4.17e+11  1.28e+13
+
+Reactant = W0   Temperature = 1.55e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O   1.2e+13  4.43e+11  1.24e+13
+
+Reactant = W0   Temperature = 1.6e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.16e+13  4.68e+11   1.2e+13
+
+Reactant = W0   Temperature = 1.65e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.12e+13  4.94e+11  1.17e+13
+
+Reactant = W0   Temperature = 1.7e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.08e+13   5.2e+11  1.13e+13
+
+Reactant = W0   Temperature = 1.75e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.05e+13  5.45e+11   1.1e+13
+
+Reactant = W0   Temperature = 1.8e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  1.02e+13   5.7e+11  1.07e+13
+
+Reactant = W0   Temperature = 1.85e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  9.85e+12  5.95e+11  1.04e+13
+
+Reactant = W0   Temperature = 1.9e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  9.55e+12   6.2e+11  1.02e+13
+
+Reactant = W0   Temperature = 1.95e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O  9.27e+12  6.44e+11  9.91e+12
+
+Reactant = W0   Temperature = 2e+03 K
+
+   P(atm)        RH         R      Loss
+      0.1       ***       ***       ***
+        1       ***       ***       ***
+       10       ***       ***       ***
+      100       ***       ***       ***
+      O-O     9e+12  6.69e+11  9.67e+12
+
+Reactant = RH   Temperature = 400 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***   2.9e-13   2.9e-13
+        1       ***   2.9e-13   2.9e-13
+       10       ***   2.9e-13   2.9e-13
+      100       ***   2.9e-13   2.9e-13
+      O-O  9.13e-10       ***  9.13e-10
+
+Reactant = RH   Temperature = 450 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  4.69e-13  4.69e-13
+        1       ***  4.69e-13  4.69e-13
+       10       ***  4.69e-13  4.69e-13
+      100       ***  4.69e-13  4.69e-13
+      O-O  9.31e-10       ***  9.31e-10
+
+Reactant = RH   Temperature = 500 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  7.21e-13  7.21e-13
+        1       ***  7.21e-13  7.21e-13
+       10       ***  7.21e-13  7.21e-13
+      100       ***  7.21e-13  7.21e-13
+      O-O  9.47e-10       ***  9.47e-10
+
+Reactant = RH   Temperature = 550 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  1.06e-12  1.06e-12
+        1       ***  1.06e-12  1.06e-12
+       10       ***  1.06e-12  1.06e-12
+      100       ***  1.06e-12  1.06e-12
+      O-O  9.63e-10       ***  9.63e-10
+
+Reactant = RH   Temperature = 600 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***   1.5e-12   1.5e-12
+        1       ***   1.5e-12   1.5e-12
+       10       ***   1.5e-12   1.5e-12
+      100       ***   1.5e-12   1.5e-12
+      O-O  9.77e-10       ***  9.77e-10
+
+Reactant = RH   Temperature = 650 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  2.05e-12  2.05e-12
+        1       ***  2.05e-12  2.05e-12
+       10       ***  2.05e-12  2.05e-12
+      100       ***  2.05e-12  2.05e-12
+      O-O   9.9e-10       ***   9.9e-10
+
+Reactant = RH   Temperature = 700 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  2.73e-12  2.73e-12
+        1       ***  2.73e-12  2.73e-12
+       10       ***  2.73e-12  2.73e-12
+      100       ***  2.73e-12  2.73e-12
+      O-O     1e-09       ***     1e-09
+
+Reactant = RH   Temperature = 750 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  3.54e-12  3.54e-12
+        1       ***  3.54e-12  3.54e-12
+       10       ***  3.54e-12  3.54e-12
+      100       ***  3.54e-12  3.54e-12
+      O-O  1.01e-09       ***  1.01e-09
+
+Reactant = RH   Temperature = 800 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  4.49e-12  4.49e-12
+        1       ***  4.49e-12  4.49e-12
+       10       ***  4.49e-12  4.49e-12
+      100       ***  4.49e-12  4.49e-12
+      O-O  1.02e-09       ***  1.02e-09
+
+Reactant = RH   Temperature = 850 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***   5.6e-12   5.6e-12
+        1       ***   5.6e-12   5.6e-12
+       10       ***   5.6e-12   5.6e-12
+      100       ***   5.6e-12   5.6e-12
+      O-O  1.04e-09       ***  1.04e-09
+
+Reactant = RH   Temperature = 900 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  6.87e-12  6.87e-12
+        1       ***  6.87e-12  6.87e-12
+       10       ***  6.87e-12  6.87e-12
+      100       ***  6.87e-12  6.87e-12
+      O-O  1.04e-09       ***  1.04e-09
+
+Reactant = RH   Temperature = 950 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***   8.3e-12   8.3e-12
+        1       ***   8.3e-12   8.3e-12
+       10       ***   8.3e-12   8.3e-12
+      100       ***   8.3e-12   8.3e-12
+      O-O  1.05e-09       ***  1.05e-09
+
+Reactant = RH   Temperature = 1e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***   9.9e-12   9.9e-12
+        1       ***   9.9e-12   9.9e-12
+       10       ***   9.9e-12   9.9e-12
+      100       ***   9.9e-12   9.9e-12
+      O-O  1.06e-09       ***  1.06e-09
+
+Reactant = RH   Temperature = 1.05e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  1.17e-11  1.17e-11
+        1       ***  1.17e-11  1.17e-11
+       10       ***  1.17e-11  1.17e-11
+      100       ***  1.17e-11  1.17e-11
+      O-O  1.07e-09       ***  1.07e-09
+
+Reactant = RH   Temperature = 1.1e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  1.36e-11  1.36e-11
+        1       ***  1.36e-11  1.36e-11
+       10       ***  1.36e-11  1.36e-11
+      100       ***  1.36e-11  1.36e-11
+      O-O  1.08e-09       ***  1.08e-09
+
+Reactant = RH   Temperature = 1.15e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  1.58e-11  1.58e-11
+        1       ***  1.58e-11  1.58e-11
+       10       ***  1.58e-11  1.58e-11
+      100       ***  1.58e-11  1.58e-11
+      O-O  1.09e-09       ***  1.09e-09
+
+Reactant = RH   Temperature = 1.2e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  1.81e-11  1.81e-11
+        1       ***  1.81e-11  1.81e-11
+       10       ***  1.81e-11  1.81e-11
+      100       ***  1.81e-11  1.81e-11
+      O-O   1.1e-09       ***   1.1e-09
+
+Reactant = RH   Temperature = 1.25e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  2.06e-11  2.06e-11
+        1       ***  2.06e-11  2.06e-11
+       10       ***  2.06e-11  2.06e-11
+      100       ***  2.06e-11  2.06e-11
+      O-O   1.1e-09       ***   1.1e-09
+
+Reactant = RH   Temperature = 1.3e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  2.33e-11  2.33e-11
+        1       ***  2.33e-11  2.33e-11
+       10       ***  2.33e-11  2.33e-11
+      100       ***  2.33e-11  2.33e-11
+      O-O  1.11e-09       ***  1.11e-09
+
+Reactant = RH   Temperature = 1.35e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  2.61e-11  2.61e-11
+        1       ***  2.61e-11  2.61e-11
+       10       ***  2.61e-11  2.61e-11
+      100       ***  2.61e-11  2.61e-11
+      O-O  1.12e-09       ***  1.12e-09
+
+Reactant = RH   Temperature = 1.4e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  2.91e-11  2.91e-11
+        1       ***  2.91e-11  2.91e-11
+       10       ***  2.91e-11  2.91e-11
+      100       ***  2.91e-11  2.91e-11
+      O-O  1.12e-09       ***  1.12e-09
+
+Reactant = RH   Temperature = 1.45e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  3.23e-11  3.23e-11
+        1       ***  3.23e-11  3.23e-11
+       10       ***  3.23e-11  3.23e-11
+      100       ***  3.24e-11  3.24e-11
+      O-O  1.13e-09       ***  1.13e-09
+
+Reactant = RH   Temperature = 1.5e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  3.57e-11  3.57e-11
+        1       ***  3.57e-11  3.57e-11
+       10       ***  3.57e-11  3.57e-11
+      100       ***  3.57e-11  3.57e-11
+      O-O  1.14e-09       ***  1.14e-09
+
+Reactant = RH   Temperature = 1.55e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  3.93e-11  3.93e-11
+        1       ***  3.93e-11  3.93e-11
+       10       ***  3.93e-11  3.93e-11
+      100       ***  3.93e-11  3.93e-11
+      O-O  1.14e-09       ***  1.14e-09
+
+Reactant = RH   Temperature = 1.6e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***   4.3e-11   4.3e-11
+        1       ***   4.3e-11   4.3e-11
+       10       ***   4.3e-11   4.3e-11
+      100       ***   4.3e-11   4.3e-11
+      O-O  1.15e-09       ***  1.15e-09
+
+Reactant = RH   Temperature = 1.65e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  4.69e-11  4.69e-11
+        1       ***  4.69e-11  4.69e-11
+       10       ***  4.69e-11  4.69e-11
+      100       ***  4.69e-11  4.69e-11
+      O-O  1.16e-09       ***  1.16e-09
+
+Reactant = RH   Temperature = 1.7e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  5.09e-11  5.09e-11
+        1       ***  5.09e-11  5.09e-11
+       10       ***  5.09e-11  5.09e-11
+      100       ***  5.09e-11  5.09e-11
+      O-O  1.16e-09       ***  1.16e-09
+
+Reactant = RH   Temperature = 1.75e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  5.51e-11  5.51e-11
+        1       ***  5.51e-11  5.51e-11
+       10       ***  5.51e-11  5.51e-11
+      100       ***  5.51e-11  5.51e-11
+      O-O  1.17e-09       ***  1.17e-09
+
+Reactant = RH   Temperature = 1.8e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  5.94e-11  5.94e-11
+        1       ***  5.94e-11  5.94e-11
+       10       ***  5.94e-11  5.94e-11
+      100       ***  5.95e-11  5.95e-11
+      O-O  1.17e-09       ***  1.17e-09
+
+Reactant = RH   Temperature = 1.85e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  6.39e-11  6.39e-11
+        1       ***  6.39e-11  6.39e-11
+       10       ***  6.39e-11  6.39e-11
+      100       ***  6.39e-11  6.39e-11
+      O-O  1.18e-09       ***  1.18e-09
+
+Reactant = RH   Temperature = 1.9e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  6.86e-11  6.86e-11
+        1       ***  6.86e-11  6.86e-11
+       10       ***  6.86e-11  6.86e-11
+      100       ***  6.86e-11  6.86e-11
+      O-O  1.18e-09       ***  1.18e-09
+
+Reactant = RH   Temperature = 1.95e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  7.33e-11  7.33e-11
+        1       ***  7.33e-11  7.33e-11
+       10       ***  7.33e-11  7.33e-11
+      100       ***  7.33e-11  7.33e-11
+      O-O  1.19e-09       ***  1.19e-09
+
+Reactant = RH   Temperature = 2e+03 K
+
+   P(atm)        W0         R      Loss
+      0.1       ***  7.82e-11  7.82e-11
+        1       ***  7.82e-11  7.82e-11
+       10       ***  7.82e-11  7.82e-11
+      100       ***  7.82e-11  7.82e-11
+      O-O  1.19e-09       ***  1.19e-09
+
+Reactant = R   Temperature = 400 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  3.56e-23  3.56e-23
+        1       ***  3.56e-23  3.56e-23
+       10       ***  3.56e-23  3.56e-23
+      100       ***  3.56e-23  3.56e-23
+      O-O  3.58e-23       ***  3.58e-23
+
+Reactant = R   Temperature = 450 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  5.31e-22  5.31e-22
+        1       ***  5.31e-22  5.31e-22
+       10       ***  5.31e-22  5.31e-22
+      100       ***  5.31e-22  5.31e-22
+      O-O  5.33e-22       ***  5.33e-22
+
+Reactant = R   Temperature = 500 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  4.79e-21  4.79e-21
+        1       ***  4.79e-21  4.79e-21
+       10       ***  4.79e-21  4.79e-21
+      100       ***  4.79e-21  4.79e-21
+      O-O  4.82e-21       ***  4.82e-21
+
+Reactant = R   Temperature = 550 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  2.98e-20  2.98e-20
+        1       ***  2.98e-20  2.98e-20
+       10       ***  2.98e-20  2.98e-20
+      100       ***  2.98e-20  2.98e-20
+      O-O     3e-20       ***     3e-20
+
+Reactant = R   Temperature = 600 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***   1.4e-19   1.4e-19
+        1       ***   1.4e-19   1.4e-19
+       10       ***   1.4e-19   1.4e-19
+      100       ***   1.4e-19   1.4e-19
+      O-O  1.41e-19       ***  1.41e-19
+
+Reactant = R   Temperature = 650 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  5.28e-19  5.28e-19
+        1       ***  5.28e-19  5.28e-19
+       10       ***  5.28e-19  5.28e-19
+      100       ***  5.28e-19  5.28e-19
+      O-O  5.34e-19       ***  5.34e-19
+
+Reactant = R   Temperature = 700 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.68e-18  1.68e-18
+        1       ***  1.68e-18  1.68e-18
+       10       ***  1.68e-18  1.68e-18
+      100       ***  1.68e-18  1.68e-18
+      O-O   1.7e-18       ***   1.7e-18
+
+Reactant = R   Temperature = 750 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  4.62e-18  4.62e-18
+        1       ***  4.62e-18  4.62e-18
+       10       ***  4.62e-18  4.62e-18
+      100       ***  4.62e-18  4.62e-18
+      O-O  4.69e-18       ***  4.69e-18
+
+Reactant = R   Temperature = 800 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.14e-17  1.14e-17
+        1       ***  1.14e-17  1.14e-17
+       10       ***  1.14e-17  1.14e-17
+      100       ***  1.14e-17  1.14e-17
+      O-O  1.16e-17       ***  1.16e-17
+
+Reactant = R   Temperature = 850 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  2.54e-17  2.54e-17
+        1       ***  2.54e-17  2.54e-17
+       10       ***  2.54e-17  2.54e-17
+      100       ***  2.54e-17  2.54e-17
+      O-O  2.59e-17       ***  2.59e-17
+
+Reactant = R   Temperature = 900 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  5.24e-17  5.24e-17
+        1       ***  5.24e-17  5.24e-17
+       10       ***  5.24e-17  5.24e-17
+      100       ***  5.24e-17  5.24e-17
+      O-O  5.36e-17       ***  5.36e-17
+
+Reactant = R   Temperature = 950 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.01e-16  1.01e-16
+        1       ***  1.01e-16  1.01e-16
+       10       ***  1.01e-16  1.01e-16
+      100       ***  1.01e-16  1.01e-16
+      O-O  1.04e-16       ***  1.04e-16
+
+Reactant = R   Temperature = 1e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.84e-16  1.84e-16
+        1       ***  1.84e-16  1.84e-16
+       10       ***  1.84e-16  1.84e-16
+      100       ***  1.84e-16  1.84e-16
+      O-O  1.89e-16       ***  1.89e-16
+
+Reactant = R   Temperature = 1.05e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  3.18e-16  3.18e-16
+        1       ***  3.18e-16  3.18e-16
+       10       ***  3.18e-16  3.18e-16
+      100       ***  3.18e-16  3.18e-16
+      O-O  3.28e-16       ***  3.28e-16
+
+Reactant = R   Temperature = 1.1e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  5.27e-16  5.27e-16
+        1       ***  5.27e-16  5.27e-16
+       10       ***  5.27e-16  5.27e-16
+      100       ***  5.27e-16  5.27e-16
+      O-O  5.46e-16       ***  5.46e-16
+
+Reactant = R   Temperature = 1.15e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  8.39e-16  8.39e-16
+        1       ***  8.39e-16  8.39e-16
+       10       ***  8.39e-16  8.39e-16
+      100       ***  8.39e-16  8.39e-16
+      O-O  8.72e-16       ***  8.72e-16
+
+Reactant = R   Temperature = 1.2e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.29e-15  1.29e-15
+        1       ***  1.29e-15  1.29e-15
+       10       ***  1.29e-15  1.29e-15
+      100       ***  1.29e-15  1.29e-15
+      O-O  1.35e-15       ***  1.35e-15
+
+Reactant = R   Temperature = 1.25e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.93e-15  1.93e-15
+        1       ***  1.93e-15  1.93e-15
+       10       ***  1.93e-15  1.93e-15
+      100       ***  1.93e-15  1.93e-15
+      O-O  2.02e-15       ***  2.02e-15
+
+Reactant = R   Temperature = 1.3e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  2.81e-15  2.81e-15
+        1       ***  2.81e-15  2.81e-15
+       10       ***  2.81e-15  2.81e-15
+      100       ***  2.81e-15  2.81e-15
+      O-O  2.96e-15       ***  2.96e-15
+
+Reactant = R   Temperature = 1.35e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  3.99e-15  3.99e-15
+        1       ***  3.99e-15  3.99e-15
+       10       ***  3.99e-15  3.99e-15
+      100       ***  3.99e-15  3.99e-15
+      O-O  4.22e-15       ***  4.22e-15
+
+Reactant = R   Temperature = 1.4e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  5.55e-15  5.55e-15
+        1       ***  5.55e-15  5.55e-15
+       10       ***  5.55e-15  5.55e-15
+      100       ***  5.56e-15  5.56e-15
+      O-O   5.9e-15       ***   5.9e-15
+
+Reactant = R   Temperature = 1.45e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  7.57e-15  7.57e-15
+        1       ***  7.57e-15  7.57e-15
+       10       ***  7.57e-15  7.57e-15
+      100       ***  7.58e-15  7.58e-15
+      O-O  8.08e-15       ***  8.08e-15
+
+Reactant = R   Temperature = 1.5e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.01e-14  1.01e-14
+        1       ***  1.01e-14  1.01e-14
+       10       ***  1.01e-14  1.01e-14
+      100       ***  1.01e-14  1.01e-14
+      O-O  1.09e-14       ***  1.09e-14
+
+Reactant = R   Temperature = 1.55e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.34e-14  1.34e-14
+        1       ***  1.34e-14  1.34e-14
+       10       ***  1.34e-14  1.34e-14
+      100       ***  1.34e-14  1.34e-14
+      O-O  1.44e-14       ***  1.44e-14
+
+Reactant = R   Temperature = 1.6e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  1.74e-14  1.74e-14
+        1       ***  1.74e-14  1.74e-14
+       10       ***  1.74e-14  1.74e-14
+      100       ***  1.74e-14  1.74e-14
+      O-O  1.88e-14       ***  1.88e-14
+
+Reactant = R   Temperature = 1.65e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  2.23e-14  2.23e-14
+        1       ***  2.23e-14  2.23e-14
+       10       ***  2.23e-14  2.23e-14
+      100       ***  2.23e-14  2.23e-14
+      O-O  2.43e-14       ***  2.43e-14
+
+Reactant = R   Temperature = 1.7e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  2.82e-14  2.82e-14
+        1       ***  2.82e-14  2.82e-14
+       10       ***  2.82e-14  2.82e-14
+      100       ***  2.82e-14  2.82e-14
+      O-O  3.09e-14       ***  3.09e-14
+
+Reactant = R   Temperature = 1.75e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  3.53e-14  3.53e-14
+        1       ***  3.53e-14  3.53e-14
+       10       ***  3.53e-14  3.53e-14
+      100       ***  3.53e-14  3.53e-14
+      O-O  3.89e-14       ***  3.89e-14
+
+Reactant = R   Temperature = 1.8e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  4.37e-14  4.37e-14
+        1       ***  4.37e-14  4.37e-14
+       10       ***  4.37e-14  4.37e-14
+      100       ***  4.37e-14  4.37e-14
+      O-O  4.84e-14       ***  4.84e-14
+
+Reactant = R   Temperature = 1.85e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  5.36e-14  5.36e-14
+        1       ***  5.36e-14  5.36e-14
+       10       ***  5.36e-14  5.36e-14
+      100       ***  5.36e-14  5.36e-14
+      O-O  5.97e-14       ***  5.97e-14
+
+Reactant = R   Temperature = 1.9e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  6.51e-14  6.51e-14
+        1       ***  6.51e-14  6.51e-14
+       10       ***  6.51e-14  6.51e-14
+      100       ***  6.52e-14  6.52e-14
+      O-O   7.3e-14       ***   7.3e-14
+
+Reactant = R   Temperature = 1.95e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  7.85e-14  7.85e-14
+        1       ***  7.85e-14  7.85e-14
+       10       ***  7.85e-14  7.85e-14
+      100       ***  7.85e-14  7.85e-14
+      O-O  8.85e-14       ***  8.85e-14
+
+Reactant = R   Temperature = 2e+03 K
+
+   P(atm)        W0        RH      Loss
+      0.1       ***  9.39e-14  9.39e-14
+        1       ***  9.39e-14  9.39e-14
+       10       ***  9.39e-14  9.39e-14
+      100       ***  9.39e-14  9.39e-14
+      O-O  1.06e-13       ***  1.06e-13
+
+______________________________________________________________________________________
+
+Temperature-Species Rate Tables:
+
+Reactant = W0   Pressure = 0.1 atm
+
+   T(K)        RH         R      Loss   Capture
+    400       ***       ***       ***  1.74e+13
+    450       ***       ***       ***   1.9e+13
+    500       ***       ***       ***     2e+13
+    550       ***       ***       ***  2.06e+13
+    600       ***       ***       ***  2.09e+13
+    650       ***       ***       ***  2.09e+13
+    700       ***       ***       ***  2.07e+13
+    750       ***       ***       ***  2.03e+13
+    800       ***       ***       ***  1.99e+13
+    850       ***       ***       ***  1.94e+13
+    900       ***       ***       ***  1.89e+13
+    950       ***       ***       ***  1.83e+13
+  1e+03       ***       ***       ***  1.78e+13
+1.05e+03       ***       ***       ***  1.72e+13
+1.1e+03       ***       ***       ***  1.66e+13
+1.15e+03       ***       ***       ***  1.61e+13
+1.2e+03       ***       ***       ***  1.55e+13
+1.25e+03       ***       ***       ***   1.5e+13
+1.3e+03       ***       ***       ***  1.45e+13
+1.35e+03       ***       ***       ***  1.41e+13
+1.4e+03       ***       ***       ***  1.36e+13
+1.45e+03       ***       ***       ***  1.32e+13
+1.5e+03       ***       ***       ***  1.28e+13
+1.55e+03       ***       ***       ***  1.24e+13
+1.6e+03       ***       ***       ***   1.2e+13
+1.65e+03       ***       ***       ***  1.17e+13
+1.7e+03       ***       ***       ***  1.13e+13
+1.75e+03       ***       ***       ***   1.1e+13
+1.8e+03       ***       ***       ***  1.07e+13
+1.85e+03       ***       ***       ***  1.04e+13
+1.9e+03       ***       ***       ***  1.02e+13
+1.95e+03       ***       ***       ***  9.91e+12
+  2e+03       ***       ***       ***  9.67e+12
+
+Reactant = W0   Pressure = 1 atm
+
+   T(K)        RH         R      Loss   Capture
+    400       ***       ***       ***  1.74e+13
+    450       ***       ***       ***   1.9e+13
+    500       ***       ***       ***     2e+13
+    550       ***       ***       ***  2.06e+13
+    600       ***       ***       ***  2.09e+13
+    650       ***       ***       ***  2.09e+13
+    700       ***       ***       ***  2.07e+13
+    750       ***       ***       ***  2.03e+13
+    800       ***       ***       ***  1.99e+13
+    850       ***       ***       ***  1.94e+13
+    900       ***       ***       ***  1.89e+13
+    950       ***       ***       ***  1.83e+13
+  1e+03       ***       ***       ***  1.78e+13
+1.05e+03       ***       ***       ***  1.72e+13
+1.1e+03       ***       ***       ***  1.66e+13
+1.15e+03       ***       ***       ***  1.61e+13
+1.2e+03       ***       ***       ***  1.55e+13
+1.25e+03       ***       ***       ***   1.5e+13
+1.3e+03       ***       ***       ***  1.45e+13
+1.35e+03       ***       ***       ***  1.41e+13
+1.4e+03       ***       ***       ***  1.36e+13
+1.45e+03       ***       ***       ***  1.32e+13
+1.5e+03       ***       ***       ***  1.28e+13
+1.55e+03       ***       ***       ***  1.24e+13
+1.6e+03       ***       ***       ***   1.2e+13
+1.65e+03       ***       ***       ***  1.17e+13
+1.7e+03       ***       ***       ***  1.13e+13
+1.75e+03       ***       ***       ***   1.1e+13
+1.8e+03       ***       ***       ***  1.07e+13
+1.85e+03       ***       ***       ***  1.04e+13
+1.9e+03       ***       ***       ***  1.02e+13
+1.95e+03       ***       ***       ***  9.91e+12
+  2e+03       ***       ***       ***  9.67e+12
+
+Reactant = W0   Pressure = 10 atm
+
+   T(K)        RH         R      Loss   Capture
+    400       ***       ***       ***  1.74e+13
+    450       ***       ***       ***   1.9e+13
+    500       ***       ***       ***     2e+13
+    550       ***       ***       ***  2.06e+13
+    600       ***       ***       ***  2.09e+13
+    650       ***       ***       ***  2.09e+13
+    700       ***       ***       ***  2.07e+13
+    750       ***       ***       ***  2.03e+13
+    800       ***       ***       ***  1.99e+13
+    850       ***       ***       ***  1.94e+13
+    900       ***       ***       ***  1.89e+13
+    950       ***       ***       ***  1.83e+13
+  1e+03       ***       ***       ***  1.78e+13
+1.05e+03       ***       ***       ***  1.72e+13
+1.1e+03       ***       ***       ***  1.66e+13
+1.15e+03       ***       ***       ***  1.61e+13
+1.2e+03       ***       ***       ***  1.55e+13
+1.25e+03       ***       ***       ***   1.5e+13
+1.3e+03       ***       ***       ***  1.45e+13
+1.35e+03       ***       ***       ***  1.41e+13
+1.4e+03       ***       ***       ***  1.36e+13
+1.45e+03       ***       ***       ***  1.32e+13
+1.5e+03       ***       ***       ***  1.28e+13
+1.55e+03       ***       ***       ***  1.24e+13
+1.6e+03       ***       ***       ***   1.2e+13
+1.65e+03       ***       ***       ***  1.17e+13
+1.7e+03       ***       ***       ***  1.13e+13
+1.75e+03       ***       ***       ***   1.1e+13
+1.8e+03       ***       ***       ***  1.07e+13
+1.85e+03       ***       ***       ***  1.04e+13
+1.9e+03       ***       ***       ***  1.02e+13
+1.95e+03       ***       ***       ***  9.91e+12
+  2e+03       ***       ***       ***  9.67e+12
+
+Reactant = W0   Pressure = 100 atm
+
+   T(K)        RH         R      Loss   Capture
+    400       ***       ***       ***  1.74e+13
+    450       ***       ***       ***   1.9e+13
+    500       ***       ***       ***     2e+13
+    550       ***       ***       ***  2.06e+13
+    600       ***       ***       ***  2.09e+13
+    650       ***       ***       ***  2.09e+13
+    700       ***       ***       ***  2.07e+13
+    750       ***       ***       ***  2.03e+13
+    800       ***       ***       ***  1.99e+13
+    850       ***       ***       ***  1.94e+13
+    900       ***       ***       ***  1.89e+13
+    950       ***       ***       ***  1.83e+13
+  1e+03       ***       ***       ***  1.78e+13
+1.05e+03       ***       ***       ***  1.72e+13
+1.1e+03       ***       ***       ***  1.66e+13
+1.15e+03       ***       ***       ***  1.61e+13
+1.2e+03       ***       ***       ***  1.55e+13
+1.25e+03       ***       ***       ***   1.5e+13
+1.3e+03       ***       ***       ***  1.45e+13
+1.35e+03       ***       ***       ***  1.41e+13
+1.4e+03       ***       ***       ***  1.36e+13
+1.45e+03       ***       ***       ***  1.32e+13
+1.5e+03       ***       ***       ***  1.28e+13
+1.55e+03       ***       ***       ***  1.24e+13
+1.6e+03       ***       ***       ***   1.2e+13
+1.65e+03       ***       ***       ***  1.17e+13
+1.7e+03       ***       ***       ***  1.13e+13
+1.75e+03       ***       ***       ***   1.1e+13
+1.8e+03       ***       ***       ***  1.07e+13
+1.85e+03       ***       ***       ***  1.04e+13
+1.9e+03       ***       ***       ***  1.02e+13
+1.95e+03       ***       ***       ***  9.91e+12
+  2e+03       ***       ***       ***  9.67e+12
+
+Reactant = RH   Pressure = 0.1 atm
+
+   T(K)        W0         R      Loss   Capture
+    400       ***   2.9e-13   2.9e-13  9.13e-10
+    450       ***  4.69e-13  4.69e-13  9.31e-10
+    500       ***  7.21e-13  7.21e-13  9.47e-10
+    550       ***  1.06e-12  1.06e-12  9.63e-10
+    600       ***   1.5e-12   1.5e-12  9.77e-10
+    650       ***  2.05e-12  2.05e-12   9.9e-10
+    700       ***  2.73e-12  2.73e-12     1e-09
+    750       ***  3.54e-12  3.54e-12  1.01e-09
+    800       ***  4.49e-12  4.49e-12  1.02e-09
+    850       ***   5.6e-12   5.6e-12  1.04e-09
+    900       ***  6.87e-12  6.87e-12  1.04e-09
+    950       ***   8.3e-12   8.3e-12  1.05e-09
+  1e+03       ***   9.9e-12   9.9e-12  1.06e-09
+1.05e+03       ***  1.17e-11  1.17e-11  1.07e-09
+1.1e+03       ***  1.36e-11  1.36e-11  1.08e-09
+1.15e+03       ***  1.58e-11  1.58e-11  1.09e-09
+1.2e+03       ***  1.81e-11  1.81e-11   1.1e-09
+1.25e+03       ***  2.06e-11  2.06e-11   1.1e-09
+1.3e+03       ***  2.33e-11  2.33e-11  1.11e-09
+1.35e+03       ***  2.61e-11  2.61e-11  1.12e-09
+1.4e+03       ***  2.91e-11  2.91e-11  1.12e-09
+1.45e+03       ***  3.23e-11  3.23e-11  1.13e-09
+1.5e+03       ***  3.57e-11  3.57e-11  1.14e-09
+1.55e+03       ***  3.93e-11  3.93e-11  1.14e-09
+1.6e+03       ***   4.3e-11   4.3e-11  1.15e-09
+1.65e+03       ***  4.69e-11  4.69e-11  1.16e-09
+1.7e+03       ***  5.09e-11  5.09e-11  1.16e-09
+1.75e+03       ***  5.51e-11  5.51e-11  1.17e-09
+1.8e+03       ***  5.94e-11  5.94e-11  1.17e-09
+1.85e+03       ***  6.39e-11  6.39e-11  1.18e-09
+1.9e+03       ***  6.86e-11  6.86e-11  1.18e-09
+1.95e+03       ***  7.33e-11  7.33e-11  1.19e-09
+  2e+03       ***  7.82e-11  7.82e-11  1.19e-09
+
+Reactant = RH   Pressure = 1 atm
+
+   T(K)        W0         R      Loss   Capture
+    400       ***   2.9e-13   2.9e-13  9.13e-10
+    450       ***  4.69e-13  4.69e-13  9.31e-10
+    500       ***  7.21e-13  7.21e-13  9.47e-10
+    550       ***  1.06e-12  1.06e-12  9.63e-10
+    600       ***   1.5e-12   1.5e-12  9.77e-10
+    650       ***  2.05e-12  2.05e-12   9.9e-10
+    700       ***  2.73e-12  2.73e-12     1e-09
+    750       ***  3.54e-12  3.54e-12  1.01e-09
+    800       ***  4.49e-12  4.49e-12  1.02e-09
+    850       ***   5.6e-12   5.6e-12  1.04e-09
+    900       ***  6.87e-12  6.87e-12  1.04e-09
+    950       ***   8.3e-12   8.3e-12  1.05e-09
+  1e+03       ***   9.9e-12   9.9e-12  1.06e-09
+1.05e+03       ***  1.17e-11  1.17e-11  1.07e-09
+1.1e+03       ***  1.36e-11  1.36e-11  1.08e-09
+1.15e+03       ***  1.58e-11  1.58e-11  1.09e-09
+1.2e+03       ***  1.81e-11  1.81e-11   1.1e-09
+1.25e+03       ***  2.06e-11  2.06e-11   1.1e-09
+1.3e+03       ***  2.33e-11  2.33e-11  1.11e-09
+1.35e+03       ***  2.61e-11  2.61e-11  1.12e-09
+1.4e+03       ***  2.91e-11  2.91e-11  1.12e-09
+1.45e+03       ***  3.23e-11  3.23e-11  1.13e-09
+1.5e+03       ***  3.57e-11  3.57e-11  1.14e-09
+1.55e+03       ***  3.93e-11  3.93e-11  1.14e-09
+1.6e+03       ***   4.3e-11   4.3e-11  1.15e-09
+1.65e+03       ***  4.69e-11  4.69e-11  1.16e-09
+1.7e+03       ***  5.09e-11  5.09e-11  1.16e-09
+1.75e+03       ***  5.51e-11  5.51e-11  1.17e-09
+1.8e+03       ***  5.94e-11  5.94e-11  1.17e-09
+1.85e+03       ***  6.39e-11  6.39e-11  1.18e-09
+1.9e+03       ***  6.86e-11  6.86e-11  1.18e-09
+1.95e+03       ***  7.33e-11  7.33e-11  1.19e-09
+  2e+03       ***  7.82e-11  7.82e-11  1.19e-09
+
+Reactant = RH   Pressure = 10 atm
+
+   T(K)        W0         R      Loss   Capture
+    400       ***   2.9e-13   2.9e-13  9.13e-10
+    450       ***  4.69e-13  4.69e-13  9.31e-10
+    500       ***  7.21e-13  7.21e-13  9.47e-10
+    550       ***  1.06e-12  1.06e-12  9.63e-10
+    600       ***   1.5e-12   1.5e-12  9.77e-10
+    650       ***  2.05e-12  2.05e-12   9.9e-10
+    700       ***  2.73e-12  2.73e-12     1e-09
+    750       ***  3.54e-12  3.54e-12  1.01e-09
+    800       ***  4.49e-12  4.49e-12  1.02e-09
+    850       ***   5.6e-12   5.6e-12  1.04e-09
+    900       ***  6.87e-12  6.87e-12  1.04e-09
+    950       ***   8.3e-12   8.3e-12  1.05e-09
+  1e+03       ***   9.9e-12   9.9e-12  1.06e-09
+1.05e+03       ***  1.17e-11  1.17e-11  1.07e-09
+1.1e+03       ***  1.36e-11  1.36e-11  1.08e-09
+1.15e+03       ***  1.58e-11  1.58e-11  1.09e-09
+1.2e+03       ***  1.81e-11  1.81e-11   1.1e-09
+1.25e+03       ***  2.06e-11  2.06e-11   1.1e-09
+1.3e+03       ***  2.33e-11  2.33e-11  1.11e-09
+1.35e+03       ***  2.61e-11  2.61e-11  1.12e-09
+1.4e+03       ***  2.91e-11  2.91e-11  1.12e-09
+1.45e+03       ***  3.23e-11  3.23e-11  1.13e-09
+1.5e+03       ***  3.57e-11  3.57e-11  1.14e-09
+1.55e+03       ***  3.93e-11  3.93e-11  1.14e-09
+1.6e+03       ***   4.3e-11   4.3e-11  1.15e-09
+1.65e+03       ***  4.69e-11  4.69e-11  1.16e-09
+1.7e+03       ***  5.09e-11  5.09e-11  1.16e-09
+1.75e+03       ***  5.51e-11  5.51e-11  1.17e-09
+1.8e+03       ***  5.94e-11  5.94e-11  1.17e-09
+1.85e+03       ***  6.39e-11  6.39e-11  1.18e-09
+1.9e+03       ***  6.86e-11  6.86e-11  1.18e-09
+1.95e+03       ***  7.33e-11  7.33e-11  1.19e-09
+  2e+03       ***  7.82e-11  7.82e-11  1.19e-09
+
+Reactant = RH   Pressure = 100 atm
+
+   T(K)        W0         R      Loss   Capture
+    400       ***   2.9e-13   2.9e-13  9.13e-10
+    450       ***  4.69e-13  4.69e-13  9.31e-10
+    500       ***  7.21e-13  7.21e-13  9.47e-10
+    550       ***  1.06e-12  1.06e-12  9.63e-10
+    600       ***   1.5e-12   1.5e-12  9.77e-10
+    650       ***  2.05e-12  2.05e-12   9.9e-10
+    700       ***  2.73e-12  2.73e-12     1e-09
+    750       ***  3.54e-12  3.54e-12  1.01e-09
+    800       ***  4.49e-12  4.49e-12  1.02e-09
+    850       ***   5.6e-12   5.6e-12  1.04e-09
+    900       ***  6.87e-12  6.87e-12  1.04e-09
+    950       ***   8.3e-12   8.3e-12  1.05e-09
+  1e+03       ***   9.9e-12   9.9e-12  1.06e-09
+1.05e+03       ***  1.17e-11  1.17e-11  1.07e-09
+1.1e+03       ***  1.36e-11  1.36e-11  1.08e-09
+1.15e+03       ***  1.58e-11  1.58e-11  1.09e-09
+1.2e+03       ***  1.81e-11  1.81e-11   1.1e-09
+1.25e+03       ***  2.06e-11  2.06e-11   1.1e-09
+1.3e+03       ***  2.33e-11  2.33e-11  1.11e-09
+1.35e+03       ***  2.61e-11  2.61e-11  1.12e-09
+1.4e+03       ***  2.91e-11  2.91e-11  1.12e-09
+1.45e+03       ***  3.24e-11  3.24e-11  1.13e-09
+1.5e+03       ***  3.57e-11  3.57e-11  1.14e-09
+1.55e+03       ***  3.93e-11  3.93e-11  1.14e-09
+1.6e+03       ***   4.3e-11   4.3e-11  1.15e-09
+1.65e+03       ***  4.69e-11  4.69e-11  1.16e-09
+1.7e+03       ***  5.09e-11  5.09e-11  1.16e-09
+1.75e+03       ***  5.51e-11  5.51e-11  1.17e-09
+1.8e+03       ***  5.95e-11  5.95e-11  1.17e-09
+1.85e+03       ***  6.39e-11  6.39e-11  1.18e-09
+1.9e+03       ***  6.86e-11  6.86e-11  1.18e-09
+1.95e+03       ***  7.33e-11  7.33e-11  1.19e-09
+  2e+03       ***  7.82e-11  7.82e-11  1.19e-09
+
+Reactant = R   Pressure = 0.1 atm
+
+   T(K)        W0        RH      Loss   Capture
+    400       ***  3.56e-23  3.56e-23  3.58e-23
+    450       ***  5.31e-22  5.31e-22  5.33e-22
+    500       ***  4.79e-21  4.79e-21  4.82e-21
+    550       ***  2.98e-20  2.98e-20     3e-20
+    600       ***   1.4e-19   1.4e-19  1.41e-19
+    650       ***  5.28e-19  5.28e-19  5.34e-19
+    700       ***  1.68e-18  1.68e-18   1.7e-18
+    750       ***  4.62e-18  4.62e-18  4.69e-18
+    800       ***  1.14e-17  1.14e-17  1.16e-17
+    850       ***  2.54e-17  2.54e-17  2.59e-17
+    900       ***  5.24e-17  5.24e-17  5.36e-17
+    950       ***  1.01e-16  1.01e-16  1.04e-16
+  1e+03       ***  1.84e-16  1.84e-16  1.89e-16
+1.05e+03       ***  3.18e-16  3.18e-16  3.28e-16
+1.1e+03       ***  5.27e-16  5.27e-16  5.46e-16
+1.15e+03       ***  8.39e-16  8.39e-16  8.72e-16
+1.2e+03       ***  1.29e-15  1.29e-15  1.35e-15
+1.25e+03       ***  1.93e-15  1.93e-15  2.02e-15
+1.3e+03       ***  2.81e-15  2.81e-15  2.96e-15
+1.35e+03       ***  3.99e-15  3.99e-15  4.22e-15
+1.4e+03       ***  5.55e-15  5.55e-15   5.9e-15
+1.45e+03       ***  7.57e-15  7.57e-15  8.08e-15
+1.5e+03       ***  1.01e-14  1.01e-14  1.09e-14
+1.55e+03       ***  1.34e-14  1.34e-14  1.44e-14
+1.6e+03       ***  1.74e-14  1.74e-14  1.88e-14
+1.65e+03       ***  2.23e-14  2.23e-14  2.43e-14
+1.7e+03       ***  2.82e-14  2.82e-14  3.09e-14
+1.75e+03       ***  3.53e-14  3.53e-14  3.89e-14
+1.8e+03       ***  4.37e-14  4.37e-14  4.84e-14
+1.85e+03       ***  5.36e-14  5.36e-14  5.97e-14
+1.9e+03       ***  6.51e-14  6.51e-14   7.3e-14
+1.95e+03       ***  7.85e-14  7.85e-14  8.85e-14
+  2e+03       ***  9.39e-14  9.39e-14  1.06e-13
+
+Reactant = R   Pressure = 1 atm
+
+   T(K)        W0        RH      Loss   Capture
+    400       ***  3.56e-23  3.56e-23  3.58e-23
+    450       ***  5.31e-22  5.31e-22  5.33e-22
+    500       ***  4.79e-21  4.79e-21  4.82e-21
+    550       ***  2.98e-20  2.98e-20     3e-20
+    600       ***   1.4e-19   1.4e-19  1.41e-19
+    650       ***  5.28e-19  5.28e-19  5.34e-19
+    700       ***  1.68e-18  1.68e-18   1.7e-18
+    750       ***  4.62e-18  4.62e-18  4.69e-18
+    800       ***  1.14e-17  1.14e-17  1.16e-17
+    850       ***  2.54e-17  2.54e-17  2.59e-17
+    900       ***  5.24e-17  5.24e-17  5.36e-17
+    950       ***  1.01e-16  1.01e-16  1.04e-16
+  1e+03       ***  1.84e-16  1.84e-16  1.89e-16
+1.05e+03       ***  3.18e-16  3.18e-16  3.28e-16
+1.1e+03       ***  5.27e-16  5.27e-16  5.46e-16
+1.15e+03       ***  8.39e-16  8.39e-16  8.72e-16
+1.2e+03       ***  1.29e-15  1.29e-15  1.35e-15
+1.25e+03       ***  1.93e-15  1.93e-15  2.02e-15
+1.3e+03       ***  2.81e-15  2.81e-15  2.96e-15
+1.35e+03       ***  3.99e-15  3.99e-15  4.22e-15
+1.4e+03       ***  5.55e-15  5.55e-15   5.9e-15
+1.45e+03       ***  7.57e-15  7.57e-15  8.08e-15
+1.5e+03       ***  1.01e-14  1.01e-14  1.09e-14
+1.55e+03       ***  1.34e-14  1.34e-14  1.44e-14
+1.6e+03       ***  1.74e-14  1.74e-14  1.88e-14
+1.65e+03       ***  2.23e-14  2.23e-14  2.43e-14
+1.7e+03       ***  2.82e-14  2.82e-14  3.09e-14
+1.75e+03       ***  3.53e-14  3.53e-14  3.89e-14
+1.8e+03       ***  4.37e-14  4.37e-14  4.84e-14
+1.85e+03       ***  5.36e-14  5.36e-14  5.97e-14
+1.9e+03       ***  6.51e-14  6.51e-14   7.3e-14
+1.95e+03       ***  7.85e-14  7.85e-14  8.85e-14
+  2e+03       ***  9.39e-14  9.39e-14  1.06e-13
+
+Reactant = R   Pressure = 10 atm
+
+   T(K)        W0        RH      Loss   Capture
+    400       ***  3.56e-23  3.56e-23  3.58e-23
+    450       ***  5.31e-22  5.31e-22  5.33e-22
+    500       ***  4.79e-21  4.79e-21  4.82e-21
+    550       ***  2.98e-20  2.98e-20     3e-20
+    600       ***   1.4e-19   1.4e-19  1.41e-19
+    650       ***  5.28e-19  5.28e-19  5.34e-19
+    700       ***  1.68e-18  1.68e-18   1.7e-18
+    750       ***  4.62e-18  4.62e-18  4.69e-18
+    800       ***  1.14e-17  1.14e-17  1.16e-17
+    850       ***  2.54e-17  2.54e-17  2.59e-17
+    900       ***  5.24e-17  5.24e-17  5.36e-17
+    950       ***  1.01e-16  1.01e-16  1.04e-16
+  1e+03       ***  1.84e-16  1.84e-16  1.89e-16
+1.05e+03       ***  3.18e-16  3.18e-16  3.28e-16
+1.1e+03       ***  5.27e-16  5.27e-16  5.46e-16
+1.15e+03       ***  8.39e-16  8.39e-16  8.72e-16
+1.2e+03       ***  1.29e-15  1.29e-15  1.35e-15
+1.25e+03       ***  1.93e-15  1.93e-15  2.02e-15
+1.3e+03       ***  2.81e-15  2.81e-15  2.96e-15
+1.35e+03       ***  3.99e-15  3.99e-15  4.22e-15
+1.4e+03       ***  5.55e-15  5.55e-15   5.9e-15
+1.45e+03       ***  7.57e-15  7.57e-15  8.08e-15
+1.5e+03       ***  1.01e-14  1.01e-14  1.09e-14
+1.55e+03       ***  1.34e-14  1.34e-14  1.44e-14
+1.6e+03       ***  1.74e-14  1.74e-14  1.88e-14
+1.65e+03       ***  2.23e-14  2.23e-14  2.43e-14
+1.7e+03       ***  2.82e-14  2.82e-14  3.09e-14
+1.75e+03       ***  3.53e-14  3.53e-14  3.89e-14
+1.8e+03       ***  4.37e-14  4.37e-14  4.84e-14
+1.85e+03       ***  5.36e-14  5.36e-14  5.97e-14
+1.9e+03       ***  6.51e-14  6.51e-14   7.3e-14
+1.95e+03       ***  7.85e-14  7.85e-14  8.85e-14
+  2e+03       ***  9.39e-14  9.39e-14  1.06e-13
+
+Reactant = R   Pressure = 100 atm
+
+   T(K)        W0        RH      Loss   Capture
+    400       ***  3.56e-23  3.56e-23  3.58e-23
+    450       ***  5.31e-22  5.31e-22  5.33e-22
+    500       ***  4.79e-21  4.79e-21  4.82e-21
+    550       ***  2.98e-20  2.98e-20     3e-20
+    600       ***   1.4e-19   1.4e-19  1.41e-19
+    650       ***  5.28e-19  5.28e-19  5.34e-19
+    700       ***  1.68e-18  1.68e-18   1.7e-18
+    750       ***  4.62e-18  4.62e-18  4.69e-18
+    800       ***  1.14e-17  1.14e-17  1.16e-17
+    850       ***  2.54e-17  2.54e-17  2.59e-17
+    900       ***  5.24e-17  5.24e-17  5.36e-17
+    950       ***  1.01e-16  1.01e-16  1.04e-16
+  1e+03       ***  1.84e-16  1.84e-16  1.89e-16
+1.05e+03       ***  3.18e-16  3.18e-16  3.28e-16
+1.1e+03       ***  5.27e-16  5.27e-16  5.46e-16
+1.15e+03       ***  8.39e-16  8.39e-16  8.72e-16
+1.2e+03       ***  1.29e-15  1.29e-15  1.35e-15
+1.25e+03       ***  1.93e-15  1.93e-15  2.02e-15
+1.3e+03       ***  2.81e-15  2.81e-15  2.96e-15
+1.35e+03       ***  3.99e-15  3.99e-15  4.22e-15
+1.4e+03       ***  5.56e-15  5.56e-15   5.9e-15
+1.45e+03       ***  7.58e-15  7.58e-15  8.08e-15
+1.5e+03       ***  1.01e-14  1.01e-14  1.09e-14
+1.55e+03       ***  1.34e-14  1.34e-14  1.44e-14
+1.6e+03       ***  1.74e-14  1.74e-14  1.88e-14
+1.65e+03       ***  2.23e-14  2.23e-14  2.43e-14
+1.7e+03       ***  2.82e-14  2.82e-14  3.09e-14
+1.75e+03       ***  3.53e-14  3.53e-14  3.89e-14
+1.8e+03       ***  4.37e-14  4.37e-14  4.84e-14
+1.85e+03       ***  5.36e-14  5.36e-14  5.97e-14
+1.9e+03       ***  6.52e-14  6.52e-14   7.3e-14
+1.95e+03       ***  7.85e-14  7.85e-14  8.85e-14
+  2e+03       ***  9.39e-14  9.39e-14  1.06e-13
+
+______________________________________________________________________________________
+
+Temperature-Pressure Rate Tables:
+
+W0->RH
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+1             ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+10            ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+100           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+O-O      1.74e+13   1.9e+13     2e+13  2.06e+13  2.08e+13  2.08e+13  2.06e+13  2.03e+13  1.98e+13  1.93e+13  1.88e+13  1.82e+13  1.76e+13   1.7e+13  1.64e+13  1.58e+13  1.53e+13  1.47e+13  1.42e+13  1.37e+13  1.33e+13  1.28e+13  1.24e+13   1.2e+13  1.16e+13  1.12e+13  1.08e+13  1.05e+13  1.02e+13  9.85e+12  9.55e+12  9.27e+12     9e+12
+
+W0->R
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+1             ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+10            ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+100           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+O-O      5.55e+09  9.61e+09  1.53e+10  2.28e+10  3.23e+10  4.36e+10  5.68e+10  7.18e+10  8.84e+10  1.07e+11  1.26e+11  1.47e+11  1.68e+11  1.91e+11  2.15e+11  2.39e+11  2.63e+11  2.88e+11  3.14e+11  3.39e+11  3.65e+11  3.91e+11  4.17e+11  4.43e+11  4.68e+11  4.94e+11   5.2e+11  5.45e+11   5.7e+11  5.95e+11   6.2e+11  6.44e+11  6.69e+11
+
+RH->W0
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+1             ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+10            ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+100           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+O-O      9.13e-10  9.31e-10  9.47e-10  9.63e-10  9.77e-10   9.9e-10     1e-09  1.01e-09  1.02e-09  1.04e-09  1.04e-09  1.05e-09  1.06e-09  1.07e-09  1.08e-09  1.09e-09   1.1e-09   1.1e-09  1.11e-09  1.12e-09  1.12e-09  1.13e-09  1.14e-09  1.14e-09  1.15e-09  1.16e-09  1.16e-09  1.17e-09  1.17e-09  1.18e-09  1.18e-09  1.19e-09  1.19e-09
+
+RH->R
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1       2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.23e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.94e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+1         2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.23e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.94e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+10        2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.23e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.94e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+100       2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.24e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.95e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+O-O           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+
+R->W0
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+1             ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+10            ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+100           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+O-O      3.58e-23  5.33e-22  4.82e-21     3e-20  1.41e-19  5.34e-19   1.7e-18  4.69e-18  1.16e-17  2.59e-17  5.36e-17  1.04e-16  1.89e-16  3.28e-16  5.46e-16  8.72e-16  1.35e-15  2.02e-15  2.96e-15  4.22e-15   5.9e-15  8.08e-15  1.09e-14  1.44e-14  1.88e-14  2.43e-14  3.09e-14  3.89e-14  4.84e-14  5.97e-14   7.3e-14  8.85e-14  1.06e-13
+
+R->RH
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1      3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.55e-15  7.57e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.51e-14  7.85e-14  9.39e-14
+1        3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.55e-15  7.57e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.51e-14  7.85e-14  9.39e-14
+10       3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.55e-15  7.57e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.51e-14  7.85e-14  9.39e-14
+100      3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.56e-15  7.58e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.52e-14  7.85e-14  9.39e-14
+O-O           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+
+W0-> 
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+1             ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+10            ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+100           ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***       ***
+O-O      1.74e+13   1.9e+13     2e+13  2.06e+13  2.09e+13  2.09e+13  2.07e+13  2.03e+13  1.99e+13  1.94e+13  1.89e+13  1.83e+13  1.78e+13  1.72e+13  1.66e+13  1.61e+13  1.55e+13   1.5e+13  1.45e+13  1.41e+13  1.36e+13  1.32e+13  1.28e+13  1.24e+13   1.2e+13  1.17e+13  1.13e+13   1.1e+13  1.07e+13  1.04e+13  1.02e+13  9.91e+12  9.67e+12
+
+RH-> 
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1       2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.23e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.94e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+1         2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.23e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.94e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+10        2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.23e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.94e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+100       2.9e-13  4.69e-13  7.21e-13  1.06e-12   1.5e-12  2.05e-12  2.73e-12  3.54e-12  4.49e-12   5.6e-12  6.87e-12   8.3e-12   9.9e-12  1.17e-11  1.36e-11  1.58e-11  1.81e-11  2.06e-11  2.33e-11  2.61e-11  2.91e-11  3.24e-11  3.57e-11  3.93e-11   4.3e-11  4.69e-11  5.09e-11  5.51e-11  5.95e-11  6.39e-11  6.86e-11  7.33e-11  7.82e-11
+O-O      9.13e-10  9.31e-10  9.47e-10  9.63e-10  9.77e-10   9.9e-10     1e-09  1.01e-09  1.02e-09  1.04e-09  1.04e-09  1.05e-09  1.06e-09  1.07e-09  1.08e-09  1.09e-09   1.1e-09   1.1e-09  1.11e-09  1.12e-09  1.12e-09  1.13e-09  1.14e-09  1.14e-09  1.15e-09  1.16e-09  1.16e-09  1.17e-09  1.17e-09  1.18e-09  1.18e-09  1.19e-09  1.19e-09
+
+R-> 
+
+P\T           400       450       500       550       600       650       700       750       800       850       900       950     1e+03  1.05e+03   1.1e+03  1.15e+03   1.2e+03  1.25e+03   1.3e+03  1.35e+03   1.4e+03  1.45e+03   1.5e+03  1.55e+03   1.6e+03  1.65e+03   1.7e+03  1.75e+03   1.8e+03  1.85e+03   1.9e+03  1.95e+03     2e+03
+0.1      3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.55e-15  7.57e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.51e-14  7.85e-14  9.39e-14
+1        3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.55e-15  7.57e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.51e-14  7.85e-14  9.39e-14
+10       3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.55e-15  7.57e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.51e-14  7.85e-14  9.39e-14
+100      3.56e-23  5.31e-22  4.79e-21  2.98e-20   1.4e-19  5.28e-19  1.68e-18  4.62e-18  1.14e-17  2.54e-17  5.24e-17  1.01e-16  1.84e-16  3.18e-16  5.27e-16  8.39e-16  1.29e-15  1.93e-15  2.81e-15  3.99e-15  5.56e-15  7.58e-15  1.01e-14  1.34e-14  1.74e-14  2.23e-14  2.82e-14  3.53e-14  4.37e-14  5.36e-14  6.52e-14  7.85e-14  9.39e-14
+O-O      3.58e-23  5.33e-22  4.82e-21     3e-20  1.41e-19  5.34e-19   1.7e-18  4.69e-18  1.16e-17  2.59e-17  5.36e-17  1.04e-16  1.89e-16  3.28e-16  5.46e-16  8.72e-16  1.35e-15  2.02e-15  2.96e-15  4.22e-15   5.9e-15  8.08e-15  1.09e-14  1.44e-14  1.88e-14  2.43e-14  3.09e-14  3.89e-14  4.84e-14  5.97e-14   7.3e-14  8.85e-14  1.06e-13
+

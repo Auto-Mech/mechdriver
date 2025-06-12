@@ -1,0 +1,9 @@
+stagni:
+    rate_file: 'stagni.mech'
+    therm_file: 'stagni.therm'
+    species_csv: 'stagni.csv'
+alturaifi:
+    rate_file: 'alturaifi.mech'
+    therm_file: 'alturaifi.therm'
+    species_csv: 'alturaifi.csv'
+    

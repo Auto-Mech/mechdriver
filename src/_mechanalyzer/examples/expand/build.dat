@@ -1,0 +1,10 @@
+inp
+    inp_spc = species.csv
+    inp_mech = mechanism.dat
+    out_spc = species_stereo.csv
+    out_mech = mechanism_stereo.dat
+    sort = sort.dat
+    headers = [smiles, inchi, inchikey, mult, charge, canon_enant_ich]
+    stereo = True
+end inp
+

@@ -1,0 +1,98 @@
+! S. A. Alturaifi, O. Mathieu, and E. L. Petersen, 
+! "An Experimental and Modeling Study of Ammonia Pyrolysis",
+! Combustion and Flame, (2021) -- submitted
+!
+! Kinetics mechanism of NH3 pyrolysis
+
+ELEMENTS
+AR N H
+END
+
+SPECIES
+AR H H2 N N2 NH3 NH2 NH NNH N2H2 N2H3 N2H4 H2NN
+END
+
+REACTIONS
+
+!!!!!!!!!!!!!!!!! H2 and N2 reactions !!!!!!!!!!!!!!!!
+H2+M=H+H+M             4.58E+19   -1.40   104400     ! Reference: W. Tsang, R.F. Hampson, Chemical Kinetic Data Base for Combustion Chemistry. Part I. Methane and Related Compounds, Journal of Physical and Chemical Reference Data 15 (1986) 1087-1279.
+ H2/2.5/ AR/0/                                       !
+H2+AR=H+H+AR           5.80E+18   -1.10   104380     ! Reference: W. Tsang, R.F. Hampson, Chemical Kinetic Data Base for Combustion Chemistry. Part I. Methane and Related Compounds, Journal of Physical and Chemical Reference Data 15 (1986) 1087-1279.
+N2+M=N+N+M             1.89E+18   -0.85   224950     ! Reference: P. Dagaut, F. Lecomte, S. Chevailler, M. Cathonnet, Experimental and Detailed Kinetic Modeling of Nitric Oxide Reduction by a Natural Gas Blend in Simulated Reburning Conditions, Combustion Science and Technology 139 (1998) 329-363.
+
+!!!!!!!!!!!!!!!!! NH3 reactions !!!!!!!!!!!!!!!!!!!!!!
+NH3+M=NH2+H+M          2.20E+16    0.00    93470     ! Reference: D.F. Davidson, K. Kohse-Hoinghaus, A.Y. Chang, R.K. Hanson, A pyrolysis mechanism for ammonia, International Journal of Chemical Kinetics 22 (1990) 513-535.
+NH2+H2=NH3+H           1.50E+04    2.60     5975     ! Reference: G. Friedrichs, H.G. Wagner, Direct Measurements of the Reaction NH2 + H2 = NH3 + H at Temperatures from 1360 to 2130 K, 214 (2000) 1151-1151.
+
+!!!!!!!!!!!!!!!!! NH2 reactions !!!!!!!!!!!!!!!!!!!!!!
+NH2+M=NH+H+M           1.20E+15    0.00    75950     ! Reference: J. Deppe, G. Friedrichs, A. Ibrahim, H.-J. Romming, H.G. Wagner, The Thermal Decomposition of NH2 and NH Radicals, Berichte der Bunsengesellschaft fur physikalische Chemie 102 (1998) 1474-1485.
+NH2+H=NH+H2            6.92E+13    0.00     3650     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+NH2+N=N2+H+H           7.00E+13    0.00        0     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+NH2+NH=NH3+N           9.57E+03    2.46      107     ! Reference: S.J. Klippenstein, L.B. Harding, B. Ruscic, R. Sivaramakrishnan, N.K. Srinivasan, M.C. Su, J.V. Michael, Thermal Decomposition of NH2OH and Subsequent Reactions: Ab Initio Transition State Theory and Reflected Shock Tube Experiments, The Journal of Physical Chemistry A 113 (2009) 10241-10259.
+NH2+NH=N2H2+H          1.50E+15   -0.50        0     ! Reference: D.F. Davidson, K. Kohse-Hoinghaus, A.Y. Chang, R.K. Hanson, A pyrolysis mechanism for ammonia, International Journal of Chemical Kinetics 22 (1990) 513-535.
+NH2+NH2=NH3+NH         5.64E+00    3.53      522     ! Reference: S.J. Klippenstein, L.B. Harding, B. Ruscic, R. Sivaramakrishnan, N.K. Srinivasan, M.C. Su, J.V. Michael, Thermal Decomposition of NH2OH and Subsequent Reactions: Ab Initio Transition State Theory and Reflected Shock Tube Experiments, The Journal of Physical Chemistry A 113 (2009) 10241-10259.
+NH2+NH2=N2H2+H2        1.74E+08    1.02    11783     ! Reference: S.J. Klippenstein, L.B. Harding, B. Ruscic, R. Sivaramakrishnan, N.K. Srinivasan, M.C. Su, J.V. Michael, Thermal Decomposition of NH2OH and Subsequent Reactions: Ab Initio Transition State Theory and Reflected Shock Tube Experiments, The Journal of Physical Chemistry A 113 (2009) 10241-10259.
+NH2+NH2=H2NN+H2        7.17E+04    1.88     8802     ! Reference: S.J. Klippenstein, L.B. Harding, B. Ruscic, R. Sivaramakrishnan, N.K. Srinivasan, M.C. Su, J.V. Michael, Thermal Decomposition of NH2OH and Subsequent Reactions: Ab Initio Transition State Theory and Reflected Shock Tube Experiments, The Journal of Physical Chemistry A 113 (2009) 10241-10259.
+
+!!!!!!!!!!!!!!!!! NH reactions !!!!!!!!!!!!!!!!!!!!!!!
+NH+M=H+N+M             1.80E+14    0.00    74760     ! Reference: J. Deppe, G. Friedrichs, A. Ibrahim, H.-J. Romming, H.G. Wagner, The Thermal Decomposition of NH2 and NH Radicals, Berichte der Bunsengesellschaft fur physikalische Chemie 102 (1998) 1474-1485.
+NH+H=H2+N              1.00E+14    0.00        0     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+NH+N=N2+H              3.00E+13    0.00        0     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+NH+NH=N2+H+H           2.50E+13    0.00        0     ! Reference: P. Glarborg, M.U. Alzueta, K. Dam-Johansen, J.A. Miller, Kinetic Modeling of Hydrocarbon/Nitric Oxide Interactions in a Flow Reactor, Combustion and Flame 115 (1998) 1-27.
+NH+NH=NH2+N            5.66E-01    3.88      342     ! Reference: S.J. Klippenstein, L.B. Harding, B. Ruscic, R. Sivaramakrishnan, N.K. Srinivasan, M.C. Su, J.V. Michael, Thermal Decomposition of NH2OH and Subsequent Reactions: Ab Initio Transition State Theory and Reflected Shock Tube Experiments, The Journal of Physical Chemistry A 113 (2009) 10241-10259.
+
+!!!!!!!!!!!!!!!!! NNH reactions !!!!!!!!!!!!!!!!!!!!!!
+NNH+M=N2+H+M           1.00E+13    0.50     3063     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+NNH=N2+H               3.00E+08    0.00        0     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+NNH+H=N2+H2            1.00E+14    0.00        0     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+NNH+NH=N2+NH2          5.00E+13    0.00        0     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+NNH+NH2=N2+NH3         5.00E+13    0.00        0     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+
+!!!!!!!!!!!!!!!!! N2H2 reactions !!!!!!!!!!!!!!!!!!!!!
+N2H2+M=NNH+H+M         1.80E+40   -8.41    73320     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+ PLOG /          0.1   5.60E+36   -7.75    70340/    !
+ PLOG /          1.0   1.80E+40   -8.41    73320/    !
+ PLOG /         10.0   3.10E+41   -8.42    76102/    !
+N2H2=H2NN              9.20E+38   -9.01    67727     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+ PLOG /          0.1   9.20E+38   -9.01    67727/    !
+ PLOG /          1.0   2.00E+41   -9.38    68452/    !
+ PLOG /         10.0   1.30E+45  -10.13    70757/    !
+N2H2+H=NNH+H2          8.50E+04    2.63      230     ! Reference: D.P. Linder, X. Duan, M. Page, Thermal rate constants for R+N2H2=RH+N2H (R=H, OH, NH2) determined from multireference configuration interaction and variational transition state theory calculations, The Journal of Chemical Physics 104 (1996) 6298-6307.
+N2H2+NH=NNH+NH2        2.40E+06    2.00    -1192     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+N2H2+NH2=NNH+NH3       8.80E-02    4.05     1610     ! Reference: D.P. Linder, X. Duan, M. Page, Thermal rate constants for R+N2H2=RH+N2H (R=H, OH, NH2) determined from multireference configuration interaction and variational transition state theory calculations, The Journal of Chemical Physics 104 (1996) 6298-6307.
+
+!!!!!!!!!!!!!!!!! N2H3 reactions !!!!!!!!!!!!!!!!!!!!!
+N2H3+M=NH2+NH+M        5.00E+16    0.00    60000     ! Reference: A.A. Konnov, J. De Ruyck, Kinetic modeling of the decomposition and flames of hydrazine, Combustion and Flame 124 (2001) 106-126.
+N2H3+M=N2H2+H+M        1.00E+16    0.00    37000     ! Reference: A.A. Konnov, J. De Ruyck, Kinetic modeling of the decomposition and flames of hydrazine, Combustion and Flame 124 (2001) 106-126.
+N2H3+H=N2H2+H2         2.40E+08    1.50        0     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+N2H3+H=NH+NH3          1.00E+11    0.00        0     ! Reference: A.A. Konnov, J. De Ruyck, Kinetic modeling of the decomposition and flames of hydrazine, Combustion and Flame 124 (2001) 106-126.
+N2H3+NH=N2H2+NH2       2.00E+13    0.00        0     ! Reference: J.A. Miller, M.D. Smooke, R.M. Green, R.J. Kee, Kinetic Modeling of the Oxidation of Ammonia in Flames, Combustion Science and Technology 34 (1983) 149-176.
+N2H3+NH2=N2H2+NH3      9.20E+05    1.94    -1152     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+N2H3+NH2=H2NN+NH3      3.00E+13    0.00        0     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+N2H3+N2H3=NH3+NH3+N2   3.00E+12    0.00        0     ! Reference: M. Schiavello, G.G. Volpi, Reactions of Hydrogen Atoms with Hydrazine, Ammonia, and Nitrous Oxide, The Journal of Chemical Physics 37 (1962) 1510-1513.
+N2H3+N2H3=N2H4+N2H2    1.20E+13    0.00        0     ! Reference: A.A. Konnov, J. De Ruyck, Kinetic modeling of the decomposition and flames of hydrazine, Combustion and Flame 124 (2001) 106-126.
+
+!!!!!!!!!!!!!!!!! N2H4 reactions !!!!!!!!!!!!!!!!!!!!!
+NH2+NH2(+M)=N2H4(+M)   5.60E+14   -0.414       66    ! Reference: S.J. Klippenstein, L.B. Harding, B. Ruscic, R. Sivaramakrishnan, N.K. Srinivasan, M.C. Su, J.V. Michael, Thermal Decomposition of NH2OH and Subsequent Reactions: Ab Initio Transition State Theory and Reflected Shock Tube Experiments, The Journal of Physical Chemistry A 113 (2009) 10241-10259.
+ LOW /                 1.60E+34   -5.49      1987/   !
+ TROE / 0.31 1E-30 1E30 1E30/                        !
+N2H4=H2NN+H2           4.00E+44   -9.85    71353     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+ PLOG /          0.1   4.00E+44   -9.85    71353/    !
+ PLOG /          1.0   5.30E+39   -8.35    69307/    !
+ PLOG /         10.0   2.50E+39   -8.19    69664/    !
+N2H4+H=NH2+NH3         2.40E+09    0.00     3100     ! Reference: A.A. Konnov, J. De Ruyck, Kinetic modeling of the decomposition and flames of hydrazine, Combustion and Flame 124 (2001) 106-126.
+N2H4+H=N2H3+H2         7.00E+12    0.00     2500     ! Reference: G.L. Vaghjiani, Laser photolysis studies of hydrazine vapor: 193 and 222-nm H-atom primary quantum yields at 296 K, and the kinetics of H + N2H4 reaction over the temperature range 222 657 K, International Journal of Chemical Kinetics 27 (1995) 777-790.
+N2H4+N=N2H3+NH         1.00E+10    1.00     2000     ! Reference: A.A. Konnov, J. De Ruyck, Kinetic modeling of the decomposition and flames of hydrazine, Combustion and Flame 124 (2001) 106-126.
+N2H4+NH=NH2+N2H3       1.00E+09    1.50     2000     ! Reference: A.A. Konnov, J. De Ruyck, Kinetic modeling of the decomposition and flames of hydrazine, Combustion and Flame 124 (2001) 106-126.
+N2H4+NH2=N2H3+NH3      3.90E+12    0.00     1500     ! Reference: J.A. Miller, C.T. Bowman, Mechanism and modeling of nitrogen chemistry in combustion, Progress in Energy and Combustion Science 15 (1989) 287-338.
+
+!!!!!!!!!!!!!!!!! H2NN reactions !!!!!!!!!!!!!!!!!!!!!
+H2NN=NNH+H             3.40E+26   -4.83    46228     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+ PLOG /          0.1   5.90E+32   -6.99     51791/   !
+ PLOG /          1.0   9.60E+35   -7.57     54841/   !
+ PLOG /         10.0   5.00E+36   -7.43     57295/   !
+H2NN+H=NNH+H2          4.80E+08    1.50     -894     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000). 
+H2NN+H=N2H2+H          7.00E+13    0.00        0     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+H2NN+NH2=NNH+NH3       1.80E+06    1.94    -1152     ! Reference: A. Dean, J. Bozzelli, Combustion Chemistry of Nitrogen,  (2000).
+
+END

@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "mechanalyzer"
+version = "2024.6.5"
+description = ""
+authors = ["Andreas Copan <avcopan@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "mechanalyzer" },
+    { include = "ratefit" },
+    { include = "thermfit" },
+]
+
+[tool.poetry.scripts]
+mechanalyzer = 'mechanalyzer.cli:main'
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

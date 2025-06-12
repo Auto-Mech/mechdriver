@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/Auto-Mech/mechanalyzer.git
+	branch = dev
+	commit = 704098cc1904b7de52f6ba4b5316b1b823a13cae
+	parent = e15be9a7ba6cc44f4fcdeb542c7fb76cc2cef803
+	method = rebase
+	cmdver = 0.4.9

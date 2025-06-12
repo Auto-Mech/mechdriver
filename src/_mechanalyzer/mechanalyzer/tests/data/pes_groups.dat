@@ -1,0 +1,32 @@
+grp 1 # pes "group", i.e., set of radical-generating reaction and radical deco reaction
+# used in mechdriver to write appropriately mess input files for calculations + prompt post-processing
+	 idxs = [2:2, 1:1] # n1:n2 indicates pes:subpes to consider (from the mechanism file)
+	 peds = [['C4H8ORvEsWvAB+OH=C4H7ORvE0BQ0+H2O'], []] # lines to write in "pedoutput" section in mess
+            #ped section will be empty for the radical dissociation mess file, hence []
+	 hot = [[], ['C4H7ORvE0BQ0']] # set of hot species for each pes:subpes
+             # empty if the subpes is a only a radical-generating reaction
+	 modeltype = rovib_dos # type of model to consider for prompt statistical analysis
+            # what changes is the amount of energy transferred to the hot product
+            # default: rovib_dos (hard-coded when generating the pes_groups)
+            # assigns energy trasferred to the hot radical based on dos at the TS of reaction1 (see prompt paper)
+            # additional options:
+            # thermal => assumed that radical has only its thermal energy (independent of radical generation)
+            # fne => reads directly estimate from mess (result is in principle identical - practically slightly different- as the thermal model
+            # equip_simple => equipartition model for energy redistribution (constant fraction of energy)
+            # equip_phi => as equipartition model, but fraction of energy follows a normal distribution
+            # beta_phi1a,2a,3a: models from Danilack PROCI 2021 
+	 bf_threshold = 0.1 # consider prompt channel?
+            # reaction A => B+C+D where e.g., B+C is a promptly dissociated product
+            # is written in the final set of reactions only if it contributes by more than 10% 
+            # to the consumption of A at ANY of the T,P analyzed (those in mess input)
+end grp 
+
+grp 2 
+	 idxs = [4:1, 4:3, 1:1] # if radical-generating subpess belong to the same PES, they are written together
+	 peds = [['C4H8ORvEsWvAA0+O2-S58TcY=C4H7ORvE0BQ0+HO2-S580KW'], ['C4H8ORvEsWvAB+O2-S58TcY=C4H7ORvE0BQ0+HO2-S580KW'], []] 
+	 hot = [[], [], ['C4H7ORvE0BQ0']] 
+	 modeltype = rovib_dos 
+	 bf_threshold = 0.1 
+end grp 
+
+

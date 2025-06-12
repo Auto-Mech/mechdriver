@@ -1,0 +1,120 @@
+ELEMENTS 
+
+C
+H
+N
+O
+AR
+HE
+
+END 
+
+
+SPECIES 
+
+H2CC        ! SMILES: [C]=C              InChi: InChI=1S/C2H2/c1-2/h1H2
+C2H5O2      ! SMILES: CCO[O]             InChi: InChI=1S/C2H5O2/c1-2-4-3/h2H2,1H3
+CHOCHO      ! SMILES: O=CC=O             InChi: InChI=1S/C2H2O2/c3-1-2-4/h1-2H
+HOCH2CO     ! SMILES: OC[C]=O            InChi: InChI=1S/C2H3O2/c3-1-2-4/h3H,1H2
+HO2         ! SMILES: [O]O               InChi: InChI=1S/HO2/c1-2/h1H
+CO          ! SMILES: [C]=O              InChi: InChI=1S/CO/c1-2
+PC2H4OH     ! SMILES: [CH2]CO            InChi: InChI=1S/C2H5O/c1-2-3/h3H,1-2H2
+C3H4-A      ! SMILES: C=C=C              InChi: InChI=1S/C3H4/c1-3-2/h1-2H2
+C2H3        ! SMILES: [CH]=C             InChi: InChI=1S/C2H3/c1-2/h1H,2H2
+CH2O        ! SMILES: C=O                InChi: InChI=1S/CH2O/c1-2/h1H2
+CH4         ! SMILES: C                  InChi: InChI=1S/CH4/h1H4
+H           ! SMILES: [H]                InChi: InChI=1S/H
+C2H2        ! SMILES: C#C                InChi: InChI=1S/C2H2/c1-2/h1-2H
+H2          ! SMILES: [H][H]             InChi: InChI=1S/H2/h1H
+CH3O        ! SMILES: C[O]               InChi: InChI=1S/CH3O/c1-2/h1H3
+HCO         ! SMILES: [CH]=O             InChi: InChI=1S/CHO/c1-2/h1H
+CO2         ! SMILES: O=C=O              InChi: InChI=1S/CO2/c2-1-3
+CHCHO       ! SMILES: [CH]CO             InChi: InChI=1S/C2H2O/c1-2-3/h1-2H
+C2H3OO      ! SMILES: C=C(O[O])          InChi: InChI=1S/C2H3O2/c1-2-4-3/h2H,1H2
+C2H5        ! SMILES: [CH2]C             InChi: InChI=1S/C2H5/c1-2/h1H2,2H3
+CH3         ! SMILES: [CH3]              InChi: InChI=1S/CH3/h1H3
+H2O         ! SMILES: O                  InChi: InChI=1S/H2O/h1H2
+O2          ! SMILES: [O][O]             InChi: InChI=1S/O2/c1-2
+CH2OH       ! SMILES: [CH2]O             InChi: InChI=1S/CH3O/c1-2/h2H,1H2
+CH2CHO      ! SMILES: [CH2]C=O           InChi: InChI=1S/C2H3O/c1-2-3/h2H,1H2
+CH2CO       ! SMILES: C=C=O              InChi: InChI=1S/C2H2O/c1-2-3/h1H2
+C2H6        ! SMILES: CC                 InChi: InChI=1S/C2H6/c1-2/h1-2H3
+CH2(S)      ! SMILES: singlet[CH2]       InChi: InChI=1S/CH2/h1H2
+O           ! SMILES: [O]                InChi: InChI=1S/O
+C2H4        ! SMILES: C=C                InChi: InChI=1S/C2H4/c1-2/h1-2H2
+OH          ! SMILES: [OH]               InChi: InChI=1S/HO/h1H
+
+END 
+
+
+REACTIONS     CAL/MOLE     MOLES
+! Commenting out since reaction classifier isn't working well for this
+!C2H4(+M)=H2+H2CC(+M)     8.000E+12     0.440    88770
+!    LOW  /               7.000E+50    -9.310    99860  /
+!    TROE /   7.345E-01   1.800E+02   1.035E+03   5.417E+03 /
+!    H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+C2H3+H(+M)=C2H4(+M)      6.080E+12     0.270      280
+    LOW  /               1.400E+30    -3.860     3320  /
+    TROE /   7.820E-01   2.075E+02   2.663E+03   6.095E+03 /
+    H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   
+C2H4+H=C2H3+H2           5.070E+07     1.930    12950
+CH2(S)+CH3=C2H4+H        2.000E+13     0.000        0
+HOCH2CO=CH2OH+CO         1.070E+12     0.630    16900
+
+C3H5-A=C3H5-T                                          3.90E+59  -15.420   75400 !
+C3H5-A=C3H5-S                                          1.30E+55  -14.530   73800 !
+
+C2H5+H=C2H4+H2           2.000E+12     0.000        0
+
+C2H5O2=C2H4+HO2          2.700E+37    -8.470    35840   ! Arrhenius parameters at 1 atm
+    PLOG /   4.000E-02   1.780E+32    -7.100    32840 /
+    PLOG /   1.000E+00   2.700E+37    -8.470    35840 /
+    PLOG /   1.000E+01   1.980E+38    -8.460    37900 /
+! Commenting out since reaction classifier isn't working well for this
+!C3H4-A+O=C2H4+CO         6.240E+06     2.050      180
+C2H5+H(+M)=C2H6(+M)      5.210E+17    -0.990     1580
+    LOW  /               1.990E+41    -7.080     6685  /
+    TROE /   8.420E-01   1.250E+02   2.219E+03   6.882E+03 /
+    H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   
+CH3+CH3=H+C2H5           3.100E+14    -0.362    13372   ! Arrhenius parameters at 1 atm
+    PLOG /   1.000E-02   4.740E+12     0.105    10664 /
+    PLOG /   1.000E-01   2.570E+13    -0.096    11406 /
+    PLOG /   1.000E+00   3.100E+14    -0.362    13372 /
+    PLOG /   1.000E+01   2.150E+10     0.885    13532 /
+    PLOG /   1.000E+02   1.030E+02     3.230    11236 /
+C2H3+O2=C2H2+HO2         2.150E+07     1.190     3367   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   1.080E+07     1.280     3322 /
+    PLOG /   1.000E-02   4.760E+01     2.750     -796 /
+    PLOG /   1.000E-01   7.750E+06     1.330     3216 /
+    PLOG /   1.000E-01   5.160E+01     2.730     -768 /
+    PLOG /   3.160E-01   1.210E+07     1.270     3311 /
+    PLOG /   3.160E-01   5.550E+01     2.730     -658 /
+    PLOG /   1.000E+00   2.150E+07     1.190     3367 /
+    PLOG /   1.000E+00   4.600E+01     2.760     -493 /
+    PLOG /   3.160E+00   1.130E+08     1.000     3695 /
+    PLOG /   3.160E+00   3.750E+00     3.070     -601 /
+    PLOG /   1.000E+01   1.310E+11     0.120     5872 /
+    PLOG /   1.000E+01   5.480E+00     3.070       86 /
+    PLOG /   3.160E+01   1.190E+09     0.820     5617 /
+    PLOG /   3.160E+01   4.470E+08     0.000      955 /
+    PLOG /   1.000E+02   1.060E+17    -1.450    12230 /
+    PLOG /   1.000E+02   2.020E+01     2.940     1847 /
+C2H3OO=CH2O+HCO          8.640E+33    -6.880    34370   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   1.660E+174  -55.520    60320 /
+    PLOG /   1.000E-02   2.270E+35    -7.970    31280 /
+    PLOG /   1.000E-01   9.030E+66   -17.250    48120 /
+    PLOG /   1.000E-01   2.080E+26    -4.960    28780 /
+    PLOG /   3.160E-01   1.820E+43    -9.870    37960 /
+    PLOG /   3.160E-01   1.450E+20    -3.080    26630 /
+    PLOG /   1.000E+00   8.640E+33    -6.880    34370 /
+    PLOG /   1.000E+00   1.060E+130  -39.380    54700 /
+    PLOG /   3.160E+00   7.290E+171  -43.530   191900 /
+    PLOG /   3.160E+00   2.350E+34    -6.870    35700 /
+    PLOG /   1.000E+01   1.030E+32    -6.060    35500 /
+    PLOG /   1.000E+01   2.180E+175  -53.780    68500 /
+    PLOG /   3.160E+01   1.850E+34    -6.570    38510 /
+    PLOG /   3.160E+01   1.070E+185  -54.220    88990 /
+    PLOG /   1.000E+02   5.700E+29    -5.190    36800 /
+    PLOG /   1.000E+02   4.680E+02     1.810    18100 /
+
+END 

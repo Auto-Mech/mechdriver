@@ -1,0 +1,8 @@
+Run this example with the following command (when inside this directory):
+
+mechanalyzer compare-rates
+
+Can also run from another directory; to see how, run:
+
+mechanalyzer compare-rates -h
+

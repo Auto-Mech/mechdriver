@@ -1,0 +1,35 @@
+! This file simulates an AutoMech-calculated mechanism, w/stereospecific rxns
+! Note: I'm assuming that all singly chiral (i.e., S/R) species have been 
+! lumped together by this point
+
+
+REACTIONS
+
+
+C4ALK-808sWvZ + HO2 = C4CETH-RvEsWvBB0 + OH      1.00E+12     0    0
+C4ALK-808sWvZ + HO2 = C4CETH-RvEsWvAB + OH       2.00E+12     0    0
+C4ALK-808sWvE + HO2 = C4CETH-RvEsWvBB0 + OH      3.00E+12     0    0
+C4ALK-808sWvE + HO2 = C4CETH-RvEsWvAB + OH       4.00E+12     0    0
+
+! Two (nonsense) reactions to check when there is only a single
+! stereoisomer in the *products*. They should be condensed to a single
+! reaction (with the rates *averaged*)
+H + HO2 = C4CETH-RvEsWvBB0 + OH      3.00E+12     0    0
+H + HO2 = C4CETH-RvEsWvAB + OH       4.00E+12     0    0
+
+! Two (nonsense) reactions to check when there is only a single
+! stereoisomer in the *reactants*. They should be condensed to a single
+! reaction (with the rates *added*)
+C4ALK-808sWvZ + HO2 = H + OH      1.00E+12     0    0
+C4ALK-808sWvE + HO2 = H + OH      2.00E+12     0    0
+
+! Two non-stereo reactions. They should be unchanged
+H + OH = H2O    1.00E+12    0   0
+O + O = O2      1.00E+12    0   0
+
+! A set of reactions with S/R only; should not affect the
+! literature mechanism since they're singly chiral
+RO2 = R + O2        1    0   0
+
+
+END
