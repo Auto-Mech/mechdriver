@@ -8,6 +8,9 @@ dependencies = []
 build-backend = "hatchling.build"
 requires = ["hatchling"]
 
+[project.scripts]
+mechanalyzer = "mechanalyzer.cli:main"
+
 [tool.hatch.build.targets.sdist]
 include = ["mechanalyzer", "ratefit", "thermfit"]
 
