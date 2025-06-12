@@ -7517,7 +7517,7 @@ packages:
 - pypi: ./src/_mechanalyzer
   name: mechanalyzer
   version: 2025.6.12
-  sha256: 2fd10890c2dd95c14a6a7ca1c1490d551ff2b25981e3e60d5659145b9b21d588
+  sha256: d1845a421261cd92889b8a2f46765308ebb900fdedddc35876b32f5ef1e799c7
   requires_python: '>=3.11'
   editable: true
 - pypi: ./
