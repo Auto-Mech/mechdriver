@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e  # if any command fails, quit
+
 REPO="${@:-all}"
 USERNAME=$(<.username)
 
