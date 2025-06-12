@@ -1,0 +1,36 @@
+! 
+memory,512,m
+gthresh,orbital=1.0d-10
+nosym
+angstrom
+geometry = {
+H  
+X  1    R1 
+H  1    R2  2    A2 
+N  1    R3  2    A3  3    D3 
+H  4    R4  1    A4  2    D4 
+H  4    R5  1    A5  5    D5 
+}
+R2   =   0.907500
+R3   =   1.288000
+R4   =   1.027400
+R5   =   1.027400
+A3   =  92.500300
+A4   = 100.516500
+A5   = 100.517600
+D4   =  -5.935100
+D5   = 253.636400
+R1   =   1.000000
+A2   =  77.537700
+D3   = 162.538800
+set,spin=1
+set,charge=0
+basis=cc-pvtz-f12
+{rhf,energy=1.0d-10,maxit=150}
+{uccsd(t)-f12,energy=1.0d-10,maxit=100}
+
+{optg,gradient=1.0d-05,root=2;inactive,R1,A2,D3}
+status
+
+molpro_energy=energy
+show[1,e25.15],molpro_energy

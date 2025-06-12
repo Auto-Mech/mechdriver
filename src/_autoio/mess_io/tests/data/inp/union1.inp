@@ -1,0 +1,49 @@
+Union
+  RRHO
+    Core RigidRotor
+      SymmetryFactor          1.0
+    End
+    Geometry[angstrom]        3
+      O   1.911401284  0.16134481659  -0.05448080419
+      N   4.435924209  0.16134481659  -0.05448080419
+      N   6.537299661  0.16134481659  -0.05448080419
+    Frequencies[1/cm]         9
+      100.00  200.00  300.00  400.00  500.00
+      600.00  700.00  800.00  900.00
+    ElectronicLevels[1/cm]    2
+      1  0.0
+      3  50.0
+    ZeroEnergy[kcal/mol]      1.00
+  End  ! Union1
+  RRHO
+    Core RigidRotor
+      SymmetryFactor          1.0
+    End
+    Geometry[angstrom]        3
+      O   1.911401284  0.16134481659  -0.05448080419
+      N   4.435924209  0.16134481659  -0.05448080419
+      N   6.537299661  0.16134481659  -0.05448080419
+    Frequencies[1/cm]         9
+      100.00  200.00  300.00  400.00  500.00
+      600.00  700.00  800.00  900.00
+    ElectronicLevels[1/cm]    2
+      1  0.0
+      3  50.0
+    ZeroEnergy[kcal/mol]      2.00
+  End  ! Union2
+  RRHO
+    Core RigidRotor
+      SymmetryFactor          1.0
+    End
+    Geometry[angstrom]        3
+      O   1.911401284  0.16134481659  -0.05448080419
+      N   4.435924209  0.16134481659  -0.05448080419
+      N   6.537299661  0.16134481659  -0.05448080419
+    Frequencies[1/cm]         9
+      100.00  200.00  300.00  400.00  500.00
+      600.00  700.00  800.00  900.00
+    ElectronicLevels[1/cm]    2
+      1  0.0
+      3  50.0
+    ZeroEnergy[kcal/mol]      3.00
+  End  ! Union3

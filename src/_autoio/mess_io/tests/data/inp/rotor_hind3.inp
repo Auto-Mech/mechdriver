@@ -1,0 +1,8 @@
+Rotor  Hindered
+  Group                        3   4   5
+  Axis                         1   2
+  Symmetry                     1.0
+  Potential[kcal/mol]          12
+    0.0000  2.9100  9.0600  12.6300 9.9700  3.5100
+    0.0300  3.4900  9.9600  12.6300 9.0800  2.9300
+End  ! HindRot

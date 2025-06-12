@@ -1,0 +1,14 @@
+MolproExecFile	                /path/to/lib/run.sh
+GeometryPattern                 geometry_here
+EnergyPattern                   energy_here
+BaseFileName                    mol
+DebugLevel                      5
+PotentialCorrectionTable        /path/to/lib/corrpot.so
+mol_corr_                                 1
+ParameterInteger                          1
+mol_corr_                                 1
+ParameterInteger                          2
+mol_corr_                                 1
+ParameterInteger                          3
+x_corr_                                   1
+End

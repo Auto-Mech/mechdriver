@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "autoio"
+version = "2024.6.5"
+description = ""
+authors = ["Andreas Copan <avcopan@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "autoparse" },
+    { include = "autoread" },
+    { include = "autorun" },
+    { include = "autowrite" },
+    { include = "chemkin_io" },
+    { include = "elstruct" },
+    { include = "intder_io" },
+    { include = "ioformat" },
+    { include = "mess_io" },
+    { include = "nst_io" },
+    { include = "onedmin_io" },
+    { include = "pac99_io" },
+    { include = "polyrate_io" },
+    { include = "projrot_io" },
+    { include = "thermp_io" },
+    { include = "varecof_io" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

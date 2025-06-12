@@ -1,0 +1,19 @@
+[MASTER]
+ignore=*yaml*
+disable=
+    assignment-from-no-return,
+    arguments-out-of-order,
+    consider-iterating-dictionary,
+    duplicate-code,
+    deprecated-method,
+    redefined-builtin,
+    superfluous-parens,
+    too-many-arguments,
+    too-many-statements,
+    too-many-locals,
+    too-many-branches,
+    too-many-nested-blocks,
+    too-few-public-methods,
+    unnecessary-lambda,
+    consider-using-f-string
+

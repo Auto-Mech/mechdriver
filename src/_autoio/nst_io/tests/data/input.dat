@@ -1,0 +1,24 @@
+! NST Run
+! Jobtype
+OPTGM
+! Geometry (Number of atoms. Followed by atom symbol; coords in Ang)
+3
+N    0.257278  -0.279393   0.000000
+N    1.300399   0.160521   0.000000
+O   -1.378160   0.096991   0.000000
+! Masses in amu
+14.00307400443
+14.00307400443
+15.99491461957
+! Zero of Energy (Hartrees)
+-184.17192618
+! Energy grid spacing , maximum grid energy in cm-1
+100.0 50000.0
+! Angular momentum grid spacing, maximum grid angular momentum in hbar
+6 300
+! Spin-orbit coupling in cm-1
+20.0
+! Scaling factor for the state counts in ne_*.dat and nej_*.dat
+3.0
+! Cuts along vibrational modes (only for HESSC and HESSR)
+F

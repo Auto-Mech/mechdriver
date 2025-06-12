@@ -1,0 +1,15 @@
+projection distances
+
+distances to be read as Atom1 Atom2 distance
+
+C H 1.500
+H C 1.200
+C C 2.400
+C N 1.800
+C O 1.600
+O H 1.600
+H O 1.200
+O O 1.600
+S H 1.500
+N H 1.300
+H H 1.200

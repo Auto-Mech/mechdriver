@@ -1,0 +1,10 @@
+InternalRotation
+  Group                      3   4   5
+  Axis                       1   2
+  Symmetry                   1.0
+  GridSize                   100
+  MassExpansionSize          5
+  PotentialExpansionSize     5
+  HamiltonSizeMin            13
+  HamiltonSizeMax            101
+End  ! IntlRot
