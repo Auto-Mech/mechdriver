@@ -870,6 +870,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gettext-0.24.1-h5888daf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gettext-tools-0.24.1-h5888daf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gflags-2.2.2-h5888daf_1005.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/gh-2.74.1-h76a2195_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/glib-2.84.2-h6287aef_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/glib-tools-2.84.2-h4833e2c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/glog-0.7.1-hbabe93e_0.conda
@@ -3984,6 +3985,16 @@ packages:
   purls: []
   size: 30947
   timestamp: 1745040689536
+- conda: https://conda.anaconda.org/conda-forge/linux-64/gh-2.74.1-h76a2195_0.conda
+  sha256: 519080155b56dac094ce84d3caffc84723c803f510f59ee5f7fccb443764b357
+  md5: bd5da738a4b6ea6ff4d5a569c71ef647
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  license: Apache-2.0
+  license_family: APACHE
+  purls: []
+  size: 23854816
+  timestamp: 1749576612792
 - conda: https://conda.anaconda.org/conda-forge/linux-64/glib-2.80.3-h315aac3_2.conda
   sha256: 20e138ea8d5e59cb62f06b2ddadbfaf155125b64ea2d3a959e119ffc0be245f1
   md5: 00e0da7e4fceb5449f3ddd2bf6b2c351
@@ -7512,7 +7523,7 @@ packages:
 - pypi: ./
   name: mechdriver
   version: 2025.6.12
-  sha256: 5e2ad0dbdad5f2746a7fb781d9892374d7ab459ab2a67eac6d56437d63f5667b
+  sha256: c8c9d2e0db5f64f5b1f18671367d70ab597d0e2ef95d929925e09ef84822b596
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/mercantile-1.2.1-pyhd8ed1ab_1.conda

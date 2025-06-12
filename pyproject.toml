@@ -81,9 +81,12 @@ polars = "<1.29"
 cantera = "*"
 pyarrow = "*"
 
+[tool.pixi.feature.dev.dependencies]
+gh = "*"
+
 [tool.pixi.environments]
 test = ["test"]
-dev = ["test", "lint", "docs"]
+dev = ["test", "lint", "docs", "dev"]
 build = ["build"]
 proto = ["proto"]
 
