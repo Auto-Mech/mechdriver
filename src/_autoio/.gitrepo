@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/Auto-Mech/autoio.git
+	remote = git@github.com:avcopan/autoio.git
 	branch = dev
-	commit = 15acfbd136c324cf9c237b5d8b1a3c7576454ae3
-	parent = a85cbb99915591be03b27ad9e963008bdc16211e
+	commit = 67b60435186cf106a21a90bda9ce8caa5ca7562e
+	parent = 4901be8ae853ac738f31560d5e5aab47bd77d93e
 	method = rebase
 	cmdver = 0.4.9
