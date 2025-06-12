@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:avcopan/mechanalyzer.git
 	branch = dev
-	commit = f30845930a48d08e7329ba7d00700561501d96c2
-	parent = 2b7720be94e2724a9041f72707ecfd9c79a5aa6e
+	commit = 1dabfd9ffcb3b088949596e6ddedc95d117b3b2a
+	parent = a7fd0db129e57e0f01ddaeb4de7fae3f2a6e0d9d
 	method = rebase
 	cmdver = 0.4.9
