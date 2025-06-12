@@ -1,17 +1,15 @@
-[tool.poetry]
+[project]
 name = "autofile"
-version = "2024.6.5"
-description = ""
-authors = ["Andreas Copan <avcopan@gmail.com>"]
-readme = "README.md"
-packages = [
-    { include = "autofile" },
-]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-
+requires-python = ">= 3.11"
+version = "2025.6.12"
+dependencies = []
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build.targets.sdist]
+include = ["autofile"]
+
+[tool.hatch.build.targets.wheel]
+include = ["autofile"]
