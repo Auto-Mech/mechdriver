@@ -27,6 +27,7 @@ autofile = { path = "src/_autofile", editable = true }
 mechanalyzer = { path = "src/_mechanalyzer", editable = true }
 
 [tool.pixi.tasks]
+push = { cmd = "./scripts/push.sh", cwd = "." }
 
 [tool.pixi.dependencies]
 python = "3.11.*"

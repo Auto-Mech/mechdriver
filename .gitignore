@@ -110,3 +110,6 @@ save/
 # pixi environments
 .pixi
 *.egg-info
+
+# User configuration
+.username
