@@ -1,32 +1,49 @@
-[tool.poetry]
+[project]
 name = "autoio"
-version = "2024.6.5"
-description = ""
-authors = ["Andreas Copan <avcopan@gmail.com>"]
-readme = "README.md"
-packages = [
-    { include = "autoparse" },
-    { include = "autoread" },
-    { include = "autorun" },
-    { include = "autowrite" },
-    { include = "chemkin_io" },
-    { include = "elstruct" },
-    { include = "intder_io" },
-    { include = "ioformat" },
-    { include = "mess_io" },
-    { include = "nst_io" },
-    { include = "onedmin_io" },
-    { include = "pac99_io" },
-    { include = "polyrate_io" },
-    { include = "projrot_io" },
-    { include = "thermp_io" },
-    { include = "varecof_io" },
-]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-
+requires-python = ">= 3.11"
+version = "2025.6.12"
+dependencies = []
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "autoparse",
+    "autoread",
+    "autorun",
+    "autowrite",
+    "chemkin_io",
+    "elstruct",
+    "intder_io",
+    "ioformat",
+    "mess_io",
+    "nst_io",
+    "onedmin_io",
+    "pac99_io",
+    "polyrate_io",
+    "projrot_io",
+    "thermp_io",
+    "varecof_io",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "autoparse",
+    "autoread",
+    "autorun",
+    "autowrite",
+    "chemkin_io",
+    "elstruct",
+    "intder_io",
+    "ioformat",
+    "mess_io",
+    "nst_io",
+    "onedmin_io",
+    "pac99_io",
+    "polyrate_io",
+    "projrot_io",
+    "thermp_io",
+    "varecof_io",
+]
