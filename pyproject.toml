@@ -31,6 +31,7 @@ mechanalyzer = { path = "src/_mechanalyzer", editable = true }
 pull = { cmd = "./scripts/pull.sh", cwd = "." }
 push = { cmd = "./scripts/push.sh", cwd = "." }
 status = { cmd = "./scripts/status.sh", cwd = "." }
+validate = { cmd = "./scripts/validate.sh", cwd = "." }
 
 [tool.pixi.dependencies]
 python = "3.11.*"
