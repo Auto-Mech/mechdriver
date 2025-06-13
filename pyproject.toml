@@ -37,6 +37,7 @@ status = { cmd = "./scripts/status.sh", cwd = "." }
 validate = { cmd = "./scripts/validate.sh", cwd = "." }
 node = { cmd = "./scripts/node.sh" }
 subtasks = { cmd = "./scripts/subtasks.sh" }
+test = { cmd = "./scripts/test.py" }
 
 [tool.pixi.dependencies]
 python = "3.11.*"

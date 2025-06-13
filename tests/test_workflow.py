@@ -1,68 +1,40 @@
-"""End-to-end Workflow tests
-"""
+"""End-to-end Workflow tests."""
 
 import contextlib
-import os
-from pathlib import Path
+
+import pytest
 
 import mechdriver
-import pytest
-import yaml
-from mechdriver import test_utils
-from mechdriver.test_utils import InvalidSignatureError
+import test_utils as tu
+from test_utils import Directory, Logger, Test
 
-ROOT_DIR = Path(__file__).parent.parent
-TEST_UTILS = test_utils.TestUtils(ROOT_DIR)
-TEST_DIRS = [n for n in yaml.safe_load(TEST_UTILS.config_file.read_text())]
-OTHER_TEST_DIRS = []
-PROMPT_TEST_DIRS = []
-for test_dir in TEST_DIRS:
-    if "prompt" in test_dir:
-        PROMPT_TEST_DIRS.append(test_dir)
-    else:
-        OTHER_TEST_DIRS.append(test_dir)
+TESTS = Test.names()
+PROMPT_TESTS = filter(lambda test: "prompt" in test, TESTS)
+OTHER_TESTS = filter(lambda test: "prompt" not in test, TESTS)
 
-TEST_UTILS.extract_archived_tests()
+# Extract tests
+tu.extract_archived_tests()
 
 
-def test_signature():
-    """Unpack archive and check provenance"""
-    # 1. Check the hashes of the mechdriver repo (this repo)
-    signed_commit = TEST_UTILS.signed_mechdriver_commit()
-    current_commit = TEST_UTILS.current_mechdriver_commit()
-    if not test_utils.are_equivalent_commits(signed_commit, current_commit):
-        raise InvalidSignatureError(f"\n   {signed_commit}\n!~ {current_commit}")
-
-    # 2. Check the hashes of the other remote repos
-    signed_prov = dict(TEST_UTILS.signed_provenance())
-    current_prov = dict(TEST_UTILS.remote_provenance())
-    for repo in ("autochem", "autoio", "autofile", "mechanalyzer"):
-        signed_commit = signed_prov[repo]
-        current_commit = current_prov[repo]
-        if not test_utils.are_equivalent_commits(signed_commit, current_commit):
-            raise InvalidSignatureError(f"\n   {signed_commit}\n!~ {current_commit}")
-
-
-@pytest.mark.parametrize("test_dir", OTHER_TEST_DIRS)
-def test_other_workflow(test_dir: str):
+@pytest.mark.parametrize("test", OTHER_TESTS)
+def test_other_workflow(test: str):
     """Test the entire workflow."""
-    print(f"Running in {test_dir}...")
+    print(f"Running in {test}...")
 
-    with contextlib.chdir(TEST_UTILS.tests_dir / test_dir):
-        with contextlib.redirect_stdout(test_utils.Logger("out.log")):
+    with contextlib.chdir(Directory.tests / test):
+        with contextlib.redirect_stdout(Logger("out.log")):
             mechdriver.run()
 
 
-@pytest.mark.parametrize("test_dir", PROMPT_TEST_DIRS)
-def test_prompt_workflow(test_dir: str):
+@pytest.mark.parametrize("test", PROMPT_TESTS)
+def test_prompt_workflow(test: str):
     """Test the entire workflow."""
-    print(f"Running in {test_dir}...")
+    print(f"Running in {test}...")
 
-    with contextlib.chdir(TEST_UTILS.tests_dir / test_dir):
-        with contextlib.redirect_stdout(test_utils.Logger("out.log")):
+    with contextlib.chdir(Directory.tests / test):
+        with contextlib.redirect_stdout(Logger("out.log")):
             mechdriver.run()
 
 
 if __name__ == "__main__":
-    # test_workflow("quick")
-    test_signature()
+    test_other_workflow("quick")

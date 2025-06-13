@@ -1,5 +1,5 @@
 *
 !.gitignore
 !test_workflow.py
-!config.yaml
+!tests.yaml
 !archive.tgz
