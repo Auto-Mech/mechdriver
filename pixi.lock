@@ -7523,7 +7523,7 @@ packages:
 - pypi: ./
   name: mechdriver
   version: 2025.6.12
-  sha256: 55b4a695a907344719efa1a0f27c760fb3311fa905786a0e3589da08e7ccba73
+  sha256: e959b33bf5dd87b3d7e2d6fb4f737e414d6d64f22fcf674385c7948764f1e26e
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/mercantile-1.2.1-pyhd8ed1ab_1.conda

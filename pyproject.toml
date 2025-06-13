@@ -9,6 +9,9 @@ version = "2025.6.12"
 build-backend = "hatchling.build"
 requires = ["hatchling"]
 
+[project.scripts]
+automech = 'mechdriver.cli:main'
+
 [dependency-groups]
 test = ["pytest", "pytest-xdist[psutil]"]
 lint = ["ruff", "mypy", "pre-commit"]
