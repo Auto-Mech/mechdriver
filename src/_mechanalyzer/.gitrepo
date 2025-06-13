@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;
 [subrepo]
-	remote = git@github.com:avcopan/mechanalyzer.git
+	remote = https://github.com/Auto-Mech/mechanalyzer.git
 	branch = dev
-	commit = 1dabfd9ffcb3b088949596e6ddedc95d117b3b2a
-	parent = a7fd0db129e57e0f01ddaeb4de7fae3f2a6e0d9d
+	commit = 4c89d97cddadd2d76077c9307302887373a5033e
+	parent = 1625d4c5a1562d94f8a84927aec27eecd5035747
 	method = rebase
 	cmdver = 0.4.9
