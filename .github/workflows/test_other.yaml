@@ -21,4 +21,4 @@ jobs:
       # Test
       - name: Test
         run: |
-          pixi run pytest -v tests/ -k "not signature and not prompt"
+          pixi run -e test pytest -v tests/ -k "not signature and not prompt"

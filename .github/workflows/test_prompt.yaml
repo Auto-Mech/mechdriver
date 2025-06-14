@@ -21,4 +21,4 @@ jobs:
       # Test
       - name: Test
         run: |
-          pixi run pytest -v tests/ -k "prompt"
+          pixi run -e test pytest -v tests/ -k "prompt"
