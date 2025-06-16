@@ -16,6 +16,15 @@ OTHER_TESTS = filter(lambda test: "prompt" not in test, TESTS)
 tu.extract_archived_tests()
 
 
+def test_signature():
+    """Check signature."""
+    sign = tu.read_signature()
+    curr_commit = tu.current_commit_line()
+    assert (
+        sign.signed_commit == curr_commit
+    ), f"\n{sign.signed_commit} !~\n{curr_commit}"
+
+
 @pytest.mark.parametrize("test", OTHER_TESTS)
 def test_other_workflow(test: str):
     """Test the entire workflow."""

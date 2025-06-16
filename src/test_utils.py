@@ -8,13 +8,20 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import textwrap
 from collections.abc import Sequence
 from pathlib import Path
 
+import pydantic
 import yaml
 
 ROOT_PATH = Path(__file__).parent.parent
 ARCHIVE_COMMIT_MESSAGE = "Updates tests/archive.tgz"
+SKIP_COMMITS = (
+    re.escape(ARCHIVE_COMMIT_MESSAGE),
+    r"Merge pull request \S* from \S*",
+    r"Merge \S* into \S*",
+)
 
 
 class Directory:
@@ -28,7 +35,8 @@ class File:
     """Files."""
 
     commit: Path = Directory.tests / ".commit"
-    tests_yaml: Path = Directory.tests / "tests.yaml"
+    signature: Path = Directory.tests / "signature.yaml"
+    tests: Path = Directory.tests / "tests.yaml"
     archive: Path = Directory.tests / "archive.tgz"
 
 
@@ -39,7 +47,7 @@ class Test:
     @functools.lru_cache
     def names(cls) -> list[str]:
         """Test names."""
-        return yaml.safe_load(File.tests_yaml.read_text())
+        return yaml.safe_load(File.tests.read_text())
 
     @classmethod
     def paths(cls) -> list[Path]:
@@ -54,7 +62,7 @@ class Test:
 
 # Main testing workflow functions
 def setup_tests() -> list[Path]:
-    """Set up tests for testing workflow.
+    """Set up tests to prepare local testing workflow.
 
     :return: List of test paths
     """
@@ -79,6 +87,16 @@ def setup_tests() -> list[Path]:
     return test_paths
 
 
+def wrap_up_tests(from_archive: bool = False, allow_override: bool = False) -> None:
+    """Archive and sign tests to wrap up local testing workflow."""
+    if from_archive:
+        extract_archived_tests()
+
+    sign_tests(allow_override=allow_override)
+    archive_tests()
+    commit_test_archive()
+
+
 def archive_tests() -> None:
     """Archive tests from testing workflow."""
     exclude = ("subtasks", "run")
@@ -97,6 +115,8 @@ def archive_tests() -> None:
     with tarfile.open(File.archive, "w:gz") as tar:
         if File.commit.exists:
             tar.add(File.commit, arcname=File.commit.name)
+        if File.signature.exists:
+            tar.add(File.signature, arcname=File.signature.name)
         for test in Test.names():
             tar.add(test, arcname=test, filter=_filter)
 
@@ -117,6 +137,66 @@ def commit_test_archive() -> None:
     subprocess.run(["git", "commit", "-m", ARCHIVE_COMMIT_MESSAGE], cwd=ROOT_PATH)
 
 
+class Signature(pydantic.BaseModel):
+    """Sign off on local tests."""
+
+    signed_commit: str
+    tested_commit: str
+    untested_commits: list[str]
+    username: str
+
+
+def sign_tests(allow_override: bool = False) -> None:
+    """Sign off on local tests."""
+    # Assert that there are no uncommitted Python changes
+    changes = uncommitted_python_changes()
+    assert not changes, f"You have uncommitted changes:\n{changes}"
+
+    # Get commits since test commit
+    test_commit = File.commit.read_text()
+    curr_commit = current_commit_line()
+    new_commits = commit_lines_since(test_commit)
+
+    # Interactively approve
+    if new_commits:
+        if not allow_override:
+            print(f"Not signing tests because new commits are present:\n{new_commits}")
+            return
+        else:
+            print("WARNING: New commits since tested version!!")
+            print(textwrap.indent("\n".join(new_commits), "    "))
+            answer = input(
+                "Do you solemnly swear that these changes will not break tests? (yes/no): "
+            )
+            print()
+            if answer != "yes":
+                print("Thank you for your honesty.")
+                print("Please re-run the tests using `pixi run test local`.")
+                sys.exit()
+
+    # Sign
+    sign = Signature(
+        signed_commit=curr_commit,
+        tested_commit=test_commit,
+        untested_commits=new_commits,
+        username=github_username(),
+    )
+    print(f"\nWriting signed repo information to {File.signature}")
+    write_signature(sign)
+
+
+# Signature file I/O
+def write_signature(sign: Signature):
+    """Write signature file."""
+    print(f"\nWriting signed repo information to {File.signature}")
+    File.signature.write_text(yaml.safe_dump(sign.model_dump()))
+
+
+def read_signature() -> Signature:
+    """Read signature file."""
+    return Signature.model_validate(yaml.safe_load(File.signature.read_text()))
+
+
 # Helper functions
 def pixi_activation_hook() -> str:
     """Get pixi activation hook."""
@@ -130,17 +210,24 @@ def uncommitted_python_changes() -> str:
     )
 
 
-def current_commit_line(
-    skip: Sequence[str] = (
-        re.escape(ARCHIVE_COMMIT_MESSAGE),
-        r"Merge pull request \S* from \S*",
-        r"Merge \S* into \S*",
-    ),
-) -> str:
+def github_username() -> str:
+    """Return the current user's GitHub username as a string.
+
+    Requires the username to be configured:
+
+        git config --global user.name
+
+    :return: The username
+    """
+    return subprocess.check_output(
+        ["git", "config", "--global", "user.name"], text=True
+    ).strip()
+
+
+def current_commit_line() -> str:
     """Get the first commit line from the log (oneline) output.
 
     :param log: Log output
-    :param skip: Regexes to skip
     :return: The first commit line
     """
     log = subprocess.check_output(["git", "log", "--oneline"], text=True)
@@ -148,7 +235,30 @@ def current_commit_line(
         return log
 
     lines = log.splitlines()
-    return next((line for line in lines if not re.search("|".join(skip), line)), "")
+    return next(
+        (line for line in lines if not re.search("|".join(SKIP_COMMITS), line)), ""
+    )
+
+
+def commit_lines_since(commit0: str) -> list[str]:
+    """Get intervening commits between two comments."""
+    hash0 = commit_hash_from_line(commit0)
+    log = subprocess.check_output(
+        ["git", "log", "--oneline", f"{hash0}..HEAD"], text=True
+    )
+    return [
+        line for line in log.splitlines() if not re.search("|".join(SKIP_COMMITS), line)
+    ]
+
+
+def commit_hash_from_line(line: str) -> str:
+    """Get the commit hash from a one-line log summary.
+
+    :param line: A one-line log summary
+    :return: The commit hash
+    """
+    hash_, *_ = line.split()
+    return hash_
 
 
 class Logger:

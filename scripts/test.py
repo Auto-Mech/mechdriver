@@ -54,19 +54,13 @@ def local_(nodes: Sequence[str]):
     mechdriver.subtasks.run_multiple(
         test_paths, nodes=nodes, activation_hook=tu.pixi_activation_hook()
     )
-    tu.archive_tests()
-    tu.commit_test_archive()
+    tu.wrap_up_tests(from_archive=False, allow_override=False)
 
 
 @main.command("sign")
 def sign():
     """Sign off on local tests."""
-    sign_()
-
-
-def sign_():
-    """Sign off on local tests."""
-    pass
+    tu.wrap_up_tests(from_archive=True, allow_override=True)
 
 
 if __name__ == "__main__":
