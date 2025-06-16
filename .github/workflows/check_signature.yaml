@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
+        # Signature check needs git history of previous commits
+        with:
+          fetch-depth: 10
 
       - name: Set up Pixi
         uses: prefix-dev/setup-pixi@v0.8.9

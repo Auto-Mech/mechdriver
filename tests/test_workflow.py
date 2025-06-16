@@ -20,8 +20,8 @@ def test_signature():
     """Check signature."""
     sign = tu.read_signature()
     curr_commit = tu.current_commit_line()
-    assert (
-        sign.signed_commit == curr_commit
+    assert tu.commits_are_equivalent(
+        sign.signed_commit, curr_commit
     ), f"\n{sign.signed_commit} !~\n{curr_commit}"
 
 

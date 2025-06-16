@@ -240,25 +240,38 @@ def current_commit_line() -> str:
     )
 
 
-def commit_lines_since(commit0: str) -> list[str]:
+def commit_lines_since(commit: str) -> list[str]:
     """Get intervening commits between two comments."""
-    hash0 = commit_hash_from_line(commit0)
+    hash_ = commit_hash(commit)
     log = subprocess.check_output(
-        ["git", "log", "--oneline", f"{hash0}..HEAD"], text=True
+        ["git", "log", "--oneline", f"{hash_}..HEAD"], text=True
     )
     return [
         line for line in log.splitlines() if not re.search("|".join(SKIP_COMMITS), line)
     ]
 
 
-def commit_hash_from_line(line: str) -> str:
+def commit_hash(commit: str) -> str:
     """Get the commit hash from a one-line log summary.
 
     :param line: A one-line log summary
     :return: The commit hash
     """
-    hash_, *_ = line.split()
+    hash_, *_ = commit.split()
     return hash_
+
+
+def commits_are_equivalent(commit1: str, commit2: str) -> bool:
+    """Check if two git commit hashes are equivalent.
+
+    :param commit1: First commit
+    :param commit2: Second commit
+    :return: `True` if they are, `False` if they aren't
+    """
+    hash1 = commit_hash(commit1)
+    hash2 = commit_hash(commit2)
+    nchars = max(4, min(*map(len, [hash1, hash2])))
+    return hash1[:nchars] == hash2[:nchars]
 
 
 class Logger:
