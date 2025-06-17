@@ -101,6 +101,7 @@ def setup(
     dir_name: str = SUBTASK_DIR,
     save_path: str | Path | None = None,
     run_path: str | Path | None = None,
+    absolute: bool = True,
     task_group_keys: Sequence[str] = DEFAULT_TASK_GROUPS,
 ):
     """Creates run directories for each task/species/TS and returns the paths in tables
@@ -115,6 +116,7 @@ def setup(
         (if `None`, the value in run.dat is used)
     :param run_path: The path to the run filesystem
         (if `None`, the value in run.dat is used)
+    :param absolute: Whether to resolve absolute paths
     :param task_groups: The task groups to set up
     :return: DataFrames of run paths, whose columns (species/TS index) are independent
         and can be run in parallel, but whose rows (tasks) are potentially sequential
@@ -141,7 +143,7 @@ def setup(
 
     # Set the run and save paths
     inp_dct = util.input_arguments_from_run_dict(
-        run_dct, save_path=save_path, run_path=run_path
+        run_dct, save_path=save_path, run_path=run_path, absolute=absolute
     )
     run_dct["input"] = "\n".join(f"{k} = {v}" for k, v in inp_dct.items())
 

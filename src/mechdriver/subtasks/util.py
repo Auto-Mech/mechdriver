@@ -479,6 +479,7 @@ def input_arguments_from_run_dict(
     run_dct: dict[str, str],
     save_path: str | Path | None = None,
     run_path: str | Path | None = None,
+    absolute: bool = True,
 ) -> dict[str, str]:
     """Get the input block of a run dictionary, with absolute paths for the RUN and SAVE
     directories.
@@ -488,6 +489,7 @@ def input_arguments_from_run_dict(
         (if `None`, the value in run.dat is used.)
     :param run_path: The path to the run filesystem
         (if `None`, the value in run.dat is used.)
+    :param absolute: Whether to resolve absolute paths
     :return: The input block, with absolute paths
     """
     inp_block = run_dct.get("input")
@@ -496,8 +498,14 @@ def input_arguments_from_run_dict(
     inp_dct = dict(
         line.replace(" ", "").split("=", maxsplit=1) for line in lines if "=" in line
     )
-    inp_dct["save_prefix"] = save_path or inp_dct.get("save_prefix")
-    inp_dct["run_prefix"] = run_path or inp_dct.get("run_prefix")
+    save_path = save_path or inp_dct.get("save_prefix")
+    run_path = run_path or inp_dct.get("run_prefix")
+    if absolute:
+        save_path = str(Path(save_path).resolve())
+        run_path = str(Path(run_path).resolve())
+
+    inp_dct["save_prefix"] = save_path
+    inp_dct["run_prefix"] = run_path
     return inp_dct
 
 
