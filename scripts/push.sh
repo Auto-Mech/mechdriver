@@ -2,7 +2,9 @@
 
 set -e  # if any command fails, quit
 
-REPO="${@:-all}"
+REPO=${1:-"all"}
+shift 1
+ARGS="$*"  # Additional arguments for git subrepo push
 USERNAME=$(<.username)
 
 if [[ $REPO == "all" ]]; then
@@ -12,6 +14,6 @@ else
 fi
 
 for repo in ${REPOS[@]}; do
-    echo cmd: git subrepo push src/_${repo} -r git@github.com:${USERNAME}/${repo}.git
-    git subrepo push src/_${repo} -r git@github.com:${USERNAME}/${repo}.git
+    echo \$ git subrepo push src/_${repo} -r git@github.com:${USERNAME}/${repo}.git ${ARGS}
+    git subrepo push src/_${repo} -r git@github.com:${USERNAME}/${repo}.git ${ARGS}
 done

@@ -2,7 +2,9 @@
 
 set -e  # if any command fails, quit
 
-REPO="${@:-all}"
+REPO=${1:-"all"}
+shift 1
+ARGS="$*"  # Additional arguments for git subrepo pull
 USERNAME=$(<.username)
 
 if [[ $REPO == "all" ]]; then
@@ -12,18 +14,20 @@ else
 fi
 
 for repo in ${REPOS[@]}; do
-   # 1. Sync to make sure the fork is up-to-date
-   echo cmd: gh repo sync ${USERNAME}/${repo}
-   gh repo sync ${USERNAME}/${repo}
-   echo
+   if [[ -z ${ARGS} ]]; then
+      # 1. Sync to make sure the fork is up-to-date
+      echo \$ gh repo sync ${USERNAME}/${repo}
+      gh repo sync ${USERNAME}/${repo}
+      echo
 
-   # 2. Pull from upstream first
-   echo cmd: git subrepo pull src/_${repo} -r https://github.com/Auto-Mech/${repo}.git
-   git subrepo pull src/_${repo} -r https://github.com/Auto-Mech/${repo}.git
-   echo
+      # 2. Pull from upstream first
+      echo \$ git subrepo pull src/_${repo} -r https://github.com/Auto-Mech/${repo}.git
+      git subrepo pull src/_${repo} -r https://github.com/Auto-Mech/${repo}.git
+      echo
+   fi
 
    # 3. Pull from fork, in case it is ahead of upstream
-   echo cmd: git subrepo pull src/_${repo} -r git@github.com:${USERNAME}/${repo}.git
-   git subrepo pull src/_${repo} -r git@github.com:${USERNAME}/${repo}.git
+   echo \$ git subrepo pull src/_${repo} -r git@github.com:${USERNAME}/${repo}.git ${ARGS}
+   git subrepo pull src/_${repo} -r git@github.com:${USERNAME}/${repo}.git ${ARGS}
    echo
 done
