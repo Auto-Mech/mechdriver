@@ -101,8 +101,69 @@ all minor and will not break the tests.
 This list of untested commits will be recorded in the `signature.yaml` file, which will
 override the commit hash check on GitHub Actions and allow your tests to pass.
 
+## Subrepos
 
-### Subtasks
+This repository includes several submodules that also exist as separate repositories:
+
+ - [MechAnalyzer](./src/_mechanalyzer/): Mechanism pre- and post-processing (see [here](https://github.com/Auto-Mech/mechanalyzer))
+ - [AutoFile](./src/_autofile/): Filesystem databasing (see [here](https://github.com/Auto-Mech/autofile))
+ - [AutoIO](./src/_autoio/): I/O interfaces to external programs (see [here](https://github.com/Auto-Mech/autoio))
+ - [AutoChem](./src/_autochem/): Cheminformatics and coordinate transformation (see [here](https://github.com/Auto-Mech/autochem))
+
+If you are actively working on any of these "subrepos", you should fork them and create
+a `.username` file in this directory containing the GitHub username of your forks.
+```
+echo "<username>" > .username
+```
+You will also need to install `git-subrepo`, which can easily be done as follows.
+```
+git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
+echo 'source /path/to/git-subrepo/.rc' >> ~/.bashrc
+```
+
+### Syncing
+
+To pull updates for one or more subrepos, you can use the `pull` task.
+```
+pixi run pull all     # pull changes for all subrepos
+pixi run pull         # equivalent to `pixi run pull all`
+pixi run pull autoio  # pull changes for AutoIO only
+```
+To push updates back to the subrepos, you can use the `push` task.
+```
+pixi run push all     # push changes for all subrepos
+pixi run push         # equivalent to `pixi run push all`
+pixi run push autoio  # push changes for AutoIO only
+```
+
+### Advanced
+
+The above Pixi tasks are sufficient for working with the default branches of each fork
+and keeping them in sync with their upstream repositories.
+To pull from/push to a specific branch of a subrepo, you can add a `-b` flag.
+```
+pixi run pull autoio -b <branch name>
+pixi run push autoio -b <branch name>
+```
+This flag, along with any others added after the repository name, is simply passed along
+to the `git subrepo pull` and `git subrepo push` commands, which are documented
+[here](https://github.com/ingydotnet/git-subrepo?tab=readme-ov-file#commands).
+
+For more advanced usage, you can run the commands manually, which is facilitated by the
+tab completion provided by `git-subrepo`.
+For example, the pull/push commands above are equivalent to the following.
+```
+git subrepo pull src/_autoio -r git@github.com:<username>/autoio.git -b <branch name>
+git subrepo pull src/_autoio -r git@github.com:<username>/autoio.git -b <branch name>
+```
+Here, the [GitHub CLI](https://cli.github.com/manual/) can also come in handy. It is
+installed in the `dev` Pixi environment of this repository.
+For example, you can sync a particular branch of your fork against its uptream [as follows](https://cli.github.com/manual/gh_repo_sync).
+```
+gh repo sync <username>/autoio -b <branch name>
+```
+
+## Subtasks
 
 Workflow parallelization is currently not automated in AutoMech. However, if you are on a cluster with direct SSH node access and permissions to run, you can run the following commands to split an AutoMech workflow into subtasks and run them in parallel.
 
