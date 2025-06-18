@@ -9,18 +9,18 @@ import subprocess
 import sys
 import tarfile
 import textwrap
-from collections.abc import Sequence
 from pathlib import Path
 
 import pydantic
 import yaml
 
 ROOT_PATH = Path(__file__).parent.parent
-ARCHIVE_COMMIT_MESSAGE = "Updates tests/archive.tgz"
+ARCHIVE_COMMIT_MESSAGE = "Update tests/archive.tgz"
 SKIP_COMMITS = (
     re.escape(ARCHIVE_COMMIT_MESSAGE),
     r"Merge pull request \S* from \S*",
     r"Merge \S* into \S*",
+    r"Update README.md",
 )
 
 
@@ -181,14 +181,13 @@ def sign_tests(allow_override: bool = False) -> None:
         untested_commits=new_commits,
         username=github_username(),
     )
-    print(f"\nWriting signed repo information to {File.signature}")
+    print(f"Writing signed repo information to {File.signature}")
     write_signature(sign)
 
 
 # Signature file I/O
 def write_signature(sign: Signature):
     """Write signature file."""
-    print(f"\nWriting signed repo information to {File.signature}")
     File.signature.write_text(yaml.safe_dump(sign.model_dump()))
 
 
