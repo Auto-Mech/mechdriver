@@ -128,7 +128,6 @@ def subtasks_setup_(
 
 
 @subtasks_.command("run")
-@click.argument("nodes", nargs=-1)
 @click.option(
     "-p",
     "--path",
@@ -138,18 +137,18 @@ def subtasks_setup_(
     multiple=True,
 )
 @click.option(
-    "-n",
+    "-d",
     "--dir-name",
     default=subtasks.SUBTASK_DIR,
     show_default=True,
     help="The subtask directory name",
 )
 @click.option(
-    "-a",
-    "--activation-hook",
+    "-q",
+    "--hyperqueue-path",
     default=None,
     show_default=True,
-    help="An activation hook, to be called using `eval`",
+    help="Hyperqueue server directory path, /path/to/hq-current",
 )
 @click.option(
     "-s",
@@ -159,13 +158,12 @@ def subtasks_setup_(
     help="A comma-separated list of statuses to run or re-run",
 )
 def subtasks_run_(
-    nodes: tuple[str, ...],
     path: str = (".",),
     dir_name: str = subtasks.SUBTASK_DIR,
-    activation_hook: str | None = None,
+    hyperqueue_path: str | None = None,
     statuses: str = f"{Status.TBD.value}",
 ):
-    """Run subtasks in parallel on an Ad Hoc SSH Cluster
+    """Run subtasks in parallel on an Ad Hoc SSH Cluster.
 
     Use a space-separated list of nodes:
         csed-0008 csed-0009 csed-0010
@@ -173,18 +171,15 @@ def subtasks_run_(
         csed-00{08..10}
 
     """
-    paths = path
-    # For convenience, grab the Pixi activation hook automatically, if using Pixi
-    # environment and activation hook is `None`
-    result = subprocess.run(["pixi", "shell-hook"], capture_output=True, text=True)
-    if activation_hook is None and result.stdout:
-        activation_hook = result.stdout
+    if len(path) != 1:
+        raise NotImplementedError("Running multiple paths coming soon...")
 
-    subtasks.run_multiple(
-        paths=paths,
-        nodes=nodes,
+    (path_,) = path
+
+    subtasks.run(
+        path=path_,
         dir_name=dir_name,
-        activation_hook=activation_hook,
+        hyperqueue_path=hyperqueue_path,
         statuses=list(map(Status, statuses.split(","))),
     )
 
