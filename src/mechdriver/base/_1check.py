@@ -17,6 +17,9 @@ class Status(enum.Enum):
     OK_1E = "OK_1E"  # All but 1 log file succeeded
     OK_2E = "OK_2E"  # All but 2 log files succeeded
 
+class Extension:
+    running = ".running"
+
 
 def check_log(path: str = ".", log: bool = False) -> tuple[Status, str | None]:
     """Check an AutoMech log file to see if it succeeded
@@ -48,6 +51,8 @@ def _check_log(log_path: str | Path) -> tuple[Status, str | None]:
     :return: The status and the line triggering the status, if applicable
     """
     log_path = Path(log_path)
+    log_stem = log_path.stem
+    run_glob = f"{log_stem}.*{Extension.running}"
     line = None
     if not log_path.exists():
         status = Status.TBD
@@ -55,7 +60,7 @@ def _check_log(log_path: str | Path) -> tuple[Status, str | None]:
 
     log = log_path.read_text().strip()
     has_exit_message = re.search("EXITING AUTOMECHANIC", log)
-    has_is_running_file = Path(f"{log_path}_IS_RUNNING").exists()
+    has_is_running_file = any(log_path.parent.glob(run_glob))
     if not has_exit_message:
         status = Status.RUNNING if has_is_running_file else Status.ERROR
         line = log.splitlines()[-1] if log else ""
