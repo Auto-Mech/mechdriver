@@ -1,0 +1,15 @@
+isolate_submech # this section is not mandatory
+        C2H4
+end
+
+sort_mech
+    criteria = (
+    submech_keepsubfuel #builds C2H4 submech and keeps also all reactions below C2H6O2 (see below)
+                        # this is a classification criterion, but final submech is identical even if this is not called
+    )
+    n_criteria_headers = 0
+    stoich_keepbelow = C2H6O2 # keep all species with <= 2 Carbons, 6 Hydrogens, 2 oxygens
+                                           # default: stoich of fuel +2H +2O
+    # keep a reaction if all rcts or prds are in the list
+end
+

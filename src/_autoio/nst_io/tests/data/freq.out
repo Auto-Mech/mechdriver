@@ -1,0 +1,74 @@
+ MSX optimization
+
+ Energies in kcal/mol
+ step             E1             E2            <E>          E1-E2            dE1            dE2    gr.norm(lo)    gr.norm(up)
+ Creating directory /lcrc/project/CMRP/pressure_crossing/1_NN_O/3_MSX/1_Seam1/2_RS2/3_NoDW2/2_AVTZ/2_CompFreq/high_so/kmoore
+ Creating directory /lcrc/project/CMRP/pressure_crossing/1_NN_O/3_MSX/1_Seam1/2_RS2/3_NoDW2/2_AVTZ/2_CompFreq/high_so/kmoore/scratch
+    1    29.50770084    29.50773221    29.50771652    -0.00003138   -29.50770084   -29.50773221     0.00000003     0.00000003
+    2    29.50770711    29.50771966    29.50771339    -0.00001255    -0.00000628     0.00001255     0.00000007     0.00000007
+    3    29.50771339    29.50768829    29.50770084     0.00002510    -0.00000628     0.00003138     0.00000012     0.00000012
+    4    29.50771339    29.50771339    29.50771339     0.00000000     0.00000000    -0.00002510     0.00000008     0.00000008
+
+ Optimized geometry (A)
+N      0.266942558190543    -0.267973966382419     0.000000000000000
+N      1.299430544891663     0.152125573919057     0.000000000000000
+O     -1.386855425165470     0.093967698170613     0.000000000000000
+
+ Moments of intertia (cm-1)       11.47858        0.30426        0.29640
+ Symmetrized to (cm-1)            11.47858        0.30033 (x2)
+
+ Calculating Hessians...
+ step (    1,    1) of ( 3,    3)
+ step (    1,    2) of ( 3,    3)
+ step (    1,    3) of ( 3,    3)
+ step (    2,    1) of ( 3,    3)
+ step (    2,    2) of ( 3,    3)
+ step (    2,    3) of ( 3,    3)
+ step (    3,    1) of ( 3,    3)
+ step (    3,    2) of ( 3,    3)
+ step (    3,    3) of ( 3,    3)
+
+ Surface 1 grad(E1-E2)-projected
+    Index  Force Const(mass-scaled Eh/a0^2) Freq(cm-1)
+         1   -0.31570E-02     -288.83275
+         2   -0.32406E-05       -9.25384
+         3   -0.52469E-06       -3.72358
+         4   -0.72727E-07       -1.38630
+         5   -0.71064E-08       -0.43335
+         6   -0.41039E-09       -0.10414
+         7    0.35883E-07        0.97376
+         8    0.43694E-07        1.07453
+         9    0.15657E+00     2034.07338
+
+ Surface 2 grad(E1-E2)-projected
+    Index  Force Const(mass-scaled Eh/a0^2) Freq(cm-1)
+         1   -0.20876E-07       -0.74274
+         2    0.13503E-10        0.01889
+         3    0.88962E-07        1.53324
+         4    0.94287E-07        1.57847
+         5    0.11432E-06        1.73809
+         6    0.85587E-06        4.75570
+         7    0.40068E-05       10.28987
+         8    0.53965E-02      377.62923
+         9    0.15254E+00     2007.68106
+
+ Effective two-state grad(E1-E2)-projected
+    Index  Force Const (mass-scaled Eh/a0^2) Freq(cm-1)
+         1   -0.16317E-07       -0.65665
+         2   -0.19893E-09       -0.07250
+         3    0.81158E-08        0.46310
+         4    0.63611E-07        1.29650
+         5    0.74586E-07        1.40391
+         6    0.13150E-06        1.86410
+         7    0.38312E-06        3.18183
+         8    0.11392E-02      173.50369
+         9    0.15453E+00     2020.79346
+
+ MSX frequencies
+   173.50368745416804     
+   2020.7934568716717     
+
+ Finished writing the nej.dat and ne.dat files.
+
+ Well done!
+

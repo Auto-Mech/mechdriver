@@ -1,0 +1,249 @@
+TemperatureList[K]   400  450  500  550  600  650  700  750  800  850  900  950  1000  1050  1100  1150  1200  1250  1300  1350  1400  1450  1500  1550  1600  1650  1700  1750  1800  1850  1900  1950  2000
+PressureList[atm]                      0.1 1.0 10. 100.
+
+
+
+EnergyStepOverTemperature             0.1          #Ratio of discretization energy step to T
+ExcessEnergyOverTemperature           40
+ModelEnergyLimit[kcal/mol]            400
+WellCutoff                            10
+ChemicalEigenvalueMax                 0.2
+ChemicalEigenvalueMin                 1.e-6          #only for direct diagonalization method
+CalculationMethod                       direct #low-eigenvalue #direct
+
+MicroRateOutput                        ke_ped.out
+MicroEnerMin[kcal/mol]                 0.0
+MicroEnerMax[kcal/mol]                 320.0
+MicroEnerStep[kcal/mol]                0.1
+
+
+!EnergyStepOverTemperature		.2
+!ExcessEnergyOverTemperature		40
+!ModelEnergyLimit[kcal/mol]		400
+!CalculationMethod			direct #low-eigenvalue #direct
+!  WellCutoff				10
+!  ChemicalEigenvalueMax			0.2 
+!  GlobalCutoff[kcal/mol]			-45.0
+
+
+PEDOutput       ped.out
+PEDSpecies      RH_R
+
+Model
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm]			400
+      Power				.85
+      ExponentCutoff			15
+    End
+  CollisionFrequency
+    LennardJones
+      Epsilons[1/cm]			6.95  285.2 
+      Sigmas[angstrom]			2.55  5.182
+      Masses[amu]			4.0 60
+    End
+
+#  ThermodynamicDataOutput         test.therm
+
+
+!-----------------------------------------------
+!Wells: CH2O---H complex
+!-----------------------------------------------
+  Well     W0	# CH2O--H
+    Species
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c1o1/ch3o/transition_states/ts_ch2o_h_to_hco_h2/new_trajectories/ts_v0.log
+      RRHO
+        Geometry[angstrom]	5
+	C	  0.000000	  0.000000	  0.000000
+	O	  0.000000	  0.000000	  1.180297
+	H	  0.916544	  0.000000	 -0.626746
+	H	 -1.078614	  0.000007	 -0.658790
+	H	 -1.998922	  0.000002	 -1.204065
+
+        Core	RigidRotor
+          SymmetryFactor	1.0
+        End
+
+        Frequencies[1/cm]	9
+        100.0
+	 335.0	 432.6	1170.9
+	1214.4	1309.3	1410.2
+	1931.7	2918.2
+        !Imaginary mode:  -1775.7
+
+        ZeroEnergy[kcal/mol]	-6.0
+        ElectronicLevels[1/cm]	1
+            0	2
+      End
+ End
+
+!-----------------------------------------------
+!Bimolecular R:  Reactants CH2O + H
+!-----------------------------------------------
+
+  Bimolecular		RH	# ch3ch2ch3+oh
+    Fragment	CH2O
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c1o1/ch2o/cc/ch2o_cc_tz.out
+      RRHO
+        Geometry[angstrom]	4
+	 C          0.0000000000        0.0000000000       -0.6053837008
+	 O          0.0000000000        0.0000000000        0.6042162031
+	 H          0.0000000000        0.9366280202       -1.1884800134
+	 H          0.0000000000       -0.9366280202       -1.1884800134
+
+        Core	RigidRotor
+          SymmetryFactor	2.0
+        End
+
+        Frequencies[1/cm]	6
+	1192.0	1274.6	1543.0
+	1780.0	2928.8	2995.4
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	1
+      End
+
+    Fragment    H
+      Atom
+        Mass[amu]    1
+        ElectronicLevels[1/cm]          1
+                0       2
+      End
+          
+    GroundEnergy[kcal/mol]			-5.2
+  End
+
+
+
+
+!-----------------------------------------------
+!Bimolecular Products C3H7 + H2O
+!-----------------------------------------------
+
+  Bimolecular		R	#ch3ch2ch2+h2o
+    Fragment    HCO density
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c1o1/hco/cc/hco_cc_tz.out
+      RRHO
+        Geometry[angstrom]	3
+	 C          0.0000000000       -0.1017851707       -0.6226018557
+	 O          0.0000000000        0.0293082217        0.5526894370
+	 H          0.0000000000        0.7476910557       -1.3538786927
+
+        Core	RigidRotor
+          SymmetryFactor	1.
+        End
+
+        Frequencies[1/cm]	3
+	1122.5	1887.7	2691.0
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	2
+      End
+
+    Fragment	H2 density
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/h/h2/dft/h2_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	2
+	H	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  0.740860 #0.739945 too close
+
+        Core	RigidRotor
+          SymmetryFactor	2
+        End
+
+        Frequencies[1/cm]	1
+	4466.3
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	1
+      End
+    GroundEnergy[kcal/mol]				-21.85
+  End
+
+
+
+!-----------------------------------------------
+!TS addition: ch2o+h --> ch2o--h
+!-----------------------------------------------
+
+   Barrier      B0   W0   RH    # 
+     RRHO
+	Stoichiometry  C1H3O1
+        Core     PhaseSpaceTheory
+        FragmentGeometry[angstrom]	4
+         C          0.0000000000        0.0000000000       -0.6053837008
+         O          0.0000000000        0.0000000000        0.6042162031
+         H          0.0000000000        0.9366280202       -1.1884800134
+         H          0.0000000000       -0.9366280202       -1.1884800134
+        FragmentGeometry[angstrom]	1
+	H	  0.000000	  0.000000	  0.000000
+         SymmetryFactor    1 
+         PotentialPrefactor[au]         1.0
+         PotentialPowerExponent         6
+       End
+       Frequencies[1/cm]         6
+        1192.0  1274.6  1543.0
+        1780.0  2928.8  2995.4
+
+       ZeroEnergy[kcal/mol]          -5.2
+       ElectronicLevels[1/cm]         1
+            0    2             
+     End  
+
+!-----------------------------------------------
+!TS abstraction: ch2o + h --> hco + h2
+!-----------------------------------------------
+
+  Barrier	B1	W0 R
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c1o1/ch3o/transition_states/ts_ch2o_h_to_hco_h2/new_trajectories/ts_v0.log
+      RRHO
+        Geometry[angstrom]	5
+	C	  0.000000	  0.000000	  0.000000
+	O	  0.000000	  0.000000	  1.180297
+	H	  0.916544	  0.000000	 -0.626746
+	H	 -1.078614	  0.000007	 -0.658790
+	H	 -1.998922	  0.000002	 -1.204065
+
+        Core	RigidRotor
+          SymmetryFactor	1.0
+        End
+
+        Frequencies[1/cm]	8
+	 335.0	 432.6	1170.9
+	1214.4	1309.3	1410.2
+	1931.7	2918.2
+        !Imaginary mode:  -1775.7
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1775.7
+          WellDepth[kcal/mol]	5.2
+          WellDepth[kcal/mol]	21.75
+        End
+      End
+
+
+
+
+!-----------------------------------------------
+End
+
+
+
+
+
+
+
+
+
+
+

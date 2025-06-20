@@ -1,0 +1,49 @@
+[project]
+name = "autoio"
+requires-python = ">= 3.11"
+version = "2025.6.12"
+dependencies = []
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "autoparse",
+    "autoread",
+    "autorun",
+    "autowrite",
+    "chemkin_io",
+    "elstruct",
+    "intder_io",
+    "ioformat",
+    "mess_io",
+    "nst_io",
+    "onedmin_io",
+    "pac99_io",
+    "polyrate_io",
+    "projrot_io",
+    "thermp_io",
+    "varecof_io",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "autoparse",
+    "autoread",
+    "autorun",
+    "autowrite",
+    "chemkin_io",
+    "elstruct",
+    "intder_io",
+    "ioformat",
+    "mess_io",
+    "nst_io",
+    "onedmin_io",
+    "pac99_io",
+    "polyrate_io",
+    "projrot_io",
+    "thermp_io",
+    "varecof_io",
+]

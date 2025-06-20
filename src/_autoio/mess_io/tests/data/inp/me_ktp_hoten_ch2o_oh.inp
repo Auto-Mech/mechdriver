@@ -1,0 +1,145 @@
+TemperatureList[K]              300.0 350.0 400.0 450.0 500.0 550.0 600.0 650.0 700.0 750.0 800.0 850.0 900.0 950.0 1000.0 1050.0 1100.0 1150.0 1200.0 1250.0 1300.0 1350.0 1400.0 1450.0 1500.0 1550.0 1600.0 1650.0 1700.0 1750.0 1800.0 1850.0 1900.0 1950.0 2000.0 2050.0 2100.0 2150.0 2200.0 2250.0 2300.0 2350.0 2400.0 2450.0 2500.0
+PressureList[atm]                       0.01 0.1 0.316 1.0 3.16 10.0 31.6 100.0
+
+EnergyStepOverTemperature		.2
+ModelEnergyLimit[kcal/mol]		400
+CalculationMethod			well-reduction #well-reduction #low-eigenvalue #direct
+WellReductionThreshold 10
+  WellCutoff				10
+!  ChemicalEigenvalueMax			0.2 
+!  GlobalCutoff[kcal/mol]			-45.0
+ RateOutput                            me_ktp_hoten.out
+ LogOutput                             me_ktp_hoten.log
+ EigenvalueOutput                                    eigenvalue.out
+ MicroRateOutput                         ke_hoten.out
+ MicroEnerMin[kcal/mol]                  .1
+ MicroEnerMax[kcal/mol]                  320.
+ MicroEnerStep[kcal/mol]                 0.1
+
+
+HotEnergies[kcal/mol]                   1
+W1 0:1:220 
+
+
+
+Model
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm]                      100
+      Power                             .85
+      ExponentCutoff                    15
+    End
+  CollisionFrequency
+    LennardJones                        #N2 HCO
+      Epsilons[1/cm]                    67.78  346.1
+      Sigmas[angstrom]                  3.62 5.59
+      Masses[amu]                       28.0 29.0
+    End
+
+#  ThermodynamicDataOutput         test.therm
+
+  Well     W1	# HCO
+    Species
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c1o1/hco/cc/hco_cc_tz.out
+      RRHO
+        Geometry[angstrom]	3
+	 C          0.0000000000       -0.1017851707       -0.6226018557
+	 O          0.0000000000        0.0293082217        0.5526894370
+	 H          0.0000000000        0.7476910557       -1.3538786927
+
+        Core	RigidRotor
+          SymmetryFactor	1.
+        End
+
+        Frequencies[1/cm]	3
+	1122.5	1887.7	2691.0
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	2
+      End
+    End
+
+!-----------------------------------------------
+!END WELLS         
+!-----------------------------------------------
+!===============================================  
+      
+!-----------------------------------------------
+!BEGIN BIMOLECULAR
+!-----------------------------------------------
+     
+!-----------------------------------------------
+!Bimolecular:  H + CO
+!-----------------------------------------------
+  Bimolecular		CO+H
+    Fragment CO
+      RRHO
+        Geometry[angstrom]	2
+	 C          0.0000000000        0.0000000000       -0.6487312067
+	 O          0.0000000000        0.0000000000        0.4870126707
+
+        Core	RigidRotor
+          SymmetryFactor	1
+        End
+
+        Frequencies[1/cm]	1
+	2152.9
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	1
+      End
+
+    Fragment    H
+      Atom
+        Mass[amu]    1
+        ElectronicLevels[1/cm]          1
+                0       2
+      End    
+
+    GroundEnergy[kcal/mol] 15.70  ! 65.702 +- 0.097 kJ/mol  ATcT
+  End
+
+
+
+
+!-----------------------------------------------
+!END BIMOLECULAR         
+!-----------------------------------------------
+
+
+!-----------------------------------------------
+!BEGIN TRANSITION STATES   
+!-----------------------------------------------
+!-----------------------------------------------
+!TS 1: HCO --> H + CO
+!-----------------------------------------------
+
+  Barrier     B1   W1   CO+H
+      RRHO
+        Geometry[angstrom]	3
+	 O          0.0000000000        0.0830487195       -0.5377017800
+	 C          0.0000000000       -0.2089124576        0.5647319464
+	 H          0.0000000000        1.1712183723        1.8055741916
+
+        Core	RigidRotor
+          SymmetryFactor	1.
+        End
+
+        Frequencies[1/cm]	2
+	 386.8	2100.2
+        !Imaginary mode:  -809.4
+
+        ZeroEnergy[kcal/mol]	18.34
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]   809.4
+          WellDepth[kcal/mol]	18.34
+          WellDepth[kcal/mol]	3.55
+        End
+      End
+
+
+!-----------------------------------------------
+End

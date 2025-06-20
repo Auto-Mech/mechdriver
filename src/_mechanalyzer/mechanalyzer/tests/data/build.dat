@@ -1,0 +1,23 @@
+inp
+    inp_spc = species.csv
+    out_spc = species.csv2
+    inp_mech = mechanism.dat
+    out_mech = mechanism.dat2
+    sort = sort.dat
+    headers = [smiles, inchi, mult, charge]
+end inp
+
+rct1
+    C4H9(1)
+    C4H9(2)
+end rct1
+
+rct2
+    O2
+end rct2
+
+rclasses
+    addition
+    hydrogen_migration
+    beta_scission
+end rclasses

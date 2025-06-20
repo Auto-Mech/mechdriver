@@ -1,0 +1,27 @@
+isolate_submech # this section is not mandatory
+    DMM-R1
+    DMM-R2
+end
+
+
+sort_mech
+    criteria = (
+        submech_prompt
+        pes
+        subpes
+        chnl
+    )
+    n_criteria_headers = 0
+end
+
+
+prompt_filter # not mandatory; keep only rxns fulfilling AT LEAST ONE among these criteria:
+    # available: Tref, DH, H5H3ratio, kratio, kabs, lookforpromptchains
+    DH = -10.    #default: 0. # DHtot < DH
+    Tref = 1000 #default: 1500. 
+#    H5H3ratio = 50. #default: 0. # DHtot/DH3 < H5H3ratio 
+#    kratio = 100. #default:1e5 kdeco(Tprompt)/kmaxdeco(Tref) > kratio
+#    kabs = 1e40 #default: 1e50 kdeco(Tprompt) > kabs 
+    lookforpromptchains = 0 #don't search for additional prompt chains
+end
+

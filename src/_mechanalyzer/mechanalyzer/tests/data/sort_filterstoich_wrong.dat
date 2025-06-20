@@ -1,0 +1,11 @@
+
+sort_mech
+    criteria = (
+    subpes 
+    )
+    n_criteria_headers = 0
+    stoich_keepbelow = C2H6O2 # keep all species with <= 2 Carbons, 6 Hydrogens, 2 oxygens
+    # keep a reaction if all reactants or all products fullfil this criterion
+    stoich_deleteabove = C3H4O2
+end
+

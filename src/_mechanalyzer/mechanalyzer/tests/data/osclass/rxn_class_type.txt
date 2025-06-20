@@ -1,0 +1,225 @@
+# UNIMOL DECO
+# maybe should rewrite all bondfission as rec_rad_well?
+#[REACTIONCLASS][PAH-R][INCEPTION_PAH-R]
+#[REACTIONCLASS][BIN-M][BSCISS_CH]
+# -M, -R, -RSR
+
+classtype INCEPTION
+    INCEPTION_PAH-R
+    INCEPTION_PAH-M
+    INCEPTION_PAH-RSR
+end classtype
+
+classtype BONDFISSION
+    BONDFISSION_CH
+    BONDFISSION_OH
+    BONDFISSION_CC
+    BONDFISSION_CO
+end classtype
+
+classtype DECOMPOSITION
+    MOLECULAR_DECO
+	RADICAL_DECO
+	EL_H2
+    EL_H2O
+    ROPEN
+end classtype
+
+classtype BETASCISSION
+    BSCISS_CO
+    BSCISS_CH
+    BSCISS_CC
+	BSCISS_OH
+end classtype
+
+# PROPAGATION
+classtype HABSTRACTION
+	HABS_R
+    HABS_DECO
+    HABS_H
+    HABS_CH3
+    HABS_OH
+    HABS_O
+    HABS_O2
+    HABS_HO2
+	HABS_HCO
+	HABS_C2.D-R
+    HABS_A1-R
+    HABS_C5-RSR
+    HABS_A1CH2-RSR
+    HABS_A1O-RSR
+end classtype
+
+classtype IPSO
+    IPSO_H
+    IPSO_CH3
+    IPSO_C2H3
+	IPSO_O    
+	IPSO_OH
+	IPSO_HCO
+end classtype
+
+classtype ADD_H #other than ipso
+	ADD_H_WELL
+    ADD_H_DECO
+	ADD_H_ROPEN
+    REC_H_EL_CH3
+	REC_H_EL_OH
+    REC_H_DECO
+    REC_H_WELL
+	REC_H_ROPEN
+end classtype 
+
+classtype ADD_CH3
+	REC_CH3_WELL
+    REC_CH3_DECO
+	REC_CH3_EL_H2
+end classtype
+	
+classtype ISOMERIZATION # PROPAGATION
+    ISOM_CC
+    ISOM_OC
+    ISOM_CO
+	ISOM_BIMOL_H
+end classtype
+
+classtype ADD_SELF
+    REC_DISP_DECO # the 2OC6H4OH in catechol
+end classtype
+
+# OXIDATION - FOR NOW RXNS FOR MOLEC AND RADS ARE GROUPED TOGETHER (ADD/REC)
+
+classtype ADD_O
+    ADD_O_ISC_DECO
+    ADD_O_ISC
+	ADD_O_DECO
+	ADD_O_ROPEN
+    REC_O_WELL
+	REC_O_DECO
+    REC_O_EL_H
+    REC_O_EL_OH
+    REC_O_ROPEN
+end classtype
+
+classtype ADD_O2
+    ADD_O2_EL_OH
+	ADD_O2_EL_HCO
+    ADD_O2_DECO
+	ADD_O2_ROPEN
+    REC_O2_WELL
+    REC_O2_EL_O
+    REC_O2_INSERTION
+	REC_O2_ROPEN
+    REC_O2_EL_OH
+    REC_O2_EL_HO2
+    REC_O2_ISOM_O
+    RO2_INSERTION
+    RO2_EL_OH
+    RO2_ISOM_O
+end classtype
+
+classtype RO2_SECONDARY
+    RO2_REC_H
+    RO2_DISP
+    RO2_ABS    
+end classtype
+
+classtype ADD_OH
+	ADD_OH_WELL
+	ADD_OH_DECO
+	ADD_OH_ROPEN
+	ADD_OH_EL_H
+	ADD_OH_INSERTION
+    REC_OH_WELL
+    REC_OH_EL_H
+	REC_OH_EL_H2O
+    REC_OH_DECO
+	REC_OH_ROPEN
+end classtype
+
+classtype ADD_HO2
+    ADD_HO2_DECO
+	ADD_HO2_ROPEN
+	ADD_HO2_EL_OH
+	ADD_HO2_EL_O2
+    REC_HO2_WELL
+    REC_HO2_EL_OH
+    REC_HO2_EL_H2O
+    ROOH_EL_OH
+    ROOH_EL_H2O
+end classtype
+
+# GROWTH
+
+
+classtype GROWTH-C1
+	ADD_C1-R
+	ENLARGE_C1-R
+	REC_C1-R
+end classtype
+
+classtype GROWTH-C2
+	ADD_C2.D-M
+	ADD_C2.D-R
+	ADD_C2.T-M
+	ADD_C2.T-R
+	REC_C2.D-R
+	REC_C2.T-R
+	ENLARGE_C2.D-M
+	ENLARGE_C2.T-M
+end classtype
+
+classtype GROWTH-C3
+	ADD_C3.D-M
+	ADD_C3.DD-M
+	ADD_C3.DD-RSR
+	ADD_C3.D-RSR
+	REC_C3.DD-RSR
+	REC_C3.D-RSR
+	ENLARGE_C3.DD-M
+	ENLARGE_C3.D-R
+	ENLARGE_C3.D-RSR
+	ENLARGE_C3.DD-RSR
+end classtype
+
+classtype GROWTH-C4
+	ADD_C4.DD-M
+	ADD_C4.DT-M
+	ADD_C4.TT-M
+	ADD_C4.DD-R
+	ADD_C4.DT-R
+	ADD_C4.D-R
+	ADD_C4.D-RSR
+	REC_C4.DD-R
+	REC_C4.DT-R
+end classtype
+
+classtype GROWTH-C5
+	ADD_C5-M
+	ADD_C5O-M
+	ADD_C5-RSR
+	ADD_DECO_C5-RSR
+	REC_C5-RSR
+	REC_C5,A1-RSR
+	ENLARGE_C5-RSR
+end classtype
+
+classtype GROWTH-C6
+	ADD_A1-M
+	ADD_A1-R
+	REC_A1-R
+	REC_A1O-RSR
+end classtype
+
+classtype GROWTH-UNIMOL
+	ENLARGE
+end classtype GROWTH-UNIMOL
+
+classtype GROWTH-H
+	ENLARGE_H
+end classtype GROWTH-H
+
+classtype UNSORTED
+    UNSORTED
+end classtype
+

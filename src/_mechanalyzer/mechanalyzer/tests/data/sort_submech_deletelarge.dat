@@ -1,0 +1,15 @@
+isolate_submech # this section is not mandatory
+        C2H4
+end
+
+sort_mech
+    criteria = (
+    submech_deletelarge #builds C2H4 submech, and deletes species according to specifications below.
+                        # works also without this keyword. if submech_deletelage specified,
+    )
+    n_criteria_headers = 0
+    stoich_deleteabove = C3H4O2 # delete all species with >= 3 Carbons, >= 4 Hydrogens, >= 2 oxygens
+                                           # default (only if submech_deletelarge active): stoich of fuel +1C  +2O
+    # keep a reaction only if all rcts and prds are in the final list of species
+end
+

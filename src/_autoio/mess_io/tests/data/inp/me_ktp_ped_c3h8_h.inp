@@ -1,0 +1,486 @@
+!********************************\*******************
+!               GLOBAL SECTION
+!***************************************************
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+!
+TemperatureList[K]                 300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 1600 1700 1800 1900 2000 2100 2200 2300 2400 2500
+PressureList[atm]                       1.
+AtomDistanceMin[bohr] 1.3
+
+
+EnergyStepOverTemperature             0.1          #Ratio of discretization energy step to T
+ExcessEnergyOverTemperature           40
+ModelEnergyLimit[kcal/mol]            400
+WellCutoff                            10
+ChemicalEigenvalueMax                 0.2
+ChemicalEigenvalueMin                 1.e-6          #only for direct diagonalization method
+CalculationMethod                       direct #low-eigenvalue #direct
+
+
+!EnergyStepOverTemperature		.2
+!ExcessEnergyOverTemperature		40
+!ModelEnergyLimit[kcal/mol]		400
+!CalculationMethod			direct #low-eigenvalue #direct
+!  WellCutoff				10
+!  ChemicalEigenvalueMax			0.2 
+!  GlobalCutoff[kcal/mol]			-45.0
+
+RateOutput                              rate_ped.out                        ! output file name for rate coefficients                         
+PEDOutput       thf_pyro_ped_c3h8_h.out
+PEDSpecies      C3H8+H=CH3CH2CH2+H2 C3H8+H=CH3CHCH3+H2
+
+MicroRateOutput                         ke_ped.out
+MicroEnerMin[kcal/mol]                  0.
+MicroEnerMax[kcal/mol]                  240.
+MicroEnerStep[kcal/mol]                 0.2
+
+Model
+UseShortNames
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm]			400
+      Power				.85
+      ExponentCutoff			15
+    End
+  CollisionFrequency
+    LennardJones
+      Epsilons[1/cm]			6.95  285.2 
+      Sigmas[angstrom]			2.55  5.182
+      Masses[amu]			4.0 60
+    End
+
+#  ThermodynamicDataOutput         test.therm
+
+
+!-----------------------------------------------
+!Wells: CH3CH2CH3---H complex
+!-----------------------------------------------
+  Well     W0	# CH3CH2CH3--H
+    Species
+      RRHO
+        Geometry[angstrom]      12
+        H         0.000000        0.000000        0.000000
+        C         0.000000        0.000000        2.273502
+        C         1.459140        0.000000        2.645784
+        H        -0.015067       -0.027528        0.940524
+        H        -0.510550       -0.932821        2.504020
+        H         1.581565        0.012161        3.732371
+        H         1.961883        0.883274        2.250525
+        H         1.971397       -0.881974        2.264200
+        C        -0.786455        1.229055        2.645785
+        H        -0.842195        1.338731        3.732372
+        H        -0.313433        2.128596        2.250524
+        H        -1.805455        1.185165        2.264203
+
+        Core    RigidRotor
+          SymmetryFactor        1
+        End
+        Rotor     Hindered
+          Group                  6 7 8          # atoms in rotating group excluding the atom on the axis
+          Axis                   2 3            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.10  0.44  0.98  1.58  2.09  2.33  2.21  1.77  1.17  0.59  0.17
+          End
+        Rotor     Hindered
+          Group                  10 11 12       # atoms in rotating group excluding the atom on the axis
+          Axis                   2 9            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+          0.00  0.10  0.44  0.98  1.58  2.09  2.33  2.21  1.77  1.17  0.59  0.17
+          End
+
+        Frequencies[1/cm]       28
+         100.0
+         311.0
+         335.8   375.6   824.7
+         884.8   934.0   948.7
+        1107.8  1128.4  1201.0
+        1217.8  1240.5  1373.1
+        1414.7  1424.8  1494.8
+        1497.8  1506.6  1508.9
+        1625.0  3025.8  3028.6
+        3086.3  3087.9  3102.4
+        3120.0  3125.9
+        !Torsional frequencies:  186.2   211.7
+
+        !Imaginary mode:  -1303.5
+
+       ZeroEnergy[kcal/mol] 0.    !-6.0 #CFG
+        ElectronicLevels[1/cm]  1
+            0   2
+      End
+   End
+
+
+!-----------------------------------------------
+!Bimolecular R:  Reactants C3H8 + H
+!-----------------------------------------------
+
+  Bimolecular		C3H8+H
+    Fragment	C3H8
+      RRHO
+        Geometry[angstrom]	11
+	C	  0.000000	  0.000000	  0.000000
+	C	  0.000000	  0.000000	  1.525395
+	C	  1.409708	  0.000000	  2.108108
+	H	  0.513710	  0.879949	 -0.389149
+	H	  0.513710	 -0.879949	 -0.389149
+	H	 -1.012731	  0.000000	 -0.401690
+	H	 -0.544489	  0.873405	  1.889499
+	H	 -0.544489	 -0.873405	  1.889499
+	H	  1.965584	 -0.879949	  1.782016
+	H	  1.965584	  0.879949	  1.782016
+	H	  1.394061	  0.000000	  3.197481
+
+        Core	RigidRotor
+          SymmetryFactor	2
+        End
+        Rotor     Hindered
+          Group                  4 5 6 		# atoms in rotating group excluding the atom on the axis
+          Axis                   2 1 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+		 0.00  0.18  0.68  1.38  2.10  2.66  2.87  2.68  2.14  1.42  0.71  0.20 
+          End
+        Rotor     Hindered
+          Group                  9 10 11	# atoms in rotating group excluding the atom on the axis
+          Axis                   2 3 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+		 0.00  0.18  0.68  1.38  2.10  2.66  2.87  2.68  2.14  1.42  0.71  0.20 
+          End
+
+        Frequencies[1/cm]	25
+	 368.7
+	 755.6	 883.2	 916.7
+	 938.3	1069.9	1188.2
+	1225.0	1328.0	1377.9
+	1413.9	1430.8	1504.3
+	1504.8	1510.4	1521.8
+	1526.3	3040.1	3041.1
+	3043.2	3066.6	3102.4
+	3113.0	3113.1	3115.2
+
+        !Torsional frequencies:	 221.5	 273.6
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	1
+      End
+
+    Fragment    H
+      Atom
+        Mass[amu]    1
+        ElectronicLevels[1/cm]          1
+                0       2
+      End
+          
+    GroundEnergy[kcal/mol]			0. !-10.19
+  End
+
+  Bimolecular		CH3CH2CH2+H2
+    Fragment    CH3CH2CH2 density
+      RRHO
+        Geometry[angstrom]	10
+	C	  0.000000	  0.000000	  0.000000
+	C	  0.000000	  0.000000	  1.485621
+	C	  1.402646	  0.000000	  2.090785
+	H	 -0.881744	 -0.277246	 -0.556654
+	H	  0.837534	  0.403923	 -0.549155
+	H	 -0.545491	  0.879505	  1.856341
+	H	 -0.566701	 -0.858836	  1.855016
+	H	  1.363721	  0.027747	  3.178796
+	H	  1.953416	 -0.891775	  1.793836
+	H	  1.968313	  0.868683	  1.753387
+
+        Core	RigidRotor
+          SymmetryFactor	1.0
+        End
+        Rotor     Hindered
+          Group                  4 5 		# atoms in rotating group excluding the atom on the axis
+          Axis                   2 1 		# rotational axis
+          Symmetry               2 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    18 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+		0.00  0.00  0.00  0.00  0.02  0.08  0.21  0.36  0.46  0.48  0.49  0.48  0.46  0.41  0.33  0.23  0.12  0.04
+          End
+        Rotor     Hindered
+          Group                  8 9 10		# atoms in rotating group excluding the atom on the axis
+          Axis                   2 3 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+		0.00  0.12  0.56  1.22  1.94  2.51  2.76  2.54  1.98  1.27  0.60  0.15
+          End
+
+        Frequencies[1/cm]	22
+	 374.2
+	 486.9	 762.6	 890.0
+	 931.0	1061.4	1095.4
+	1183.4	1281.2	1373.1
+	1420.4	1480.8	1481.4
+	1512.7	1518.5	2961.0
+	3039.7	3048.6	3115.7
+	3121.9	3163.2	3266.1
+
+        !Torsional frequencies:	 105.9	 249.6
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	2
+      End       
+    Fragment	H2 density
+      RRHO
+        Geometry[angstrom]	2
+	H	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  0.740860 #0.739945 too close
+
+        Core	RigidRotor
+          SymmetryFactor	2
+        End
+
+        Frequencies[1/cm]	1
+	4466.3
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	1
+      End
+    GroundEnergy[kcal/mol]			-3.53 !	-13.72
+  End
+
+
+  Bimolecular    CH3CHCH3+H2
+    Fragment    CH3CHCH3 density
+      RRHO
+        Geometry[angstrom]      10
+        C         0.000000        0.000000        0.000000
+        C         0.000000        0.000000        1.486233
+        C         1.282262        0.000000        2.237693
+        H        -0.917155       -0.221794        2.011789
+        H        -0.994756        0.165640       -0.409314
+        H         0.665488        0.771240       -0.396783
+        H         0.363930       -0.953867       -0.405851
+        H         1.132439        0.165640        3.302884
+        H         1.961070        0.771240        1.864155
+        H         1.816422       -0.953867        2.128913
+
+        Core    RigidRotor
+          SymmetryFactor        2
+        End
+        Rotor     Hindered
+          Group                  5 6 7          # atoms in rotating group excluding the atom on the axis
+          Axis                   2 1            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                0.00  0.02  0.00  0.06  0.18  0.34  0.47  0.51  0.44  0.30  0.15  0.04
+          End
+        Rotor     Hindered
+          Group                  8 9 10         # atoms in rotating group excluding the atom on the axis
+          Axis                   2 3            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                0.00  0.02  0.00  0.06  0.18  0.34  0.47  0.51  0.44  0.30  0.15  0.04
+          End
+
+        Frequencies[1/cm]       22
+         344.5
+         390.8   895.9   945.7
+         954.8  1037.6  1155.3
+        1191.5  1378.3  1422.2
+        1422.9  1482.7  1490.8
+        1493.7  1504.5  2970.6
+        2973.5  3043.5  3043.6
+        3116.5  3117.6  3200.6
+
+        !Torsional frequencies:  113.7   123.2
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  1
+            0   2
+      End
+    Fragment    H2 density
+      RRHO
+        Geometry[angstrom]      2
+        H         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        0.740860 #0.739945 too close
+
+        Core    RigidRotor
+          SymmetryFactor        2
+        End
+
+        Frequencies[1/cm]       1
+        4466.3
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  1
+            0   1
+      End
+    GroundEnergy[kcal/mol]                      -6.58   !-14.25
+  End
+
+!-----------------------------------------------
+!TS addition: c3h8+H --> ch3ch2ch3--H2
+!-----------------------------------------------
+
+   Barrier      B0   W0   C3H8+H    
+     RRHO
+	Stoichiometry  C3H9
+        Core     PhaseSpaceTheory
+        FragmentGeometry[angstrom]	11
+	C	  0.000000	  0.000000	  0.000000
+	C	  0.000000	  0.000000	  1.525395
+	C	  1.409708	  0.000000	  2.108108
+	H	  0.513710	  0.879949	 -0.389149
+	H	  0.513710	 -0.879949	 -0.389149
+	H	 -1.012731	  0.000000	 -0.401690
+	H	 -0.544489	  0.873405	  1.889499
+	H	 -0.544489	 -0.873405	  1.889499
+	H	  1.965584	 -0.879949	  1.782016
+	H	  1.965584	  0.879949	  1.782016
+	H	  1.394061	  0.000000	  3.197481
+        FragmentGeometry[angstrom]	1
+	H	  0.000000	  0.000000	  0.000000
+         SymmetryFactor    1 
+         PotentialPrefactor[au]         1.0
+         PotentialPowerExponent         6
+       End
+       Frequencies[1/cm]         27
+	221.5	 273.6	 368.7
+	 755.6	 883.2	 916.7
+	 938.3	1069.9	1188.2
+	1225.0	1328.0	1377.9
+	1413.9	1430.8	1504.3
+	1504.8	1510.4	1521.8
+	1526.3	3040.1	3041.1
+	3043.2	3066.6	3102.4
+	3113.0	3113.1	3115.2
+
+       ZeroEnergy[kcal/mol]          0. !-10.19
+       ElectronicLevels[1/cm]         1
+            0    2             
+     End  
+
+
+!-----------------------------------------------
+!TS abstraction: c3h8 + h --> c3h7 + h2
+!-----------------------------------------------
+
+  Barrier	B1	W0 CH3CH2CH2+H2
+      RRHO
+        Geometry[angstrom]	12
+	H	  0.000000	  0.000000	  0.000000
+	C	  0.000000	  0.000000	  2.287592
+	C	  1.456345	  0.000000	  2.664242
+	C	  2.175546	  1.279431	  2.246576
+	H	 -0.030120	  0.012713	  0.913935
+	H	 -0.552244	  0.902206	  2.535506
+	H	 -0.554723	 -0.906321	  2.508865
+	H	  1.947826	 -0.866348	  2.216670
+	H	  1.545990	 -0.131688	  3.747971
+	H	  3.224706	  1.257061	  2.537346
+	H	  2.127166	  1.415683	  1.166616
+	H	  1.716746	  2.151752	  2.712852
+
+        Core	RigidRotor
+          SymmetryFactor	1
+        End
+        Rotor     Hindered
+          Group                  10 11 12	# atoms in rotating group excluding the atom on the axis
+          Axis                   3 4 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+		0.00  0.10  0.44  0.98  1.58  2.09  2.33  2.21  1.77  1.17  0.59  0.17
+          End
+        Rotor     Hindered
+          Group                  8 9 4 10 11 12 		# atoms in rotating group excluding the atom on the axis
+          Axis                   2 3 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    36 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+	   0.00  0.13  0.56  1.16  1.75  2.15  2.23  1.97  1.49  0.95  0.50  0.23  0.21  0.43  0.86  1.39  1.90  2.20 2.20  1.90 1.39 0.86 0.43 0.21 0.23 0.50 0.95 1.49 1.97 2.23 2.15 1.75 1.16 0.56 0.13 0.01
+          End
+
+        Frequencies[1/cm]	27
+	 300.4
+	 393.9	 572.4	 764.5
+	 889.2	 926.8	 939.5
+	1075.2	1132.2	1179.5
+	1188.3	1215.5	1296.9
+	1377.0	1422.4	1472.2
+	1492.2	1514.1	1518.7
+	1766.5	3010.8	3047.9
+	3060.0	3098.1	3115.4
+	3123.0	3180.7
+        !Torsional frequencies:	 148.0	 240.8
+
+        !Imaginary mode:  -1328.0
+
+        ZeroEnergy[kcal/mol]	10.19 !0.0
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1328.0
+          WellDepth[kcal/mol]	10.19
+          WellDepth[kcal/mol]	13.72
+        End
+      End
+
+
+  Barrier       B2  W0 CH3CHCH3+H2
+      RRHO
+        Geometry[angstrom]      12
+        H         0.000000        0.000000        0.000000
+        C         0.000000        0.000000        2.273502
+        C         1.459140        0.000000        2.645784
+        H        -0.015067       -0.027528        0.940524
+        H        -0.510550       -0.932821        2.504020
+        H         1.581565        0.012161        3.732371
+        H         1.961883        0.883274        2.250525
+        H         1.971397       -0.881974        2.264200
+        C        -0.786455        1.229055        2.645785
+        H        -0.842195        1.338731        3.732372
+        H        -0.313433        2.128596        2.250524
+        H        -1.805455        1.185165        2.264203
+
+        Core    RigidRotor
+          SymmetryFactor        1
+        End
+        Rotor     Hindered
+          Group                  6 7 8          # atoms in rotating group excluding the atom on the axis
+          Axis                   2 3            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.10  0.44  0.98  1.58  2.09  2.33  2.21  1.77  1.17  0.59  0.17
+          End
+        Rotor     Hindered
+          Group                  10 11 12       # atoms in rotating group excluding the atom on the axis
+          Axis                   2 9            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+          0.00  0.10  0.44  0.98  1.58  2.09  2.33  2.21  1.77  1.17  0.59  0.17
+          End
+
+        Frequencies[1/cm]       27
+         311.0
+         335.8   375.6   824.7
+         884.8   934.0   948.7
+        1107.8  1128.4  1201.0
+        1217.8  1240.5  1373.1
+        1414.7  1424.8  1494.8
+        1497.8  1506.6  1508.9
+        1625.0  3025.8  3028.6
+        3086.3  3087.9  3102.4
+        3120.0  3125.9
+        !Torsional frequencies:  186.2   211.7
+
+        !Imaginary mode:  -1303.5
+
+        ZeroEnergy[kcal/mol]    7.67 !0.0
+        ElectronicLevels[1/cm]  1
+            0   2
+        Tunneling       Eckart
+          ImaginaryFrequency[1/cm]  1303.5
+          WellDepth[kcal/mol]   7.67
+          WellDepth[kcal/mol]   14.25
+        End
+      End
+
+End

@@ -1,0 +1,17 @@
+'name','smiles','inchi','mult','charge','exc_flag'
+'H','[H]','InChI=1S/H',2,0,0
+'O','[O]','InChI=1S/O',3,0,0
+'O2','O=O','InChI=1S/O2/c1-2',3,0,0
+'OH','[OH]','InChI=1S/HO/h1H',2,0,0
+'HO2','O[O]','InChI=1S/HO2/c1-2/h1H',2,0,0
+'H2O','O','InChI=1S/H2O/h1H2',1,0,0
+'C4ALK-808sWvZ','C/C=C\C','InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3-',1,0,0
+'C4ALK-808sWvE','C/C=C/C','InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+',1,0,0
+'C4KEOH-RyFn3YA1','CC[C@H]([C]=O)O','InChI=1/C4H7O2/c1-2-4(6)3-5/h4,6H,2H2,1H3/t4-/s3',2,0,0
+'C4ADOH-q3bFNeA1','[CH2][C@H](CC=O)O','InChI=1/C4H7O2/c1-4(6)2-3-5/h3-4,6H,1-2H2/t4-/s3',2,0,0
+'C4CETH-RvEsWvAB','C[C@@H]1O[C@@H]1C','InChI=1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4+',1,0,0
+'C4CETH-RvEsWvAA1','C[C@H]1O[C@@H]1C','InChI=1/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4-/s3',1,0,0
+'C4CEHY-2m1jatAA0','C[C@@H]([C@H]1OC1)OO','InChI=1/C4H8O3/c1-3(7-5)4-2-6-4/h3-5H,2H2,1H3/t3-,4-/s3',1,0,0
+'C4CEHY-2m1jatAB0','C[C@@H]([C@@H]1OC1)OO','InChI=1/C4H8O3/c1-3(7-5)4-2-6-4/h3-5H,2H2,1H3/t3-,4+/s3',1,0,0
+'C4CEHY-Y2VjatAB0','C[C@@H]1OC[C@H]1OO','InChI=1/C4H8O3/c1-3-4(7-5)2-6-3/h3-5H,2H2,1H3/t3-,4+/s3',1,0,0
+'C4CEHY-Y2VjatAA1','C[C@H]1OC[C@H]1OO','InChI=1/C4H8O3/c1-3-4(7-5)2-6-3/h3-5H,2H2,1H3/t3-,4-/s3',1,0,0

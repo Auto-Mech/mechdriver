@@ -1,0 +1,421 @@
+Pressure = 0.0101324 bar	 Temperature = 600 K
+number of species = 3
+             W1             W3             W5             W6
+    1.25935e+56    7.00253e+40    9.63257e+38    1.12616e+28
+             W4
+    1.35884e+41
+             W2
+    1.25059e+44
+Pressure = 0.101324 bar	 Temperature = 600 K
+number of species = 3
+             W1             W3             W5             W6
+    1.25935e+56    7.00253e+40    9.63257e+38    1.12616e+28
+             W4
+    1.35884e+41
+             W2
+    1.25059e+44
+Pressure = 1.01324 bar	 Temperature = 600 K
+number of species = 4
+             W1             W5
+    1.25935e+56    9.63257e+38
+             W4
+    1.35884e+41
+             W2             W6
+    1.25059e+44    1.12616e+28
+             W3
+    7.00253e+40
+Pressure = 10.1324 bar	 Temperature = 600 K
+number of species = 5
+             W1             W5
+    1.25935e+56    9.63257e+38
+             W4
+    1.35884e+41
+             W2
+    1.25059e+44
+             W3
+    7.00253e+40
+             W6
+    1.12616e+28
+Pressure = 101.324 bar	 Temperature = 600 K
+number of species = 5
+             W1             W5
+    1.25935e+56    9.63257e+38
+             W4
+    1.35884e+41
+             W2
+    1.25059e+44
+             W3
+    7.00253e+40
+             W6
+    1.12616e+28
+Pressure = 0.0101324 bar	 Temperature = 800 K
+number of species = 3
+             W1             W3             W5             W6
+    2.11498e+47     5.1513e+35    3.88737e+34    1.95005e+26
+             W4
+    1.18159e+36
+             W2
+    1.43108e+38
+Pressure = 0.101324 bar	 Temperature = 800 K
+number of species = 3
+             W1             W3             W5             W6
+    2.11498e+47     5.1513e+35    3.88737e+34    1.95005e+26
+             W4
+    1.18159e+36
+             W2
+    1.43108e+38
+Pressure = 1.01324 bar	 Temperature = 800 K
+number of species = 3
+             W1             W3             W5             W6
+    2.11498e+47     5.1513e+35    3.88737e+34    1.95005e+26
+             W4
+    1.18159e+36
+             W2
+    1.43108e+38
+Pressure = 10.1324 bar	 Temperature = 800 K
+number of species = 3
+             W1             W3             W5             W6
+    2.11498e+47     5.1513e+35    3.88737e+34    1.95005e+26
+             W4
+    1.18159e+36
+             W2
+    1.43108e+38
+Pressure = 101.324 bar	 Temperature = 800 K
+number of species = 3
+             W1             W3             W5             W6
+    2.11498e+47     5.1513e+35    3.88737e+34    1.95005e+26
+             W4
+    1.18159e+36
+             W2
+    1.43108e+38
+Pressure = 0.0101324 bar	 Temperature = 1000 K
+number of species = 3
+             W1             W3             W5             W6
+    1.79955e+42    6.57698e+32    1.40741e+32      2.717e+25
+             W4
+    1.63972e+33
+             W2
+    6.02541e+34
+Pressure = 0.101324 bar	 Temperature = 1000 K
+number of species = 3
+             W1             W3             W5             W6
+    1.79955e+42    6.57698e+32    1.40741e+32      2.717e+25
+             W4
+    1.63972e+33
+             W2
+    6.02541e+34
+Pressure = 1.01324 bar	 Temperature = 1000 K
+number of species = 3
+             W1             W3             W5             W6
+    1.79955e+42    6.57698e+32    1.40741e+32      2.717e+25
+             W4
+    1.63972e+33
+             W2
+    6.02541e+34
+Pressure = 10.1324 bar	 Temperature = 1000 K
+number of species = 3
+             W1             W3             W5             W6
+    1.79955e+42    6.57698e+32    1.40741e+32      2.717e+25
+             W4
+    1.63972e+33
+             W2
+    6.02541e+34
+Pressure = 101.324 bar	 Temperature = 1000 K
+number of species = 3
+             W1             W3             W5             W6
+    1.79955e+42    6.57698e+32    1.40741e+32      2.717e+25
+             W4
+    1.63972e+33
+             W2
+    6.02541e+34
+Pressure = 0.0101324 bar	 Temperature = 1200 K
+number of species = 3
+             W1             W3             W5             W6
+    1.03974e+39    1.06587e+31    4.61706e+30     1.0219e+25
+             W4
+     2.7831e+31
+             W2
+    4.67841e+32
+Pressure = 0.101324 bar	 Temperature = 1200 K
+number of species = 3
+             W1             W3             W5             W6
+    1.03974e+39    1.06587e+31    4.61706e+30     1.0219e+25
+             W4
+     2.7831e+31
+             W2
+    4.67841e+32
+Pressure = 1.01324 bar	 Temperature = 1200 K
+number of species = 3
+             W1             W3             W5             W6
+    1.03974e+39    1.06587e+31    4.61706e+30     1.0219e+25
+             W4
+     2.7831e+31
+             W2
+    4.67841e+32
+Pressure = 10.1324 bar	 Temperature = 1200 K
+number of species = 3
+             W1             W3             W5             W6
+    1.03974e+39    1.06587e+31    4.61706e+30     1.0219e+25
+             W4
+     2.7831e+31
+             W2
+    4.67841e+32
+Pressure = 101.324 bar	 Temperature = 1200 K
+number of species = 3
+             W1             W3             W5             W6
+    1.03974e+39    1.06587e+31    4.61706e+30     1.0219e+25
+             W4
+     2.7831e+31
+             W2
+    4.67841e+32
+Pressure = 0.0101324 bar	 Temperature = 1400 K
+number of species = 3
+             W1             W3             W5
+    6.49488e+36    7.18717e+29    5.18173e+29
+             W4
+    1.92979e+30
+             W2
+    1.86887e+31
+Pressure = 0.101324 bar	 Temperature = 1400 K
+number of species = 3
+             W1             W3             W5             W6
+    6.49488e+36    7.18717e+29    5.18173e+29    6.56745e+24
+             W4
+    1.92979e+30
+             W2
+    1.86887e+31
+Pressure = 1.01324 bar	 Temperature = 1400 K
+number of species = 3
+             W1             W3             W5             W6
+    6.49488e+36    7.18717e+29    5.18173e+29    6.56745e+24
+             W4
+    1.92979e+30
+             W2
+    1.86887e+31
+Pressure = 10.1324 bar	 Temperature = 1400 K
+number of species = 3
+             W1             W3             W5             W6
+    6.49488e+36    7.18717e+29    5.18173e+29    6.56745e+24
+             W4
+    1.92979e+30
+             W2
+    1.86887e+31
+Pressure = 101.324 bar	 Temperature = 1400 K
+number of species = 3
+             W1             W3             W5             W6
+    6.49488e+36    7.18717e+29    5.18173e+29    6.56745e+24
+             W4
+    1.92979e+30
+             W2
+    1.86887e+31
+Pressure = 0.0101324 bar	 Temperature = 1600 K
+number of species = 3
+             W1             W5             W3
+    1.75473e+35    1.22495e+29     1.1555e+29
+             W4
+    3.15907e+29
+             W2
+    2.03131e+30
+Pressure = 0.101324 bar	 Temperature = 1600 K
+number of species = 3
+             W1             W5             W3             W6
+    1.75473e+35    1.22495e+29     1.1555e+29    5.75511e+24
+             W4
+    3.15907e+29
+             W2
+    2.03131e+30
+Pressure = 1.01324 bar	 Temperature = 1600 K
+number of species = 3
+             W1             W5             W3             W6
+    1.75473e+35    1.22495e+29     1.1555e+29    5.75511e+24
+             W4
+    3.15907e+29
+             W2
+    2.03131e+30
+Pressure = 10.1324 bar	 Temperature = 1600 K
+number of species = 3
+             W1             W5             W3             W6
+    1.75473e+35    1.22495e+29     1.1555e+29    5.75511e+24
+             W4
+    3.15907e+29
+             W2
+    2.03131e+30
+Pressure = 101.324 bar	 Temperature = 1600 K
+number of species = 3
+             W1             W5             W3             W6
+    1.75473e+35    1.22495e+29     1.1555e+29    5.75511e+24
+             W4
+    3.15907e+29
+             W2
+    2.03131e+30
+Pressure = 0.0101324 bar	 Temperature = 1800 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.23955e+34    4.23908e+29    9.04305e+28    4.68496e+28     3.2673e+28
+Pressure = 0.101324 bar	 Temperature = 1800 K
+number of species = 2
+             W1             W2             W5             W3
+    1.23955e+34    4.23908e+29    4.68496e+28     3.2673e+28
+             W4
+    9.04305e+28
+Pressure = 1.01324 bar	 Temperature = 1800 K
+number of species = 3
+             W1             W5             W3             W6
+    1.23955e+34    4.68496e+28     3.2673e+28    6.10282e+24
+             W4
+    9.04305e+28
+             W2
+    4.23908e+29
+Pressure = 10.1324 bar	 Temperature = 1800 K
+number of species = 3
+             W1             W5             W3             W6
+    1.23955e+34    4.68496e+28     3.2673e+28    6.10282e+24
+             W4
+    9.04305e+28
+             W2
+    4.23908e+29
+Pressure = 101.324 bar	 Temperature = 1800 K
+number of species = 3
+             W1             W5             W3             W6
+    1.23955e+34    4.68496e+28     3.2673e+28    6.10282e+24
+             W4
+    9.04305e+28
+             W2
+    4.23908e+29
+Pressure = 0.0101324 bar	 Temperature = 2000 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.69523e+33    1.37976e+29    3.78427e+28     2.4782e+28    1.35537e+28
+Pressure = 0.101324 bar	 Temperature = 2000 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.69523e+33    1.37976e+29    3.78427e+28     2.4782e+28    1.35537e+28
+Pressure = 1.01324 bar	 Temperature = 2000 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.69523e+33    1.37976e+29    3.78427e+28     2.4782e+28    1.35537e+28
+Pressure = 10.1324 bar	 Temperature = 2000 K
+number of species = 3
+             W1             W5             W3             W6
+    1.69523e+33     2.4782e+28    1.35537e+28    7.30233e+24
+             W4
+    3.78427e+28
+             W2
+    1.37976e+29
+Pressure = 101.324 bar	 Temperature = 2000 K
+number of species = 3
+             W1             W5             W3             W6
+    1.69523e+33     2.4782e+28    1.35537e+28    7.30233e+24
+             W4
+    3.78427e+28
+             W2
+    1.37976e+29
+Pressure = 0.0101324 bar	 Temperature = 2200 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    3.71565e+32    6.15022e+28    2.06974e+28    1.64464e+28    7.36537e+27
+Pressure = 0.101324 bar	 Temperature = 2200 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    3.71565e+32    6.15022e+28    2.06974e+28    1.64464e+28    7.36537e+27
+Pressure = 1.01324 bar	 Temperature = 2200 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    3.71565e+32    6.15022e+28    2.06974e+28    1.64464e+28    7.36537e+27
+Pressure = 10.1324 bar	 Temperature = 2200 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    3.71565e+32    6.15022e+28    2.06974e+28    1.64464e+28    7.36537e+27
+Pressure = 101.324 bar	 Temperature = 2200 K
+number of species = 3
+             W1             W5             W3             W6
+    3.71565e+32    1.64464e+28    7.36537e+27     9.4527e+24
+             W4
+    2.06974e+28
+             W2
+    6.15022e+28
+Pressure = 0.0101324 bar	 Temperature = 2400 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.15001e+32    3.44032e+28    1.37201e+28    1.28242e+28    4.85868e+27
+Pressure = 0.101324 bar	 Temperature = 2400 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.15001e+32    3.44032e+28    1.37201e+28    1.28242e+28    4.85868e+27
+Pressure = 1.01324 bar	 Temperature = 2400 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.15001e+32    3.44032e+28    1.37201e+28    1.28242e+28    4.85868e+27
+Pressure = 10.1324 bar	 Temperature = 2400 K
+number of species = 1
+             W1             W2             W4             W5             W3
+    1.15001e+32    3.44032e+28    1.37201e+28    1.28242e+28    4.85868e+27
+Pressure = 101.324 bar	 Temperature = 2400 K
+number of species = 3
+             W1             W5             W3             W6
+    1.15001e+32    1.28242e+28    4.85868e+27    1.28644e+25
+             W4
+    1.37201e+28
+             W2
+    3.44032e+28
+Pressure = 0.0101324 bar	 Temperature = 2600 K
+number of species = 1
+             W1             W2             W4             W3
+    4.61604e+31    2.27916e+28    1.04885e+28    3.70022e+27
+Pressure = 0.101324 bar	 Temperature = 2600 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    4.61604e+31    2.27916e+28     1.1257e+28    1.04885e+28    3.70022e+27
+Pressure = 1.01324 bar	 Temperature = 2600 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    4.61604e+31    2.27916e+28     1.1257e+28    1.04885e+28    3.70022e+27
+Pressure = 10.1324 bar	 Temperature = 2600 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    4.61604e+31    2.27916e+28     1.1257e+28    1.04885e+28    3.70022e+27
+Pressure = 101.324 bar	 Temperature = 2600 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    4.61604e+31    2.27916e+28     1.1257e+28    1.04885e+28    3.70022e+27
+Pressure = 0.0101324 bar	 Temperature = 2800 K
+number of species = 1
+             W1             W2
+    2.26161e+31    1.71606e+28
+Pressure = 0.101324 bar	 Temperature = 2800 K
+number of species = 1
+             W1             W2             W4             W3
+    2.26161e+31    1.71606e+28    8.92512e+27    3.13922e+27
+Pressure = 1.01324 bar	 Temperature = 2800 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    2.26161e+31    1.71606e+28    1.07908e+28    8.92512e+27    3.13922e+27
+Pressure = 10.1324 bar	 Temperature = 2800 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    2.26161e+31    1.71606e+28    1.07908e+28    8.92512e+27    3.13922e+27
+Pressure = 101.324 bar	 Temperature = 2800 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    2.26161e+31    1.71606e+28    1.07908e+28    8.92512e+27    3.13922e+27
+Pressure = 0.0101324 bar	 Temperature = 3000 K
+number of species = 1
+             W1             W2
+    1.29503e+31    1.42626e+28
+Pressure = 0.101324 bar	 Temperature = 3000 K
+number of species = 1
+             W1             W2
+    1.29503e+31    1.42626e+28
+Pressure = 1.01324 bar	 Temperature = 3000 K
+number of species = 1
+             W1             W2             W4             W3
+    1.29503e+31    1.42626e+28    8.24555e+27    2.89317e+27
+Pressure = 10.1324 bar	 Temperature = 3000 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    1.29503e+31    1.42626e+28    1.10585e+28    8.24555e+27    2.89317e+27
+Pressure = 101.324 bar	 Temperature = 3000 K
+number of species = 1
+             W1             W2             W5             W4             W3
+    1.29503e+31    1.42626e+28    1.10585e+28    8.24555e+27    2.89317e+27
+

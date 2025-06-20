@@ -1,0 +1,27 @@
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     100.0  200.0  300.0  400.0  500.0  600.0  700.0
+PressureList[atm]                      0.01  0.1  1.0  10.0  100.0
+!
+ReferenceTemperature[K]                1000.00
+ReferencePressure[atm]                 1.00
+!
+ModelEnergyLimit[kcal/mol]             800.00
+EnergyStepOverTemperature              0.20
+EnergyCutoffOverTemperature            20.00
+ExcessEnergyOverTemperature            10.00
+!
+ChemicalTolerance                      1.00e-10
+ChemicalThreshold                      0.10
+WellProjectionThreshold                0.10
+WellReductionThreshold                 10.00
+!
+TimePropagationLimit                   50.00
+TimePropagationStep                    0.02
+!
+WellExtension                          0.0010
+!
+AtomDistanceMin[angstrom]              0.68793
+!
+RateOutput                             rate.out

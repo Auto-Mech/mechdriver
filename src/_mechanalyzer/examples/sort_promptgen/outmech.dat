@@ -1,0 +1,276 @@
+ELEMENTS
+
+C
+H
+O
+
+END
+
+
+SPECIES
+
+CH2O             ! SMILES: C=O                   InChI: InChI=1S/CH2O/c1-2/h1H2
+CH2OCHO          ! SMILES: [CH2]OC=O             InChI: InChI=1S/C2H3O2/c1-4-2-3/h2H,1H2
+CH2OH            ! SMILES: [CH2]O                InChI: InChI=1S/CH3O/c1-2/h2H,1H2
+CH3              ! SMILES: [CH3]                 InChI: InChI=1S/CH3/h1H3
+CH3O             ! SMILES: C[O]                  InChI: InChI=1S/CH3O/c1-2/h1H3
+CH3O2            ! SMILES: CO[O]                 InChI: InChI=1S/CH3O2/c1-3-2/h1H3
+CH3O2H           ! SMILES: COO                   InChI: InChI=1S/CH4O2/c1-3-2/h2H,1H3
+CH3OCH2          ! SMILES: [CH2]OC               InChI: InChI=1S/C2H5O/c1-3-2/h1H2,2H3
+CH3OCH2O         ! SMILES: COC[O]                InChI: InChI=1S/C2H5O2/c1-4-2-3/h2H2,1H3
+CH3OCH3          ! SMILES: COC                   InChI: InChI=1S/C2H6O/c1-3-2/h1-2H3
+CH3OCHO          ! SMILES: COC=O                 InChI: InChI=1S/C2H4O2/c1-4-2-3/h2H,1H3
+CH3OCO           ! SMILES: CO[C]=O               InChI: InChI=1S/C2H3O2/c1-4-2-3/h1H3
+CH3OH            ! SMILES: CO                    InChI: InChI=1S/CH4O/c1-2/h2H,1H3
+CH4              ! SMILES: C                     InChI: InChI=1S/CH4/h1H4
+DME-OQOOH        ! SMILES: O=COCOO               InChI: InChI=1S/C2H4O4/c3-1-5-2-6-4/h1,4H,2H2
+DME-QOOH         ! SMILES: [CH2]OCOO             InChI: InChI=1S/C2H5O3/c1-4-2-5-3/h3H,1-2H2
+DMM              ! SMILES: COCOC                 InChI: InChI=1S/C3H8O2/c1-4-3-5-2/h3H2,1-2H3
+DMM-QOOH1        ! SMILES: [CH2]OCOCOO           InChI:  InChI=1S/C3H7O4/c1-5-2-6-3-7-4/h4H,1-3H2
+DMM-QOOH2        ! SMILES: CO[CH]OCOO            InChI: InChI=1S/C3H7O4/c1-5-2-6-3-7-4/h2,4H,3H2,1H3
+DMM-QOOH3        ! SMILES: [CH2]OC(OC)OO         InChI: InChI=1S/C3H7O4/c1-5-3(6-2)7-4/h3-4H,1H2,2H3
+DMM-R1           ! SMILES: [CH2]OCOC             InChI: InChI=1S/C3H7O2/c1-4-3-5-2/h1,3H2,2H3
+DMM-R2           ! SMILES: CO[CH]OC              InChI: InChI=1S/C3H7O2/c1-4-3-5-2/h3H,1-2H3
+DMM-RO1          ! SMILES: COCOC[O]              InChI: InChI=1S/C3H7O3/c1-5-3-6-2-4/h2-3H2,1H3
+DMM-RO2          ! SMILES: COC([O])OC            InChI: InChI=1S/C3H7O3/c1-5-3(4)6-2/h3H,1-2H3
+DMM-RO21         ! SMILES: COCOCO[O]             InChI: InChI=1S/C3H7O4/c1-5-2-6-3-7-4/h2-3H2,1H3
+DMM-RO22         ! SMILES: COC(OC)O[O]           InChI: InChI=1S/C3H7O4/c1-5-3(6-2)7-4/h3H,1-2H3
+DMM-cycleth1     ! SMILES: C1OCOCO1              InChI: InChI=1S/C3H6O3/c1-4-2-6-3-5-1/h1-3H2
+DMM-cycleth2     ! SMILES: COC1OCO1              InChI: InChI=1S/C3H6O3/c1-4-3-5-2-6-3/h3H,2H2,1H3
+H                ! SMILES: [H]                   InChI: InChI=1S/H
+H2               ! SMILES: [H][H]                InChI: InChI=1S/H2/h1H
+H2O              ! SMILES: O                     InChI: InChI=1S/H2O/h1H2
+H2O2             ! SMILES: OO                    InChI: InChI=1S/H2O2/c1-2/h1-2H
+HCO              ! SMILES: [CH]=O                InChI: InChI=1S/CHO/c1-2/h1H
+HO2              ! SMILES: O[O]                  InChI: InChI=1S/HO2/c1-2/h1H
+HO2CHO           ! SMILES: O=COO                 InChI: InChI=1S/CH2O3/c2-1-4-3/h1,3H
+HOCHO            ! SMILES: OC=O                  InChI: InChI=1S/CH2O2/c2-1-3/h1H,(H,2,3)
+O                ! SMILES: [O]                   InChI: InChI=1S/O
+O2               ! SMILES: O=O                   InChI: InChI=1S/O2/c1-2
+O2CHO            ! SMILES: O=COO                 InChI: InChI=1S/CH2O3/c2-1-4-3/h1,3H
+OCHO             ! SMILES: O=C[O]                InChI: InChI=1S/CHO2/c2-1-3/h1H
+OH               ! SMILES: [OH]                  InChI: InChI=1S/HO/h1H
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+DMM-R2 = CH3 + CH3OCHO                      1.871E+16    -1.889    10983  # pes.subpes.channel.submech_prompt  95.1.1.RAD_DECO_DMM-R2
+  PLOG /                        1.000E-02   8.103E+10    -0.943     7409 /
+  PLOG /                        2.000E-02   2.344E+11    -0.994     7650 /
+  PLOG /                        5.000E-02   6.356E+12    -1.267     8617 /
+  PLOG /                        1.000E-01   2.380E+13    -1.351     8959 /
+  PLOG /                        2.000E-01   9.589E+13    -1.444     9338 /
+  PLOG /                        5.000E-01   3.182E+15    -1.748    10449 /
+  PLOG /                        1.000E+00   1.871E+16    -1.889    10983 /
+  PLOG /                        2.000E+00   3.609E+17    -2.157    11991 /
+  PLOG /                        5.000E+00   1.208E+19    -2.472    13214 /
+  PLOG /                        1.000E+01   1.280E+20    -2.687    14026 /
+  PLOG /                        2.000E+01   1.954E+21    -2.932    15091 /
+  PLOG /                        5.000E+01   4.772E+22    -3.213    16421 /
+  PLOG /                        1.000E+02   3.469E+23    -3.371    17386 /
+  PLOG /                        5.000E+02   5.005E+10     0.986    14949 /
+
+DMM-R2 = CH2O + CH3OCH2                     1.000E+00     0.000        0  # pes.subpes.channel.submech_prompt  95.1.2.RAD_DECO_DMM-R2
+  PLOG /                        1.000E+01   4.800E-24     8.483    19312 /
+  PLOG /                        1.000E+02   3.120E-01     2.347    30854 /
+
+DMM-R1 = DMM-R2                             1.189E-170   53.769   -41946  # pes.subpes.channel.submech_prompt  95.1.3.RAD_DECO_DMM-R1
+  PLOG /                        1.000E-01   2.763E-146   45.404   -35829 /
+  PLOG /                        1.000E+00   1.189E-170   53.769   -41946 /
+  PLOG /                        1.000E+01   7.096E-119   38.106   -22258 /
+  PLOG /                        1.000E+02   7.867E-32    11.753    11935 /
+  PLOG /                        5.000E+02   8.512E+03     2.390    32846 /
+
+DMM-R1 = CH3 + CH3OCHO                      9.290E+39    -9.923    40407  # pes.subpes.channel.submech_prompt  95.1.4.RAD_DECO_DMM-R1
+  PLOG /                        1.000E-02   3.770E+35    -9.997    31719 /
+  PLOG /                        1.000E-01   1.260E+35    -9.160    34763 /
+  PLOG /                        1.000E+00   9.290E+39    -9.923    40407 /
+  PLOG /                        1.000E+01   2.460E+38    -8.824    43230 /
+  PLOG /                        1.000E+02   8.420E+30    -6.113    43021 /
+
+DMM-R1 = CH2O + CH3OCH2                     3.108E+35    -7.205    30972  # pes.subpes.channel.submech_prompt  95.1.5.RAD_DECO_DMM-R1
+  PLOG /                        1.000E-02   8.338E+27    -5.685    23841 /
+  PLOG /                        2.000E-02   1.301E+29    -5.937    24765 /
+  PLOG /                        5.000E-02   5.820E+30    -6.276    26210 /
+  PLOG /                        1.000E-01   9.039E+31    -6.514    27332 /
+  PLOG /                        2.000E-01   1.676E+33    -6.787    28443 /
+  PLOG /                        5.000E-01   4.477E+34    -7.064    29925 /
+  PLOG /                        1.000E+00   3.108E+35    -7.205    30972 /
+  PLOG /                        2.000E+00   1.257E+36    -7.280    31915 /
+  PLOG /                        5.000E+00   3.101E+36    -7.266    32950 /
+  PLOG /                        1.000E+01   1.860E+36    -7.108    33475 /
+  PLOG /                        2.000E+01   3.947E+35    -6.823    33750 /
+  PLOG /                        5.000E+01   6.750E+33    -6.198    33630 /
+  PLOG /                        1.000E+02   1.200E+32    -5.615    33264 /
+  PLOG /                        5.000E+02   1.305E+13     0.218    25700 /
+
+DMM = H + DMM-R2                            1.895E+17     0.000    98120  # pes.subpes.channel.submech_prompt  96.1.1.RAD_GEN_DMM-R2
+
+DMM = H + DMM-R1                            1.895E+17     0.000    98120  # pes.subpes.channel.submech_prompt  96.1.2.RAD_GEN_DMM-R1
+
+DMM (+M) = CH3O + CH3OCH2 (+M)              2.600E+23    -1.960    88386  # pes.subpes.channel.submech_prompt  96.1.3.
+  LOW  /                                    1.070E+76   -16.418    98829  /
+  TROE /   8.762E-05   5.899E+02   6.892E+03   1.968E+03 /
+
+DMM (+M) => CH3 + CH3OH + HCO (+M)          1.000E+14     0.000    65200  # pes.subpes.channel.submech_prompt  96.1.4.
+  LOW  /                                    5.720E+96   -23.040    80813  /
+  TROE /   1.176E-03   3.791E+02   1.581E+07   4.728E+03 /
+
+DMM (+M) = CH3 + CH3OCH2O (+M)              2.331E+19    -0.661    84139  # pes.subpes.channel.submech_prompt  96.1.5.
+  LOW  /                                    1.720E+59   -11.400    93296  /
+  TROE /   1.000E+00   1.000E-30   8.800E+02 /
+
+DMM (+M) = CH2O + CH3OCH3 (+M)              1.000E+14     0.000    65200  # pes.subpes.channel.submech_prompt  96.1.6.
+  LOW  /                                    5.720E+96   -23.040    80813  /
+  TROE /   1.177E-03   3.790E+02   1.580E+07   4.728E+03 /
+
+CH3O + CH3OCH2 = CH2O + CH3OCH3             2.410E+13     0.000        0  # pes.subpes.channel.submech_prompt  96.1.7.
+
+H + DMM = H2 + DMM-R2                       5.207E+07     1.886     5257  # pes.subpes.channel.submech_prompt  97.7.7.RAD_GEN_DMM-R2
+
+H + DMM = H2 + DMM-R1                       2.297E+04     2.898     5203  # pes.subpes.channel.submech_prompt  97.8.8.RAD_GEN_DMM-R1
+
+O + DMM = OH + DMM-R1                       5.430E+06     2.148     3081  # pes.subpes.channel.submech_prompt  103.1.1.RAD_GEN_DMM-R1
+
+O + DMM = OH + DMM-R2                       1.100E+06     2.450     2820  # pes.subpes.channel.submech_prompt  103.2.2.RAD_GEN_DMM-R2
+
+OH + DMM = H2O + DMM-R2                     1.419E+04     2.722    -1244  # pes.subpes.channel.submech_prompt  104.6.6.RAD_GEN_DMM-R2
+
+OH + DMM = H2O + DMM-R1                     6.064E+01     3.498    -2206  # pes.subpes.channel.submech_prompt  104.7.7.RAD_GEN_DMM-R1
+
+O2 + DMM-R1 = DMM-RO21                      1.130E+28    -5.240     4088  # pes.subpes.channel.submech_prompt  107.1.1.RAD_GEN_DMM-R1
+  PLOG /                        1.000E-03   1.120E+18    -3.370    -4294 /
+  PLOG /                        1.000E-02   1.330E+21    -3.950    -2615 /
+  PLOG /                        1.000E+00   1.130E+28    -5.240     4088 /
+  PLOG /                        2.000E+00   3.910E+27    -5.000     4512 /
+  PLOG /                        1.000E+01   2.750E+24    -3.870     4290 /
+  PLOG /                        2.000E+01   2.970E+22    -3.230     3781 /
+  PLOG /                        5.000E+01   5.190E+19    -2.350     2908 /
+  PLOG /                        1.000E+02   5.430E+17    -1.730     2210 /
+
+DMM-RO21 = DMM-QOOH2                        5.370E+08     0.765    14651  # pes.subpes.channel.submech_prompt  107.1.2.
+
+DMM-RO21 = DMM-QOOH1                        6.700E+07     0.585    14125  # pes.subpes.channel.submech_prompt  107.1.3.
+
+DMM-QOOH2 = OH + DMM-cycleth2               4.605E+13    -0.340    15798  # pes.subpes.channel.submech_prompt  107.1.4.
+
+DMM-QOOH2 => OH + CH2O + CH3OCHO            3.625E+22    -3.689    16740  # pes.subpes.channel.submech_prompt  107.1.5.
+  PLOG /                        1.000E-02   2.021E+14    -1.944    10646 /
+  PLOG /                        2.000E-02   1.038E+15    -2.066    11092 /
+  PLOG /                        5.000E-02   8.417E+16    -2.474    12457 /
+  PLOG /                        1.000E-01   7.002E+17    -2.656    13093 /
+  PLOG /                        2.000E-01   2.852E+19    -3.011    14319 /
+  PLOG /                        5.000E-01   8.805E+20    -3.330    15425 /
+  PLOG /                        1.000E+00   3.625E+22    -3.689    16740 /
+  PLOG /                        2.000E+00   6.703E+23    -3.970    17752 /
+  PLOG /                        5.000E+00   5.395E+25    -4.389    19433 /
+  PLOG /                        1.000E+01   9.867E+26    -4.653    20677 /
+  PLOG /                        2.000E+01   9.212E+27    -4.835    21786 /
+  PLOG /                        5.000E+01   3.548E+28    -4.874    22948 /
+  PLOG /                        1.000E+02   3.814E+28    -4.795    23559 /
+  PLOG /                        5.000E+02   2.543E+12     0.374    18486 /
+
+DMM-QOOH2 = CH3 + DME-OQOOH                 1.470E+22    -3.590    16368  # pes.subpes.channel.submech_prompt  107.1.6.
+  PLOG /                        1.000E-02   1.360E+14    -1.881    10397 /
+  PLOG /                        2.000E-02   6.720E+14    -2.002    10847 /
+  PLOG /                        5.000E-02   4.720E+16    -2.400    12170 /
+  PLOG /                        1.000E-01   3.730E+17    -2.579    12802 /
+  PLOG /                        2.000E-01   1.380E+19    -2.927    13995 /
+  PLOG /                        5.000E-01   3.880E+20    -3.237    15085 /
+  PLOG /                        1.000E+00   1.470E+22    -3.590    16368 /
+  PLOG /                        2.000E+00   2.460E+23    -3.862    17359 /
+  PLOG /                        5.000E+00   1.750E+25    -4.269    18997 /
+  PLOG /                        1.000E+01   2.930E+26    -4.525    20207 /
+  PLOG /                        2.000E+01   2.520E+27    -4.701    21283 /
+  PLOG /                        5.000E+01   9.120E+27    -4.736    22408 /
+  PLOG /                        1.000E+02   9.280E+27    -4.652    22994 /
+  PLOG /                        5.000E+02   1.130E+12     0.429    17979 /
+
+DMM-QOOH1 = OH + DMM-cycleth1               2.510E+16    -1.450    15607  # pes.subpes.channel.submech_prompt  107.1.7.
+
+DMM-QOOH1 = CH2O + DME-QOOH                 3.390E+16    -1.230    23375  # pes.subpes.channel.submech_prompt  107.1.8.
+
+O2 + DMM-R2 = DMM-RO22                      3.390E+28    -5.240     4088  # pes.subpes.channel.submech_prompt  107.2.9.RAD_GEN_DMM-R2
+  PLOG /                        1.000E-03   3.360E+18    -3.370    -4294 /
+  PLOG /                        1.000E-02   3.990E+21    -3.950    -2615 /
+  PLOG /                        1.000E+00   3.390E+28    -5.240     4088 /
+  PLOG /                        2.000E+00   1.173E+28    -5.000     4512 /
+  PLOG /                        1.000E+01   8.250E+24    -3.870     4290 /
+  PLOG /                        2.000E+01   8.910E+22    -3.230     3781 /
+  PLOG /                        5.000E+01   1.557E+20    -2.350     2908 /
+  PLOG /                        1.000E+02   1.629E+18    -1.730     2210 /
+
+DMM-RO22 = DMM-QOOH3                        1.850E+06     1.535    17238  # pes.subpes.channel.submech_prompt  107.2.10.
+
+DMM-QOOH3 = OH + DMM-cycleth2               1.180E+13    -0.280    19431  # pes.subpes.channel.submech_prompt  107.2.11.
+
+DMM-QOOH3 => OH + CH2O + CH3OCHO            5.020E+10     0.730    18614  # pes.subpes.channel.submech_prompt  107.2.12.
+
+HO2 + DMM-R2 = OH + DMM-RO2                 9.000E+12     0.000    -1000  # pes.subpes.channel.submech_prompt  108.2.2.RAD_GEN_DMM-R2
+
+HO2 + DMM-R1 = OH + DMM-RO1                 9.000E+12     0.000    -1000  # pes.subpes.channel.submech_prompt  108.3.3.RAD_GEN_DMM-R1
+
+O2 + DMM = HO2 + DMM-R2                     1.260E+07     2.000    40344  # pes.subpes.channel.submech_prompt  108.4.4.RAD_GEN_DMM-R2
+
+O2 + DMM = HO2 + DMM-R1                     1.880E+04     2.822    42591  # pes.subpes.channel.submech_prompt  108.5.5.RAD_GEN_DMM-R1
+
+HO2 + DMM = H2O2 + DMM-R1                   1.320E+01     3.560    12691  # pes.subpes.channel.submech_prompt  109.1.1.RAD_GEN_DMM-R1
+
+HO2 + DMM = H2O2 + DMM-R2                   2.260E+02     3.160    11759  # pes.subpes.channel.submech_prompt  109.2.2.RAD_GEN_DMM-R2
+
+CH3 + DMM = CH4 + DMM-R1                    1.458E-02     4.246     7544  # pes.subpes.channel.submech_prompt  140.4.4.RAD_GEN_DMM-R1
+
+CH3 + DMM = CH4 + DMM-R2                    1.301E+02     3.123     7986  # pes.subpes.channel.submech_prompt  140.5.5.RAD_GEN_DMM-R2
+
+HCO + DMM = CH2O + DMM-R1                   3.680E+13     0.000    24713  # pes.subpes.channel.submech_prompt  145.3.3.RAD_GEN_DMM-R1
+
+HCO + DMM = CH2O + DMM-R2                   5.420E+13     0.000    22968  # pes.subpes.channel.submech_prompt  145.4.4.RAD_GEN_DMM-R2
+
+CH3O + DMM-R1 = CH2O + DMM                  2.410E+13     0.000        0  # pes.subpes.channel.submech_prompt  146.1.1.RAD_GEN_DMM-R1
+
+CH3O + DMM-R2 = CH2O + DMM                  2.410E+13     0.000        0  # pes.subpes.channel.submech_prompt  146.2.2.RAD_GEN_DMM-R2
+
+CH2OH + DMM = CH3OH + DMM-R1                2.240E+12     0.000    19646  # pes.subpes.channel.submech_prompt  147.1.1.RAD_GEN_DMM-R1
+
+CH2OH + DMM = CH3OH + DMM-R2                6.050E+11     0.000    17304  # pes.subpes.channel.submech_prompt  147.2.2.RAD_GEN_DMM-R2
+
+CH3O + DMM = CH3OH + DMM-R1                 1.960E+03     2.930     3442  # pes.subpes.channel.submech_prompt  147.3.3.RAD_GEN_DMM-R1
+
+CH3O + DMM = CH3OH + DMM-R2                 6.760E+05     2.130     4493  # pes.subpes.channel.submech_prompt  147.4.4.RAD_GEN_DMM-R2
+
+OCHO + DMM = HOCHO + DMM-R1                 1.000E+13     0.000    17690  # pes.subpes.channel.submech_prompt  148.2.2.RAD_GEN_DMM-R1
+
+OCHO + DMM = HOCHO + DMM-R2                 1.000E+13     0.000    17690  # pes.subpes.channel.submech_prompt  148.3.3.RAD_GEN_DMM-R2
+
+CH3O2 + DMM-R1 = CH3O + DMM-RO1             9.000E+12     0.000    -1000  # pes.subpes.channel.submech_prompt  149.1.1.RAD_GEN_DMM-R1
+
+CH3O2 + DMM-R2 = CH3O + DMM-RO2             9.000E+12     0.000    -1000  # pes.subpes.channel.submech_prompt  149.2.2.RAD_GEN_DMM-R2
+
+CH3O2 + DMM = CH3O2H + DMM-R1               1.060E+01     3.560    12691  # pes.subpes.channel.submech_prompt  150.1.1.RAD_GEN_DMM-R1
+
+CH3O2 + DMM = CH3O2H + DMM-R2               1.810E+02     3.160    11759  # pes.subpes.channel.submech_prompt  150.2.2.RAD_GEN_DMM-R2
+
+O2CHO + DMM = HO2CHO + DMM-R2               4.425E+04     2.600    13910  # pes.subpes.channel.submech_prompt  151.1.1.RAD_GEN_DMM-R2
+
+O2CHO + DMM = HO2CHO + DMM-R1               4.425E+04     2.600    13910  # pes.subpes.channel.submech_prompt  151.2.2.RAD_GEN_DMM-R1
+
+CH3OCH2 + DMM = CH3OCH3 + DMM-R1            1.300E+12     0.000    19168  # pes.subpes.channel.submech_prompt  180.1.1.RAD_GEN_DMM-R1
+
+CH3OCH2 + DMM = CH3OCH3 + DMM-R2            3.520E+11     0.000    16826  # pes.subpes.channel.submech_prompt  180.2.2.RAD_GEN_DMM-R2
+
+DMM + CH2OCHO = CH3OCHO + DMM-R1            9.560E+11     0.000    17089  # pes.subpes.channel.submech_prompt  181.1.1.RAD_GEN_DMM-R1
+
+DMM + CH2OCHO = CH3OCHO + DMM-R2            2.560E+11     0.000    14747  # pes.subpes.channel.submech_prompt  181.2.2.RAD_GEN_DMM-R2
+
+CH3OCO + DMM = CH3OCHO + DMM-R1             4.040E+12     0.000    15989  # pes.subpes.channel.submech_prompt  181.3.3.RAD_GEN_DMM-R1
+
+CH3OCO + DMM = CH3OCHO + DMM-R2             1.080E+12     0.000    13647  # pes.subpes.channel.submech_prompt  181.4.4.RAD_GEN_DMM-R2
+
+DMM + DMM-R1 = DMM + DMM-R2                 1.000E+11     0.000    10400  # pes.subpes.channel.submech_prompt  208.1.1.RAD_GEN_DMM-R1
+
+
+
+END
+

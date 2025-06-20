@@ -1,0 +1,49 @@
+[project]
+authors = [{name = "Andreas Copan", email = "avcopan@gmail.com"}]
+description = "Cheminformatics libraries used by the AutoMech project"
+name = "autochem"
+requires-python = ">= 3.11"
+version = "2025.4.23"
+dependencies = [
+    "ipython>=8.15",
+    "ipywidgets",
+    "jupyter",
+    "more-itertools",
+    "networkx",
+    "numpy",
+    "py3dmol",
+    "pyparsing",
+    "pyyaml",
+    "qcelemental",
+    "rdkit",
+    "scipy",
+    "xarray",
+    "altair",
+    "pint",
+]
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build.targets.sdist]
+include = ["autochem", "automol", "autoreact", "phydat", "molsym"]
+
+[tool.hatch.build.targets.wheel]
+include = ["autochem", "automol", "autoreact", "phydat", "molsym"]
+
+[dependency-groups]
+dev = [
+    "pip",
+    "pylint",
+    "pytest",
+    "black",
+    "ruff",
+    "mypy",
+    "sphinx",
+    "myst-parser",
+    "sphinx-book-theme",
+    "sphinx-autodoc-typehints",
+    "pytest-xdist[psutil]",
+    "pre-commit"
+]

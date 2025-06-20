@@ -1,0 +1,10 @@
+isolate_submech # this section is not mandatory
+end
+
+sort_mech
+    criteria = (
+        subpes
+        chnl
+    )
+    n_criteria_headers = 0
+end

@@ -1,0 +1,54 @@
+name: test
+
+on: 
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      # Repository
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      # Environment
+      - name: Download environment files
+        run: |
+          wget https://raw.githubusercontent.com/Auto-Mech/amech-dev/main/pyproject.toml -P ..
+          wget https://raw.githubusercontent.com/Auto-Mech/amech-dev/main/pixi.lock -P ..
+          mkdir -p ../src/automech
+          touch ../src/automech/__init__.py
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          manifest-path: ../pyproject.toml
+
+      - name: Pip install
+        run: |
+          pixi run pip install git+https://github.com/Auto-Mech/autochem.git --no-deps
+          pixi run pip install -e . --no-deps
+
+      # Test
+      - name: Test
+        run: |
+          pixi run pytest -v mess_io 
+          pixi run pytest -v autoparse
+          pixi run pytest -v autoread
+          pixi run pytest -v autowrite
+          pixi run pytest -v ioformat
+          pixi run pytest -v chemkin_io
+          pixi run pytest -v projrot_io
+          pixi run pytest -v polyrate_io
+          pixi run pytest -v thermp_io
+          pixi run pytest -v onedmin_io
+          # # broken:
+          # pixi run pytest -v pac99_io   # ! fix
+          # pixi run pytest -v varecof_io # ! fix
+          # pixi run pytest -v autorun    # ! fix
+          # pixi run pytest -v elstruct   # ! fix

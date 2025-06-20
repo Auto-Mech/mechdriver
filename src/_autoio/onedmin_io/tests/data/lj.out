@@ -1,0 +1,17 @@
+Orientation    Sigma (Ang)     Epsilon (cm-1)
+          1        3.48579           17.88616
+          2        3.65598           15.23453
+          3        3.49781           17.73100
+
+
+ Simple Statistical Analysis of Calculated Parameters:
+
+                                   r         s(est)              v              s
+       minimum               3.89326        3.46850      -17.88616        3.48579
+       maximum               4.05876        3.61594      -15.23453        3.65598
+       average               3.95230        3.52110      -16.95056        3.54653
+    standard dev.            0.07543        0.06720        1.21507        0.07755
+
+     SIGMA  =    3.5465261992954926       +/-    7.7550786217970610E-002  Ang
+    EPSILON =    16.950564145902945       +/-    1.2150686379215254       cm-1
+

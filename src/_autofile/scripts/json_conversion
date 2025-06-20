@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+""" Converts the file structure in a given directory to a Python dictionary
+"""
+
+from ioformat import pathtools
+from autofile import directory_to_dictionary
+
+
+INP_PATH = '/Users/keceli/tmp/test/'
+OUT_FILE_PATH = '/Users/keceli/tmp/test'
+OUT_FILE_NAME = 'test.json'
+
+
+JSON_FILE_DCT = directory_to_dictionary(INP_PATH)
+pathtools.write_json_file(JSON_FILE_DCT, OUT_FILE_PATH, OUT_FILE_NAME)

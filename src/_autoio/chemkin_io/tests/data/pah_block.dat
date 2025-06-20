@@ -1,0 +1,191 @@
+REACTIONS
+!#[REACTIONCLASS][A1,CH3-M][BONDFISSION_CH]
+XYLENE(+M)=RXYLENE+H(+M)                                                                  +7.00000E+015 +1.70000E-001 +9.11680E+004 ! LPM as tol ; tol is 5.6 !would be 2.78           !S.J. Klippenstein Proceedings of the Combustion Institute 31.1 (2007): 221-229.
+LOW /                                                                                     +1.00000E+098 -2.28550E+001 +9.98820E+004/
+TROE /                                                                      +6.547194E-02 +1.511253E+01 +9.999996E+09  7.596123E+07/ 
+ H2 / 2.0 / H2O / 6.0 / CH4 / 2.0 / CO / 1.5 / CO2 / 2.0 / C2H6 / 3.0 / !
+!#[ENDREACTIONCLASS][A1,CH3-M][BONDFISSION_CH]
+!#[REACTIONCLASS][A1,CH3-M][BONDFISSION_CC] 
+XYLENE(+M)=CH3+CH3C6H4(+M)                                                                +3.90000E+027 -3.16000E+000 +1.07447E+005 ! LPM as tol, x2 (N of sites)   !S.J. Klippenstein Proceedings of the Combustion Institute 31.1 (2007): 221-229.
+LOW /                                                                                     +1.00000E+098 -2.29660E+001 +1.22080E+005/
+TROE /                                                                      +7.054562E-01 +9.999989E+09 +4.599180E+02 +8.213938E+09/
+ H2 / 2.0 / H2O / 6.0 / CH4 / 2.0 / CO / 1.5 / CO2 / 2.0 / C2H6 / 3.0 / !
+!#[ENDREACTIONCLASS][A1,CH3-M][BONDFISSION_CC] 
+
+!#[REACTIONCLASS][C5-M][ADD_C5-RSR_ENLARGE] !ADD DECO
+C5H5+C5H5CH3=>C7H8+C4H5                      1.200E+13    .000  25500.0   !CHECK TOT REACTIVITY- TO IND/NAPH?                      
+C5H6+C5H4CH3=>C7H8+C4H5                      1.200E+13    .000  25500.0   !CHECK TOT REACTIVITY- TO IND/NAPH?                      
+C5H5CH3+C5H4CH3=>XYLENE+C4H5                 1.200E+13    .000  25500.0   !CHECK TOT REACTIVITY- TO IND/NAPH?                      
+!#[ENDREACTIONCLASS][C5-M][ADD_C5-RSR_ENLARGE]
+!#[REACTIONCLASS][C5-RSR][REC_C3.D-R_ENLARGE]
+C4H5+C5H4CH3=>C3H4-A+C7H8                    2.000E+12    .000   3000.0                    
+!#[ENDREACTIONCLASS][C5-RSR][REC_C3.D-R_ENLARGE]
+
+C10H10=>2C5H5 1. 0. 0.
+
+!M+RSR WARNING IN CONTRAST WITH RR IN PAH MODULE C5H5+C5H6 => INDENE + CH3 3.40E+011 .00 15700
+!#[REACTIONCLASS][C5-M][ADD_C5-RSR]
+C5H5+C5H5CH3=>C10H7CH3+H2+H                     .3000E+13    .000  23000.0     
+C5H6+C5H4CH3=>C10H7CH3+H2+H                     .3000E+13    .000  23000.0     
+C5H5CH3+C5H4CH3=>0.5C10H7CH3+0.5CH3+0.5H2 +0.5C12H8+1.5H2+0.5H    .3000E+13    .000  23000.0     
+!#[ENDREACTIONCLASS][C5-M][ADD_C5-RSR]
+!#[REACTIONCLASS][A1-M][ADD_C5-RSR]
+C5H4CH3+C6H6=>C10H7CH3+CH3                 .3000E+13    .000  23000.0 
+!#[ENDREACTIONCLASS][A1-M][ADD_C5-RSR]
+
+
+!#[REACTIONCLASS][C5H4CCH2-RSR][REC_C3.DD-RSR]
+!TOT RR FIT 500 - 2000 K: 1.74E+10	0.00	-11499 !AT 1000 K IS 5E+12
+C7H5 + C3H3 = C10H8                1.085E+85   -21.196    47819 ! LPM LUMP+PSSA FROM MEBEL ET AL 2024
+PLOG /               3.000E-02	1.07E+50	-11.39	15392	/
+PLOG /               1.000E-01	2.25E+45	-9.98		13356	/
+PLOG /               1.000E+00	3.23E+38	-7.89		10539	/
+PLOG /               1.000E+01	2.44E+39	-8.19		10607	/
+PLOG /               2.000E+01	3.25E+40	-8.54		11070	/
+C7H5 + C3H3 = C9H6CH2          6.91E+82   -21.66    44010	! LPM LUMP+PSSA FROM MEBEL ET AL 2024
+PLOG /               3.000E-02	1.54E+36	-7.63		5297	/
+PLOG /               1.000E-01	1.00E+39	-8.44		6811	/
+PLOG /               1.000E+00	1.58E+45	-10.20	10258	/
+PLOG /               1.000E+01	4.73E+50	-11.82	12903	/
+PLOG /               2.000E+01	2.41E+52	-12.32	13778	/
+!#[ENDREACTIONCLASS][C5H4CCH2-RSR][REC_C3.DD-RSR]
+
+!_________ decomposition
+
+!#[REACTIONCLASS][C5-RSR][REC_H_WELL]
+!KEEP IRREVERSIBLE. TOT IS 2.4E+14, CONSISTENT WITH C5H5+H (1.7-2E+14)
+INDENYL+H=>INDENE	3.56e+36	-6.62	10225.81	! LPM 06-10-23 EXTRA-LUMP FROM SELBY(MEBEL) 2023 JPCA 10.1021/ACS.JPCA.2C08121 !HPL: 2.4E+14
+PLOG/0.1	3.56e+36	-6.62	10225.81	/ ! R2_adj=0.82 , T RANGE=500 - 2000 K
+PLOG/1.0	1.21e+26	-3.46	5607.55	    / ! R2_adj=0.68 , T RANGE=500 - 2000 K
+PLOG/10.0	1.34e+18	-1.09	1892.23    	/ ! R2_adj=0.45 , T RANGE=500 - 2000 K
+PLOG/100.0	6.55e+14	-0.12	318.51	/ ! R2_adj=0.37 , T RANGE=500 - 2000 K		
+INDENE=>INDENYL+H	1.74e+52	-10.66	101146.10	! LPM 06-10-23 EXTRA-LUMP FROM SELBY(MEBEL) 2023 JPCA 10.1021/ACS.JPCA.2C08121
+PLOG/0.1	1.74e+52	-10.66	101146.10	/ ! R2_adj=1.00 , T RANGE=700 - 2000 K
+PLOG/1.0	4.91e+36	-6.08	92967.65	/ ! R2_adj=1.00 , T RANGE=700 - 2000 K
+PLOG/10.0	5.09e+23	-2.29	85748.83	/ ! R2_adj=1.00 , T RANGE=700 - 2000 K
+PLOG/100.0	5.29e+17	-0.55	82315.62	/ ! R2_adj=1.00 , T RANGE=700 - 2000 K
+
+!INDENYL+H(+M)=INDENE(+M)                              1.00E+13	0.28	  -179.      ! !LPM 07-16-2022 /3.2 FOR IND CONVERSION IN PYR! LPM 05-31-2022 AS CPD - ABOUT 2.5E+14, FROM MEBEL - VERY CLOSE TO CPDYL, NO SYMM CORRECTION; IF YOU PUT IT, IT SHOULD BE 3/5 (N OF SITES)
+!LOW/   .1e+81    -18.0      5000.0/                                                  ! IN USC MECH IT WAS 1.14e+81    -18.280      12994.0/
+!TROE/ +1.00E+000 +1.00E-001 +5.85E+002 +6.11E+003 /
+!CO/ 1.50/  CO2/ 2.00/  H2O/ 6.00/  H2/ 2.00/  CH4/ 2.00/
+
+INDENYL+H=C6H5C3H3	7.88e+34	-5.48	41464.21	! LPM EXTRA-LUMP FROM SELBY(MEBEL) 2023 JPCA 10.1021/ACS.JPCA.2C08121
+PLOG/0.1	7.88e+34	-5.48	41464.21	/ ! R2_adj=0.99 , T RANGE=500 - 2000 K
+PLOG/1.0	3.41e+10	1.68	31891.72	/ ! R2_adj=0.99 , T RANGE=500 - 2000 K
+PLOG/10.0	7.52e-17	9.32	19064.56	/ ! R2_adj=1.00 , T RANGE=500 - 2000 K
+PLOG/100.0	1.17e-30	13.07	10794.26	/ ! R2_adj=1.00 , T RANGE=500 - 2000 K
+!#[ENDREACTIONCLASS][C5-RSR][REC_H_WELL]
+
+
+!#[REACTIONCLASS][A1-R][ADD_A1-M]
+!SEPARATE BASED ON LATERAL GROUP. EG ALL C6H5C2H TYPES
+!different class for this one? !revise rate rule?
+C6H5+C6H6=H+BIPHENYL                                                                      +5.60000E+012 -7.40000E-002 +7.55000E+003 ! 97-WANG-FRENCKLACH
+PLOG /                                                                      +2.63000E-002 +5.60000E+012 -7.40000E-002 +7.55000E+003 	/
+PLOG /                                                                      +1.18400E-001 +1.50000E+014 -4.50000E-001 +8.91500E+003 	/
+PLOG /                                                                      +1.00000E+000 +1.10000E+023 -2.92000E+000 +1.58900E+004 	/
+PLOG /                                                                      +5.00000E+000 +1.10000E+023 -2.92000E+000 +1.58900E+004     /
+PLOG /  																	+10.00000e+00  9.550000e+11     0.00       4.305000e+03     /
+C6H4C2H+C6H5C2H=>C16H10+H                                                                 +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H4C2H+C6H5C2H3=>C16H10+H+H2                                                             +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H4C2H+XYLENE=>0.5C14H10+0.5C16H10+CH3+H2                                                +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H4C2H+C6H5C2H5=>0.5C14H10+0.5C16H10+CH3+H2                                              +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H4C2H+C10H8=>0.5C16H10+0.5C18H10+CH3                                                    +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C6H4C2H+C12H8=>0.666667BIN1B+0.33333375BIN1A+H                                +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C6H4C2H+BIPHENYL=>0.333333BIN1B+0.666666625BIN1A+H                            +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+C6H5C2H3=STILB+H                                                                     +1.86400E+013 -3.85000E-001 +4.16340E+003 ! Akira Matsugi and Akira Miyoshi 2012 PCCP,14.
+C6H5+C7H8=C6H5CH2C6H5+H                                                                   +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!replaced above - C2H moiety necessary!C6H5+C6H5C2H=>C14H10+H                                                                    +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+C6H5C2H3=>C14H10+H+H2                                                                +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+XYLENE=>FLUORENE+CH3+H2                                                              +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+C6H5C2H5=>FLUORENE+CH3+H2                                                            +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+C10H8=>C16H10+H+H2                                                                   +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+C12H8=>0.5C18H10+0.5C18H14+H                                                         +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+BIPHENYL=>C18H14+H                                                                   +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+FLUORENE=>0.5C18H14+0.166666666856036BIN1B+0.333333333979624BIN1A+H                  +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5+C6H5CH2C6H5=>C18H14+CH3                                                              +1.00000E+012 +0.00000E+000 +8.00000E+003  
+!AN REMOVED!C6H5+C14H10=>0.333333BIN1B+0.66666625BIN1A+H                                              +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5C2H+C6H5C2H2=>C16H10+H2+H                                                             +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5C2H+C10H7=>0.5C16H10+0.5C18H10+CH3                                                    +1.00000E+012 +0.00000E+000 +8.00000E+003   
+C6H5C2H2+C6H5C2H3=>C16H10+H+2H2                                                           +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5C2H2+XYLENE=>0.5C14H10+0.5C16H10+CH3+2H2                                              +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5C2H2+C6H5C2H5=>0.5C14H10+0.5C16H10+CH3+2H2                                            +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5C2H2+C10H8=>0.5C16H10+0.5C18H10+H2+CH3                                                +1.00000E+012 +0.00000E+000 +8.00000E+003   
+C6H5C2H3+C10H7=>C18H14+H                                                                  +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C6H5C2H3+C12H7=>H+0.3333BIN1B+0.6666625BIN1A                                              +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C6H5C2H3+C12H9=>H+BIN1A                                                                   +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H5C2H5+C10H7=>0.5C16H10+0.5C18H14+CH3+H2                                                +1.00000E+012 +0.00000E+000 +8.00000E+003  
+!AN REMOVED!C6H5C2H5+C12H7=>H+BIN1A                                                                   +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H6+CH3C6H4=>FLUORENE+H2+H                                                               +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H6+C6H4C2H=>C14H10+H                                                                    +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H6+C6H5C2H2=>C14H10+H2+H                                                                +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H6+C10H7=>C16H10+H+H2                                                                   +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H6+C12H7=>0.5C16H10+0.5C18H10+CH3                                                       +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C6H6+C12H9=>C18H14+H                                                                      +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C6H6+C14H9=>H+0.33333BIN1B+0.66666625BIN1A                                                +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C7H8+C10H7=>0.181818181818271C16H10+0.727272727274474C18H14+CH3                           +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C7H8+C12H7=>0.5C18H14+0.166666666856036BIN1B+0.333333333979624BIN1A+H                     +1.00000E+012 +0.00000E+000 +8.00000E+003 
+C7H8+C12H9=>C18H14+CH3                                                                    +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C7H8+C6H4C2H=>0.75BIN1A+H                                                                 +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C7H8+C6H5C2H2=>0.75BIN1A+H2+H                                                             +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!AN REMOVED!C10H7+C10H8=>0.333333BIN1B+0.66666625BIN1A+H                                              +1.00000E+012 +0.00000E+000 +8.00000E+003 
+CH3C6H4+C7H8=>C14H10+2H2+H                                                                +1.00000E+012 +0.00000E+000 +8.00000E+003 
+CH3C6H4+C6H5C2H3=>C14H10+CH3+H2                                                           +1.00000E+012 +0.00000E+000 +8.00000E+003 
+CH3C6H4+XYLENE=>C6H5C2H4C6H5+CH3                                                          +1.00000E+012 +0.00000E+000 +8.00000E+003 
+CH3C6H4+C6H5C2H5=>C6H5C2H4C6H5+CH3                                                        +1.00000E+012 +0.00000E+000 +8.00000E+003 
+CH3C6H4+C10H8=>0.181818181818271C16H10+0.727272727274474C18H14+CH3                        +1.00000E+012 +0.00000E+000 +8.00000E+003 
+CH3C6H4+C12H8=>0.5C18H14+0.166666666856036BIN1B+0.333333333979624BIN1A+H                  +1.00000E+012 +0.00000E+000 +8.00000E+003 
+CH3C6H4+BIPHENYL=>C18H14+CH3                                                              +1.00000E+012 +0.00000E+000 +8.00000E+003  
+!AN REMOVED!CH3C6H4+C6H5C2H=>0.75BIN1A+H                                                              +4.00000E+011 +0.00000E+000 +1.90000E+004   
+XYLENE+C10H7=>0.5C16H10+0.5C18H14+CH3+H2                                                  +1.00000E+012 +0.00000E+000 +8.00000E+003  
+!AN REMOVED!XYLENE+C12H7=>H+BIN1A                                                                     +1.00000E+012 +0.00000E+000 +8.00000E+003 
+!#[ENDREACTIONCLASS][A1-R][ADD_A1-M]
+
+!#[REACTIONCLASS][A1-R][REC_A1-R]
+!HP LIM AVG FOR C6H5+C6H5 IS 8E+12, LOW P IS 5E+12
+C6H5+C6H5=BIPHENYL                                                                        +1.66000E+064 -1.46800E+001 +3.32620E+004 ! Tranter et al. The Journal of Physical Chemistry A 114.32 (2010): 8240-8261.
+PLOG /                                                                      +1.00000E-002 +1.66000E+064 -1.46800E+001 +3.32620E+004 ! 0.181818181818271C16H10+0.727272727274474C18H14+CH3
+PLOG /                                                                      +1.00000E-001 +6.14000E+037 -7.14000E+000 +1.57030E+004 ! C18H14+H
+PLOG /                                                                      +1.00000E+000 +7.34000E+020 -2.33500E+000 +4.12500E+003 ! C18H14+CH3
+PLOG /                                                                      +1.00000E+001 +1.11000E+014 -4.05000E-001 -6.10000E+002 ! 0.5C18H10+0.5BIN1A+CH3+H2
+PLOG /                                                                      +1.00000E+002 +3.09000E+012 +3.60000E-002 -1.70200E+003 ! 0.5C18H10+0.5BIN1A+CH3+H2
+C6H5+CH3C6H4=>FLUORENE+H+H                                                                +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H5+C6H4C2H=C14H10                                                                       +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H5+C6H5C2H2=>C14H10+H+H                                                                 +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H5+C10H7=>C16H10+H+H                                                                    +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H5+C12H7=>C18H10+H+H                                                                    +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H5+C12H9=>0.5C16H10+0.5C18H10+CH3+H                                                     +5.00000E+012 +0.00000E+000 +0.00000E+000  
+C6H5C2H2+C6H5C2H2=>C16H10+H2+H+H                                                          +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H5C2H2+C10H7=>C18H10+H2+H+H                                                             +5.00000E+012 +0.00000E+000 +0.00000E+000   
+CH3C6H4+CH3C6H4=>C14H10+H2+H+H                                                            +5.00000E+012 +0.00000E+000 +0.00000E+000 
+CH3C6H4+C6H4C2H=>.5C16H10+.5C14H10+H+H                                                    +5.00000E+012 +0.00000E+000 +0.00000E+000 
+CH3C6H4+C6H5C2H2=>.5C16H10+.5C14H10+H2+H+H                                                +5.00000E+012 +0.00000E+000 +0.00000E+000 
+CH3C6H4+C10H7=>C16H10+CH3+H                                                               +5.00000E+012 +0.00000E+000 +0.00000E+000 
+CH3C6H4+C12H7=>C18H10+CH3+H                                                               +5.00000E+012 +0.00000E+000 +0.00000E+000 
+CH3C6H4+C12H9=>C18H10+CH3+H+H2                                                            +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H4C2H+C6H4C2H=>C16H10                                                                   +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H4C2H+C6H5C2H2=>C16H10+H+H                                                              +5.00000E+012 +0.00000E+000 +0.00000E+000 
+C6H4C2H+C10H7=>C18H10+H+H                                                                 +5.00000E+012 +0.00000E+000 +0.00000E+000 
+!redundant- commented in AN version! C6H4C2H+C12H7=>BIN1B+H+H                                                                  +5.00000E+012 +0.00000E+000 +0.00000E+000 
+!redundant- commented in AN version! C6H4C2H+C12H9=>0.666667BIN1B+0.33333375BIN1A+H+H                                          +5.00000E+012 +0.00000E+000 +0.00000E+000  
+!#[ENDREACTIONCLASS][A1-R][REC_A1-R]
+
+!#[REACTIONCLASS][A1-R][ADD_C4.TT-M]
+C4H2+C6H5=C10H7                               5.000E+12    0.000     5000.00 ! LPM 01-21-2021 UPDATE C3 ! DUPLICATE CAUSE THERE WERE 2 DIFFERENT RADICALS OF C10H7; HPLIM IS OLD CRECK !lumped C10H8tyl as CRECK  
+PLOG / 0.01	1.25E+88	-21.83	48863/	!800-1700
+PLOG / 0.1	1.54E+81	-19.48	50784/	!800-1800
+PLOG / 1	1.28E+76	-17.68	55146/	!800-2000
+PLOG / 10	2.22E+58	-12.44	49974/	!800-2500
+PLOG / 100	1.02E+35	-5.809	39347/	!800-2500
+DUPLICATE
+C4H2+C6H5=C10H7                      5.00E+12    0.000     5000.00 !2-naphthyl
+PLOG / 0.01	1.83E+87	-21.56	48728/
+PLOG / 0.1	4.57E+85	-20.72	54421/
+PLOG / 1	7.82E+72	-16.75	53604/
+PLOG / 10	3.74E+63	-13.83	55912/
+PLOG / 100	2.55E+45	-8.515	52892/
+DUPLICATE
+!#[ENDREACTIONCLASS][A1-R][ADD_C4.TT-M]
+
+END

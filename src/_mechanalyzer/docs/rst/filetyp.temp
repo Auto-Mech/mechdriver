@@ -1,0 +1,20 @@
+.. helpful description of common files used by MechAnalyzer
+
+mechanism.dat file
+CHEMKIN-formatted mechanism file containing, at minimum, the reaction channels listed out
+in a `REACTIONS` block. The code should be able to parse any file formatted for this program.
+Please see <ckin link> for instructions on how to construct such files.
+
+species.csv file
+comma-seperated file relating arbitrary species mechanism names (possibly listed in mechanism.dat)
+to structural identifiers.
+
+sort auxiliary file
+input for sorting a mechanism
+
+plot auxiliary file
+input for plotting a mechanism
+
+label-rate auxliary file
+input for fitting rate constants in a MESS output file
+

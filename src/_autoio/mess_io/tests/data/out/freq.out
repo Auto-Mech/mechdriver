@@ -1,0 +1,253 @@
+Model::RRHO::RRHO:  starts
+   Model::new_core:  starts
+      Model::RigidRotor::RigidRotor:  starts
+         molecular geometry will be used to estimate rotational constants
+         rotational configuration: nonlinear
+         rotational constants[1/cm]:        0.486334      0.0379003      0.0365926
+      Model::RigidRotor::RigidRotor:  done, cpu time[sec] = 0, elapsed time[sec] = 0
+   Model::new_core:  done, cpu time[sec] = 0, elapsed time[sec] = 0
+   1-th ROTOR:
+   WARNING: geometry has been changed
+   Model::HinderedRotor::HinderedRotor:  starts
+      Model::HinderedRotor::_read:  starts
+         first point frequency estimate = 100.299 1/cm
+         Fourier Expansion Coefficients(kcal/mol):
+           0        3.01042
+           1   -5.95297e-17
+           2       -1.82843
+           3   -4.64898e-16
+           4        1.13159
+           5    1.77455e-15
+           6       -2.46275
+           7    3.11822e-16
+           8         0.2125
+           9    2.05236e-15
+          10       -0.16183
+          11   -1.11689e-15
+          12       0.154167
+          13    9.86492e-16
+          14      -0.100534
+          15   -3.79856e-16
+          16      0.0708333
+          17   -8.44755e-16
+          18      -0.025586
+          19   -3.50658e-15
+          20      0.0317405
+          21    -3.4754e-15
+          22     -0.0158697
+          23   -2.36821e-15
+          24        0.01375
+      Model::HinderedRotor::_read:  done, cpu time[sec] = 0, elapsed time[sec] = 0
+      effective rotational constant[1/cm]  = 0.985676
+      analytic  frequency at minimum[1/cm] = 97.5241
+      numerical frequency at minimum[1/cm] = 97.5267
+      minimum energy[kcal/mol]             = 0.03
+      maximum energy[kcal/mol]             = 9.22
+      maximum frequency[1/cm]              = 114.674
+      ground energy [kcal/mol]             = 0.171427
+      highest energy level [kcal/mol]      = 699.225
+      number of levels                     = 995
+      10 lowest excited states [kcal/mol] relative to the ground: 0.286 0.574 0.797 0.797 0.863 1.12 1.12 1.15 1.43
+      Statistical Weight (*** - deep tunneling regime):
+       T, K        Quantum             PG             PI  ***
+        100        1.35538         1.3625        1.35548
+        200        2.43703        2.44158        2.43696
+        300         3.9255        3.92792        3.92546
+        400        5.65448        5.65487        5.65445
+        500        7.53973        7.53847        7.53971
+        600         9.5257        9.52323        9.52569
+        700        11.5725        11.5692        11.5725
+        800        13.6515        13.6476        13.6515
+        900        15.7426        15.7383        15.7426
+       1000        17.8313        17.8268        17.8313
+   Model::HinderedRotor::HinderedRotor:  done, cpu time[sec] = 4.08, elapsed time[sec] = 1
+   2-th ROTOR:
+   WARNING: geometry has been changed
+   Model::HinderedRotor::HinderedRotor:  starts
+      Model::HinderedRotor::_read:  starts
+         first point frequency estimate = 108.73 1/cm
+         Fourier Expansion Coefficients(kcal/mol):
+           0        3.00542
+           1   -3.68517e-17
+           2       -1.89992
+           3   -2.83475e-16
+           4        1.16552
+           5    1.66116e-15
+           6         -2.441
+           7    1.98432e-16
+           8       0.241667
+           9    2.19976e-15
+          10      -0.171163
+          11   -1.05453e-15
+          12         0.1625
+          13    9.97831e-16
+          14     -0.0878988
+          15   -3.91195e-16
+          16      0.0533333
+          17   -7.54043e-16
+          18      0.0126636
+          19   -3.50658e-15
+          20      0.0194799
+          21   -3.52076e-15
+          22     -0.0276799
+          23   -2.30294e-15
+          24    -0.00291667
+      Model::HinderedRotor::_read:  done, cpu time[sec] = 0, elapsed time[sec] = 0
+      effective rotational constant[1/cm]  = 1.15835
+      analytic  frequency at minimum[1/cm] = 111.919
+      numerical frequency at minimum[1/cm] = 111.917
+      minimum energy[kcal/mol]             = 0.03
+      maximum energy[kcal/mol]             = 9.26
+      maximum frequency[1/cm]              = 124.358
+      ground energy [kcal/mol]             = 0.187754
+      highest energy level [kcal/mol]      = 824.492
+      number of levels                     = 997
+      10 lowest excited states [kcal/mol] relative to the ground: 0.312 0.617 0.846 0.846 0.916 1.17 1.17 1.21 1.5
+      Statistical Weight (*** - deep tunneling regime):
+       T, K        Quantum             PG             PI  ***
+        100        1.30117        1.29268         1.3006
+        200        2.28437        2.27952        2.28427
+        300        3.66804        3.66339        3.66799
+        400        5.28636        5.28101        5.28633
+        500        7.05273        7.04661         7.0527
+        600        8.91124        8.90453        8.91122
+        700         10.823        10.8159         10.823
+        800        12.7611        12.7538        12.7611
+        900        14.7067        14.6993        14.7067
+       1000        16.6472        16.6398        16.6472
+   Model::HinderedRotor::HinderedRotor:  done, cpu time[sec] = 3.91, elapsed time[sec] = 0
+   3-th ROTOR:
+   WARNING: geometry has been changed
+   Model::HinderedRotor::HinderedRotor:  starts
+      Model::HinderedRotor::_read:  starts
+         first point frequency estimate = 100.312 1/cm
+         Fourier Expansion Coefficients(kcal/mol):
+           0        3.00792
+           1    0.000589256
+           2       -1.82396
+           3   -0.000833333
+           4        1.12848
+           5    0.000589256
+           6       -2.46132
+           7     2.2111e-16
+           8         0.2125
+           9   -0.000589256
+          10      -0.162598
+          11    0.000833333
+          12          0.155
+          13   -0.000589256
+          14      -0.100986
+          15     -3.345e-16
+          16      0.0708333
+          17    0.000589256
+          18     -0.0253419
+          19   -0.000833333
+          20      0.0315172
+          21    0.000589256
+          22     -0.0157922
+          23   -2.36259e-15
+          24        0.01375
+      Model::HinderedRotor::_read:  done, cpu time[sec] = 0, elapsed time[sec] = 0
+      effective rotational constant[1/cm]  = 0.98592
+      analytic  frequency at minimum[1/cm] = 97.5351
+      numerical frequency at minimum[1/cm] = 97.5376
+      minimum energy[kcal/mol]             = 0.03
+      maximum energy[kcal/mol]             = 9.21
+      maximum frequency[1/cm]              = 114.748
+      ground energy [kcal/mol]             = 0.171443
+      highest energy level [kcal/mol]      = 699.395
+      number of levels                     = 995
+      10 lowest excited states [kcal/mol] relative to the ground: 0.286 0.575 0.797 0.798 0.863 1.12 1.12 1.15 1.43
+      Statistical Weight (*** - deep tunneling regime):
+       T, K        Quantum             PG             PI  ***
+        100        1.35529         1.3624        1.35538
+        200         2.4369        2.44143        2.43684
+        300        3.92562        3.92801        3.92557
+        400        5.65502        5.65538        5.65499
+        500        7.54079        7.53952        7.54077
+        600        9.52734        9.52485        9.52733
+        700        11.5747        11.5714        11.5747
+        800        13.6543        13.6504        13.6543
+        900        15.7459        15.7416        15.7459
+       1000        17.8352        17.8306        17.8352
+   Model::HinderedRotor::HinderedRotor:  done, cpu time[sec] = 3.69, elapsed time[sec] = 0
+   4-th ROTOR:
+   WARNING: geometry has been changed
+   Model::HinderedRotor::HinderedRotor:  starts
+      Model::HinderedRotor::_read:  starts
+         first point frequency estimate = 251.535 1/cm
+         Fourier Expansion Coefficients(kcal/mol):
+           0        1.90375
+           1        -0.0025
+           2       -1.88045
+           3    1.70085e-17
+           4         0.0025
+           5         0.0025
+           6    0.000452019
+           7   -6.12323e-19
+           8        0.00375
+      Model::HinderedRotor::_read:  done, cpu time[sec] = 0.01, elapsed time[sec] = 0
+      effective rotational constant[1/cm]  = 5.73998
+      analytic  frequency at minimum[1/cm] = 255.494
+      numerical frequency at minimum[1/cm] = 255.494
+      minimum energy[kcal/mol]             = 0.03
+      maximum energy[kcal/mol]             = 3.79
+      maximum frequency[1/cm]              = 255.667
+      ground energy [kcal/mol]             = 0.389016
+      highest energy level [kcal/mol]      = 36632.3
+      number of levels                     = 997
+      10 lowest excited states [kcal/mol] relative to the ground: 0.702 1.37 1.98 2.54 3.06 3.34 4.07 4.09 5.33
+      Statistical Weight (*** - deep tunneling regime):
+       T, K        Quantum             PG             PI  ***
+        100        1.03028         1.0028        1.02048
+        200        1.21219        1.19574        1.21023
+        300         1.4709        1.45631        1.47017
+        400        1.76673         1.7525        1.76638
+        500        2.08442        2.07035        2.08422
+        600        2.41405        2.40026        2.41393
+        700        2.74864        2.73525        2.74856
+        800        3.08339        3.07051        3.08334
+        900        3.41516        3.40283        3.41512
+       1000        3.74195        3.73021        3.74192
+   Model::HinderedRotor::HinderedRotor:  done, cpu time[sec] = 4.53, elapsed time[sec] = 1
+   5-th ROTOR:
+   WARNING: geometry has been changed
+   Model::HinderedRotor::HinderedRotor:  starts
+      Model::HinderedRotor::_read:  starts
+         first point frequency estimate = 251.531 1/cm
+         Fourier Expansion Coefficients(kcal/mol):
+           0         1.9025
+           1    -0.00426777
+           2       -1.87868
+           3         0.0025
+           4         0.0025
+           5    0.000732233
+           6    -0.00131575
+           7   -1.53081e-18
+           8          0.005
+      Model::HinderedRotor::_read:  done, cpu time[sec] = 0, elapsed time[sec] = 0
+      effective rotational constant[1/cm]  = 5.7398
+      analytic  frequency at minimum[1/cm] = 255.076
+      numerical frequency at minimum[1/cm] = 255.076
+      minimum energy[kcal/mol]             = 0.03
+      maximum energy[kcal/mol]             = 3.79001
+      maximum frequency[1/cm]              = 255.142
+      ground energy [kcal/mol]             = 0.388898
+      highest energy level [kcal/mol]      = 36631.2
+      number of levels                     = 997
+      10 lowest excited states [kcal/mol] relative to the ground: 0.702 1.37 1.98 2.54 3.06 3.34 4.07 4.09 5.33
+      Statistical Weight (*** - deep tunneling regime):
+       T, K        Quantum             PG             PI  ***
+        100        1.03025        1.00443        1.02062
+        200        1.21209        1.19623        1.21013
+        300        1.47082        1.45653        1.47009
+        400        1.76676        1.75271         1.7664
+        500        2.08458        2.07065        2.08439
+        600        2.41438        2.40068        2.41425
+        700        2.74911        2.73581        2.74903
+        800          3.084        3.07119        3.08394
+        900        3.41589        3.40362        3.41585
+       1000        3.74278        3.73109        3.74275
+   Model::HinderedRotor::HinderedRotor:  done, cpu time[sec] = 4.31, elapsed time[sec] = 0
+   ground state energy, kcal/mol:   0
+Model::RRHO::RRHO:  done, cpu time[sec] = 20.57, elapsed time[sec] = 2

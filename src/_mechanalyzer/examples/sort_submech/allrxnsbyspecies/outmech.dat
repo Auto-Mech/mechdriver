@@ -1,0 +1,533 @@
+ELEMENTS
+
+C
+H
+O
+
+END
+
+
+SPECIES
+
+C2H2             ! SMILES: C#C                    InChI: InChI=1S/C2H2/c1-2/h1-2H
+C2H3             ! SMILES: C=[CH]                 InChI: InChI=1S/C2H3/c1-2/h1H,2H2
+C2H3CHO          ! SMILES: C=CC=O                 InChI: InChI=1S/C3H4O/c1-2-3-4/h2-3H,1H2
+C2H3CO           ! SMILES: C=C[C]=O               InChI: InChI=1S/C3H3O/c1-2-3-4/h2H,1H2
+C2H3OH           ! SMILES: OC=C                   InChI: InChI=1S/C2H4O/c1-2-3/h2-3H,1H2
+C2H4             ! SMILES: C=C                    InChI: InChI=1S/C2H4/c1-2/h1-2H2
+C2H4COCH2OH      ! SMILES: C[CH]C(=O)CO           InChI: InChI=1S/C4H7O2/c1-2-4(6)3-5/h2,5H,3H2,1H3
+C2H4O1-2         ! SMILES: O1CC1                  InChI: InChI=1S/C2H4O/c1-2-3-1/h1-2H2
+C2H4O2H          ! SMILES: [CH2]COO               InChI: InChI=1S/C2H5O2/c1-2-4-3/h3H,1-2H2
+C2H5             ! SMILES: C[CH2]                 InChI: InChI=1S/C2H5/c1-2/h1H2,2H3
+C2H5CHO          ! SMILES: CCC=O                  InChI: InChI=1S/C3H6O/c1-2-3-4/h3H,2H2,1H3
+C2H5CHOHCO       ! SMILES: CCC([C]=O)O            InChI: InChI=1S/C4H7O2/c1-2-4(6)3-5/h4,6H,2H2,1H3
+C2H5CO           ! SMILES: CC[C]=O                InChI: InChI=1S/C3H5O/c1-2-3-4/h2H2,1H3
+C2H5COCH2        ! SMILES: CCC(=O)[CH2]           InChI: InChI=1S/C4H7O/c1-3-4(2)5/h2-3H2,1H3
+C2H5COCH3        ! SMILES: CCC(=O)C               InChI: InChI=1S/C4H8O/c1-3-4(2)5/h3H2,1-2H3
+C2H5O            ! SMILES: CC[O]                  InChI: InChI=1S/C2H5O/c1-2-3/h2H2,1H3
+C2H5O2           ! SMILES: CCO[O]                 InChI: InChI=1S/C2H5O2/c1-2-4-3/h2H2,1H3
+C2H5O2H          ! SMILES: CCOO                   InChI: InChI=1S/C2H6O2/c1-2-4-3/h3H,2H2,1H3
+C2H5OH           ! SMILES: CCO                    InChI: InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3
+C3H3             ! SMILES: [CH2]C#C               InChI: InChI=1S/C3H3/c1-3-2/h1H,2H2
+C3H4-A           ! SMILES: C=C=C                  InChI: InChI=1S/C3H4/c1-3-2/h1-2H2
+C3H4-P           ! SMILES: CC#C                   InChI: InChI=1S/C3H4/c1-3-2/h1H,2H3
+C3H5-A           ! SMILES: [CH2]C=C               InChI: InChI=1S/C3H5/c1-3-2/h3H,1-2H2
+C3H5-S           ! SMILES: CC=[CH]                InChI: InChI=1S/C3H5/c1-3-2/h1,3H,2H3
+C3H5O            ! SMILES: [O]CC=C                InChI: InChI=1S/C3H5O/c1-2-3-4/h2H,1,3H2
+C3H6             ! SMILES: CC=C                   InChI: InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3
+C3H6CHO-1        ! SMILES: [CH2]CCC=O             InChI: InChI=1S/C4H7O/c1-2-3-4-5/h4H,1-3H2
+C3H6O1-2         ! SMILES: CC1CO1                 InChI: InChI=1S/C3H6O/c1-3-2-4-3/h3H,2H2,1H3
+C3H6O1-3         ! SMILES: C1CCO1                 InChI: InChI=1S/C3H6O/c1-2-4-3-1/h1-3H2
+C3H6OOH1-2       ! SMILES: C[CH]COO               InChI: InChI=1S/C3H7O2/c1-2-3-5-4/h2,4H,3H2,1H3
+C3H6OOH1-3       ! SMILES: [CH2]CCOO              InChI: InChI=1S/C3H7O2/c1-2-3-5-4/h4H,1-3H2
+C3H8             ! SMILES: CCC                    InChI: InChI=1S/C3H8/c1-3-2/h3H2,1-2H3
+C4H10            ! SMILES: CCCC                   InChI: InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3
+C4H5-I           ! SMILES: C=[C]C=C               InChI: InChI=1S/C4H5/c1-3-4-2/h3H,1-2H2
+C4H5-N           ! SMILES: C=CC=[CH]              InChI: InChI=1S/C4H5/c1-3-4-2/h1,3-4H,2H2
+C4H6             ! SMILES: C=CC=C                 InChI: InChI=1S/C4H6/c1-3-4-2/h3-4H,1-2H2
+C4H612           ! SMILES: CC=C=C                 InChI: InChI=1S/C4H6/c1-3-4-2/h4H,1H2,2H3
+C4H6O23          ! SMILES: C1CC=CO1               InChI: InChI=1S/C4H6O/c1-2-4-5-3-1/h1,3H,2,4H2
+C4H71-3          ! SMILES: C[CH]C=C               InChI: InChI=1S/C4H7/c1-3-4-2/h3-4H,1H2,2H3
+C4H71-3,4OOH     ! SMILES: OOCC(OO)C[CH2]         InChI: InChI=1S/C4H9O4/c1-2-4(8-6)3-7-5/h4-6H,1-3H2
+C4H71-4          ! SMILES: [CH2]CC=C              InChI: InChI=1S/C4H7/c1-3-4-2/h3H,1-2,4H2
+C4H71-4O2        ! SMILES: [O]OCCC=C              InChI: InChI=1S/C4H7O2/c1-2-3-4-6-5/h2H,1,3-4H2
+C4H71-4OOH       ! SMILES: OOCCC=C                InChI: InChI=1S/C4H8O2/c1-2-3-4-6-5/h2,5H,1,3-4H2
+C4H71-O          ! SMILES: CC(C=C)[O]             InChI: InChI=1S/C4H7O/c1-3-4(2)5/h3-4H,1H2,2H3
+C4H8-1           ! SMILES: CCC=C                  InChI: InChI=1S/C4H8/c1-3-4-2/h3H,1,4H2,2H3
+C4H8-2           ! SMILES: CC=CC                  InChI: InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3
+C4H8OOH2-4       ! SMILES: CC(OO)C[CH2]           InChI: InChI=1S/C4H9O2/c1-3-4(2)6-5/h4-5H,1,3H2,2H3
+CC3H6            ! SMILES: C1CC1                  InChI: InChI=1S/C3H6/c1-2-3-1/h1-3H2
+CH               ! SMILES: [CH]                   InChI: InChI=1S/CH/h1H
+CH2(S)           ! SMILES: [CH2]                  InChI: InChI=1S/CH2/h1H2
+CH2CCH2OH        ! SMILES: OC[C]=C                InChI: InChI=1S/C3H5O/c1-2-3-4/h4H,1,3H2
+CH2CH2CHO        ! SMILES: [CH2]CC=O              InChI: InChI=1S/C3H5O/c1-2-3-4/h3H,1-2H2
+CH2CH2COCH3      ! SMILES: [CH2]CC(=O)C           InChI: InChI=1S/C4H7O/c1-3-4(2)5/h1,3H2,2H3
+CH2CHCHCHO       ! SMILES: [CH2]C=CC=O            InChI: InChI=1S/C4H5O/c1-2-3-4-5/h2-4H,1H2
+CH2CHO           ! SMILES: [CH2]C=O               InChI: InChI=1S/C2H3O/c1-2-3/h2H,1H2
+CH2CHOCH2        ! SMILES: [CH2]OC=C              InChI: InChI=1S/C3H5O/c1-3-4-2/h3H,1-2H2
+CH2CO            ! SMILES: C=C=O                  InChI: InChI=1S/C2H2O/c1-2-3/h1H2
+CH2COHCHO        ! SMILES: OC(=C)C=O              InChI: InChI=1S/C3H4O2/c1-3(5)2-4/h2,5H,1H2
+CH2COHCO         ! SMILES: OC(=C)[C]=O            InChI: InChI=1S/C3H3O2/c1-3(5)2-4/h5H,1H2
+CH2O             ! SMILES: C=O                    InChI: InChI=1S/CH2O/c1-2/h1H2
+CH3              ! SMILES: [CH3]                  InChI: InChI=1S/CH3/h1H3
+CH3CHCOCH3       ! SMILES: C[CH]C(=O)C            InChI: InChI=1S/C4H7O/c1-3-4(2)5/h3H,1-2H3
+CH3CHO           ! SMILES: CC=O                   InChI: InChI=1S/C2H4O/c1-2-3/h2H,1H3
+CH3CO            ! SMILES: C[C]=O                 InChI: InChI=1S/C2H3O/c1-2-3/h1H3
+CH3CO3           ! SMILES: CC(=O)O[O]             InChI: InChI=1S/C2H3O3/c1-2(3)5-4/h1H3
+CH3CO3H          ! SMILES: CC(=O)OO               InChI: InChI=1S/C2H4O3/c1-2(3)5-4/h4H,1H3
+CH3COCOHCH3      ! SMILES: CC(=O)[C](O)C          InChI: InChI=1S/C4H7O2/c1-3(5)4(2)6/h5H,1-2H3
+CH3O             ! SMILES: C[O]                   InChI: InChI=1S/CH3O/c1-2/h1H3
+CH3O2            ! SMILES: CO[O]                  InChI: InChI=1S/CH3O2/c1-3-2/h1H3
+CH3O2H           ! SMILES: COO                    InChI: InChI=1S/CH4O2/c1-3-2/h2H,1H3
+CH3OH            ! SMILES: CO                     InChI: InChI=1S/CH4O/c1-2/h2H,1H3
+CH4              ! SMILES: C                      InChI: InChI=1S/CH4/h1H4
+CO               ! SMILES: [C]=O                  InChI: InChI=1S/CO/c1-2
+CY(CCCO)COH      ! SMILES: OCC1CCO1               InChI: InChI=1S/C4H8O2/c5-3-4-1-2-6-4/h4-5H,1-3H2
+H                ! SMILES: [H]                    InChI: InChI=1S/H
+H2               ! SMILES: [H][H]                 InChI: InChI=1S/H2/h1H
+H2CC             ! SMILES: C=[C]                  InChI: InChI=1S/C2H2/c1-2/h1H2
+H2O              ! SMILES: O                      InChI: InChI=1S/H2O/h1H2
+H2O2             ! SMILES: OO                     InChI: InChI=1S/H2O2/c1-2/h1-2H
+HCO              ! SMILES: [CH]=O                 InChI: InChI=1S/CHO/c1-2/h1H
+HO2              ! SMILES: O[O]                   InChI: InChI=1S/HO2/c1-2/h1H
+HO2CH2CHO        ! SMILES: OOCC=O                 InChI: InChI=1S/C2H4O3/c3-1-2-5-4/h1,4H,2H2
+HOCH2CHO         ! SMILES: OCC=O                  InChI: InChI=1S/C2H4O2/c3-1-2-4/h1,4H,2H2
+HOCH2CO          ! SMILES: OC[C]=O                InChI: InChI=1S/C2H3O2/c3-1-2-4/h3H,1H2
+IC3H7            ! SMILES: C[CH]C                 InChI: InChI=1S/C3H7/c1-3-2/h3H,1-2H3
+IC3H7O2          ! SMILES: [O]OC(C)C              InChI: InChI=1S/C3H7O2/c1-3(2)5-4/h3H,1-2H3
+IC3H7O2H         ! SMILES: OOC(C)C                InChI: InChI=1S/C3H8O2/c1-3(2)5-4/h3-4H,1-2H3
+IC4H9O2          ! SMILES: [O]OCC(C)C             InChI: InChI=1S/C4H9O2/c1-4(2)3-6-5/h4H,3H2,1-2H3
+IC4H9O2H         ! SMILES: OOCC(C)C               InChI: InChI=1S/C4H10O2/c1-4(2)3-6-5/h4-5H,3H2,1-2H3
+NC3H7            ! SMILES: CC[CH2]                InChI: InChI=1S/C3H7/c1-3-2/h1,3H2,2H3
+NC3H7O2          ! SMILES: CCCO[O]                InChI: InChI=1S/C3H7O2/c1-2-3-5-4/h2-3H2,1H3
+NC3H7O2H         ! SMILES: CCCOO                  InChI: InChI=1S/C3H8O2/c1-2-3-5-4/h4H,2-3H2,1H3
+NC4KET12OH       ! SMILES: CCC(C=O)O              InChI: InChI=1S/C4H8O2/c1-2-4(6)3-5/h3-4,6H,2H2,1H3
+NC4KET21OH       ! SMILES: CCC(=O)CO              InChI: InChI=1S/C4H8O2/c1-2-4(6)3-5/h5H,2-3H2,1H3
+NC4KET23OH       ! SMILES: CC(=O)C(O)C            InChI: InChI=1S/C4H8O2/c1-3(5)4(2)6/h3,5H,1-2H3
+O                ! SMILES: [O]                    InChI: InChI=1S/O
+O2               ! SMILES: [O][O]                 InChI: InChI=1S/O2/c1-2
+OH               ! SMILES: [OH]                   InChI: InChI=1S/HO/h1H
+PC2H4OH          ! SMILES: [CH2]CO                InChI: InChI=1S/C2H5O/c1-2-3/h3H,1-2H2
+PC4H9            ! SMILES: CCC[CH2]               InChI: InChI=1S/C4H9/c1-3-4-2/h1,3-4H2,2H3
+PC4H9O2          ! SMILES: CCCCO[O]               InChI: InChI=1S/C4H9O2/c1-2-3-4-6-5/h2-4H2,1H3
+PC4H9O2H         ! SMILES: CCCCOO                 InChI: InChI=1S/C4H10O2/c1-2-3-4-6-5/h5H,2-4H2,1H3
+SC3H5CHO         ! SMILES: CC=CC=O                InChI: InChI=1S/C4H6O/c1-2-3-4-5/h2-4H,1H3
+SC3H5CO          ! SMILES: CC=C[C]=O              InChI: InChI=1S/C4H5O/c1-2-3-4-5/h2-3H,1H3
+SC4H9            ! SMILES: C[CH]CC                InChI: InChI=1S/C4H9/c1-3-4-2/h3H,4H2,1-2H3
+SC4H9O2          ! SMILES: CC(O[O])CC             InChI: InChI=1S/C4H9O2/c1-3-4(2)6-5/h4H,3H2,1-2H3
+SC4H9O2H         ! SMILES: CC(OO)CC               InChI: InChI=1S/C4H10O2/c1-3-4(2)6-5/h4-5H,3H2,1-2H3
+SQC4H7OHP-4      ! SMILES: [CH2]CC(OO)CO          InChI: InChI=1S/C4H9O3/c1-2-4(3-5)7-6/h4-6H,1-3H2
+TC4H9O2          ! SMILES: [O]OC(C)(C)C           InChI: InChI=1S/C4H9O2/c1-4(2,3)6-5/h1-3H3
+TC4H9O2H         ! SMILES: OOC(C)(C)C             InChI: InChI=1S/C4H10O2/c1-4(2,3)6-5/h5H,1-3H3
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+C2H4 (+M) = H2 + H2CC (+M)                              8.000E+12     0.440    88770  # pes.subpes.NR.rxntype  42.1.1.Decomposition
+  LOW  /                                                7.000E+50    -9.310    99860  /
+  TROE /   7.345E-01   1.800E+02   1.035E+03   5.417E+03 /
+  H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+
+C2H3 + H (+M) = C2H4 (+M)                               6.080E+12     0.270      280  # pes.subpes.NR.rxntype  42.1.2.Recombination H
+  LOW  /                                                1.400E+30    -3.860     3320  /
+  TROE /   7.820E-01   2.075E+02   2.663E+03   6.095E+03 /
+  H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   HE/0.700/   
+
+C2H4 + H (+M) = C2H5 (+M)                               9.569E+08     1.463     1355  # pes.subpes.NR.rxntype  43.1.2.Addition H
+  LOW  /                                                1.419E+39    -6.642     5769  /
+  TROE /  -5.690E-01   2.990E+02  -9.147E+03   1.524E+02 /
+  H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+
+C2H4 + H = C2H3 + H2                                    5.070E+07     1.930    12950  # pes.subpes.NR.rxntype  43.2.2.H abstraction
+
+CH2(S) + CH3 = C2H4 + H                                 2.000E+13     0.000        0  # pes.subpes.NR.rxntype  43.3.2.Addition-decomposition - propagation
+
+CH + CH4 = C2H4 + H                                     6.000E+13     0.000        0  # pes.subpes.NR.rxntype  43.4.2.Addition-decomposition - propagation
+
+C2H5 + H = C2H4 + H2                                    2.000E+12     0.000        0  # pes.subpes.NR.rxntype  44.2.2.Recombination-decomposition - termination
+
+C2H4 + O = CH2CHO + H                                   6.098E+06     1.880      183  # pes.subpes.NR.rxntype  49.3.2.Addition-decomposition - branching
+
+C2H4 + O = CH3 + HCO                                    7.453E+06     1.880      183  # pes.subpes.NR.rxntype  49.4.2.Addition-decomposition - branching
+
+C2H4 + OH = PC2H4OH                                     2.560E+36    -7.752     6946  # pes.subpes.NR.rxntype  50.1.2.Addition OH
+  PLOG /                                    1.000E-02   1.740E+43   -10.461     7699 /
+  PLOG /                                    2.500E-02   3.250E+37    -8.629     5215 /
+  PLOG /                                    1.000E-01   1.840E+35    -7.750     4909 /
+  PLOG /                                    1.000E+00   2.560E+36    -7.752     6946 /
+  PLOG /                                    1.000E+01   3.700E+33    -6.573     7606 /
+  PLOG /                                    1.000E+02   1.120E+26    -4.101     5757 /
+
+C2H4 + OH = CH3CHO + H                                  2.380E-02     3.910     1723  # pes.subpes.NR.rxntype  50.1.2.Addition-decomposition - propagation
+  PLOG /                                    1.000E-02   2.370E-07     5.300    -2051 /
+  PLOG /                                    2.500E-02   8.730E-05     4.570     -618 /
+  PLOG /                                    1.000E-01   4.030E-01     3.540     1882 /
+  PLOG /                                    1.000E+00   2.380E-02     3.910     1723 /
+  PLOG /                                    1.000E+01   8.250E+08     1.010    10507 /
+  PLOG /                                    1.000E+02   6.800E+09     0.810    13867 /
+
+C2H4 + OH = CH3 + CH2O                                  1.780E+05     1.680     2060  # pes.subpes.NR.rxntype  50.1.2.Addition-decomposition - propagation
+  PLOG /                                    1.000E-02   5.350E+00     2.920    -1733 /
+  PLOG /                                    2.500E-02   3.190E+01     2.710    -1172 /
+  PLOG /                                    1.000E-01   5.550E+02     2.360     -181 /
+  PLOG /                                    1.000E+00   1.780E+05     1.680     2060 /
+  PLOG /                                    1.000E+01   2.370E+09     0.560     6007 /
+  PLOG /                                    1.000E+02   2.760E+13    -0.500    11455 /
+
+C2H4 + OH = C2H3OH + H                                  3.190E+05     2.190     5256  # pes.subpes.NR.rxntype  50.1.2.Addition-decomposition - propagation
+  PLOG /                                    1.000E-02   1.040E+04     2.600     4121 /
+  PLOG /                                    2.500E-02   1.070E+04     2.600     4129 /
+  PLOG /                                    1.000E-01   1.520E+04     2.560     4238 /
+  PLOG /                                    1.000E+00   3.190E+05     2.190     5256 /
+  PLOG /                                    1.000E+01   1.940E+08     1.430     7829 /
+  PLOG /                                    1.000E+02   8.550E+10     0.750    11491 /
+
+C2H4 + OH = C2H3 + H2O                                  2.230E+04     2.745     2216  # pes.subpes.NR.rxntype  50.5.2.H abstraction
+
+C2H5OH = C2H4 + H2O                                     5.230E+43    -8.900    81507  # pes.subpes.NR.rxntype  51.1.1.Decomposition
+  PLOG /                                    1.000E-03   3.410E+59   -14.200    83673 /
+  PLOG /                                    1.000E-02   2.620E+57   -13.300    85262 /
+  PLOG /                                    1.000E-01   1.650E+52   -11.500    84746 /
+  PLOG /                                    1.000E+00   5.230E+43    -8.900    81507 /
+  PLOG /                                    1.000E+01   4.590E+32    -5.600    76062 /
+  PLOG /                                    1.000E+02   3.840E+20    -2.060    69466 /
+
+C2H4 + O2 = C2H3 + HO2                                  4.220E+13     0.000    57623  # pes.subpes.NR.rxntype  56.4.2.H abstraction
+
+C2H5O2 = C2H4 + HO2                                     2.701E+37    -8.470    35840  # pes.subpes.NR.rxntype  57.1.1.Beta-scission +HO2
+  PLOG /                                    4.000E-02   1.782E+32    -7.100    32840 /
+  PLOG /                                    1.000E+00   2.701E+37    -8.470    35840 /
+  PLOG /                                    1.000E+01   1.980E+38    -8.460    37900 /
+
+C2H4O2H = C2H4 + HO2                                    6.825E+40    -9.610    23840  # pes.subpes.NR.rxntype  57.1.1.Beta-scission +HO2
+  PLOG /                                    4.000E-02   3.918E+40   -10.200    22250 /
+  PLOG /                                    1.000E+00   6.825E+40    -9.610    23840 /
+  PLOG /                                    1.000E+01   3.980E+34    -7.250    23250 /
+
+C2H4 + HO2 = C2H4O1-2 + OH                              3.345E+12     0.000    17190  # pes.subpes.NR.rxntype  57.1.2.Addition-decomposition - propagation
+
+C2H5 + O2 = C2H4 + HO2                                  1.843E+07     1.130     -721  # pes.subpes.NR.rxntype  57.1.2.Recombination-decomposition - termination
+  PLOG /                                    4.000E-02   2.094E+09     0.490     -391 /
+  PLOG /                                    1.000E+00   1.843E+07     1.130     -721 /
+  PLOG /                                    1.000E+01   7.561E+14    -1.010     4749 /
+
+CH2(S) + C2H4 = CC3H6                                   1.350E+54   -13.000    18900  # pes.subpes.NR.rxntype  76.1.2.Addition
+  PLOG /                                    1.000E-02   1.440E+51   -13.100    14200 /
+  PLOG /                                    1.000E-01   3.380E+54   -13.600    16500 /
+  PLOG /                                    1.000E+00   1.350E+54   -13.000    18900 /
+  PLOG /                                    1.000E+01   2.730E+47   -10.800    14200 /
+  PLOG /                                    1.000E+02   2.710E+50   -11.200    16700 /
+  DUP
+CH2(S) + C2H4 = CC3H6                                   1.810E+37    -8.550     5521
+  PLOG /                                    1.000E-02   6.160E+40   -10.500     5428 /
+  PLOG /                                    1.000E-01   6.930E+41   -10.300     6189 /
+  PLOG /                                    1.000E+00   1.810E+37    -8.550     5521 /
+  PLOG /                                    1.000E+01   4.260E+37    -8.320     4770 /
+  PLOG /                                    1.000E+02   4.680E+35    -7.370     4689 /
+  DUP
+
+CH2(S) + C2H4 = C3H6                                    2.130E+58   -13.500    20400  # pes.subpes.NR.rxntype  76.1.2.Addition
+  PLOG /                                    1.000E-02   4.820E+57   -14.300    17100 /
+  PLOG /                                    1.000E-01   3.840E+59   -14.400    18400 /
+  PLOG /                                    1.000E+00   2.130E+58   -13.500    20400 /
+  PLOG /                                    1.000E+01   8.480E+52   -11.600    20700 /
+  PLOG /                                    1.000E+02   6.070E+47    -9.850    22100 /
+  DUP
+CH2(S) + C2H4 = C3H6                                    1.300E+40    -8.770     5864
+  PLOG /                                    1.000E-02   1.150E+45   -11.100     6145 /
+  PLOG /                                    1.000E-01   1.830E+45   -10.700     6638 /
+  PLOG /                                    1.000E+00   1.300E+40    -8.770     5864 /
+  PLOG /                                    1.000E+01   2.270E+32    -6.140     4318 /
+  PLOG /                                    1.000E+02   1.280E+24    -3.490     2530 /
+  DUP
+
+CH2(S) + C2H4 = C3H5-A + H                              4.440E+35    -6.550    13900  # pes.subpes.NR.rxntype  76.1.2.Addition-decomposition - branching
+  PLOG /                                    1.000E-02   8.200E+19    -2.060     1150 /
+  PLOG /                                    1.000E-01   2.270E+21    -2.440     2650 /
+  PLOG /                                    1.000E+00   4.440E+35    -6.550    13900 /
+  PLOG /                                    1.000E+01   1.180E+28    -4.090    14000 /
+  PLOG /                                    1.000E+02   6.510E+26    -3.580    18900 /
+  DUP
+CH2(S) + C2H4 = C3H5-A + H                              3.890E+14    -0.420     1238
+  PLOG /                                    1.000E-02   1.080E+07     1.620    -3175 /
+  PLOG /                                    1.000E-01   1.370E+05     2.150    -3799 /
+  PLOG /                                    1.000E+00   3.890E+14    -0.420     1238 /
+  PLOG /                                    1.000E+01   2.450E+10     0.670      751 /
+  PLOG /                                    1.000E+02   1.810E+02     2.970     -746 /
+  DUP
+
+CH2(S) + C2H4 = C2H3 + CH3                              4.160E+24    -3.190     9760  # pes.subpes.NR.rxntype  76.1.2.Addition-decomposition - branching
+  PLOG /                                    1.000E-02   1.770E+19    -1.940     6790 /
+  PLOG /                                    1.000E-01   1.680E+19    -1.800     4310 /
+  PLOG /                                    1.000E+00   4.160E+24    -3.190     9760 /
+  PLOG /                                    1.000E+01   7.890E+24    -3.070    13900 /
+  PLOG /                                    1.000E+02   7.360E+29    -4.280    23800 /
+  DUP
+CH2(S) + C2H4 = C2H3 + CH3                              4.920E+09     1.020      600
+  PLOG /                                    1.000E-02   4.300E+12     0.190     -110 /
+  PLOG /                                    1.000E-01   2.260E+11     0.540       48 /
+  PLOG /                                    1.000E+00   4.920E+09     1.020      600 /
+  PLOG /                                    1.000E+01   1.470E+08     1.330     1228 /
+  PLOG /                                    1.000E+02   8.110E+10     0.550     5506 /
+  DUP
+
+C2H4 + CH3 = NC3H7                                      7.670E+47   -11.170    22366  # pes.subpes.NR.rxntype  77.1.2.Addition CH3
+  PLOG /                                    1.300E-03   8.670E+48   -12.540    18206 /
+  PLOG /                                    4.000E-02   1.060E+49   -12.040    20001 /
+  PLOG /                                    1.000E+00   7.670E+47   -11.170    22366 /
+  PLOG /                                    1.000E+01   1.810E+45   -10.030    23769 /
+  PLOG /                                    1.000E+02   2.040E+40    -8.250    24214 /
+  DUP
+C2H4 + CH3 = NC3H7                                      2.600E+33    -7.460    12416
+  PLOG /                                    1.300E-03   1.120E+43   -11.300    13080 /
+  PLOG /                                    4.000E-02   7.280E+39    -9.880    13164 /
+  PLOG /                                    1.000E+00   2.600E+33    -7.460    12416 /
+  PLOG /                                    1.000E+01   3.850E+27    -5.380    11455 /
+  PLOG /                                    1.000E+02   1.660E+21    -3.170    10241 /
+  DUP
+
+C3H6 + H = C2H4 + CH3                                   2.670E+12     0.470     5431  # pes.subpes.NR.rxntype  77.1.2.Addition-decomposition - propagation
+  PLOG /                                    1.300E-03   1.540E+09     1.350     2542 /
+  PLOG /                                    4.000E-02   7.880E+10     0.870     3600 /
+  PLOG /                                    1.000E+00   2.670E+12     0.470     5431 /
+  PLOG /                                    1.000E+01   9.250E+22    -2.600    12898 /
+  PLOG /                                    1.000E+02   1.320E+23    -2.420    16500 /
+  DUP
+C3H6 + H = C2H4 + CH3                                   1.000E-10     0.000        0
+  PLOG /                                    1.300E-03   1.000E-10     0.000        0 /
+  PLOG /                                    4.000E-02   1.000E-10     0.000        0 /
+  PLOG /                                    1.000E+00   1.000E-10     0.000        0 /
+  PLOG /                                    1.000E+01   1.240E+05     2.520     3679 /
+  PLOG /                                    1.000E+02   2.510E+03     2.910     3981 /
+  DUP
+
+C2H4 + CH3 = C2H3 + CH4                                 9.760E+02     2.947    15148  # pes.subpes.NR.rxntype  77.3.2.H abstraction
+  DUP
+C2H4 + CH3 = C2H3 + CH4                                 8.130E-05     4.417     8836
+  DUP
+
+C2H5 + CH3 = CH4 + C2H4                                 1.180E+04     2.450    -2921  # pes.subpes.NR.rxntype  78.2.2.Recombination-decomposition - termination
+
+C3H3 + OH = C2H4 + CO                                   1.000E+13     0.000        0  # pes.subpes.NR.rxntype  82.4.2.Recombination-decomposition - termination
+
+C3H4-A + O = C2H4 + CO                                  2.000E+07     1.800     1000  # pes.subpes.NR.rxntype  82.9.2.Addition-decomposition - termination
+
+C3H4-P + O = C2H4 + CO                                  1.000E+13     0.000     2250  # pes.subpes.NR.rxntype  82.11.2.Addition-decomposition - termination
+
+CH2CO + CH2(S) = C2H4 + CO                              1.600E+14     0.000        0  # pes.subpes.NR.rxntype  82.14.2.Addition-decomposition - propagation
+
+CH2CHOCH2 = C2H4 + HCO                                  1.440E+36    -7.760    28008  # pes.subpes.NR.rxntype  83.1.1.Beta-scission
+  PLOG /                                    1.000E-03   8.230E+26    -5.840    19357 /
+  PLOG /                                    1.000E-02   1.320E+29    -6.210    21294 /
+  PLOG /                                    1.000E-01   3.470E+32    -6.960    24197 /
+  PLOG /                                    1.000E+00   1.440E+36    -7.760    28008 /
+  PLOG /                                    1.000E+01   9.720E+37    -8.020    32395 /
+  PLOG /                                    1.000E+02   2.430E+31    -5.810    34296 /
+  PLOG /                                    1.000E+03   3.730E+14    -0.726    32008 /
+
+CH2CH2CHO = C2H4 + HCO                                  1.010E+34    -6.700    30018  # pes.subpes.NR.rxntype  83.1.1.Beta-scission
+  PLOG /                                    1.000E-03   2.900E+32    -7.240    25688 /
+  PLOG /                                    1.000E-02   5.300E+33    -7.280    27101 /
+  PLOG /                                    1.000E-01   2.000E+35    -7.410    29027 /
+  PLOG /                                    1.000E+00   1.010E+34    -6.700    30018 /
+  PLOG /                                    1.000E+01   9.760E+27    -4.630    28924 /
+  PLOG /                                    1.000E+02   2.110E+19    -1.850    26240 /
+  PLOG /                                    1.000E+03   1.590E+13     0.063    24086 /
+
+CH2CCH2OH = HCO + C2H4                                  9.240E+10     0.870    30460  # pes.subpes.NR.rxntype  83.1.1.Beta-scission
+
+C3H5O = C2H4 + HCO                                      1.070E+24    -4.160    18985  # pes.subpes.NR.rxntype  83.1.1.Beta-scission
+  PLOG /                                    1.000E-03   6.620E+16    -2.840    13197 /
+  PLOG /                                    1.000E-02   1.260E+20    -3.530    15469 /
+  PLOG /                                    1.000E-01   2.130E+21    -3.640    16584 /
+  PLOG /                                    1.000E+00   1.070E+24    -4.160    18985 /
+  PLOG /                                    1.000E+01   8.420E+25    -4.400    22383 /
+  PLOG /                                    1.000E+02   1.860E+21    -2.730    23659 /
+  PLOG /                                    1.000E+03   4.750E+08     1.140    20922 /
+
+C2H3 + CH2O = C2H4 + HCO                                1.420E+10     0.209     3934  # pes.subpes.NR.rxntype  83.1.2.H abstraction
+  PLOG /                                    1.000E-03   1.110E+07     1.090     1807 /
+  PLOG /                                    1.000E-02   2.470E+07     0.993     1995 /
+  PLOG /                                    1.000E-01   2.470E+08     0.704     2596 /
+  PLOG /                                    1.000E+00   1.420E+10     0.209     3934 /
+  PLOG /                                    1.000E+01   3.450E+13    -0.726     6944 /
+  PLOG /                                    1.000E+02   3.310E+14    -0.866    10966 /
+  PLOG /                                    1.000E+03   1.650E+01     3.170     9400 /
+
+C3H5-S + O = C2H4 + HCO                                 6.000E+13     0.000        0  # pes.subpes.NR.rxntype  83.10.2.Recombination-decomposition - termination
+
+C3H6O1-2 = C2H4 + CH2O                                  6.000E+14     0.000    60000  # pes.subpes.NR.rxntype  84.3.1.Decomposition
+
+C3H6O1-3 = C2H4 + CH2O                                  6.000E+14     0.000    60000  # pes.subpes.NR.rxntype  84.4.1.Decomposition
+
+C3H5-S + OH => C2H4 + HCO + H                           5.000E+12     0.000        0  # pes.subpes.NR.rxntype  84.14.2.Recombination-decomposition(lumped) - propagation
+
+C2H4 + CH3O = C2H3 + CH3OH                              1.200E+11     0.000     6750  # pes.subpes.NR.rxntype  85.8.2.H abstraction
+
+C3H4-A + HO2 => C2H4 + CO + OH                          1.000E+11     0.000    14000  # pes.subpes.NR.rxntype  91.18.2.Addition-decomposition(lumped) - propagation
+
+C3H4-P + HO2 => C2H4 + CO + OH                          3.000E+12     0.000    19000  # pes.subpes.NR.rxntype  91.20.2.Addition-decomposition(lumped) - propagation
+
+C3H5-S + HO2 => C2H4 + HCO + OH                         2.000E+13     0.000        0  # pes.subpes.NR.rxntype  92.9.2.Recombination-decomposition(lumped) - propagation
+
+C3H6OOH1-3 => OH + CH2O + C2H4                          2.890E+09     1.300    26700  # pes.subpes.NR.rxntype  93.1.1.Decomposition(lumped)
+
+C3H6OOH1-2 => C2H4 + CH2O + OH                          1.310E+33    -7.010    48120  # pes.subpes.NR.rxntype  93.1.1.Decomposition(lumped)
+
+C2H4 + CH3O2 = C2H4O1-2 + CH3O                          2.820E+12     0.000    17110  # pes.subpes.NR.rxntype  93.3.2.Addition-decomposition - propagation
+
+C2H4 + CH3O2 = C2H3 + CH3O2H                            8.590E+00     3.754    27132  # pes.subpes.NR.rxntype  93.4.2.H abstraction
+
+H2CC + C2H4 = C4H6                                      1.000E+12     0.000        0  # pes.subpes.NR.rxntype  110.1.2.Addition
+
+C2H3 + C2H3 = C2H2 + C2H4                               9.600E+11     0.000        0  # pes.subpes.NR.rxntype  110.2.2.Recombination-decomposition - termination
+
+C4H71-4 = C2H4 + C2H3                                   2.840E+10     0.990    38999  # pes.subpes.NR.rxntype  111.1.1.Beta-scission
+
+C4H6 + H = C2H4 + C2H3                                  1.460E+30    -4.340    21647  # pes.subpes.NR.rxntype  111.1.2.Addition-decomposition - propagation
+  PLOG /                                    1.000E+00   1.460E+30    -4.340    21647 /
+  PLOG /                                    1.000E+01   5.450E+30    -4.510    21877 /
+
+C2H4 + C2H4 = C2H5 + C2H3                               4.820E+14     0.000    71530  # pes.subpes.NR.rxntype  112.4.2.Addition-decomposition - branching
+
+SC4H9 = C2H4 + C2H5                                     4.540E+42    -9.540    50839  # pes.subpes.NR.rxntype  113.2.1.Beta-scission
+  PLOG /                                    1.000E-03   8.300E+25    -5.750    39343 /
+  PLOG /                                    1.000E-02   4.120E+27    -5.940    39859 /
+  PLOG /                                    1.000E-01   5.570E+32    -7.100    43029 /
+  PLOG /                                    1.000E+00   4.540E+42    -9.540    50839 /
+  PLOG /                                    1.000E+01   1.060E+49   -10.900    58899 /
+  PLOG /                                    1.000E+02   9.940E+42    -8.700    61203 /
+
+PC4H9 = C2H4 + C2H5                                     7.470E+43    -9.670    38722  # pes.subpes.NR.rxntype  113.2.1.Beta-scission
+  PLOG /                                    1.000E-03   3.440E+34    -8.100    28397 /
+  PLOG /                                    1.000E-02   1.110E+39    -9.050    31891 /
+  PLOG /                                    1.000E-01   7.740E+42    -9.780    35771 /
+  PLOG /                                    1.000E+00   7.470E+43    -9.670    38722 /
+  PLOG /                                    1.000E+01   2.060E+39    -7.970    38955 /
+  PLOG /                                    1.000E+02   1.480E+29    -4.710    35950 /
+
+C4H8-2 + H = C2H4 + C2H5                                3.010E+17    -1.090    14023  # pes.subpes.NR.rxntype  113.2.2.Addition-decomposition - propagation
+  PLOG /                                    1.000E-03   8.960E+06     1.860     6209 /
+  PLOG /                                    1.000E-02   1.920E+07     1.770     6443 /
+  PLOG /                                    1.000E-01   3.970E+09     1.110     8097 /
+  PLOG /                                    1.000E+00   3.010E+17    -1.090    14023 /
+  PLOG /                                    1.000E+01   1.880E+29    -4.330    24297 /
+  PLOG /                                    1.000E+02   5.150E+33    -5.390    32601 /
+
+C4H8-1 + H = C2H4 + C2H5                                9.470E+16    -1.030    13413  # pes.subpes.NR.rxntype  113.2.2.Addition-decomposition - propagation
+  PLOG /                                    1.000E-03   2.550E+06     1.930     5564 /
+  PLOG /                                    1.000E-02   5.560E+06     1.830     5802 /
+  PLOG /                                    1.000E-01   1.210E+09     1.180     7472 /
+  PLOG /                                    1.000E+00   9.470E+16    -1.030    13413 /
+  PLOG /                                    1.000E+01   4.500E+28    -4.240    23618 /
+  PLOG /                                    1.000E+02   7.020E+32    -5.220    31754 /
+  DUP
+C4H8-1 + H = C2H4 + C2H5                                6.020E+15    -0.490     8452
+  PLOG /                                    1.000E-03   3.450E+07     1.810     2263 /
+  PLOG /                                    1.000E-02   8.060E+07     1.710     2522 /
+  PLOG /                                    1.000E-01   1.180E+10     1.100     4077 /
+  PLOG /                                    1.000E+00   6.020E+15    -0.490     8452 /
+  PLOG /                                    1.000E+01   7.580E+21    -2.140    14245 /
+  PLOG /                                    1.000E+02   2.290E+21    -1.870    17243 /
+  DUP
+
+C4H6O23 = C2H4 + CH2CO                                  5.750E+15     0.000    69300  # pes.subpes.NR.rxntype  119.1.1.Decomposition
+
+C4H612 + O = CH2CO + C2H4                               1.200E+08     1.650      327  # pes.subpes.NR.rxntype  119.15.2.Addition-decomposition - termination
+
+CH2CH2COCH3 = C2H4 + CH3CO                              1.590E+13     0.063    24086  # pes.subpes.NR.rxntype  120.1.1.Beta-scission
+
+C4H71-O = C2H4 + CH3CO                                  4.750E+08     1.140    20922  # pes.subpes.NR.rxntype  120.1.1.Beta-scission
+
+C2H3 + CH3CHO = C2H4 + CH3CO                            1.650E+01     3.170     9400  # pes.subpes.NR.rxntype  120.1.2.H abstraction
+
+C3H6CHO-1 = C2H4 + CH2CHO                               7.400E+11     0.000    21970  # pes.subpes.NR.rxntype  120.7.1.Beta-scission
+
+C4H8OOH2-4 => OH + CH3CHO + C2H4                        3.080E+08     1.500    23500  # pes.subpes.NR.rxntype  130.2.1.Decomposition(lumped)
+
+C2H4 + C2H5O2 = C2H4O1-2 + C2H5O                        2.820E+12     0.000    17110  # pes.subpes.NR.rxntype  130.9.2.Addition-decomposition - propagation
+
+C2H4 + C2H5O2 = C2H3 + C2H5O2H                          8.590E+00     3.754    27132  # pes.subpes.NR.rxntype  130.10.2.H abstraction
+
+CY(CCCO)COH + H => C2H4 + HOCH2CO + H2                  5.000E+12     0.000        0  # pes.subpes.NR.rxntype  130.53.2.Addition-decomposition(lumped) - propagation
+
+C2H4 + CH3CO3 = C2H3 + CH3CO3H                          1.130E+13     0.000    30430  # pes.subpes.NR.rxntype  135.6.2.H abstraction
+
+CY(CCCO)COH + O => C2H4 + HOCH2CO + OH                  5.000E+12     0.000        0  # pes.subpes.NR.rxntype  136.33.2.Addition-decomposition(lumped) - branching
+
+SQC4H7OHP-4 => OH + HOCH2CHO + C2H4                     3.080E+08     1.500    23500  # pes.subpes.NR.rxntype  137.2.1.Decomposition(lumped)
+
+CY(CCCO)COH + OH => C2H4 + HOCH2CO + H2O                5.000E+12     0.000        0  # pes.subpes.NR.rxntype  137.55.2.Addition-decomposition(lumped) - propagation
+
+C4H71-3,4OOH => C2H4 + OH + HO2CH2CHO                   1.230E+09     1.300    24900  # pes.subpes.NR.rxntype  142.1.1.Decomposition(lumped)
+
+CY(CCCO)COH + HO2 => C2H4 + HOCH2CO + H2O2              1.000E+13     0.000    15000  # pes.subpes.NR.rxntype  142.21.2.Addition-decomposition(lumped) - propagation
+
+C3H4-P + C2H3 = C3H3 + C2H4                             1.000E+12     0.000     7700  # pes.subpes.NR.rxntype  149.1.2.H abstraction
+
+C3H5-A + C2H3 = C3H4-A + C2H4                           1.000E+12     0.000        0  # pes.subpes.NR.rxntype  150.1.2.Recombination-decomposition - termination
+
+C3H5-A + C2H5 = C2H4 + C3H6                             4.000E+11     0.000        0  # pes.subpes.NR.rxntype  152.2.2.Recombination-decomposition - termination
+
+C3H8 + C2H3 = IC3H7 + C2H4                              1.000E+11     0.000    10400  # pes.subpes.NR.rxntype  153.2.2.H abstraction
+
+C3H8 + C2H3 = NC3H7 + C2H4                              1.000E+11     0.000    10400  # pes.subpes.NR.rxntype  153.3.2.H abstraction
+
+C2H3CHO + C2H3 = C2H3CO + C2H4                          1.740E+12     0.000     8440  # pes.subpes.NR.rxntype  157.1.2.H abstraction
+
+C2H5CHO + C2H3 = C2H5CO + C2H4                          1.700E+12     0.000     8440  # pes.subpes.NR.rxntype  159.1.2.H abstraction
+
+CH2COHCHO + C2H3 = CH2COHCO + C2H4                      1.740E+12     0.000     8440  # pes.subpes.NR.rxntype  164.1.2.H abstraction
+
+IC3H7O2 + C2H4 = IC3H7O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes.NR.rxntype  167.11.2.H abstraction
+
+NC3H7O2 + C2H4 = NC3H7O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes.NR.rxntype  167.13.2.H abstraction
+
+CY(CCCO)COH + CH3 => C2H4 + HOCH2CO + CH4               2.000E+11     0.000    10000  # pes.subpes.NR.rxntype  167.22.2.Addition-decomposition(lumped) - propagation
+
+CY(CCCO)COH + CH3O2 => C2H4 + HOCH2CO + CH3O2H          1.000E+13     0.000    19000  # pes.subpes.NR.rxntype  176.8.2.Addition-decomposition(lumped) - propagation
+
+C4H6 + C2H3 = C4H5-I + C2H4                             2.500E+13     0.000    19800  # pes.subpes.NR.rxntype  182.3.2.H abstraction
+
+C4H6 + C2H3 = C4H5-N + C2H4                             5.000E+13     0.000    22800  # pes.subpes.NR.rxntype  182.4.2.H abstraction
+
+C2H3 + C4H71-3 = C2H4 + C4H6                            3.980E+12     0.000        0  # pes.subpes.NR.rxntype  183.3.2.Recombination-decomposition - termination
+
+C4H71-3 + C2H5 = C4H8-1 + C2H4                          2.590E+12     0.000     -131  # pes.subpes.NR.rxntype  184.2.2.Recombination-decomposition - termination
+
+C4H10 + C2H3 = PC4H9 + C2H4                             1.000E+12     0.000    18000  # pes.subpes.NR.rxntype  185.3.2.H abstraction
+
+C4H10 + C2H3 = SC4H9 + C2H4                             8.000E+11     0.000    16800  # pes.subpes.NR.rxntype  185.4.2.H abstraction
+
+SC3H5CHO + C2H3 = CH2CHCHCHO + C2H4                     2.210E+00     3.500     4682  # pes.subpes.NR.rxntype  187.1.2.H abstraction
+
+SC3H5CHO + C2H3 = SC3H5CO + C2H4                        1.110E+00     3.500     4682  # pes.subpes.NR.rxntype  187.2.2.H abstraction
+
+C2H5COCH3 + C2H3 = C2H5COCH2 + C2H4                     6.150E+10     0.000     4278  # pes.subpes.NR.rxntype  188.1.2.H abstraction
+
+C2H5COCH3 + C2H3 = CH2CH2COCH3 + C2H4                   5.000E+11     0.000    10400  # pes.subpes.NR.rxntype  188.2.2.H abstraction
+
+C2H5COCH3 + C2H3 = CH3CHCOCH3 + C2H4                    3.000E+11     0.000     3400  # pes.subpes.NR.rxntype  188.3.2.H abstraction
+
+C4H71-4O2 + C2H4 = C4H71-4OOH + C2H3                    1.130E+13     0.000    30430  # pes.subpes.NR.rxntype  191.1.2.H abstraction
+
+NC4KET12OH + C2H3 = C2H5CHOHCO + C2H4                   3.256E+05     2.000     3966  # pes.subpes.NR.rxntype  191.2.2.H abstraction
+
+NC4KET21OH + C2H3 = C2H4COCH2OH + C2H4                  3.000E+11     0.000     3400  # pes.subpes.NR.rxntype  191.3.2.H abstraction
+
+NC4KET23OH + C2H3 = CH3COCOHCH3 + C2H4                  3.000E+11     0.000     3400  # pes.subpes.NR.rxntype  191.4.2.H abstraction
+
+IC4H9O2 + C2H4 = IC4H9O2H + C2H3                        8.590E+00     3.754    27132  # pes.subpes.NR.rxntype  193.4.2.H abstraction
+
+PC4H9O2 + C2H4 = PC4H9O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes.NR.rxntype  193.9.2.H abstraction
+
+SC4H9O2 + C2H4 = SC4H9O2H + C2H3                        1.130E+13     0.000    30430  # pes.subpes.NR.rxntype  193.10.2.H abstraction
+
+TC4H9O2 + C2H4 = TC4H9O2H + C2H3                        8.590E+00     3.754    27132  # pes.subpes.NR.rxntype  193.11.2.H abstraction
+
+
+
+END
+

@@ -1,0 +1,34 @@
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     100.0  200.0  300.0  400.0  500
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species Tmp
+  RRHO
+    Geometry[angstrom]        8
+      C          0.00000       0.00000       0.00000
+      C          0.00000       0.00000       1.52746
+      H          0.00000       1.02077      -0.39642
+      H          0.88401      -0.51038      -0.39642
+      H         -0.88401      -0.51038      -0.39642
+      H          0.88401       0.51038       1.92388
+      H         -0.00000      -1.02077       1.92388
+      H         -0.88401       0.51038       1.92388
+    Core RigidRotor
+      SymmetryFactor          1.0
+    End  ! Core
+    Frequencies[1/cm]         1
+      1000
+    ElectronicLevels[1/cm]    1
+      0.0  1.0
+    Rotor  Hindered   # D5
+      Group                  3   4   5
+      Axis                   1   2
+      Symmetry               3
+      Potential[kcal/mol]    8
+        0.00    0.45    1.55    2.66    3.13    2.66
+        1.55    0.45
+    End  ! HindRot
+    ZeroEnergy[kcal/mol]      0.00
+End

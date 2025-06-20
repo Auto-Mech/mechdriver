@@ -1,0 +1,27 @@
+# Orientation Frame
+# origin: 1
+# orientation:
+#  3
+#  ^
+#  |y
+#  |  x
+#  4--->2
+# Frame i j k l
+#       ^ ^ ^ ^
+#       1 2 3 4
+# Pivot Points for Fragment 1
+PivotPoints     1
+Frame 0 0 0 0
+x1 = 1.000  y1 = 2.000  z1 = 3.000
+# Pivot Points for Fragment 2
+PivotPoints     2
+Frame 0 0 0 0
+x2 = 1.000 + d2*cos(t2)  y2 = 2.000 + d2*sin(t2)  z2 = 0.000
+x3 = 1.000 - d2*cos(t2)  y3 = 2.000 - d2*sin(t2)  z3 = 0.000
+# interpointal distances
+Distances
+r11 = r1
+Conditions 0
+Cycles 1
+r1 = (15.118, 11.338, 7.559, 7.181, 6.803, 6.425, 6.047, 5.669, 5.291, 4.913, 4.535, 4.157)
+EndSurface

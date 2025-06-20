@@ -1,0 +1,226 @@
+ELEMENTS 
+
+C
+H
+N
+O
+AR
+HE
+
+END 
+
+
+SPECIES 
+
+H2CC        ! SMILES: [C]=C              InChi: InChI=1S/C2H2/c1-2/h1H2
+C2H5O2      ! SMILES: CCO[O]             InChi: InChI=1S/C2H5O2/c1-2-4-3/h2H2,1H3
+CHOCHO      ! SMILES: O=CC=O             InChi: InChI=1S/C2H2O2/c3-1-2-4/h1-2H
+HOCH2CO     ! SMILES: OC[C]=O            InChi: InChI=1S/C2H3O2/c3-1-2-4/h3H,1H2
+HO2         ! SMILES: [O]O               InChi: InChI=1S/HO2/c1-2/h1H
+CO          ! SMILES: [C]=O              InChi: InChI=1S/CO/c1-2
+PC2H4OH     ! SMILES: [CH2]CO            InChi: InChI=1S/C2H5O/c1-2-3/h3H,1-2H2
+C3H4-A      ! SMILES: C=C=C              InChi: InChI=1S/C3H4/c1-3-2/h1-2H2
+C2H3        ! SMILES: [CH]=C             InChi: InChI=1S/C2H3/c1-2/h1H,2H2
+CH2O        ! SMILES: C=O                InChi: InChI=1S/CH2O/c1-2/h1H2
+CH4         ! SMILES: C                  InChi: InChI=1S/CH4/h1H4
+H           ! SMILES: [H]                InChi: InChI=1S/H
+C2H2        ! SMILES: C#C                InChi: InChI=1S/C2H2/c1-2/h1-2H
+H2          ! SMILES: [H][H]             InChi: InChI=1S/H2/h1H
+CH3O        ! SMILES: C[O]               InChi: InChI=1S/CH3O/c1-2/h1H3
+HCO         ! SMILES: [CH]=O             InChi: InChI=1S/CHO/c1-2/h1H
+CO2         ! SMILES: O=C=O              InChi: InChI=1S/CO2/c2-1-3
+CHCHO       ! SMILES: [CH]CO             InChi: InChI=1S/C2H2O/c1-2-3/h1-2H
+C2H3OO      ! SMILES: C=C(O[O])          InChi: InChI=1S/C2H3O2/c1-2-4-3/h2H,1H2
+C2H5        ! SMILES: [CH2]C             InChi: InChI=1S/C2H5/c1-2/h1H2,2H3
+CH3         ! SMILES: [CH3]              InChi: InChI=1S/CH3/h1H3
+H2O         ! SMILES: O                  InChi: InChI=1S/H2O/h1H2
+O2          ! SMILES: [O][O]             InChi: InChI=1S/O2/c1-2
+CH2OH       ! SMILES: [CH2]O             InChi: InChI=1S/CH3O/c1-2/h2H,1H2
+CH2CHO      ! SMILES: [CH2]C=O           InChi: InChI=1S/C2H3O/c1-2-3/h2H,1H2
+CH2CO       ! SMILES: C=C=O              InChi: InChI=1S/C2H2O/c1-2-3/h1H2
+C2H6        ! SMILES: CC                 InChi: InChI=1S/C2H6/c1-2/h1-2H3
+CH2(S)      ! SMILES: singlet[CH2]       InChi: InChI=1S/CH2/h1H2
+O           ! SMILES: [O]                InChi: InChI=1S/O
+C2H4        ! SMILES: C=C                InChi: InChI=1S/C2H4/c1-2/h1-2H2
+OH          ! SMILES: [OH]               InChi: InChI=1S/HO/h1H
+
+END 
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+C2H4(+M)=H2+H2CC(+M)     8.000E+12     0.440    88770
+    LOW  /               7.000E+50    -9.310    99860  /
+    TROE /   7.345E-01   1.800E+02   1.035E+03   5.417E+03 /
+    H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+C2H3+H(+M)=C2H4(+M)      6.080E+12     0.270      280
+    LOW  /               1.400E+30    -3.860     3320  /
+    TROE /   7.820E-01   2.075E+02   2.663E+03   6.095E+03 /
+    H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   
+C2H4+H(+M)=C2H5(+M)      9.570E+08     1.463     1355
+    LOW  /               1.420E+39    -6.642     5769  /
+    TROE /  -5.690E-01   2.990E+02  -9.147E+03   1.524E+02 /
+    H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+C2H4+H=C2H3+H2           5.070E+07     1.930    12950
+CH2(S)+CH3=C2H4+H        2.000E+13     0.000        0
+C2H5+H=C2H4+H2           2.000E+12     0.000        0
+C2H4+O=CH3+HCO           7.450E+06     1.880      183
+C2H4+OH=PC2H4OH          2.560E+36    -7.752     6946   ! Arrhenius parameters at 1 atm
+    PLOG /   1.000E-02   1.740E+43   -10.461     7699 /
+    PLOG /   2.500E-02   3.250E+37    -8.629     5215 /
+    PLOG /   1.000E-01   1.840E+35    -7.750     4909 /
+    PLOG /   1.000E+00   2.560E+36    -7.752     6946 /
+    PLOG /   1.000E+01   3.700E+33    -6.573     7606 /
+    PLOG /   1.000E+02   1.120E+26    -4.101     5757 /
+C2H5+OH=C2H4+H2O         7.940E+22    -2.989     3863   ! Arrhenius parameters at 1 atm
+    PLOG /   1.000E-03   1.290E+19    -1.960      273 /
+    PLOG /   1.000E-02   1.220E+19    -1.953      239 /
+    PLOG /   1.000E-01   4.110E+19    -2.101      625 /
+    PLOG /   1.000E+00   7.940E+22    -2.989     3863 /
+    PLOG /   1.000E+01   2.790E+24    -3.329     7749 /
+    PLOG /   1.000E+02   4.700E+18    -1.581     7999 /
+C2H4+O2=C2H3+HO2         4.220E+13     0.000    57623
+C2H5O2=C2H4+HO2          2.700E+37    -8.470    35840   ! Arrhenius parameters at 1 atm
+    PLOG /   4.000E-02   1.780E+32    -7.100    32840 /
+    PLOG /   1.000E+00   2.700E+37    -8.470    35840 /
+    PLOG /   1.000E+01   1.980E+38    -8.460    37900 /
+C2H4+CH3=C2H3+CH4        9.760E+02     2.947    15148
+DUP 
+C2H4+CH3=C2H3+CH4        8.130E-05     4.417     8836
+DUP 
+C3H4-A+O=C2H4+CO         6.240E+06     2.050      180
+C2H5+H(+M)=C2H6(+M)      5.210E+17    -0.990     1580
+    LOW  /               1.990E+41    -7.080     6685  /
+    TROE /   8.420E-01   1.250E+02   2.219E+03   6.882E+03 /
+    H2/2.000/   H2O/6.000/   AR/0.700/   CO/1.500/   CO2/2.000/   CH4/2.000/   C2H6/3.000/   
+CH3+CH3=H+C2H5           3.100E+14    -0.362    13372   ! Arrhenius parameters at 1 atm
+    PLOG /   1.000E-02   4.740E+12     0.105    10664 /
+    PLOG /   1.000E-01   2.570E+13    -0.096    11406 /
+    PLOG /   1.000E+00   3.100E+14    -0.362    13372 /
+    PLOG /   1.000E+01   2.150E+10     0.885    13532 /
+    PLOG /   1.000E+02   1.030E+02     3.230    11236 /
+C2H6+H=C2H5+H2           7.350E+03     3.100     5340
+DUP 
+C2H6+H=C2H5+H2           3.260E+14     0.000    13700
+DUP 
+C2H3+O2=C2H3OO           3.340E+61   -15.790    20150   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   1.550E+24    -5.450     9662 /
+    PLOG /   1.000E-02   1.780E-09     4.150    -4707 /
+    PLOG /   1.000E-01   3.480E+56   -15.010    19160 /
+    PLOG /   1.000E-01   2.360E+22    -4.520     2839 /
+    PLOG /   3.160E-01   1.250E+64   -16.970    21290 /
+    PLOG /   3.160E-01   2.000E+26    -5.430     2725 /
+    PLOG /   1.000E+00   3.340E+61   -15.790    20150 /
+    PLOG /   1.000E+00   6.130E+28    -5.890     3154 /
+    PLOG /   3.160E+00   7.340E+53   -13.110    17300 /
+    PLOG /   3.160E+00   2.140E+29    -5.800     3520 /
+    PLOG /   1.000E+01   4.160E+48   -11.210    16000 /
+    PLOG /   1.000E+01   3.480E+28    -5.370     3636 /
+    PLOG /   3.160E+01   2.330E+43    -9.380    14810 /
+    PLOG /   3.160E+01   3.320E+27    -4.950     3610 /
+    PLOG /   1.000E+02   3.410E+39    -8.040    14360 /
+    PLOG /   1.000E+02   1.030E+27    -4.720     3680 /
+C2H3+O2=C2H2+HO2         2.150E+07     1.190     3367   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   1.080E+07     1.280     3322 /
+    PLOG /   1.000E-02   4.760E+01     2.750     -796 /
+    PLOG /   1.000E-01   7.750E+06     1.330     3216 /
+    PLOG /   1.000E-01   5.160E+01     2.730     -768 /
+    PLOG /   3.160E-01   1.210E+07     1.270     3311 /
+    PLOG /   3.160E-01   5.550E+01     2.730     -658 /
+    PLOG /   1.000E+00   2.150E+07     1.190     3367 /
+    PLOG /   1.000E+00   4.600E+01     2.760     -493 /
+    PLOG /   3.160E+00   1.130E+08     1.000     3695 /
+    PLOG /   3.160E+00   3.750E+00     3.070     -601 /
+    PLOG /   1.000E+01   1.310E+11     0.120     5872 /
+    PLOG /   1.000E+01   5.480E+00     3.070       86 /
+    PLOG /   3.160E+01   1.190E+09     0.820     5617 /
+    PLOG /   3.160E+01   4.470E+08     0.000      955 /
+    PLOG /   1.000E+02   1.060E+17    -1.450    12230 /
+    PLOG /   1.000E+02   2.020E+01     2.940     1847 /
+C2H3+O2=CH2CO+OH         1.060E+03     2.390     6180   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   8.660E+02     2.410     6061 /
+    PLOG /   1.000E-02   1.820E-01     3.120     1331 /
+    PLOG /   1.000E-01   8.910E+02     2.410     6078 /
+    PLOG /   1.000E-01   2.070E-01     3.110     1383 /
+    PLOG /   3.160E-01   9.430E+02     2.400     6112 /
+    PLOG /   3.160E-01   2.710E-01     3.080     1496 /
+    PLOG /   1.000E+00   1.060E+03     2.390     6180 /
+    PLOG /   1.000E+00   5.260E-01     3.010     1777 /
+    PLOG /   3.160E+00   1.090E+03     2.380     6179 /
+    PLOG /   3.160E+00   1.370E+00     2.900     2225 /
+    PLOG /   1.000E+01   1.390E+03     2.360     6074 /
+    PLOG /   1.000E+01   4.190E-01     2.930     2052 /
+    PLOG /   3.160E+01   2.490E+06     1.420     8480 /
+    PLOG /   3.160E+01   1.190E-04     4.210     2043 /
+    PLOG /   1.000E+02   1.660E+10     0.360    12010 /
+    PLOG /   1.000E+02   1.300E-03     3.970     3414 /
+C2H3+O2=CHOCHO+H         3.730E+15    -1.290     1441   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   4.790E+14    -1.030      912 /
+    PLOG /   1.000E-02   2.800E-04     4.040    -7019 /
+    PLOG /   1.000E-01   5.030E+14    -1.040      922 /
+    PLOG /   1.000E-01   3.450E-04     4.010    -6978 /
+    PLOG /   3.160E-01   6.430E+14    -1.070      983 /
+    PLOG /   3.160E-01   9.730E-04     3.890    -6768 /
+    PLOG /   1.000E+00   3.730E+15    -1.290     1441 /
+    PLOG /   1.000E+00   4.980E-01     3.150    -5496 /
+    PLOG /   3.160E+00   2.440E+18    -2.130     3234 /
+    PLOG /   3.160E+00   1.340E+05     1.670    -2931 /
+    PLOG /   1.000E+01   1.300E+15    -1.090     2393 /
+    PLOG /   1.000E+01   4.500E+15    -3.080    -4836 /
+    PLOG /   3.160E+01   3.570E+33    -6.500    14910 /
+    PLOG /   3.160E+01   3.840E+10     0.220      941 /
+    PLOG /   1.000E+02   3.280E+31    -5.760    16250 /
+    PLOG /   1.000E+02   2.750E+08     0.830      858 /
+C2H3+O2=CH2O+H+CO        6.360E+35    -7.320    11820   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   5.820E+36    -7.600    12640 /
+    PLOG /   1.000E-02   1.060E+16    -1.280      515 /
+    PLOG /   1.000E-01   5.660E+36    -7.600    12610 /
+    PLOG /   1.000E-01   1.070E+16    -1.280      513 /
+    PLOG /   3.160E-01   4.550E+36    -7.570    12490 /
+    PLOG /   3.160E-01   1.130E+16    -1.290      521 /
+    PLOG /   1.000E+00   6.360E+35    -7.320    11820 /
+    PLOG /   1.000E+00   1.420E+16    -1.310      646 /
+    PLOG /   3.160E+00   3.350E+36    -7.470    12460 /
+    PLOG /   3.160E+00   2.200E+16    -1.360     1066 /
+    PLOG /   1.000E+01   1.210E+36    -7.200    13430 /
+    PLOG /   1.000E+01   5.980E+15    -1.180     1429 /
+    PLOG /   3.160E+01   7.430E+20    -2.570     5578 /
+    PLOG /   3.160E+01   2.390E+69   -19.230    14760 /
+    PLOG /   1.000E+02   6.360E+33    -6.280    16000 /
+    PLOG /   1.000E+02   9.810E+10     0.190      831 /
+C2H3OO=CH2O+HCO          8.640E+33    -6.880    34370   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   1.660E+174  -55.520    60320 /
+    PLOG /   1.000E-02   2.270E+35    -7.970    31280 /
+    PLOG /   1.000E-01   9.030E+66   -17.250    48120 /
+    PLOG /   1.000E-01   2.080E+26    -4.960    28780 /
+    PLOG /   3.160E-01   1.820E+43    -9.870    37960 /
+    PLOG /   3.160E-01   1.450E+20    -3.080    26630 /
+    PLOG /   1.000E+00   8.640E+33    -6.880    34370 /
+    PLOG /   1.000E+00   1.060E+130  -39.380    54700 /
+    PLOG /   3.160E+00   7.290E+171  -43.530   191900 /
+    PLOG /   3.160E+00   2.350E+34    -6.870    35700 /
+    PLOG /   1.000E+01   1.030E+32    -6.060    35500 /
+    PLOG /   1.000E+01   2.180E+175  -53.780    68500 /
+    PLOG /   3.160E+01   1.850E+34    -6.570    38510 /
+    PLOG /   3.160E+01   1.070E+185  -54.220    88990 /
+    PLOG /   1.000E+02   5.700E+29    -5.190    36800 /
+    PLOG /   1.000E+02   4.680E+02     1.810    18100 /
+C2H3OO=CH2O+H+CO         2.020E+34    -6.880    34370   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /   1.000E-02   3.880E+174  -55.520    60320 /
+    PLOG /   1.000E-02   5.290E+35    -7.970    31280 /
+    PLOG /   1.000E-01   2.110E+67   -17.250    48120 /
+    PLOG /   1.000E-01   4.850E+26    -4.960    28780 /
+    PLOG /   3.160E-01   4.260E+43    -9.870    37960 /
+    PLOG /   3.160E-01   3.370E+20    -3.080    26630 /
+    PLOG /   1.000E+00   2.020E+34    -6.880    34370 /
+    PLOG /   1.000E+00   2.460E+130  -39.380    54700 /
+    PLOG /   3.160E+00   1.700E+172  -43.530   191900 /
+    PLOG /   3.160E+00   5.490E+34    -6.870    35700 /
+    PLOG /   1.000E+01   2.400E+32    -6.060    35500 /
+    PLOG /   1.000E+01   5.090E+175  -53.780    68500 /
+    PLOG /   3.160E+01   4.320E+34    -6.570    38510 /
+    PLOG /   3.160E+01   2.490E+185  -54.220    88990 /
+    PLOG /   1.000E+02   1.330E+30    -5.190    36800 /
+    PLOG /   1.000E+02   1.090E+03     1.810    18100 /
+HOCH2CO=CH2OH+CO         1.070E+12     0.630    16900
+END 

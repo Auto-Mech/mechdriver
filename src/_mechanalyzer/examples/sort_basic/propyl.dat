@@ -1,0 +1,49 @@
+ELEMENTS
+
+H
+C
+O
+
+END
+
+
+SPECIES
+
+C3y1       ! SMILES: [CH2]CC           ChI: InChI=1S/C3H7/c1-3-2/h1,3H2,2H3
+C3p1       ! SMILES: [O]OCCC           ChI: InChI=1S/C3H7O2/c1-2-3-5-4/h2-3H2,1H3
+O2         ! SMILES: [O][O]            ChI: InChI=1S/O2/c1-2
+C3h1y1     ! SMILES: OO[CH]CC          ChI: InChI=1S/C3H7O2/c1-2-3-5-4/h3-4H,2H2,1H3
+C3h1y2     ! SMILES: OOC[CH]C          ChI: InChI=1S/C3H7O2/c1-2-3-5-4/h2,4H,3H2,1H3
+C3h1y3     ! SMILES: OOCC[CH2]         ChI: InChI=1S/C3H7O2/c1-2-3-5-4/h4H,1-3H2
+C3e1       ! SMILES: C=CC              ChI: InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3
+HO2        ! SMILES: [O]O              ChI: InChI=1S/HO2/c1-2/h1H
+HO         ! SMILES: [OH]              ChI: InChI=1S/HO/h1H
+C3a1       ! SMILES: O=CCC             ChI: InChI=1S/C3H6O/c1-2-3-4/h3H,2H2,1H3
+C3e12      ! SMILES: O1CC1C            ChI: InChI=1S/C3H6O/c1-3-2-4-3/h3H,2H2,1H3
+C3e13      ! SMILES: O1CCC1            ChI: InChI=1S/C3H6O/c1-2-4-3-1/h1-3H2
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+C3p1 = C3e1 + HO2            1.000E+00     0.000        0
+
+C3y1 + O2 = C3p1             1.000E+00     0.000        0
+
+C3p1 = C3h1y3                1.000E+00     0.000        0
+
+C3p1 = C3h1y2                1.000E+00     0.000        0
+
+C3h1y2 = C3e1 + HO2          1.000E+00     0.000        0
+
+C3p1 = C3h1y1                1.000E+00     0.000        0
+
+C3h1y2 = C3e12 + HO          1.000E+00     0.000        0
+
+C3h1y3 = C3e13 + HO          1.000E+00     0.000        0
+
+
+
+END
+

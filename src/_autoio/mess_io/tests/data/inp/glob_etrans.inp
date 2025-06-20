@@ -1,0 +1,12 @@
+  EnergyRelaxation
+    Exponential
+       Factor[1/cm]                     150.000
+       Power                            50.000
+       ExponentCutoff                   80.000
+  End  ! EneRelax
+  CollisionFrequency
+    LennardJones
+       Epsilons[1/cm]                   99.993     199.985
+       Sigmas[angstrom]                 2.500      5.000
+       Masses[amu]                      15.000     25.000
+  End  ! CollidFreq

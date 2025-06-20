@@ -1,0 +1,17 @@
+name,SMILES,mult
+N2,N#N,1
+Ne,[Ne],1
+CO,[C]=O,1
+H2,[H][H],1
+H2O2,OO,1
+H,[H],2
+H2O,O,1
+OH,[OH],2
+HO2,O[O],2          
+O2,[O][O],3
+CO2,O=C=O,1
+HE,[He],1
+HOCO,O[C]=O,2
+C2H3,C=[CH],2
+CH2CHO,[CH2]C=O,2
+O,[O],3 

@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/Auto-Mech/autoio.git
+	branch = dev
+	commit = 9610c41bec5ec13f4ed97541e390c378acd1f5ae
+	parent = 946253ffb9fc01aca2cdf554bcfc387189950d8d
+	method = rebase
+	cmdver = 0.4.9

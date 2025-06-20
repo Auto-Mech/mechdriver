@@ -1,0 +1,6 @@
+EnergyRelaxation
+  Exponential
+     Factor[1/cm]                     150.000
+     Power                            50.000
+     ExponentCutoff                   80.000
+End  ! EneRelax

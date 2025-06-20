@@ -1,0 +1,18 @@
+[project]
+name = "mechanalyzer"
+requires-python = ">= 3.11"
+version = "2025.6.12"
+dependencies = []
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[project.scripts]
+mechanalyzer = "mechanalyzer.cli:main"
+
+[tool.hatch.build.targets.sdist]
+include = ["mechanalyzer", "ratefit", "thermfit"]
+
+[tool.hatch.build.targets.wheel]
+include = ["mechanalyzer", "ratefit", "thermfit"]

@@ -1,0 +1,2604 @@
+TemperatureList[K]     300.0 400.0 500.0 600.0 700.0 800.0 900.0 1000.0 1100.0 1200.0 1300.0 1400.0 1500.0 1600.0 1700.0 1800.0 1900.0 2000.0
+PressureList[atm]      0.01 0.1 1.0 10.0 100.0
+
+! GLOBAL
+EnergyStepOverTemperature               .2
+ExcessEnergyOverTemperature             20
+ModelEnergyLimit[kcal/mol]              400
+CalculationMethod                       direct #low-eigenvalue #direct
+! WellExtension  ! causing seg faults
+  WellCutoff                            10
+  ChemicalEigenvalueMax                 0.2 #0.4 !LOOK AT
+!  GlobalCutoff[kcal/mol]                       -60.0
+
+! MODEL
+Model
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm]			200
+      Power				.85
+      ExponentCutoff			15
+    End
+  CollisionFrequency
+    LennardJones			#N2 allene+NO
+      Epsilons[1/cm]			58.38  124.75 
+      Sigmas[angstrom]			3.705  4.205
+      Masses[amu]			28. 69.
+    End
+
+!-----------------------------------------------
+!Well 1: CH3CH2OCH_OO_CH3
+!-----------------------------------------------
+
+  Well     w1 #
+   Species  
+      ! Current data taken from:
+      !/users/adanilac/data/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/ch3ch2och_oo_ch3/estoktp/me_files
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.087945
+	H	  1.031826	  0.000000	 -0.345270
+	H	 -0.482362	  0.913115	 -0.345151
+	C	 -0.740020	 -1.206226	 -0.526928
+	H	 -1.776876	 -1.211843	 -0.190320
+	H	 -0.741911	 -1.228708	 -1.619998
+	O	 -0.068115	 -2.375215	 -0.037802
+	C	 -0.527980	 -3.568961	 -0.541232
+	H	 -0.723869	 -3.518927	 -1.613984
+	C	  0.398892	 -4.678690	 -0.127467
+	O	 -1.845141	 -3.886429	  0.053757
+	H	  0.473423	 -4.705581	  0.957047
+	H	  0.029225	 -5.635252	 -0.487229
+	H	  1.386326	 -4.494614	 -0.542636
+	O	 -2.834262	 -3.474536	 -0.717492
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor                             Hindered
+        Group    6   7   8   9  10  11  12  13  14  15  16
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.48    3.10    1.50
+        End
+
+        Rotor                             Hindered
+        Group    9  10  11  12  13  14  15  16
+        Axis             8           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.76    1.57    0.99    1.20    3.53    5.61    3.09    1.42    1.19    1.43    0.78
+        End
+
+        Rotor                             Hindered
+        Group   10  11  12  13  14  15  16
+        Axis             9           8
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    2.08    6.00    5.91    3.29    2.53    5.45    6.90    5.57    4.30    3.42    1.57
+        End
+
+        Rotor                             Hindered
+        Group   13  14  15
+        Axis            11           9
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.24    2.61    1.31
+        End
+
+        Rotor                             Hindered
+        Group   16
+        Axis            12           9
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.31    0.21    0.98    2.80    3.04    1.73    1.13    2.52    3.30    2.62    1.02
+        End
+
+        Frequencies[1/cm]           37
+        3162.3      3159.7      3143.8
+        3138.4      3087.8      3077.2
+        3066.7      3063.8      3033.2
+        1538.2      1514.4      1502.4
+        1498.8      1497.4      1458.6
+        1426.2      1415.4      1383.5
+        1356.6      1315.4      1218.4
+        1213.2      1187.8      1169.2
+        1135.3      1100.7      1059.7
+        967.95      867.66      825.58
+        791.08      552.63      543.16
+        425.51      377.55      305.78
+        197.63
+
+        ZeroEnergy[kcal/mol]	-35.60
+        ElectronicLevels[1/cm]	2
+            0	2
+            7585   2
+      End
+
+  End
+
+!-----------------------------------------------
+!Well 2: CH3CHOCH_OOH_CH3
+!-----------------------------------------------
+
+  Well     w2 #
+   Species
+      ! Current data taken from:
+      !/users/adanilac/data/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/ch3choch_ooh_ch3/estoktp/me_files
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.087841
+	H	  1.032426	  0.000000	 -0.348462
+	H	 -0.455951	  0.938340	 -0.337445
+	C	 -0.729008	 -1.183927	 -0.513760
+	H	 -1.648268	 -1.524911	 -0.049254
+	O	 -0.662208	 -1.332672	 -1.873269
+	C	 -1.399273	 -2.406981	 -2.435064
+	H	 -2.355818	 -2.495273	 -1.915761
+	C	 -1.539465	 -2.145152	 -3.913706
+	O	 -0.703966	 -3.622948	 -2.315566
+	H	 -0.553607	 -2.096930	 -4.369739
+	H	 -2.112880	 -2.940926	 -4.380397
+	H	 -2.045046	 -1.195614	 -4.066204
+	O	 -0.845666	 -4.097544	 -0.954673
+	H	 -0.172193	 -3.566040	 -0.501831
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor                             Hindered
+        Group    6   7   8   9  10  11  12  13  14  15  16
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    0.72    1.53    0.62
+        End
+
+        Rotor                             Hindered
+        Group    8   9  10  11  12  13  14  15  16
+        Axis             7           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.17    3.44    5.29    2.89    2.06    3.27    3.64    4.18    5.97    4.08    1.24
+        End
+
+        Rotor                             Hindered
+        Group    9  10  11  12  13  14  15  16
+        Axis             8           7
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.85    5.76    2.32    1.04    1.96    3.47    4.39    3.34    1.71    1.23    0.85
+        End
+
+        Rotor                             Hindered
+        Group   12  13  14
+        Axis            10           8
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.23    2.51    1.21
+        End
+
+        Rotor                             Hindered
+        Group   15  16
+        Axis            11           8
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    2.45    4.71    4.34    6.14    8.28    6.10    3.10    5.08    9.52    8.67    2.92
+        End
+
+        Rotor                             Hindered
+        Group   16
+        Axis            15          11
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.53    4.98    7.50    7.13    4.99    3.16    2.76    3.05    2.87    1.80    0.46
+        End
+
+        Frequencies[1/cm]	36
+        3696.6      3167.1      3161.1
+        3146.6      3131.7      3084.9
+        3079.7      3059.2      2995.5
+        1505.0      1502.0      1497.4
+        1480.6      1448.5      1423.6
+        1408.5      1406.7      1368.0
+        1366.2      1240.2      1196.3
+        1157.0      1123.4      1102.8
+        1041.0      982.09      959.77
+        874.28      861.59      647.51
+        593.96      548.79      429.03
+        370.61      296.58      204.25
+
+        ZeroEnergy[kcal/mol]	-27.21
+        ElectronicLevels[1/cm]	1
+            0	2
+      End
+
+  End
+
+!-----------------------------------------------
+!Well 3: CH2CH2OCH_OOH_CH3
+!-----------------------------------------------
+
+  Well     w3 #
+   Species
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/ch2ch2och_ooh_ch3/estoktp/geoms/reac1_l1.log
+      RRHO
+      Geometry[angstrom]              16
+       C    0.00000   0.00000   0.00000
+       H    0.00000   0.00000   1.07828
+       H    0.94319   0.00000  -0.52376
+       C   -1.25387  -0.22732  -0.75666
+       H   -2.11811   0.16035  -0.21136
+       H   -1.42684  -1.29632  -0.91673
+       O   -1.20874   0.33091  -2.07495
+       C   -1.33799   1.73159  -2.09979
+       H   -0.77974   2.18671  -1.27606
+       C   -0.86401   2.22744  -3.44335
+       O   -2.66531   2.11898  -1.77786
+       H   -1.40595   1.72832  -4.24012
+       H   -1.02974   3.29925  -3.51812
+       H    0.19760   2.01857  -3.55099
+       O   -3.54783   1.65826  -2.83342
+       H   -3.53300   0.70284  -2.67835
+
+        Core    RigidRotor
+                SymmetryFactor    0.5
+        End
+
+        Rotor                             Hindered
+        Group    5   6   7   8   9  10  11  12  13  14  15  16
+        Axis             4           1
+        Symmetry            2
+        Potential[kcal/mol]            6
+           0.00    0.56    1.23    1.34    0.80    0.25
+        End
+
+        Rotor                             Hindered
+        Group    8   9  10  11  12  13  14  15  16
+        Axis             7           4
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.30    3.31    3.40    2.04    0.52    0.38    0.98    0.35    0.48    1.44    1.16
+        End
+
+        Rotor                             Hindered
+        Group    9  10  11  12  13  14  15  16
+        Axis             8           7
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    2.18    5.27    7.33    5.72    5.78    6.40    5.22    4.40    3.71    3.01    1.38
+        End
+
+        Rotor                             Hindered
+        Group   12  13  14
+        Axis            10           8
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.21    2.56    1.21
+        End
+
+        Rotor                             Hindered
+        Group   15  16
+        Axis            11           8
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    4.42    7.36    5.55    1.02    1.57    3.25    2.69    2.80    5.65    6.38    2.48
+        End
+
+        Rotor                             Hindered
+        Group   16
+        Axis            15          11
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.24    1.18    1.94    1.90    1.33    1.14    2.28    4.55    5.85    4.08    1.20
+        End
+
+        Frequencies[1/cm]           36
+        3741.0      3285.5      3173.7
+        3173.2      3155.3      3080.1
+        3056.4      3041.7      3011.0
+        1504.7      1497.1      1494.2
+        1466.7      1429.0      1405.8
+        1400.0      1378.2      1366.4
+        1290.5      1185.8      1135.3
+        1115.6      1111.6      1078.6
+        1003.9      927.21      880.38
+        863.50      818.87      684.18
+        549.08      524.25      461.69
+        368.60      299.76      258.97
+
+        ZeroEnergy[kcal/mol]        -19.95
+        ElectronicLevels[1/cm]        1
+           0.00        2
+
+      End
+
+  End
+
+!-----------------------------------------------
+!Well 4: CH3CH2OCH_OOH_CH2
+!-----------------------------------------------
+
+  Well     w4 #
+   Species
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/ch3ch2och_ooh_ch2/estoktp/geoms/reac1_l1.log
+      RRHO
+      Geometry[angstrom]              16
+       C    0.00000   0.00000   0.00000
+       H    0.00000   0.00000   1.08836
+       H    1.03263   0.00000  -0.34260
+       H   -0.48033   0.91474  -0.34384
+       C   -0.73616  -1.20693  -0.53231
+       H   -1.77276  -1.21908  -0.19099
+       H   -0.74320  -1.20945  -1.62673
+       O   -0.05838  -2.37768  -0.06857
+       C   -0.66058  -3.57613  -0.47458
+       H   -1.00717  -3.49857  -1.51606
+       C    0.30093  -4.68245  -0.28221
+       O   -1.90405  -3.78707   0.19110
+       H    1.33217  -4.46594  -0.06549
+       H   -0.04923  -5.69835  -0.34392
+       O   -1.62450  -4.03167   1.59408
+       H   -1.31046  -3.15948   1.87342
+      
+       Core    RigidRotor
+                SymmetryFactor    0.5
+        End
+
+        Rotor                             Hindered
+        Group    6   7   8   9  10  11  12  13  14  15  16
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+          0.00    1.47    3.10    1.48
+        End
+
+        Rotor                             Hindered
+        Group    9  10  11  12  13  14  15  16
+        Axis             8           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.68    1.42    0.72    1.30    2.85    4.72    4.09    1.59    0.66    1.17    0.70
+        End
+
+        Rotor                             Hindered
+        Group   10  11  12  13  14  15  16
+        Axis             9           8
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.95    5.87    6.76    4.22    3.00    3.20    3.73    2.92    2.30    2.75    1.45
+        End
+
+        Rotor                             Hindered
+        Group   13  14
+        Axis            11           9
+        Symmetry            2
+        Potential[kcal/mol]            6
+           0.00    0.05    0.67    0.90    0.63    0.21
+        End
+
+        Rotor                             Hindered
+        Group   15  16
+        Axis            12           9
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    4.08    6.77    6.01    1.62    1.24    2.51    2.48    2.44    4.96    5.93    2.40
+        End
+
+        Rotor                             Hindered
+        Group   16
+        Axis            15          12
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.18    1.04    1.80    1.80    1.15    0.66    1.13    2.42    3.91    3.57    1.16
+        End
+
+        Frequencies[1/cm]           36
+        3738.5      3320.5      3198.8
+        3141.3      3135.8      3071.0
+        3062.4      3019.3      2966.6
+        1544.6      1514.9      1498.8
+        1463.8      1440.4      1415.1
+        1398.7      1350.7      1344.8
+        1308.8      1194.5      1168.9
+        1146.4      1105.2      1088.6
+        971.71      945.08      873.80
+        849.34      827.16      742.09
+        562.79      470.87      431.83
+        368.89      280.19      201.30
+
+        ZeroEnergy[kcal/mol]        -19.09
+        ElectronicLevels[1/cm]                      1
+            0.00        2
+
+      End
+
+  End
+
+!-----------------------------------------------
+!END WELLS
+!-----------------------------------------------
+
+!-----------------------------------------------
+!Bimolecular 1: CH3CH2OCHCH3 + O2
+!-----------------------------------------------
+
+  Bimolecular   r1     #
+    Fragment   ch3ch2ochch3  #
+      ! Current data taken from:
+      !/users/adanilac/data/adanilac/qchem/gas_phase/coh/c4o1/c4h9o1/ch3ch2ochch3/estoktp/me_files
+      RRHO
+        Geometry[angstrom]	14
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.088051
+	H	  1.043892	  0.000000	 -0.336896
+	H	 -0.449117	 -0.931234	 -0.345743
+	C	 -0.754653	  1.167730	 -0.513578
+	H	 -0.680927	  2.139741	 -0.036102
+	O	 -0.933144	  1.175803	 -1.864091
+	C	 -1.592836	  2.332903	 -2.373043
+	H	 -1.030503	  3.224366	 -2.079475
+	H	 -2.589230	  2.401925	 -1.930300
+	C	 -1.669724	  2.210481	 -3.876516
+	H	 -2.228577	  1.320385	 -4.157820
+	H	 -2.169204	  3.081099	 -4.298874
+	H	 -0.672321	  2.140674	 -4.305757
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor                             Hindered
+        Group    6   7   8   9  10  11  12  13  14
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    0.65    1.38    0.54
+        End
+
+        Rotor                             Hindered
+        Group    8   9  10  11  12  13  14
+        Axis             7           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.18    3.30    5.15    2.26    1.78    3.01    1.63    2.76    4.83    2.81    1.16
+        End
+
+        Rotor                             Hindered
+        Group    9  10  11  12  13  14
+        Axis             8           7
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.70    1.41    0.63    0.50    2.91    4.45    3.10    1.35    0.78    1.39    0.69
+        End
+
+        Rotor                             Hindered
+        Group   12  13  14
+        Axis            11           8
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.52    3.07    1.49
+        End
+
+        Frequencies[1/cm]	32
+        3142.3      3140.5      3136.9
+        3125.4      3078.1      3063.1
+        3058.2      3017.9      2988.4
+        1537.5      1515.2      1504.9
+        1498.1      1479.8      1459.2
+        1424.4      1411.1      1378.0
+        1308.1      1259.7      1191.4
+        1180.2      1121.9      1090.3
+        1033.8      970.01      867.45
+        824.48      589.39      449.10
+        430.19      193.99
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	2
+      End
+
+    Fragment o2   #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/o/o2/dft/o2_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	2
+	O	  0.000000	  0.000000	  0.000000
+	O	  0.000000	  0.000000	  1.215086
+
+        Core	RigidRotor
+          SymmetryFactor	2.0
+        End
+
+        Frequencies[1/cm]	1
+	1534.7
+  
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	3
+      End
+
+    GroundEnergy[kcal/mol]  0.00
+  End
+
+!-----------------------------------------------
+!Bimolecular 2: CH3CH2OCHCH2 + OOH
+!-----------------------------------------------
+
+  Bimolecular   p1     #
+    Fragment   ch3ch2ochch2  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o1/c4h8o1/ch3ch2ochch2/estoktp/geoms/reac1_l1.log
+      RRHO
+        Geometry[angstrom]      13
+        C         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        1.088897
+        H         1.031421        0.000000       -0.346012
+        H        -0.479599        0.913215       -0.345809
+        C        -0.733983       -1.214275       -0.518031
+        H        -1.773430       -1.224910       -0.180530
+        H        -0.260808       -2.139649       -0.179975
+        O        -0.703977       -1.164928       -1.942478
+        C        -1.316823       -2.177689       -2.595995
+        H        -1.231135       -2.036932       -3.664092
+        C        -1.953000       -3.228618       -2.076782
+        H        -2.388672       -3.948958       -2.749168
+        H        -2.056887       -3.399759       -1.018412
+
+        Core    RigidRotor
+          SymmetryFactor        1.0
+        End
+
+       Rotor                             Hindered
+        Group    6   7   8   9  10  11  12  13
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.41    3.04    1.41
+       End
+
+       Rotor                             Hindered
+        Group    9  10  11  12  13
+        Axis             8           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.56    3.54    1.55    2.65    7.12   10.09    7.11    2.64    1.56    3.54    1.56
+       End
+
+       Rotor                             Hindered
+        Group   10  11  12  13
+        Axis             9           8
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    2.08    5.70    5.80    3.91    2.68    2.54    2.68    3.91    5.80    5.70    2.07
+       End
+
+        Frequencies[1/cm]       33
+         107.5   215.9   233.7
+         280.6   392.7   609.8
+         721.9   832.3   845.1
+         868.4   992.7  1002.9
+        1064.3  1147.0  1194.5
+        1247.4  1310.3  1359.7
+        1408.6  1435.4  1459.8
+        1499.3  1515.9  1537.8
+        1684.4  3026.2  3064.3
+        3064.6  3137.9  3144.0
+        3193.9  3209.6  3285.2
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  1
+            0   1
+      End
+
+    Fragment   ooh  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/oh/o2/o2h1/ooh/dft/ooh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      3
+        O         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        0.972657
+        O         1.286171        0.000000       -0.334858
+
+        Core    RigidRotor
+          SymmetryFactor        1.0
+        End
+
+        Frequencies[1/cm]       3
+        1174.0  1434.3  3648.2
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  2
+            0   2
+            6664.994  2
+      End
+
+    GroundEnergy[kcal/mol]  -12.79
+  End
+
+!-----------------------------------------------
+!Bimolecular 3: CH3CH_O_OOH + C2H4
+!-----------------------------------------------
+
+  Bimolecular   p2     #
+    Fragment   ch3ch_o_ooh  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c2o3/c2h5o3/ch3ch_o_ooh/estoktp/geoms/reac1_l1.log
+      RRHO
+        Geometry[angstrom]              10
+        C    0.00000   0.00000   0.00000
+        H    0.00000   0.00000   1.08526
+        H    1.02003   0.00000  -0.37209
+        H   -0.51512  -0.88496  -0.36322
+        C   -0.71874   1.25205  -0.50582
+        H   -0.23910   2.16532  -0.11440
+        O   -1.99150   1.30291  -0.07267
+        O   -0.58531   1.23158  -1.91764
+        O   -1.14767   2.46904  -2.41087
+        H   -2.08676   2.23925  -2.44149
+
+        Core    RigidRotor
+          SymmetryFactor       0.5
+        End
+
+        Rotor                             Hindered
+        Group    6   7   8   9  10
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.03    2.32    1.14
+        End
+
+        Rotor                             Hindered
+        Group    9  10
+        Axis             8           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.82    3.99    3.22    3.37    6.04    6.83    2.44    0.91    3.57    4.45    2.44
+        End
+
+        Rotor                             Hindered
+        Group   10
+        Axis             9           8
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.17    3.50    4.49    3.65    1.41   10.60   11.18   11.41   11.06    9.95    8.99
+        End
+
+        Frequencies[1/cm]       21
+        3755.8      3178.9      3170.3
+        3084.5      2929.7      1505.5
+        1493.6      1399.4      1392.5
+        1303.5      1213.3      1170.8
+        1063.1      1004.8      955.69
+        913.07      846.89      600.04
+        483.78      344.82      287.24
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  2
+            0   2
+          4605  2
+      End
+
+    Fragment   ch2h4  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/ch/c2/c2h4/dft/c2h4_b2plypd3_ccpvtz.log
+
+      RRHO
+        Geometry[angstrom]      6
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.080683
+	H	  0.964154	  0.000000	 -0.488144
+	C	 -1.130796	  0.000000	 -0.694952
+	H	 -1.130796	  0.000000	 -1.775636
+	H	 -2.094949	  0.000000	 -0.206808
+
+        Core    RigidRotor
+          SymmetryFactor        4.0
+        End
+
+        Frequencies[1/cm]	12
+	 836.0	 977.9	 984.1
+	1073.0	1252.9	1385.9
+	1487.7	1690.1	3153.8
+	3169.1	3230.2	3257.9
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  1
+            0   1
+      End
+
+    GroundEnergy[kcal/mol]  -1.54
+  End
+
+!-----------------------------------------------
+!Bimolecular 4: CH3CHO + CH3CHO + OH
+!-----------------------------------------------
+
+  Bimolecular   p3     #
+    Fragment   ch3cho #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c2o1/c2h4o1/ch3cho/dft/ch3cho_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      7
+        C         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        1.107254
+        O         1.042533        0.000000       -0.609167
+        C        -1.358602        0.000000       -0.635853
+        H        -1.916745       -0.876093       -0.301782
+        H        -1.916745        0.876093       -0.301782
+        H        -1.274369        0.000000       -1.718365
+
+        Core    RigidRotor
+          SymmetryFactor        1.0
+        End
+
+        Rotor     Hindered
+          Group                  5 6 7          # atoms in rotating group excluding the atom on the axis
+          Axis                   1 4            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+              0.00  0.07  0.25  0.49  0.72  0.87  0.92  0.84  0.67  0.45  0.24  0.07  0.00
+            End
+
+        Frequencies[1/cm]       15
+         159.6   509.0   781.5
+         895.4  1139.1  1142.5
+        1389.4  1433.5  1473.5
+        1485.0  1796.3  2907.8
+        3049.3  3110.8  3166.9
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  1
+            0   1
+      End
+
+    Fragment   ch3chooh #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c2o2/c2h5o2/ch3ch_ooh/estoktp/geoms/reac1_l1.log
+      RRHO
+        Geometry[angstrom]      9
+         C      0.14177969   -0.09627172    0.02902244
+         H     -0.08382517   -0.29827737    1.05527590
+         H      1.18124240    0.13817848   -0.06819061
+         H     -0.08630467   -0.95813985   -0.56263696
+         C     -0.70129616    1.09747811   -0.45655396
+         H     -0.32196456    2.09360049   -0.36302469
+         O     -1.99110951    0.87469373   -1.03244341
+         O     -2.00832221   -0.30142791   -1.63147731
+         H     -2.87420982   -0.45098795   -2.01809139
+
+        Core    RigidRotor
+          SymmetryFactor        0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4          # atoms in rotating group excluding the atom on the axis
+          Axis                   1 5            # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+            0.00  0.07  0.26  0.52  0.79  0.98  1.03  0.93  0.73  0.48  0.24  0.07  0.00
+          End
+
+        Rotor     Hindered
+          Group                  8 9            # atoms in rotating group excluding the atom on the axis
+          Axis                   5 7            # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+              0.00    1.95    5.46    5.47    2.92    1.44    1.46    1.36    2.76    5.61    5.72    2.12   0.00
+          End
+
+        Rotor     Hindered
+          Group                  9              # atoms in rotating group excluding the atom on the axis
+          Axis                   7 8            # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+              0.00    0.09    0.26    0.26    0.07    0.02    0.80    2.67    5.57    5.32    2.46    0.69   0.00
+          End
+
+        Frequencies[1/cm]       18
+         192.2   468.8   528.5
+         560.8   792.3   901.7
+        1146.2  1151.8  1397.6
+        1436.8  1476.1  1488.4
+        1777.3  2951.9  3050.9
+        3112.9  3166.3  3593.8
+
+        !Torsional frequencies:   61.7    66.5   149.9
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  1
+            0   2
+      End
+
+    GroundEnergy[kcal/mol]  -54.07
+  End
+
+!-----------------------------------------------
+!Bimolecular 5: CH3CH2OC_O_CH3 + OH
+!-----------------------------------------------
+
+  Bimolecular   p4     #
+    Fragment    ch3ch2oc_o_ch3  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o2/c4h8o2/ch3ch2oc_o_ch3/estoktp/geoms/reac1_l1.log
+      RRHO
+      Geometry[angstrom]              14
+      C    0.00000   0.00000   0.00000
+      H    0.00000   0.00000   1.08891
+      H    1.03231   0.00000  -0.34384
+      H   -0.47768   0.91513  -0.34387
+      C   -0.73611  -1.21454  -0.51069
+      H   -1.77461  -1.23191  -0.18553
+      H   -0.27146  -2.14331  -0.18508
+      O   -0.70333  -1.16059  -1.95319
+      C   -1.32139  -2.17970  -2.58552
+      O   -1.87227  -3.08715  -2.00988
+      C   -1.22352  -2.02175  -4.07699
+      H   -0.17786  -1.99872  -4.37724
+      H   -1.73232  -2.84682  -4.56173
+      H   -1.67064  -1.07668  -4.37836
+
+        Core    RigidRotor
+          SymmetryFactor       1.0
+        End
+
+       Rotor                             Hindered
+       Group    6   7   8   9  10  11  12  13  14
+       Axis             5           1
+       Symmetry            3
+       Potential[kcal/mol]            4
+          0.00    1.47    3.17    1.47
+       End
+
+       Rotor                             Hindered
+       Group    9  10  11  12  13  14
+       Axis             8           5
+       Symmetry            1
+       Potential[kcal/mol]           12
+          0.00    0.62    0.95    0.21    1.41    5.20    7.20    5.19    1.40    0.21    0.95    0.62
+       End
+
+       Rotor                             Hindered
+       Group   10  11  12  13  14
+       Axis             9           8
+       Symmetry            1
+       Potential[kcal/mol]           12
+          0.00    3.01    9.10   12.72   11.83    8.48    7.14    8.49   11.83   12.72    9.09    3.00
+       End
+
+       Rotor                             Hindered
+       Group   12  13  14
+       Axis            11           9
+       Symmetry            3
+       Potential[kcal/mol]            4
+          0.00    0.08    0.19    0.08
+       End
+
+        Frequencies[1/cm]       32
+        3187.2      3146.6      3143.2
+        3137.1      3117.3      3078.7
+        3076.8      3063.5      1792.4
+        1535.3      1512.9      1500.8
+        1492.4      1485.8      1438.7
+        1415.4      1400.2      1306.3
+        1277.0      1190.9      1146.3
+        1081.9      1075.0      1020.8
+        954.44      864.57      817.85
+        641.72      607.45      430.44
+        371.10      194.87
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  1
+            0   1
+      End
+
+    Fragment    oh
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/oh/o1/o1h1/oh/dft/oh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      2
+        O         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        0.970773
+
+        Core    RigidRotor
+          SymmetryFactor        1
+        End
+
+        Frequencies[1/cm]       1
+        3750.4
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  2
+            0   2
+          140   2  !Source: CCCBDB web page
+      End
+    GroundEnergy[kcal/mol]      -80.05
+
+  End
+
+!-----------------------------------------------
+!Bimolecular 6: c-OCH_CH3_OCH_CH3 + OH
+!-----------------------------------------------
+
+  Bimolecular   p5     #
+    Fragment    c-och_ch3_och_ch3  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o2/c4h8o2/c-och_ch3_och_ch3/estoktp/geoms/reac1_l1.log
+       RRHO
+       Geometry[angstrom]              14
+       C    0.00000   0.00000   0.00000
+       H    0.00000   0.00000   1.09435
+       O    1.33507   0.00000  -0.52333
+       O   -0.27555   1.30631  -0.52334
+       C   -0.87836  -1.08303  -0.55618
+       C    1.05989   1.30680  -1.04542
+       H   -1.90121  -0.93969  -0.21002
+       H   -0.85951  -1.05970  -1.64315
+       H   -0.52677  -2.05423  -0.21016
+       H    1.06122   1.30848  -2.13976
+       C    1.93775   2.38930  -0.48714
+       H    2.96084   2.24655  -0.83281
+       H    1.58622   3.36086  -0.83222
+       H    1.91823   2.36470   0.59980
+
+        Core    RigidRotor
+                SymmetryFactor    2.0
+        End
+
+        Rotor                             Hindered
+        Group    7   8   9
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.43    3.12    1.48
+        End
+
+        Rotor                             Hindered
+        Group   12  13  14
+        Axis            11           6
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.48    3.12    1.44
+        End
+
+        Frequencies[1/cm]           34
+        3151.3      3151.2      3134.9
+        3134.8      3059.6      3059.3
+        3026.3      3021.8      1499.6
+        1497.2      1492.9      1492.8
+        1451.1      1424.6      1409.1
+        1397.5      1361.9      1267.0
+        1179.8      1169.7      1136.9
+        1123.7      1085.8      1051.4
+        929.59      916.81      875.17
+        872.34      775.99      555.82
+        409.41      398.35      255.29
+        83.440
+ 
+        ZeroEnergy[kcal/mol]  0.0
+        ElectronicLevels[1/cm]                      1
+            0.00   1.00
+      End
+
+    Fragment    oh
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/oh/o1/o1h1/oh/dft/oh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      2
+        O         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        0.970773
+
+        Core    RigidRotor
+          SymmetryFactor        1
+        End
+
+        Frequencies[1/cm]       1
+        3750.4
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  2
+            0   2
+          140   2  !Source: CCCBDB web page
+      End
+    GroundEnergy[kcal/mol]      -48.75
+
+  End
+
+!-----------------------------------------------
+!Bimolecular 7: c-OCH2CH2OCH_CH3 + OH
+!-----------------------------------------------
+
+  Bimolecular   p6     #
+    Fragment    c-och2ch2och_ch3  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o2/c4h8o2/c-och2ch2och_ch3/dft/c-och2ch2och_ch3_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	14
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.089965
+	H	  1.028708	  0.000000	 -0.358148
+	C	 -0.814766	 -1.160746	 -0.583618
+	H	 -0.208802	 -1.989934	 -0.935203
+	H	 -1.552192	 -1.528688	  0.135960
+	O	 -1.464525	 -0.569251	 -1.700082
+	C	 -1.772487	  0.736320	 -1.266310
+	H	 -2.657102	  0.699905	 -0.613588
+	C	 -1.988048	  1.648474	 -2.440637
+	H	 -2.842590	  1.310311	 -3.022680
+	H	 -2.177595	  2.660386	 -2.090346
+	H	 -1.099327	  1.646058	 -3.066868
+	O	 -0.656619	  1.167601	 -0.496618
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  11 12 13       # atoms in rotating group excluding the atom on the axis
+          Axis                   10 8 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.18  0.68  1.36  2.06  2.56  2.71  2.46  1.90  1.20  0.56  0.13  0.00
+          End
+
+        Frequencies[1/cm]	35
+	  57.8   201.9	
+	 331.6	 511.4	 687.2
+	 705.3	 852.1	 880.5
+	 885.2	 960.1	1047.3
+	1069.8	1118.5	1139.9
+	1168.6	1188.6	1238.2
+	1263.1	1349.4	1384.3
+	1397.8	1406.9	1452.3
+	1498.7	1500.0	1527.6
+	1545.1	2958.4	3024.2
+	3059.2	3071.3	3100.9
+	3144.7	3151.5	3157.3
+
+        !Torsional frequencies:	  219.8 
+
+        ZeroEnergy[kcal/mol]	0.0
+        ElectronicLevels[1/cm]	1
+            0	1
+
+      End
+
+    Fragment    oh
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/oh/o1/o1h1/oh/dft/oh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      2
+        O         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        0.970773
+
+        Core    RigidRotor
+          SymmetryFactor        1
+        End
+
+        Frequencies[1/cm]       1
+        3750.4
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  2
+            0   2
+          140   2  !Source: CCCBDB web page
+      End
+    GroundEnergy[kcal/mol]      -56.62
+
+  End
+
+!-----------------------------------------------
+!Bimolecular 8: c-OCH2CH_OCH2CH3 + OH
+!-----------------------------------------------
+
+  Bimolecular   p7     #
+    Fragment    c-och2ch_och2ch3  #
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o2/c4h8o2/c-och2ch_och2ch3/estoktp/geoms/reac1_l1.log
+      RRHO
+      Geometry[angstrom]              14
+      C    0.00000   0.00000   0.00000
+      H    0.00000   0.00000   1.08888
+      H    1.03139   0.00000  -0.34612
+      H   -0.48024   0.91244  -0.34758
+      C   -0.72923  -1.21495  -0.52146
+      H   -1.77005  -1.22410  -0.18195
+      H   -0.25323  -2.13735  -0.18346
+      O   -0.69985  -1.16788  -1.95187
+      C   -1.38692  -2.20385  -2.52943
+      H   -2.43376  -2.26665  -2.24342
+      C   -0.91924  -2.70864  -3.80753
+      O   -0.73321  -3.46629  -2.59036
+      H   -0.01371  -2.28012  -4.21569
+      H   -1.61432  -3.13820  -4.51730
+
+        Core    RigidRotor
+                SymmetryFactor    0.5
+        End
+
+        Rotor                             Hindered
+        Group    6   7   8   9  10  11  12  13  14
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.42    3.10    1.43
+        End
+
+        Rotor                             Hindered
+        Group    9  10  11  12  13  14
+        Axis             8           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.87    1.79    1.19    1.25    2.78    4.08    2.63    0.64    0.79    1.61    0.87
+        End
+
+        Rotor                             Hindered
+        Group   10  11  12  13  14
+        Axis             9           8
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.45    3.55    2.60    1.16    2.04    3.89    3.39    2.47    2.93    3.08    1.35
+        End
+
+        Frequencies[1/cm]           33
+        3220.2      3143.0      3137.7
+        3125.6      3112.8      3069.9
+        3063.5      3015.9      1543.4
+        1533.7      1515.7      1498.2
+        1462.8      1422.2      1395.1
+        1322.3      1310.2      1208.8
+        1189.1      1170.2      1154.2
+        1144.2      1100.0      1080.5
+        999.56      900.49      854.13
+        829.03      792.02      571.07
+        458.30      379.63      195.33
+
+        ZeroEnergy[kcal/mol]             0.0
+        ElectronicLevels[1/cm]                      1
+             0.00     1.00
+      End
+
+    Fragment    oh
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/oh/o1/o1h1/oh/dft/oh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      2
+        O         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        0.970773
+
+        Core    RigidRotor
+          SymmetryFactor        1
+        End
+
+        Frequencies[1/cm]       1
+        3750.4
+
+        ZeroEnergy[kcal/mol]    0.0
+        ElectronicLevels[1/cm]  2
+            0   2
+          140   2  !Source: CCCBDB web page
+      End
+    GroundEnergy[kcal/mol]      -34.54
+
+  End
+
+!-----------------------------------------------
+! END OF BIMOLECULAR
+!-----------------------------------------------
+
+!-----------------------------------------------
+!TS 1: CH3CH2OCHCH3 + O2 --> CH3CH2OCH_OO_CH3
+!-----------------------------------------------
+  Barrier	B1 r1 w1
+   RRHO
+      Stoichiometry C4H9O3
+      Core      PhaseSpaceTheory
+       FragmentGeometry[angstrom]      14
+        C         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        1.088051
+        H         1.043892        0.000000       -0.336896
+        H        -0.449117       -0.931234       -0.345743
+        C        -0.754653        1.167730       -0.513578
+        H        -0.680927        2.139741       -0.036102
+        O        -0.933144        1.175803       -1.864091
+        C        -1.592836        2.332903       -2.373043
+        H        -1.030503        3.224366       -2.079475
+        H        -2.589230        2.401925       -1.930300
+        C        -1.669724        2.210481       -3.876516
+        H        -2.228577        1.320385       -4.157820
+        H        -2.169204        3.081099       -4.298874
+        H        -0.672321        2.140674       -4.305757
+
+       FragmentGeometry[angstrom]      2
+        O         0.000000        0.000000        0.000000
+        O         0.000000        0.000000        1.215086
+
+        SymmetryFactor                  1.0
+        PotentialPrefactor[au]          0.75
+        PotentialPowerExponent          6.
+       End
+
+        Rotor                             Hindered
+        Geometry[angstrom]      14
+        C         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        1.088051
+        H         1.043892        0.000000       -0.336896
+        H        -0.449117       -0.931234       -0.345743
+        C        -0.754653        1.167730       -0.513578
+        H        -0.680927        2.139741       -0.036102
+        O        -0.933144        1.175803       -1.864091
+        C        -1.592836        2.332903       -2.373043
+        H        -1.030503        3.224366       -2.079475
+        H        -2.589230        2.401925       -1.930300
+        C        -1.669724        2.210481       -3.876516
+        H        -2.228577        1.320385       -4.157820
+        H        -2.169204        3.081099       -4.298874
+        H        -0.672321        2.140674       -4.305757
+        Group    6   7   8   9  10  11  12  13  14
+        Axis             5           1
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    0.65    1.38    0.54
+        End
+
+        Rotor                             Hindered
+        Geometry[angstrom]      14
+        C         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        1.088051
+        H         1.043892        0.000000       -0.336896
+        H        -0.449117       -0.931234       -0.345743
+        C        -0.754653        1.167730       -0.513578
+        H        -0.680927        2.139741       -0.036102
+        O        -0.933144        1.175803       -1.864091
+        C        -1.592836        2.332903       -2.373043
+        H        -1.030503        3.224366       -2.079475
+        H        -2.589230        2.401925       -1.930300
+        C        -1.669724        2.210481       -3.876516
+        H        -2.228577        1.320385       -4.157820
+        H        -2.169204        3.081099       -4.298874
+        H        -0.672321        2.140674       -4.305757
+        Group    8   9  10  11  12  13  14
+        Axis             7           5
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    1.18    3.30    5.15    2.26    1.78    3.01    1.63    2.76    4.83    2.81    1.16
+        End
+
+        Rotor                             Hindered
+        Geometry[angstrom]      14
+        C         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        1.088051
+        H         1.043892        0.000000       -0.336896
+        H        -0.449117       -0.931234       -0.345743
+        C        -0.754653        1.167730       -0.513578
+        H        -0.680927        2.139741       -0.036102
+        O        -0.933144        1.175803       -1.864091
+        C        -1.592836        2.332903       -2.373043
+        H        -1.030503        3.224366       -2.079475
+        H        -2.589230        2.401925       -1.930300
+        C        -1.669724        2.210481       -3.876516
+        H        -2.228577        1.320385       -4.157820
+        H        -2.169204        3.081099       -4.298874
+        H        -0.672321        2.140674       -4.305757
+        Group    9  10  11  12  13  14
+        Axis             8           7
+        Symmetry            1
+        Potential[kcal/mol]           12
+           0.00    0.70    1.41    0.63    0.50    2.91    4.45    3.10    1.35    0.78    1.39    0.69
+        End
+
+        Rotor                             Hindered
+        Geometry[angstrom]      14
+        C         0.000000        0.000000        0.000000
+        H         0.000000        0.000000        1.088051
+        H         1.043892        0.000000       -0.336896
+        H        -0.449117       -0.931234       -0.345743
+        C        -0.754653        1.167730       -0.513578
+        H        -0.680927        2.139741       -0.036102
+        O        -0.933144        1.175803       -1.864091
+        C        -1.592836        2.332903       -2.373043
+        H        -1.030503        3.224366       -2.079475
+        H        -2.589230        2.401925       -1.930300
+        C        -1.669724        2.210481       -3.876516
+        H        -2.228577        1.320385       -4.157820
+        H        -2.169204        3.081099       -4.298874
+        H        -0.672321        2.140674       -4.305757
+        Group   12  13  14
+        Axis            11           8
+        Symmetry            3
+        Potential[kcal/mol]            4
+           0.00    1.52    3.07    1.49
+        End
+
+     Frequencies[1/cm]        33
+        3142.3      3140.5      3136.9
+        3125.4      3078.1      3063.1
+        3058.2      3017.9      2988.4
+        1537.5      1515.2      1504.9
+        1498.1      1479.8      1459.2
+        1424.4      1411.1      1378.0
+        1308.1      1259.7      1191.4
+        1180.2      1121.9      1090.3
+        1033.8      970.01      867.45
+        824.48      589.39      449.10
+        430.19      193.99      1534.7
+
+      ElectronicLevels[1/cm]                    2
+                0       2
+                7585       2
+
+      ZeroEnergy[kcal/mol]                 0.00
+    End
+
+!-----------------------------------------------
+!TS 2: CH3CH2OCH_OO_CH3 --> CH3CHOCH_OOH_CH3
+!-----------------------------------------------
+!-----------------------------------------------
+!TS 2 RF: CH3CH2OCH_OO_CH3 --> CH3CHOCH_OOH_CH3
+!-----------------------------------------------
+!-----------------------------------------------
+!TS 2': CH3CH2OCH_OO_CH3 --> CH3CHOCH_OOH_CH3
+!-----------------------------------------------
+!-----------------------------------------------
+!TS 2' RF: CH3CH2OCH_OO_CH3 --> CH3CHOCH_OOH_CH3
+!-----------------------------------------------
+!W1 and W2 are connected by FOUR different TS. Use the Union option.
+ 
+  Barrier       B2 w1 w2
+  Union
+      ! Main TS.
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch2och_oo_ch3_to_ch3choch_ooh_ch3/dft/ts_ch3ch2och_oo_ch3_to_ch3choch_ooh_ch3_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.087874
+	H	  1.038324	  0.000000	 -0.339201
+	H	 -0.474354	  0.912659	 -0.354496
+	C	 -0.725497	 -1.197984	 -0.523584
+	H	 -1.973902	 -1.322348	 -0.081109
+	H	 -0.918891	 -1.217851	 -1.600425
+	O	 -0.188863	 -2.385610	 -0.054994
+	C	 -1.121345	 -3.462664	 -0.095623
+	H	 -1.523945	 -3.557294	 -1.107657
+	C	 -0.445323	 -4.704525	  0.413082
+	O	 -2.170141	 -3.136947	  0.784800
+	H	 -0.101893	 -4.541811	  1.431374
+	H	 -1.142048	 -5.538179	  0.395355
+	H	  0.408620	 -4.937615	 -0.217455
+	O	 -2.900009	 -2.073079	  0.197860
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+            0.00  0.13  0.51  1.04  1.59  2.01  2.18  2.05  1.66  1.12  0.57  0.16  0.00 
+          End
+
+        Rotor     Hindered
+          Group                  13 14 15	# atoms in rotating group excluding the atom on the axis
+          Axis                   9 11 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+            0.00  0.16  0.60  1.19  1.78  2.21  2.35  2.17  1.71  1.12  0.54  0.14  0.00
+          End
+
+        Frequencies[1/cm]	39
+	 125.8
+         172.4	 280.4	 315.4
+	 417.0	 461.9	 501.2
+	 560.9	 618.2	 848.0
+	 872.3	 875.7	 959.3
+	 982.5	1095.6	1115.3
+	1146.1	1166.4	1186.8
+	1206.6	1278.2	1354.6
+	1373.2	1400.4	1422.8
+	1440.2	1490.1	1497.3
+	1500.9	1504.2	1647.2
+	3033.7	3042.4	3046.1
+	3079.8	3114.0	3147.2
+	3162.4	3165.2
+        !Torsional frequencies:	 190.26  198.39
+
+        !Imaginary mode:  -1709.2
+
+        ZeroEnergy[kcal/mol]    -16.55	
+        ElectronicLevels[1/cm]	1
+            0	2
+
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1709.2
+          WellDepth[kcal/mol]	19.04
+          WellDepth[kcal/mol]	10.66
+        End
+      End
+
+      ! Main TS ring flip
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/stereo/c4h9o3/transition_states/ts_ch3ch2och_oo_ch3_to_ch3choch_ooh_ch3_1A_1A/dft/rings/ring_flip.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.086319
+	H	  1.038413	  0.000000	 -0.338981
+	H	 -0.470061	  0.919233	 -0.345717
+	C	 -0.726100	 -1.186847	 -0.574686
+	H	 -1.921604	 -1.255186	  0.031567
+	H	 -0.919891	 -1.126955	 -1.643250
+	O	 -0.225118	 -2.447716	 -0.274530
+	C	 -0.771747	 -3.101929	  0.877157
+	H	 -0.503662	 -4.147751	  0.746573
+	C	 -0.273479	 -2.563384	  2.200696
+	O	 -2.176148	 -3.096782	  0.751271
+	H	 -0.691605	 -1.585837	  2.411124
+	H	 -0.578292	 -3.244412	  2.992816
+	H	  0.812199	 -2.503894	  2.185269
+	O	 -2.621714	 -1.755052	  0.869351
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.12  0.44  0.87  1.29  1.53  1.51  1.30  1.01  0.68  0.36  0.10  0.00
+          End
+
+        Rotor     Hindered
+          Group                  13 14 15	# atoms in rotating group excluding the atom on the axis
+          Axis                   11 9 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.12  0.55  1.23  2.02  2.68  2.91  2.64  1.99  1.24  0.59  0.16  0.00
+          End
+
+        Frequencies[1/cm]	39
+	 116.9
+	 140.5	 282.3	 348.2
+	 399.0	 500.9	 510.9
+	 584.8	 726.9	 785.5
+	 835.1	 868.2	 919.0
+	 946.2	1081.4	1093.5
+	1104.7	1135.5	1165.8
+	1175.0	1240.7	1368.8
+	1381.6	1396.0	1416.2
+	1418.0	1490.4	1491.9
+	1503.3	1517.7	1633.7
+	3042.6	3077.4	3110.1
+	3115.4	3121.3	3147.3
+	3154.2	3185.7
+
+        !Torsional frequencies:	 190.4  245.3
+
+        !Imaginary mode:  -1711.0
+
+        ZeroEnergy[kcal/mol]	-11.16
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1711.0
+          WellDepth[kcal/mol]	24.44
+          WellDepth[kcal/mol]	16.06
+        End
+      End
+
+      ! Secondary TS
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch2och_oo_ch3_to_ch3choch_ooh_ch3/dft/ro2_qooh_test.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.091897
+	H	  1.032323	  0.000000	 -0.343344
+	H	 -0.470165	  0.919750	 -0.343204
+	C	 -0.763721	 -1.188255	 -0.521520
+	H	 -1.836571	 -1.168589	 -0.353914
+	H	 -0.525388	 -1.208229	 -1.840234
+	O	 -0.274117	 -2.442602	 -0.183179
+	C	  0.839974	 -2.859894	 -0.973735
+	H	  1.645950	 -2.128135	 -0.899852
+	O	  0.404994	 -2.924632	 -2.309772
+	O	  0.183717	 -1.593069	 -2.742504
+	C	  1.237151	 -4.242412	 -0.538436
+	H	  0.398731	 -4.921155	 -0.671011
+	H	  2.080791	 -4.588368	 -1.129580
+	H	  1.518094	 -4.225131	  0.511260
+
+        Core    RigidRotor
+          SymmetryFactor        0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4          # atoms in rotating group excluding the atom on the axis
+          Axis                   1 5            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.14  0.51  1.01  1.52  1.91  2.07  1.94  1.55  1.01  0.48  0.11  0.00
+          End
+
+        Rotor     Hindered
+          Group                  14 15 16       # atoms in rotating group excluding the atom on the axis
+          Axis                   13 9           # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.17  0.61  1.21  1.81  2.25  2.39  2.20  1.74  1.13  0.55  0.14  0.00
+          End
+
+        Frequencies[1/cm]       39
+	 189.2
+	 200.6	 275.7	 323.4
+	 402.9	 497.3	 529.7
+	 584.4	 661.7	 800.5
+	 854.8	 873.7	 927.7
+	 981.2	1089.0	1098.4
+	1108.5	1166.5	1184.8
+	1190.1	1247.2	1366.1
+	1385.1	1393.7	1416.1
+	1434.4	1494.4	1496.9
+	1499.1	1503.8	1639.1
+	3043.2	3069.0	3079.8
+	3115.3	3128.5	3145.8
+	3162.6	3165.3
+        !Torsional frequencies:	 144.7	 150.7
+
+        !Imaginary mode:  -1714.8
+
+        ZeroEnergy[kcal/mol]   -15.35 
+        ElectronicLevels[1/cm]  1
+            0   2
+
+        Tunneling       Eckart
+          ImaginaryFrequency[1/cm]  1714.8
+          WellDepth[kcal/mol]   20.24
+          WellDepth[kcal/mol]   11.86
+        End
+      End
+
+      ! Secondary TS ring flip
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/stereo/c4h9o3/transition_states/ts_ch3ch2och_oo_ch3_to_ch3choch_ooh_ch3_1A_2A/dft/rings/ring_flip.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.092382
+	H	  1.034186	  0.000000	 -0.337471
+	H	 -0.485582	  0.912120	 -0.340741
+	C	 -0.722771	 -1.200006	 -0.525056
+	H	 -1.804938	 -1.208848	 -0.376107
+	H	 -0.666869	 -1.321101	 -1.850605
+	O	 -0.103655	 -2.381934	 -0.150464
+	C	 -0.330241	 -3.474473	 -1.043012
+	H	  0.350189	 -4.253725	 -0.709095
+	O	  0.183868	 -3.092545	 -2.302052
+	O	 -0.637338	 -2.059355	 -2.822872
+	C	 -1.764768	 -3.952877	 -1.073163
+	H	 -2.427320	 -3.205336	 -1.495176
+	H	 -1.824775	 -4.847571	 -1.688719
+	H	 -2.085304	 -4.197845	 -0.062858
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.13  0.50  1.04  1.61  2.05  2.22  2.07  1.65  1.10  0.56  0.16  0.00
+          End
+
+        Rotor     Hindered
+          Group                  14 15 16	# atoms in rotating group excluding the atom on the axis
+          Axis                   13 9 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.16  0.57  1.16  1.80  2.28  2.43  2.19  1.67  1.04  0.48  0.11  0.00
+          End
+
+        Frequencies[1/cm]	39
+	 114.0
+	 210.0	 278.6	 332.0
+	 417.0	 494.4	 506.5
+	 521.0	 726.0	 822.4
+	 862.1	 875.7	 946.5
+	 948.4	1085.7	1101.2
+	1134.3	1153.1	1172.5
+	1190.1	1268.3	1370.1
+	1374.2	1391.1	1420.1
+	1423.0	1489.6	1495.0
+	1501.3	1514.2	1640.5
+	3041.2	3052.8	3078.4
+	3113.5	3127.5	3147.0
+	3149.1	3179.9
+
+        !Torsional frequencies:	 177.2   201.8
+
+        !Imaginary mode:  -1706.2
+
+        ZeroEnergy[kcal/mol]	-13.39
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1706.2
+          WellDepth[kcal/mol]	22.21
+          WellDepth[kcal/mol]	13.83
+        End
+      End
+
+   End
+
+!-----------------------------------------------
+!TS 3: CH3CH2OCH_OO_CH3 --> CH3CH2OCHCH2 + OOH
+!-----------------------------------------------
+
+  Barrier       B3 w1 p1
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch_oo_och2ch3_to_ch2choch2ch3_ho2/dft/ts_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      16
+        O         0.000000        0.000000        0.000000
+        O         0.000000        0.000000        1.293550
+        C         2.284996        0.000000        1.577976
+        C         2.538412        0.150776        0.223175
+        O         2.413731       -1.187111        2.159714
+        C         1.845601       -1.302445        3.479829
+        C         2.239161       -2.648060        4.035775
+        H         2.108034        0.845360        2.230278
+        H         3.014818       -0.681681       -0.278619
+        H         1.247649        0.078491       -0.167694
+        H         2.835370        1.138714       -0.102289
+        H         0.765598       -1.200003        3.391264
+        H         2.227945       -0.486423        4.096336
+        H         1.863215       -3.446834        3.400490
+        H         3.321313       -2.737375        4.102964
+        H         1.818102       -2.772796        5.031977
+
+        Core    RigidRotor
+          SymmetryFactor        1.0
+        End
+
+        Rotor     Hindered
+          Group                  6 7 12 13 14 15 16             # atoms in rotating group excluding the atom on the axis
+          Axis                   3 5            # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    36             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                0.00  0.33  1.30  2.86  4.76  6.59  7.94  8.59  8.46  7.65  6.38  4.93  3.14  1.47  0.43  0.15  0.51  1.35  2.53  3.91  5.39  6.83  7.94  8.44  8.52  8.41  8.19  7.85  7.34  6.65  5.77  4.71  3.54  2.31  1.18  0.33
+          End
+
+        Rotor     Hindered
+          Group                  12 13 7 14 15 16               # atoms in rotating group excluding the atom on the axis
+          Axis                   5 6            # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    36             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                 0.03  0.09  0.26  0.50  0.76  0.94  0.99  0.87  0.68  0.57  0.70  1.10  1.44  1.52  1.60  1.89  2.32  2.76  3.09  3.25  3.16  2.76  2.04  1.29  0.79  0.56  0.42  0.22  0.02  0.00  0.18  0.40  0.50  0.44  0.26  0.09
+          End
+
+        Rotor     Hindered
+          Group                  14 15 16               # atoms in rotating group excluding the atom on the axis
+          Axis                   6 7            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                 0.00  0.20  0.75  1.53  2.34  2.97  3.21  2.98  2.37  1.55  0.76  0.20
+          End
+
+        Frequencies[1/cm]       38
+
+         176.5   229.4   258.8
+         376.6   438.8   468.9
+         532.0   616.4   668.3
+         825.6   864.9   951.8
+         991.2  1017.9  1093.0
+        1138.2  1187.3  1229.4
+        1277.7  1311.6  1322.5
+        1323.4  1403.3  1430.5
+        1458.4  1499.0  1516.0
+        1534.1  1597.4  1617.8
+        3049.0  3066.4  3112.0
+        3141.3  3141.8  3149.1
+        3182.2  3232.5
+        !Torsional frequencies:   42.5   104.5   135.0
+
+        !Imaginary mode:  -1089.7
+
+        ZeroEnergy[kcal/mol]    -6.09
+        ElectronicLevels[1/cm]  1
+            0   2
+        Tunneling       Eckart
+          ImaginaryFrequency[1/cm]  1089.7
+          WellDepth[kcal/mol]   29.50
+          WellDepth[kcal/mol]   6.69
+        End
+
+   End
+
+!-----------------------------------------------
+!TS 4: CH3CH2OCH_OO_CH3 --> CH2CH2OCH_OOH_CH3
+!-----------------------------------------------
+
+  Barrier       B4 w1 w3
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch2och_oo_ch3_to_ch2ch2och_ooh_ch3/dft/ts_ch3ch2och_oo_ch3_to_ch2ch2och_ooh_ch3_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	H	 -2.052889	 -0.077098	 -1.454288
+	C	 -2.093152	 -0.075278	 -0.370160
+	H	 -3.079186	  0.090816	  0.050809
+	C	 -1.256972	 -1.121184	  0.306286
+	H	 -1.648256	 -2.120659	  0.107666
+	H	 -1.262446	 -0.969790	  1.390428
+	O	  0.085260	 -1.132961	 -0.175345
+	C	  0.911764	 -0.100016	  0.289870
+	H	  0.786550	  0.024225	  1.369225
+	C	  2.327523	 -0.422596	 -0.117039
+	H	  3.004289	  0.350046	  0.237170
+	H	  2.616036	 -1.380827	  0.306031
+	H	  2.388109	 -0.484008	 -1.201009
+	O	  0.606900	  1.153783	 -0.317649
+	O	 -0.527531	  1.708107	  0.320688
+	H	 -1.403454	  1.049831	 -0.078489
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  11 12 13	# atoms in rotating group excluding the atom on the axis
+          Axis                   8 10 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.15  0.57  1.17  1.80  2.29  2.49  2.32  1.84  1.20  0.59  0.16  0.00
+          End
+
+        Frequencies[1/cm]	40
+	 126.1   185.0	
+	 284.6	 324.8	 358.1
+	 429.8	 525.7	 553.9
+	 585.4	 659.7	 826.7
+	 851.3	 863.7	 932.5
+	 975.0	1055.9	1073.7
+	1121.6	1133.0	1149.8
+	1187.6	1226.6	1315.0
+	1365.1	1385.5	1413.1
+	1431.2	1446.9	1473.0
+	1494.2	1497.8	1504.1
+	3019.9	3039.7	3070.4
+	3078.5	3111.7	3159.7
+	3164.8	3206.5
+        !Torsional frequencies:	 194.8 126.1
+
+        !Imaginary mode:  -1933.1
+
+        ZeroEnergy[kcal/mol]	-10.81
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1933.1
+          WellDepth[kcal/mol]	24.79
+          WellDepth[kcal/mol]	9.14
+        End
+      End
+
+!-----------------------------------------------
+!TS 5: CH3CH2OCH_OO_CH3 --> CH3CH2OCH_OOH_CH2
+!-----------------------------------------------
+
+  Barrier       B5 w1 w4
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch2och_oo_ch3_to_ch3ch2och_ooh_ch2/dft/ts_ch3ch2och_oo_ch3_to_ch3ch2och_ooh_ch2_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.003845	  0.044120	 -0.073538
+	H	  0.051431	  0.082136	  1.012490
+	H	  1.019287	  0.045604	 -0.464421
+	H	 -0.506900	  0.937563	 -0.429192
+	C	 -0.736871	 -1.190821	 -0.525347
+	H	 -1.754926	 -1.207533	 -0.134062
+	H	 -0.787762	 -1.245741	 -1.616455
+	O	 -0.023690	 -2.336159	 -0.034374
+	C	 -0.547322	 -3.539837	 -0.436095
+	H	 -0.854958	 -3.523674	 -1.487817
+	O	 -1.701642	 -3.845292	  0.376869
+	O	 -1.861269	 -5.240786	  0.137668
+	C	  0.407071	 -4.683183	 -0.155972
+	H	  0.893139	 -4.627506	  0.811683
+	H	  1.028467	 -5.037981	 -0.967937
+	H	 -0.678759	 -5.464695	  0.024375
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.19  0.71  1.45  2.24  2.86  3.12  2.92  2.33  1.52  0.74  0.19  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 6 7	# atoms in rotating group excluding the atom on the axis
+          Axis                   5 8 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.63  1.24  0.82  1.46  2.65  3.81  2.53  0.41  0.48  1.16  0.61  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 5 6 7
+          Axis                   8 9 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  1.76  4.98  4.14  1.55  1.38  4.19  6.47  5.15  3.37  2.48  1.09  0.00
+          End
+
+        Frequencies[1/cm]	38
+
+	 143.4   225.1 	 351.0
+	 417.1	 432.5	 546.2
+	 600.9	 668.9	 826.8
+	 875.4	 894.8	 940.2
+	 983.0	1036.9	1076.8
+	1109.9	1122.4	1163.9
+	1188.8	1214.0	1310.6
+	1338.8	1382.9	1418.0
+	1444.6	1474.8	1498.2
+	1515.3	1538.3	1736.5
+	3012.8	3028.5	3064.5
+	3080.9	3131.1	3138.8
+	3145.3	3230.2
+        !Torsional frequencies:	  53.6	  92.9	 256.8 
+
+        !Imaginary mode:  -2170.6
+
+        ZeroEnergy[kcal/mol]	1.31
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  2170.6
+          WellDepth[kcal/mol]	36.91
+          WellDepth[kcal/mol]	20.40
+        End
+      End
+
+!-----------------------------------------------
+!TS 6: CH3CH2OCH_OO_CH3 --> CH3CH2OC_O_CH3 + OH
+!-----------------------------------------------
+
+  Barrier       B6 w1 p4
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch2och_oo_ch3_to_ch3ch2oc_ooh_ch3/dft/ts_ch3ch2och_oo_ch3_to_ch3ch2oc_ooh_ch3_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.088018
+	H	  1.031469	  0.000000	 -0.345941
+	H	 -0.480229	  0.914530	 -0.344266
+	C	 -0.745885	 -1.198715	 -0.532193
+	H	 -1.778344	 -1.220916	 -0.192664
+	H	 -0.746475	 -1.226149	 -1.622716
+	O	 -0.065395	 -2.376287	 -0.049135
+	C	 -0.587306	 -3.572271	 -0.421880
+	H	 -0.649620	 -3.705737	 -1.705544
+	C	  0.133732	 -4.732345	  0.204610
+	O	 -1.971344	 -3.671691	 -0.419505
+	H	 -0.075602	 -4.741955	  1.274565
+	H	 -0.220417	 -5.660038	 -0.233795
+	H	  1.205003	 -4.633834	  0.055443
+	O	 -1.975542	 -3.756925	 -1.916414
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.19  0.71  1.46  2.25  2.87  3.11  2.89  2.27  1.46  0.69  0.17  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 6 7    # atoms in rotating group excluding the atom on the axis
+          Axis                   5 8 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.40  0.84  0.19  0.81  3.62  5.76  4.79  2.50  0.41  0.66  0.42  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 5 6 7	# atoms in rotating group excluding the atom on the axis
+          Axis                   8 9 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  1.31  3.89  5.73  7.13  7.61  6.36  4.35  4.32  5.79  5.73  1.95  0.00
+          End
+
+        Rotor     Hindered
+          Group                  13 14 15	# atoms in rotating group excluding the atom on the axis
+          Axis                   9 11 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.16  0.60  1.22  1.86  2.35  2.56  2.41  1.94  1.30  0.67  0.20  0.00
+          End
+
+        Frequencies[1/cm]	37
+
+	 111.6   195.1	 
+	 354.5	 379.5	 457.5
+	 558.5	 683.5	 821.6
+	 850.4	 892.8	 905.6
+	1004.9	1058.1	1097.5
+	1117.3	1132.9	1188.8
+	1259.0	1268.3	1308.9
+	1407.9	1413.6	1438.1
+	1492.2	1496.1	1499.6
+	1515.3	1538.3	1981.2
+	3062.5	3064.4	3064.6
+	3121.4	3139.0	3144.3
+	3148.1	3176.2
+        !Torsional frequencies:	  34.4	 127.3	 209.5   254.6
+
+        !Imaginary mode:  -1503.0
+
+        ZeroEnergy[kcal/mol]	2.44
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1503.0
+          WellDepth[kcal/mol]	38.03
+          WellDepth[kcal/mol]	82.48
+        End
+      End
+
+!-----------------------------------------------
+!TS 7: CH3CHOCH_OOH_CH3 --> CH3CHO + CH3CHO + OH [ADD]
+!-----------------------------------------------
+!TS 7': CH3CHOCH_OOH_CH3 --> CH3CHO + CH3CHO + OH [Sakai CBS-QB3]
+!-----------------------------------------------
+
+  Barrier       B7 w2 p3
+  Union
+      ! ADD TS.
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch_ooh_chch3_to_ch3cho_ch3cho_oh/dft/ts_oh_elim_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]      16
+        O         0.000000        0.000000        0.000000
+        C         0.000000        0.000000        1.273436
+        C         1.270947        0.000000        2.060282
+        H        -0.951124       -0.004906        1.810901
+        H         1.485891        1.001727        2.445380
+        H         1.215823       -0.665044        2.923373
+        H         2.102613       -0.296896        1.424560
+        C        -0.345162       -1.687585       -0.894372
+        C         0.292134       -2.721388       -0.056019
+        O        -1.687199       -1.722045       -0.831490
+        H         0.078966       -1.351272       -1.829558
+        H         0.137782       -2.471273        0.999322
+        H        -0.148568       -3.704061       -0.229322
+        H         1.358147       -2.767047       -0.259161
+        O        -2.188066       -0.522576       -1.484169
+        H        -1.675580        0.134317       -0.969655
+
+        Core    RigidRotor
+          SymmetryFactor        0.5
+        End
+
+        Rotor     Hindered #rotation about transition state
+          Group                  2 3 4 5 6 7            # atoms in rotating group excluding the atom on the axis
+          Axis                   1 8            # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    36             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                 0.00  0.06  0.24  0.56  0.96  1.35  1.71  1.78  1.74  1.67  1.61  1.59  1.59  1.60  1.65  1.72  1.88  2.26  2.86  3.54  4.11  4.43  4.54  4.53  4.44  4.27  3.92  3.48  3.08  2.76  2.56  2.24  1.39  0.70  0.27  0.06
+          End
+
+        Rotor     Hindered #methyl on acetaldehyde
+          Group                  5 6 7          # atoms in rotating group excluding the atom on the axis
+          Axis                   2 3            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                0.00  0.04  0.13  0.26  0.39  0.50  0.54  0.51  0.40  0.26  0.13  0.03
+          End
+
+        Rotor     Hindered #methyl on peroxy-fragment
+          Group                  12 13 14               # atoms in rotating group excluding the atom on the axis
+          Axis                   8 9            # rotational axis
+          Symmetry               3              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                 0.00  0.08  0.31  0.67  1.10  1.53  1.90  1.34  1.03  0.68  0.35  0.11
+          End
+
+        Rotor     Hindered # ho2
+          Group                  15 16          # atoms in rotating group excluding the atom on the axis
+          Axis                   8 10           # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    36             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                 0.00  0.56  2.02  3.17  3.98  4.86  5.70  6.44  7.10  7.64  8.01  8.28  8.46  8.38  8.18  7.89  7.48  6.92  6.27  5.70  5.22  4.78  4.37  4.16  4.32  5.02  6.36  8.22  10.24  11.84  11.79  10.51  8.18  5.52  3.27  1.95
+          End
+
+        Rotor     Hindered #oh
+          Group                  16             # atoms in rotating group excluding the atom on the axis
+          Axis                   10 15          # rotational axis
+          Symmetry               1              # 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    36             # number of equidistant point on the potetial energy curve with respect to the rotational angle
+                 0.00  0.21  0.86  1.87  3.08  4.31  5.38  6.20  6.67  6.71  6.28  5.73  5.19  4.72  4.35  4.08  3.91  3.81  3.76  3.74  3.74  3.76  3.79  3.83  3.85  3.84  3.77  3.64  3.45  3.22  2.98  2.77  2.61  1.60  0.79  0.21
+          End
+
+        Frequencies[1/cm]       36
+
+         222.0
+         244.1   314.9   471.2
+         510.6   524.4   623.9
+         669.8   868.6   896.5
+         907.3   973.3  1010.9
+        1056.9  1121.3  1146.4
+        1224.2  1284.3  1377.6
+        1399.9  1424.8  1452.3
+        1471.4  1475.4  1484.1
+        1495.8  1515.7  3007.2
+        3017.9  3057.5  3074.9
+        3083.5  3135.5  3153.7
+        3194.5  3548.1
+        !Torsional frequencies:   41.5    58.1    98.3   178.2   184.3
+
+        !Imaginary mode:  -537.3
+
+        ZeroEnergy[kcal/mol]    -5.69
+        ElectronicLevels[1/cm]  1
+            0   2
+        Tunneling       Eckart
+          ImaginaryFrequency[1/cm]   537.3
+          WellDepth[kcal/mol]   21.53
+          WellDepth[kcal/mol]   48.38
+        End
+      End
+
+      ! Sakai TS @ CBS-QB3 theory.
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3choch_ooh_ch3_to_ch3cho+ch3cho+oh/dft/new_sakai_cbs_qb3.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.101135
+	H	  1.040335	  0.000000	 -0.330510
+	H	 -0.475468	  0.934694	 -0.315232
+	C	 -0.720351	 -1.175200	 -0.540850
+	H	 -0.245034	 -2.097439	 -0.843579
+	O	 -2.038029	 -1.162858	 -0.441348
+	C	 -2.783369	 -2.282069	 -1.073001
+	H	 -3.512875	 -2.538546	 -0.300884
+	C	 -3.440202	 -1.710792	 -2.327488
+	H	 -4.090645	 -2.465083	 -2.772128
+	H	 -4.031731	 -0.831629	 -2.066870
+	H	 -2.674085	 -1.430009	 -3.051728
+	O	 -2.010097	 -3.322290	 -1.414303
+	O	 -1.676968	 -4.113129	  0.063014
+	H	 -1.514615	 -4.969143	 -0.356684
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve
+            0.00  0.06  0.16  0.28  0.37  0.41  0.39  0.31  0.22  0.13  0.05  0.01  0.00
+          End
+
+        Rotor     Hindered
+          Group                  11 12 13       # atoms in rotating group excluding the atom on the axis
+          Axis                   10 8 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve
+            0.00  0.30  0.97  1.86  2.72  3.31  3.45  3.10  2.38  1.50  0.68  0.14  0.00
+
+          End
+        Rotor     Hindered
+          Group                  16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   14 15 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve
+            0.00  0.42  1.23  2.04  2.93  4.47  6.01  6.42  5.42  3.42  1.41  0.24  0.00
+          End
+
+        Frequencies[1/cm]	38
+
+          86.4	 115.8   161.7
+	 234.1	 266.8	 351.3
+	 411.5	 507.3	 538.4
+	 679.9	 741.2	 899.6
+	 951.0	1002.5	1039.3
+	1058.5	1099.6	1136.9
+	1153.0	1269.9	1324.0
+	1368.8	1397.9	1403.3
+	1450.8	1468.5	1482.8
+	1486.8	1495.9	2961.6
+	3038.7	3047.0	3065.2
+	3105.8	3124.3	3129.8
+	3218.6	3796.8
+        !Torsional frequencies:	  76.6    157.5    219.0
+
+        !Imaginary mode:  -862.2
+
+        ZeroEnergy[kcal/mol]	-13.51     !CBS-QB3 relative Energy
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]   862.2
+          WellDepth[kcal/mol]	13.70
+          WellDepth[kcal/mol]	40.56
+        End
+      End
+
+   End
+
+!-----------------------------------------------
+!TS 8: CH3CH2OCH_OOH_CH2 --> CH3CH2OCHCH2 + OOH
+!-----------------------------------------------
+
+  Barrier       B8 w4 p1
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch2och_ooh_ch2_to_ch3ch2ochch2+ooh/dft/ts_ch3ch2och_ooh_ch2_to_ch3ch2ochch2+ooh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.087642
+	H	  1.030783	  0.000000	 -0.348717
+	H	 -0.483590	  0.912019	 -0.346310
+	C	 -0.743425	 -1.205430	 -0.519346
+	H	 -1.768723	 -1.232250	 -0.157042
+	H	 -0.753011	 -1.229331	 -1.612034
+	O	 -0.059755	 -2.376873	 -0.041101
+	C	 -0.599651	 -3.541118	 -0.414469
+	H	 -1.144495	 -3.546543	 -1.350956
+	C	 -0.081035	 -4.710170	  0.099377
+	O	 -2.303186	 -3.593712	  0.533399
+	H	  0.568299	 -4.681668	  0.959514
+	H	 -0.415562	 -5.656661	 -0.287608
+	O	 -2.153410	 -2.830590	  1.700393
+	H	 -2.114804	 -3.509878	  2.385853
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.18  0.70  1.44  2.24  2.87  3.14  2.95  2.35  1.53  0.74  0.19  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 6 7	# atoms in rotating group excluding the atom on the axis
+          Axis                   5 8 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.41  1.20  0.81  1.27  2.24  3.66  3.76  2.07  1.52  1.30  0.49  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 5 6 7	# atoms in rotating group excluding the atom on the axis
+          Axis                   8 9 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  2.23  6.89  8.35  5.77  2.98  3.17  6.85  8.50  7.80  4.08  1.82  0.00
+          End
+
+        Rotor     Hindered
+          Group                  15 16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   9 12 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.86  2.28  4.01  4.27  3.05  2.33  3.11  4.88  5.14  3.26  1.05  0.00
+          End
+
+        Rotor     Hindered
+          Group                  16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   12 15 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  1.49  5.47  7.91  4.23  1.52  1.16  2.79  6.33  9.01  5.20  1.50  0.00
+          End
+
+        Frequencies[1/cm]	36
+
+	 188.1   
+         214.4   270.2 	 413.8
+	 484.6	 508.0	 573.9
+	 748.0	 825.5	 858.5
+	 890.2	 996.6	1064.8
+	1095.2	1144.3	1191.2
+	1257.8	1271.9	1313.7
+	1362.8	1395.5	1424.9
+	1457.3	1498.4	1516.0
+	1530.5	1560.6	3037.7
+	3064.4	3116.8	3139.3
+	3147.7	3160.1	3192.9
+	3304.0	3753.4
+        !Torsional frequencies:	  30.7	 104.5	 140.6	 239.1   363.1
+
+        !Imaginary mode:  -567.6
+
+        ZeroEnergy[kcal/mol]	-1.63
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]   567.6
+          WellDepth[kcal/mol]	17.46
+          WellDepth[kcal/mol]	11.16
+        End
+      End
+
+!-----------------------------------------------
+!TS 9: CH2CH2OCH_OOH_CH3 --> CH3CH_O_OOH + C2H4
+!-----------------------------------------------
+
+  Barrier       B9 w3 p2
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch2ch2och_ooh_ch3_to_ch3cho+c2h4+ooh/dft/ts_ch2ch2och_ooh_ch3_to_ch3cho+c2h4+ooh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.079852
+	H	  0.960493	  0.000000	 -0.491022
+	C	 -1.153667	  0.083000	 -0.697227
+	H	 -2.109032	  0.013418	 -0.203351
+	H	 -1.161066	  0.000336	 -1.772980
+	O	 -1.391325	  2.167868	 -0.764976
+	C	 -0.365864	  2.765223	 -1.438915
+	H	  0.011265	  2.160217	 -2.271223
+	C	 -0.879469	  4.113067	 -1.950682
+	O	  0.811253	  2.904715	 -0.639043
+	H	 -1.218429	  4.719645	 -1.117398
+	H	 -0.063001	  4.623392	 -2.456551
+	H	 -1.700603	  3.956240	 -2.644683
+	O	  0.449008	  3.634610	  0.558863
+	H	 -0.227414	  3.040910	  0.921597
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  1 2 3 5 6	# atoms in rotating group excluding the atom on the axis
+          Axis                   4 7 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.56  1.67  2.30  2.77  2.76  1.55  0.50  0.69  1.11  1.22  0.42  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 5 6	# atoms in rotating group excluding the atom on the axis
+          Axis                   7 8 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  2.04  8.20  8.21  4.41  3.39  5.10  8.84  9.80  9.76  7.58  4.65  2.54
+          End
+
+        Rotor     Hindered
+          Group                  15 16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   8 11 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  3.57  7.13  3.88  0.90  2.37  4.48  3.56  3.18  6.30  7.27  4.19  2.51
+          End
+
+        Rotor     Hindered
+          Group                  16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   11 15 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.31  1.62  3.06  3.62  3.06  2.44  3.02  5.13  6.69  4.72  1.49  0.00
+          End
+
+        Rotor     Hindered
+          Group                  12 13 14	# atoms in rotating group excluding the atom on the axis
+          Axis                   8 10 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.15  0.58  1.17  1.78  2.23  2.38  2.19  1.71  1.10  0.53  0.14  0.00
+          End
+
+        Frequencies[1/cm]	36
+
+         193.7 
+	 208.7	 361.5	 390.5
+	 413.1	 512.5	 701.6
+	 817.5	 833.0	 908.4
+	 933.2	 952.6	1018.8
+	1025.1	1048.5	1108.2
+	1156.2	1253.4	1310.6
+	1340.7	1359.9	1392.9
+	1416.7	1490.4	1490.7
+	1503.3	1620.0	3015.5
+	3076.4	3156.8	3174.1
+	3176.7	3184.2	3258.2
+	3283.7	3701.8
+        !Torsional frequencies:	  49.7	  66.7	 148.3	 158.2	 280.8
+
+        !Imaginary mode:  -327.2
+
+        ZeroEnergy[kcal/mol]	3.04
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]   327.2
+          WellDepth[kcal/mol]	22.99
+          WellDepth[kcal/mol]	4.58
+        End
+      End
+
+!-----------------------------------------------
+!TS 10: CH3CHOCH_OOH_CH3 --> c-OCH_CH3_OCH_CH3 + OH
+!-----------------------------------------------
+
+  Barrier       B10 w2 p5
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3choch_ooh_ch3_to_c-och_ch3_och_ch3+oh/dft/ts_ch3choch_ooh_ch3_to_c-och_ch3_och_ch3+oh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	 -2.509093	 -0.372418	  0.528567
+	H	 -2.905918	 -1.383519	  0.468688
+	H	 -2.137051	 -0.183929	  1.533590
+	H	 -3.331401	  0.326776	  0.339111
+	C	 -1.430629	 -0.179520	 -0.459267
+	H	 -1.494753	 -0.650092	 -1.435312
+	O	 -0.739348	  1.002998	 -0.398791
+	C	  0.607690	  0.534134	 -0.441612
+	H	  0.976785	  0.516018	 -1.471574
+	C	  1.466447	  1.371151	  0.461498
+	O	  0.384172	 -0.821329	 -0.004098
+	H	  1.104324	  1.290358	  1.483545
+	H	  2.498443	  1.040962	  0.414282
+	H	  1.402331	  2.409760	  0.139303
+	O	  1.941795	 -1.320925	  0.167138
+	H	  1.817902	 -2.153492	 -0.302728
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+          0.00  0.09  0.30  0.58  0.85  1.06  1.15  1.08  0.87  0.58  0.29  0.08  0.00 
+          End
+
+        Rotor     Hindered
+          Group                  12 13 14       # atoms in rotating group excluding the atom on the axis
+          Axis                   10 8 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.15  0.61  1.28  1.98  2.53  2.73  2.52  1.99  1.30  0.65  0.18  0.00
+          End
+
+        Rotor     Hindered
+          Group                  16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   15 11 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.71  2.57  5.48  8.25  8.62  6.13  2.85  0.91  0.34  0.25  0.03  0.00
+          End
+
+        Frequencies[1/cm]	38
+	  80.9   109.2   239.9
+	 295.3	 368.0	 435.0
+	 462.6	 502.2	 658.8
+	 774.1	 865.1	 891.1
+	 945.5	1039.6	1102.7
+	1104.2	1142.9	1154.4
+	1173.5	1201.3	1314.0
+	1387.0	1400.9	1421.6
+	1446.3	1480.2	1486.6
+	1491.7	1504.4	3012.0
+	3027.6	3070.8	3100.6
+	3130.0	3146.4	3152.6
+	3179.7	3815.6
+        !Torsional frequencies:	  135.9   171.4   176.1
+
+        !Imaginary mode:  -1095.2
+
+        ZeroEnergy[kcal/mol]	-5.39
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1095.2
+          WellDepth[kcal/mol]	21.82
+          WellDepth[kcal/mol]	43.36
+        End
+      End
+
+!-----------------------------------------------
+!TS 11: CH2CH2OCH_OOH_CH3 --> c-OCH2CH2OCH_CH3 + OH
+!-----------------------------------------------
+
+  Barrier       B11 w3 p6
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch2ch2och_ooh_ch3_to_c-och2ch2och_ch3+oh/dft/ts_ch2ch2och_ooh_ch3_to_c-och2ch2och_ch3+oh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.078637
+	H	  0.955357	  0.000000	 -0.498611
+	C	 -1.215642	 -0.476096	 -0.699039
+	H	 -1.554889	 -1.456326	 -0.363991
+	H	 -1.062978	 -0.506871	 -1.781656
+	O	 -2.274177	  0.426008	 -0.367764
+	C	 -1.912256	  1.730676	 -0.718019
+	H	 -1.920243	  1.856832	 -1.805917
+	C	 -2.854616	  2.678609	 -0.023896
+	O	 -0.527112	  1.923652	 -0.306102
+	H	 -2.765114	  2.549514	  1.052676
+	H	 -2.619665	  3.702009	 -0.293723
+	H	 -3.875669	  2.449633	 -0.322766
+	O	 -0.239508	  3.384356	 -0.929900
+	H	  0.180207	  3.744156	 -0.139226
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  12 13 14	# atoms in rotating group excluding the atom on the axis
+          Axis                   10 8 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.15  0.57  1.17  1.83  2.38  2.65  2.53  2.04  1.35  0.68  0.19  0.00
+          End
+
+        Rotor     Hindered
+          Group                  16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   11 15 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.07  0.12  0.06  0.46  1.85  4.30  7.04  8.04  6.15  2.88  0.68  0.00
+          End
+
+        Frequencies[1/cm]	39
+	  78.9
+	 148.5	 263.6	 293.1
+	 334.6	 441.7	 498.2
+	 557.7	 617.6	 621.9
+	 811.8	 843.7	 873.6
+	 901.3	1023.0	1069.4
+	1095.3	1126.5	1152.9
+	1173.4	1186.7	1285.8
+	1355.4	1389.1	1396.8
+	1430.3	1481.9	1494.7
+	1507.6	1508.6	3017.0
+	3030.1	3073.4	3089.1
+	3146.2	3177.4	3181.8
+	3285.3	3806.9
+        !Torsional frequencies:	  205.3   215.3
+
+        !Imaginary mode:  -1085.0
+
+        ZeroEnergy[kcal/mol]	-2.34
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]  1085.0
+          WellDepth[kcal/mol]	17.60
+          WellDepth[kcal/mol]	54.27
+        End
+      End
+
+!-----------------------------------------------
+!TS 12: CH3CH2OCH_OOH_CH2 --> c-OCH2CH_OCH2CH3 + OH
+!-----------------------------------------------
+
+  Barrier       B12 w4 p7
+      ! Current data taken from:
+      !/gpfs/data/cfgoldsm/adanilac/qchem/gas_phase/coh/c4o3/c4h9o3/transition_states/ts_ch3ch2och_ooh_ch2_to_c-och2ch_och2ch3+oh/dft/ts_ch3ch2och_ooh_ch2_to_c-och2ch_och2ch3+oh_b2plypd3_ccpvtz.log
+      RRHO
+        Geometry[angstrom]	16
+	C	  0.000000	  0.000000	  0.000000
+	H	  0.000000	  0.000000	  1.088127
+	H	  1.032392	  0.000000	 -0.344487
+	H	 -0.481667	  0.914014	 -0.344413
+	C	 -0.740272	 -1.206404	 -0.526174
+	H	 -1.775925	 -1.221159	 -0.191349
+	H	 -0.739859	 -1.223899	 -1.620172
+	O	 -0.065756	 -2.375912	 -0.039437
+	C	 -0.531376	 -3.558294	 -0.570173
+	H	 -0.593708	 -3.528631	 -1.660276
+	C	  0.067435	 -4.747073	  0.039201
+	O	 -1.697857	 -4.081032	 -0.007927
+	H	  0.391865	 -4.691382	  1.063924
+	H	  0.100161	 -5.678412	 -0.497996
+	O	 -3.034508	 -3.266848	 -0.656347
+	H	 -3.561085	 -4.064689	 -0.788130
+
+        Core	RigidRotor
+          SymmetryFactor	0.5
+        End
+
+        Rotor     Hindered
+          Group                  2 3 4 		# atoms in rotating group excluding the atom on the axis
+          Axis                   1 5 		# rotational axis
+          Symmetry               3 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.18  0.70  1.45  2.25  2.87  3.13  2.93  2.33  1.52  0.74  0.19  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 6 7	# atoms in rotating group excluding the atom on the axis
+          Axis                   5 8 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.78  1.54  1.06  1.13  3.44  5.17  4.81  2.76  0.68  1.17  0.73  0.00
+          End
+
+        Rotor     Hindered
+          Group                  1 2 3 4 5 6 7	# atoms in rotating group excluding the atom on the axis
+          Axis                   8 9 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  1.58  3.79  2.60  1.75  3.27  6.22  6.90  4.47  3.57  3.22  1.35  0.00
+          End
+
+        Rotor     Hindered
+          Group                  16 		# atoms in rotating group excluding the atom on the axis
+          Axis                   15 12 		# rotational axis
+          Symmetry               1 		# 360/angle of rotation to recover the initial structure
+          Potential[kcal/mol]    12 		# number of equidistant point on the potetial energy curve with respect to the rotational angle
+           0.00  0.08  0.33  0.59  1.13  2.39  3.98  6.59  8.40  7.60  5.75  0.56  0.00
+          End
+
+        Frequencies[1/cm]	37
+
+	 134.0   202.4	 
+	 260.7	 377.6	 400.9
+	 497.1	 553.9	 623.2
+	 793.8	 824.5	 855.7
+	 953.7	 969.6	1039.8
+	1080.7	1134.9	1174.2
+	1181.6	1203.5	1308.1
+	1317.8	1388.4	1417.7
+	1447.0	1487.9	1498.4
+	1515.3	1541.8	3025.8
+	3056.1	3061.3	3105.4
+	3135.4	3141.5	3201.0
+	3328.2	3808.6
+        !Torsional frequencies:	  60.9	  93.4	 152.7   250.6
+
+        !Imaginary mode:  -995.9
+
+        ZeroEnergy[kcal/mol]	-5.83
+        ElectronicLevels[1/cm]	1
+            0	2
+        Tunneling	Eckart
+          ImaginaryFrequency[1/cm]   995.9
+          WellDepth[kcal/mol]	13.26
+          WellDepth[kcal/mol]	28.71
+        End
+      End
+
+!-------------------------------------
+
+End

@@ -1,0 +1,59 @@
+ELEMENTS
+
+O
+H
+C
+
+END
+
+
+SPECIES
+
+C4ALK-808sWv       ! SMILES: CC=CC           ChI: InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3
+C4CETH-RvEsWv     ! SMILES: CC1OC1C         ChI: InChI=1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3
+H                    ! SMILES: [H]             ChI: InChI=1S/H
+O                    ! SMILES: [O]             ChI: InChI=1S/O
+O2                   ! SMILES: O=O             ChI: InChI=1S/O2/c1-2
+OH                   ! SMILES: [OH]            ChI: InChI=1S/HO/h1H
+HO2                  ! SMILES: O[O]            ChI: InChI=1S/HO2/c1-2/h1H
+H2O                  ! SMILES: O               ChI: InChI=1S/H2O/h1H2
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+! These two reactions contain stereo and were calculated in our rates
+C4ALK-808sWv + HO2 = C4CETH-RvEsWv + OH          5.000E+12     0.000       -0
+C4ALK-808sWv + HO2 = H + OH                         3.000E+12     0.000       -0
+
+! This reaction contains stereo but was not calculated
+H + HO2 = C4CETH-RvEsWv + OH                       3.500E+12     0.000       -0
+
+! No stereo
+O + O = O2                                            1.000E+12     0.000        0
+H + OH = H2O                                          1.000E+12     0.000        0
+
+R+O2=RO2                                            1.0     0.00    0.00
+
+!! For testing PLOG factor multiplication
+!CO+OH<=>CO2+H                                     +2.30000000E+007 +1.35000000E+000 +9.74000000E+002 
+!PLOG /                           +1.31500000E-002 +2.10000000E+005 +1.90000000E+000 -1.06400000E+003 /
+!PLOG /                           +1.31500000E-001 +2.50000000E+005 +1.88000000E+000 -1.04300000E+003 /
+!PLOG /                           +1.31500000E+000 +8.70000000E+005 +1.73000000E+000 -6.85000000E+002 /
+!PLOG /                           +1.31580000E+001 +6.80000000E+006 +1.48000000E+000 +4.80000000E+001 /
+!PLOG /                           +1.31580000E+002 +2.30000000E+007 +1.35000000E+000 +9.74000000E+002 /
+!
+!
+!! For testing Lindemann factor multiplication
+!HOCHO(+M)<=>CO+H2O(+M)                            +7.50000000E+014 +0.00000000E+000 +6.87100000E+004 
+!LOW /                                             +4.10000000E+015 +0.00000000E+000 +5.29800000E+004 /
+!
+!! For testing Troe factor multiplication
+!CH3(+M)<=>CH2+H(+M)                    +5.00000000E+013 -3.20000000E-001 -2.62300000E+002 
+!LOW /                                             +1.95500000E+060 -1.28100000E+001 +6.25000000E+003 /
+!TROE /                           +1.04000000E-001 +1.60600000E+003 +6.00000000E+004 +6.11840000E+003 /
+!AR / +0.7000 / CO / +1.5000 / H2 / +2.0000 / CH4 / +2.0000 / CO2 / +2.0000 / C2H6 / +3.0000 / H2O / +6.0000 / 
+
+END
+
