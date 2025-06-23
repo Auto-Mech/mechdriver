@@ -10,6 +10,7 @@ import networkx as nx
 import pandas as pd
 import yaml
 from hyperqueue import Client, Job
+from hyperqueue.ffi.protocol import ResourceRequest
 
 from ..base import Status
 from ._0setup import INFO_FILE, SUBTASK_DIR, SubtasksInfo, Task
@@ -67,6 +68,7 @@ def run(
                     stdout=subtask_path / f"{stem}.log",
                     stderr=subtask_path / f"{stem}.log",
                     deps=deps,
+                    resources=ResourceRequest(resources={"mem": task.mem * 1000}),
                 )
 
                 # Add the job to the job dictionary
