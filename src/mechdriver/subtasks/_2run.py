@@ -41,6 +41,10 @@ def run(
     info_file = dir_path / INFO_FILE
     info = SubtasksInfo.model_validate(yaml.safe_load(info_file.read_text()))
 
+    # Make sure the run and save directories exist
+    info.run_path.mkdir(exist_ok=True)
+    info.save_path.mkdir(exist_ok=True)
+
     # Set up the HyperQueue client
     hyperqueue_path = hyperqueue_path or HOME / ".hq-server" / "hq-current"
     client = Client(hyperqueue_path)
@@ -68,7 +72,9 @@ def run(
                     stdout=subtask_path / f"{stem}.log",
                     stderr=subtask_path / f"{stem}.log",
                     deps=deps,
-                    resources=ResourceRequest(resources={"mem": task.mem * 1000}),
+                    resources=ResourceRequest(
+                        cpus=task.nprocs, resources={"mem": task.mem * 1000}
+                    ),
                 )
 
                 # Add the job to the job dictionary
