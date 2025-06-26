@@ -128,14 +128,7 @@ def subtasks_setup_(
 
 
 @subtasks_.command("run")
-@click.option(
-    "-p",
-    "--path",
-    default=(".",),
-    show_default=True,
-    help="A directory containing the subtask folder",
-    multiple=True,
-)
+@click.argument("paths", nargs=-1)
 @click.option(
     "-d",
     "--dir-name",
@@ -158,26 +151,21 @@ def subtasks_setup_(
     help="A comma-separated list of statuses to run or re-run",
 )
 def subtasks_run_(
-    path: str = (".",),
+    paths: str = (".",),
     dir_name: str = subtasks.SUBTASK_DIR,
     hyperqueue_path: str | None = None,
     statuses: str = f"{Status.TBD.value}",
 ):
-    """Run subtasks in parallel on an Ad Hoc SSH Cluster.
+    """Run subtasks in parallel using HyperQueue.
 
-    Use a space-separated list of nodes:
-        csed-0008 csed-0009 csed-0010
+    Use a space-separated list of paths
+        path1 path2 path3
     or
-        csed-00{08..10}
+        path{1..3}
 
     """
-    if len(path) != 1:
-        raise NotImplementedError("Running multiple paths coming soon...")
-
-    (path_,) = path
-
-    subtasks.run(
-        path=path_,
+    subtasks.run_multiple(
+        paths=paths,
         dir_name=dir_name,
         hyperqueue_path=hyperqueue_path,
         statuses=list(map(Status, statuses.split(","))),
