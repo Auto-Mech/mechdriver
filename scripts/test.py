@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Local testing CLI."""
+
 import os
 import socket
 import subprocess
@@ -24,25 +25,11 @@ def status():
     mechdriver.subtasks.status_multiple(Test.paths())
 
 
-@main.command("local", hidden=True)
-@click.argument("nodes", nargs=-1)
-def local(nodes: Sequence[str]):
+@main.command("local")
+def local():
     """Run local tests on one or more nodes.
 
     Runs hidden local_
-
-    :param nodes: A list of nodes
-    """
-    log_name = "test.log"
-    test_cmd = " ".join(["pixi run test local_", *nodes])
-    cmd = ["pixi", "run", "node", nodes[-1], log_name, test_cmd]
-    print(subprocess.check_output(cmd, text=True))
-
-
-@main.command("local_", hidden=True)
-@click.argument("nodes", nargs=-1)
-def local_(nodes: Sequence[str]):
-    """Run local tests on one or more nodes.
 
     :param nodes: A list of nodes
     """
@@ -51,9 +38,7 @@ def local_(nodes: Sequence[str]):
 
     test_paths = tu.setup_tests()
     mechdriver.subtasks.setup_multiple(test_paths)
-    mechdriver.subtasks.run_multiple(
-        test_paths, nodes=nodes, activation_hook=tu.pixi_activation_hook()
-    )
+    mechdriver.subtasks.run_multiple(test_paths)
     tu.wrap_up_tests(from_archive=False, allow_override=False)
 
 
