@@ -388,7 +388,7 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
 
 def subpes_dict_from_mechanism_dat(
     mechanism_dat: str,
-) -> dict[str, list[list[str]]] | None:
+) -> dict[str, list[set[str]]] | None:
     """Determine the groups of channels for each sub-PES from the mechanism.dat file
 
     Structure of the return dictionary:
@@ -428,7 +428,7 @@ def subpes_dict_from_mechanism_dat(
     # Create a dictionary with groups of channels by subpes
     subpes_dct = defaultdict(list)
     for (p, _), d in sort_df.groupby(["pes", "subpes"])["channel"]:
-        subpes_dct[p].append(d.to_list())
+        subpes_dct[p].append(set(d.to_list()))
 
     return dict(subpes_dct)
 
@@ -542,7 +542,7 @@ def subtask_keys_from_run_dict(
     run_dct: dict[str, str],
     task_type: str,
     key_type: str | None = None,
-    subpes_dct: dict[str, list[list[str]]] | None = None,
+    subpes_dct: dict[str, list[set[str]]] | None = None,
 ) -> list[str]:
     """Extract species indices from a run.dat dictionary
 
@@ -576,8 +576,9 @@ def subtask_keys_from_run_dict(
                 keys.append(f"{pidx}: {cidx_range}")
             elif task_type == "ktp":
                 assert pidx in subpes_dct
+                cidx_set = set(cidxs)
                 cidx_groups = [
-                    (x for x in xs if x in cidxs) for xs in subpes_dct.get(pidx)
+                    sorted(xs & cidx_set) for xs in subpes_dct[pidx] if xs & cidx_set
                 ]
                 keys.extend(
                     f"{pidx}: {format_index_series(cidx_group)}"
