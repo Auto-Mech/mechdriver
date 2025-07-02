@@ -113,9 +113,9 @@ def archive_tests() -> None:
     print(f"Creating {File.archive}...")
     File.archive.unlink(missing_ok=True)
     with tarfile.open(File.archive, "w:gz") as tar:
-        if File.commit.exists:
+        if File.commit.exists():
             tar.add(File.commit, arcname=File.commit.name)
-        if File.signature.exists:
+        if File.signature.exists():
             tar.add(File.signature, arcname=File.signature.name)
         for test in Test.names():
             tar.add(test, arcname=test, filter=_filter)
