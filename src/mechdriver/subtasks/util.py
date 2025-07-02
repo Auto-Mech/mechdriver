@@ -29,11 +29,15 @@ INP_DIR_TASKS = ("conf_energy",)
 def read_input_files(run_dir: str | Path) -> dict[str, str]:
     inp_dir = Path(run_dir) / "inp"
     return {
-        fname: (inp_dir / fname).read_text() 
+        fname: (inp_dir / fname).read_text()
         for fname in [
-            "run.dat", "theory.dat", "models.dat", 
-            "mechanism.dat", "species.csv", "pes_groups.dat"
-        ] 
+            "run.dat",
+            "theory.dat",
+            "models.dat",
+            "mechanism.dat",
+            "species.csv",
+            "pes_groups.dat",
+        ]
         if (inp_dir / fname).exists()
     }
 
@@ -167,7 +171,7 @@ def parse_subtasks_nworkers(
     if task_name in ROTOR_TASKS:
         nworkers_lst = list(map(rotor_count_from_graphs, gras_lst))
     if task_name in SAMP_TASKS or field_dct.get("cnf_range", "").startswith("n"):
-        nmax = int(field_dct.get("cnf_range", "n100").split('_')[0][1:])
+        nmax = int(field_dct.get("cnf_range", "n100").split("_")[0][1:])
         nsamp_lst = [sample_count_from_graphs(gs, param_d=nmax) for gs in gras_lst]
         nworkers_lst = [max((n - 1) // 2, 1) for n in nsamp_lst]
 
@@ -210,7 +214,7 @@ def parse_species_csv(species_csv: str) -> pandas.DataFrame:
     if "inchi" not in spc_df:
         spc_df["inchi"] = spc_df["smiles"].apply(automol.smiles.chi)
 
-    #if "canon_enant_ich" not in spc_df:
+    # if "canon_enant_ich" not in spc_df:
     #    for spc in spc_df.index:
     #        try:
     #            spc_df.loc[spc, "canon_enant_ich"] = automol.chi.canonical_enantiomer(spc_df["inchi"][spc])
@@ -368,8 +372,9 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
             eq = res.get(Key.eq)
             comment = res.get(Key.comment)
             sort_info = dict(
-                itertools.zip_longest(*sort_expr.parse_string(comment).as_list(),
-                                      fillvalue='MISSING')
+                itertools.zip_longest(
+                    *sort_expr.parse_string(comment).as_list(), fillvalue="MISSING"
+                )
             )
             pes = int(sort_info.get("pes"))
             channel = int(sort_info.get("channel"))
@@ -415,7 +420,7 @@ def subpes_dict_from_mechanism_dat(
     sort_df = pandas.DataFrame.from_records(
         [dict(zip(k.split("."), v.split("."), strict=True)) for k, v in results]
     )
-    sort_df = sort_df.apply(pandas.to_numeric, axis=1, errors='coerce')
+    sort_df = sort_df.apply(pandas.to_numeric, axis=1, errors="coerce")
 
     if not all(k in sort_df for k in ("pes", "subpes", "channel")):
         return None
@@ -479,15 +484,16 @@ def input_arguments_from_run_dict(
     run_dct: dict[str, str],
     save_path: str | Path | None = None,
     run_path: str | Path | None = None,
+    cwd: str | Path | None = None,
 ) -> dict[str, str]:
-    """Get the input block of a run dictionary, with absolute paths for the RUN and SAVE
-    directories.
+    """Get input block of run.dat, with absolute paths for the run and save directories.
 
     :param run_dct: The dictionary of a parsed run.dat file
     :param save_path: The path to the save filesystem
         (if `None`, the value in run.dat is used.)
     :param run_path: The path to the run filesystem
         (if `None`, the value in run.dat is used.)
+    :param cwd: Current working directory to resolve paths relative to, if relative
     :return: The input block, with absolute paths
     """
     inp_block = run_dct.get("input")
@@ -496,8 +502,17 @@ def input_arguments_from_run_dict(
     inp_dct = dict(
         line.replace(" ", "").split("=", maxsplit=1) for line in lines if "=" in line
     )
-    inp_dct["save_prefix"] = save_path or inp_dct.get("save_prefix")
-    inp_dct["run_prefix"] = run_path or inp_dct.get("run_prefix")
+    save_path = save_path or inp_dct.get("save_prefix")
+    run_path = run_path or inp_dct.get("run_prefix")
+    if cwd is not None:
+        cwd, save_path, run_path = map(Path, (cwd, save_path, run_path))
+        save_path = save_path if save_path.is_absolute() else cwd / save_path
+        run_path = run_path if run_path.is_absolute() else cwd / run_path
+        save_path = str(save_path.resolve())
+        run_path = str(run_path.resolve())
+
+    inp_dct["save_prefix"] = save_path
+    inp_dct["run_prefix"] = run_path
     return inp_dct
 
 
@@ -505,18 +520,21 @@ def filesystem_paths_from_run_dict(
     run_dct: dict[str, str],
     save_path: str | Path | None = None,
     run_path: str | Path | None = None,
+    cwd: str | Path | None = None,
 ) -> tuple[str, str]:
-    """Get the input block of a run dictionary, with absolute paths for the RUN and SAVE
-    directories.
+    """Get absolute paths of run and save directories.
 
     :param run_dct: The dictionary of a parsed run.dat file
     :param save_path: The path to the save filesystem
         (if `None`, the value in run.dat is used.)
     :param run_path: The path to the run filesystem
         (if `None`, the value in run.dat is used.)
+    :param cwd: Current working directory to resolve paths relative to, if relative
     :return: The input block, with absolute paths
     """
-    inp_dct = input_arguments_from_run_dict(run_dct, save_path=save_path, run_path=run_path)
+    inp_dct = input_arguments_from_run_dict(
+        run_dct, save_path=save_path, run_path=run_path, cwd=cwd
+    )
     return inp_dct.get("save_prefix"), inp_dct.get("run_prefix")
 
 
@@ -605,7 +623,7 @@ def task_method_and_basis(
     task_key: str,
     key_type: str,
     lvl: str | None = None,
-    root: bool = True
+    root: bool = True,
 ) -> tuple[str, str]:
     """Extract the method and basis of a task from a file dictionary
 
@@ -720,7 +738,7 @@ def parse_index_series(inp: str) -> list[int]:
     dash = pp.Suppress(pp.Literal("-"))
     entry = ppc.integer ^ pp.Group(ppc.integer + dash + ppc.integer)
     delim = pp.WordEnd() ^ pp.Literal(",")
-    #delim = pp.Suppress(pp.White() | ",")
+    # delim = pp.Suppress(pp.White() | ",")
     expr = pp.DelimitedList(entry, delim=delim)
     # expr = pp.OneOrMore(entry + pp.Optional(delim))
     idxs = []
