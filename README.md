@@ -123,16 +123,21 @@ echo 'source /path/to/git-subrepo/.rc' >> ~/.bashrc
 
 ### Syncing
 
+The fullowing commands require some dependencies from the `dev` environment to run, so
+you will either need to activate this environment as follows, or add a `-e dev` flag to
+each command below.
+```
+pixi shell -e dev
+```
+
 To pull updates for one or more subrepos, you can use the `pull` task.
 ```
 pixi run pull all     # pull changes for all subrepos
-pixi run pull         # equivalent to `pixi run pull all`
 pixi run pull autoio  # pull changes for AutoIO only
 ```
 To push updates back to the subrepos, you can use the `push` task.
 ```
 pixi run push all     # push changes for all subrepos
-pixi run push         # equivalent to `pixi run push all`
 pixi run push autoio  # push changes for AutoIO only
 ```
 
