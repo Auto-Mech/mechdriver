@@ -64,6 +64,9 @@ We cannot currently run a full test workflow on GitHub Actions because our curre
 set-up depends on proprietry electronic structure software.
 Testing therefore involves a local workflow step, which must be done before submitting a
 pull request to trigger the remaining GitHub Actions workflows.
+To run these, you will need to install
+[HyperQueue](https://it4innovations.github.io/hyperqueue/stable/) as described in
+[Appendix A](#appendix-a-install-hyperqueue) below.
 
 #### Running local tests
 
@@ -71,16 +74,22 @@ The first time you run tests on a new machine, you will need to configure your G
 ```
 git config --global user.name "<username>"
 ```
-You can then run tests locally as follows.
+You can then run tests locally as follows (see [below](#subtasks) for further details).
 ```
-pixi run test local <node1> <node2> <...>
+# For SLURM:
+pixi run test local -f "--partition=<partition name>"
+
+# For PBS:
+pixi run test local -f "-q <queue name> -A <account name>"
 ```
 You can check the progress of this local test run as follows.
 ```
 pixi run test status
 ```
-You can kill the test run by simply killing all processes running on the last node,
-which is where the main workflow is executed.
+You can kill the test run by stopping the HyperQueue server as follows.
+```
+hq server stop
+```
 
 #### Before submitting a pull request
 
@@ -171,16 +180,12 @@ gh repo sync <username>/autoio -b <branch name>
 ## Subtasks
 
 Workflow parallelization is currently not fully automated in AutoMech. However, you can
-run the following commands to split an AutoMech workflow into subtasks and run them in
-parallel through PBS or SLURM.
-To execute these subtasks, you will need to install HyperQueue as follows.
-```
-wget https://github.com/It4innovations/hyperqueue/releases/download/v0.22.0/hq-v0.22.0-linux-x64.tar.gz
-tar -zxvf hq-v0.22.0-linux-x64.tar.gz -C /directory/in/shell/path
-```
-The second command puts the HyperQueue executable into a directory that is in your shell
-path.  For example, this might be `$HOME/bin` if you have `export PATH=$PATH:$HOME/bin`
-in your `.bashrc`.
+run the following commands to split an AutoMech workflow into subtasks and then run them
+using [HyperQueue](https://it4innovations.github.io/hyperqueue/stable/).
+See [Appendix A](#appendix-a-install-hyperqueue) for instructions on installing HyperQueue.
+
+To see if it works, you can test the following steps on the same
+["quick" example](examples/quick/) that you ran above.
 
 **Setup.** You can set up these subtask jobs as follows:
 ```
@@ -206,3 +211,15 @@ automech subtasks status
 ```
 This will print a color-coded table showing which tasks have failed for which species/reactions. It will also generate a `check.log` file with the paths to log files that have have not completed successfully or have a warning.
 
+
+## Appendix A: Install HyperQueue
+
+HyperQueue allows you to execute parallel workflows on PBS or SLURM.
+You can install it as follows.
+```
+wget https://github.com/It4innovations/hyperqueue/releases/download/v0.22.0/hq-v0.22.0-linux-x64.tar.gz
+tar -zxvf hq-v0.22.0-linux-x64.tar.gz -C /directory/in/shell/path
+```
+The second command puts the HyperQueue executable into a directory that is in your shell
+path.  For example, this might be `$HOME/bin` if you have `export PATH=$PATH:$HOME/bin`
+in your `.bashrc`.
