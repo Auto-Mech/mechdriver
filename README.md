@@ -170,25 +170,37 @@ gh repo sync <username>/autoio -b <branch name>
 
 ## Subtasks
 
-Workflow parallelization is currently not automated in AutoMech. However, if you are on a cluster with direct SSH node access and permissions to run, you can run the following commands to split an AutoMech workflow into subtasks and run them in parallel.
+Workflow parallelization is currently not fully automated in AutoMech. However, you can
+run the following commands to split an AutoMech workflow into subtasks and run them in
+parallel through PBS or SLURM.
+To execute these subtasks, you will need to install HyperQueue as follows.
+```
+wget https://github.com/It4innovations/hyperqueue/releases/download/v0.22.0/hq-v0.22.0-linux-x64.tar.gz
+tar -zxvf hq-v0.22.0-linux-x64.tar.gz -C /directory/in/shell/path
+```
+The second command puts the HyperQueue executable into a directory that is in your shell
+path.  For example, this might be `$HOME/bin` if you have `export PATH=$PATH:$HOME/bin`
+in your `.bashrc`.
 
-(1.) You can set-up these subtask jobs as follows:
+**Setup.** You can set up these subtask jobs as follows:
 ```
 automech subtasks setup
 ```
 This will parse your `inp/` directory and create individual subdirectories for running each individual task for each individual species or reaction/TS. These directories will go in a folder called `subtasks/`.
 
-(2.) If you are using the [amech-dev](https://github.com/Auto-Mech/amech-dev) Pixi environment, you can run the subtasks in parallel on a list of nodes as follows:
+**Run.** You can run these subtask jobs as follows.
 ```
-automech subtasks run csed-00{08..10}  # expands to csed-0008 csed-0009 csed-0010
-```
-If you are running in a different environment, you will need to pass in an activation hook as follows:
-```
-automech subtasks run csed-00{08..10} -a <activation hook>
-```
-Where the activation hook contains the bash commands to activate your environment.
+# For SLURM:
+automech subtasks run -f "--partition=<partition name>"
 
-(3.) To check the progress of your subtask run, you can use the following command:
+# For PBS:
+automech subtasks run -f "-q <queue name> -A <account name>"
+```
+The `-f` flag allows you to pass additional flags to SLURM or PBS. This would be
+anything beyond basic resources (memory, CPUs, etc.) that you are required to put in
+your `sbatch` or `qsub` scripts.
+
+**Check status.** To check the progress of your subtask run, you can use the following command:
 ```
 automech subtasks status
 ```
