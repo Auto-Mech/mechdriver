@@ -64,6 +64,9 @@ We cannot currently run a full test workflow on GitHub Actions because our curre
 set-up depends on proprietry electronic structure software.
 Testing therefore involves a local workflow step, which must be done before submitting a
 pull request to trigger the remaining GitHub Actions workflows.
+To run these, you will need to install
+[HyperQueue](https://it4innovations.github.io/hyperqueue/stable/) as described in
+[Appendix A](#appendix-a-install-hyperqueue) below.
 
 #### Running local tests
 
@@ -71,16 +74,22 @@ The first time you run tests on a new machine, you will need to configure your G
 ```
 git config --global user.name "<username>"
 ```
-You can then run tests locally as follows.
+You can then run tests locally as follows (see [below](#subtasks) for further details).
 ```
-pixi run test local <node1> <node2> <...>
+# For SLURM:
+pixi run test local -f "--partition=<partition name>"
+
+# For PBS:
+pixi run test local -f "-q <queue name> -A <account name>"
 ```
 You can check the progress of this local test run as follows.
 ```
 pixi run test status
 ```
-You can kill the test run by simply killing all processes running on the last node,
-which is where the main workflow is executed.
+You can kill the test run by stopping the HyperQueue server as follows.
+```
+hq server stop
+```
 
 #### Before submitting a pull request
 
@@ -123,16 +132,21 @@ echo 'source /path/to/git-subrepo/.rc' >> ~/.bashrc
 
 ### Syncing
 
+The fullowing commands require some dependencies from the `dev` environment to run, so
+you will either need to activate this environment as follows, or add a `-e dev` flag to
+each command below.
+```
+pixi shell -e dev
+```
+
 To pull updates for one or more subrepos, you can use the `pull` task.
 ```
 pixi run pull all     # pull changes for all subrepos
-pixi run pull         # equivalent to `pixi run pull all`
 pixi run pull autoio  # pull changes for AutoIO only
 ```
 To push updates back to the subrepos, you can use the `push` task.
 ```
 pixi run push all     # push changes for all subrepos
-pixi run push         # equivalent to `pixi run push all`
 pixi run push autoio  # push changes for AutoIO only
 ```
 
@@ -165,27 +179,47 @@ gh repo sync <username>/autoio -b <branch name>
 
 ## Subtasks
 
-Workflow parallelization is currently not automated in AutoMech. However, if you are on a cluster with direct SSH node access and permissions to run, you can run the following commands to split an AutoMech workflow into subtasks and run them in parallel.
+Workflow parallelization is currently not fully automated in AutoMech. However, you can
+run the following commands to split an AutoMech workflow into subtasks and then run them
+using [HyperQueue](https://it4innovations.github.io/hyperqueue/stable/).
+See [Appendix A](#appendix-a-install-hyperqueue) for instructions on installing HyperQueue.
 
-(1.) You can set-up these subtask jobs as follows:
+To see if it works, you can test the following steps on the same
+["quick" example](examples/quick/) that you ran above.
+
+**Setup.** You can set up these subtask jobs as follows:
 ```
 automech subtasks setup
 ```
 This will parse your `inp/` directory and create individual subdirectories for running each individual task for each individual species or reaction/TS. These directories will go in a folder called `subtasks/`.
 
-(2.) If you are using the [amech-dev](https://github.com/Auto-Mech/amech-dev) Pixi environment, you can run the subtasks in parallel on a list of nodes as follows:
+**Run.** You can run these subtask jobs as follows.
 ```
-automech subtasks run csed-00{08..10}  # expands to csed-0008 csed-0009 csed-0010
-```
-If you are running in a different environment, you will need to pass in an activation hook as follows:
-```
-automech subtasks run csed-00{08..10} -a <activation hook>
-```
-Where the activation hook contains the bash commands to activate your environment.
+# For SLURM:
+automech subtasks run -f "--partition=<partition name>"
 
-(3.) To check the progress of your subtask run, you can use the following command:
+# For PBS:
+automech subtasks run -f "-q <queue name> -A <account name>"
+```
+The `-f` flag allows you to pass additional flags to SLURM or PBS. This would be
+anything beyond basic resources (memory, CPUs, etc.) that you are required to put in
+your `sbatch` or `qsub` scripts.
+
+**Check status.** To check the progress of your subtask run, you can use the following command:
 ```
 automech subtasks status
 ```
 This will print a color-coded table showing which tasks have failed for which species/reactions. It will also generate a `check.log` file with the paths to log files that have have not completed successfully or have a warning.
 
+
+## Appendix A: Install HyperQueue
+
+HyperQueue allows you to execute parallel workflows on PBS or SLURM.
+You can install it as follows.
+```
+wget https://github.com/It4innovations/hyperqueue/releases/download/v0.22.0/hq-v0.22.0-linux-x64.tar.gz
+tar -zxvf hq-v0.22.0-linux-x64.tar.gz -C /directory/in/shell/path
+```
+The second command puts the HyperQueue executable into a directory that is in your shell
+path.  For example, this might be `$HOME/bin` if you have `export PATH=$PATH:$HOME/bin`
+in your `.bashrc`.

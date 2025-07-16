@@ -105,7 +105,7 @@ def subtask_path(subtask_key: str, path: str | Path = ".", run: bool = False) ->
     spc_df = util.parse_species_csv(file_dct.get("species.csv"))
     rxn_dct = util.parse_mechanism_dat(file_dct.get("mechanism.dat"))
     run_dct = util.parse_run_dat(file_dct.get("run.dat"))
-    save_path, run_path = util.filesystem_paths_from_run_dict(run_dct)
+    save_path, run_path = util.filesystem_paths_from_run_dict(run_dct, cwd=path)
     root_path = run_path if run else save_path
 
     if util.is_species_subtask_key(subtask_key):

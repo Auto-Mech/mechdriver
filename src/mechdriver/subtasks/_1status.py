@@ -66,6 +66,7 @@ def status(
     check_records = []
     for tasks in info.task_groups:
         skeys = subtask_keys(tasks)
+        skeys = [skey.replace("\n", " ") for skey in skeys]
         kwidth = key_column_width(tasks)
         vwidth = value_column_width(tasks)
 

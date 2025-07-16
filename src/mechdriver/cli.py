@@ -1,4 +1,4 @@
-import subprocess
+from collections.abc import Sequence
 
 import click
 
@@ -18,7 +18,7 @@ def main():
 )
 @click.option("-S", "--safemode-off", is_flag=True, help="Turn off safemode?")
 def run_(path: str = ".", safemode_off: bool = False):
-    """Run central workflow
+    """Run central workflow.
 
     Central Execution script to launch a MechDriver process which will
     parse all of the user-supplied input files in a specified directory, then
@@ -109,28 +109,13 @@ def subtasks_setup_(
 
 
 @subtasks_.command("run")
-@click.argument("nodes", nargs=-1)
+@click.argument("paths", nargs=-1)
 @click.option(
-    "-p",
-    "--path",
-    default=(".",),
-    show_default=True,
-    help="A directory containing the subtask folder",
-    multiple=True,
-)
-@click.option(
-    "-n",
+    "-d",
     "--dir-name",
     default=subtasks.SUBTASK_DIR,
     show_default=True,
     help="The subtask directory name",
-)
-@click.option(
-    "-a",
-    "--activation-hook",
-    default=None,
-    show_default=True,
-    help="An activation hook, to be called using `eval`",
 )
 @click.option(
     "-s",
@@ -139,34 +124,40 @@ def subtasks_setup_(
     show_default=True,
     help="A comma-separated list of statuses to run or re-run",
 )
+@click.option(
+    "-f",
+    "--auto-config-flags",
+    default=None,
+    help="Sbatch/qsub flags for HyperQueue autoconfiguration",
+)
+@click.option(
+    "-e",
+    "--python-environment",
+    default=None,
+    help="Command to activate Python environment",
+)
 def subtasks_run_(
-    nodes: tuple[str, ...],
-    path: str = (".",),
+    paths: Sequence[str] = (".",),
     dir_name: str = subtasks.SUBTASK_DIR,
-    activation_hook: str | None = None,
     statuses: str = f"{Status.TBD.value}",
+    auto_config_flags: str | None = None,
+    python_environment: str | None = None,
 ):
-    """Run subtasks in parallel on an Ad Hoc SSH Cluster
+    """Run subtasks in parallel using HyperQueue.
 
-    Use a space-separated list of nodes:
-        csed-0008 csed-0009 csed-0010
+    Use a space-separated list of paths
+        path1 path2 path3
     or
-        csed-00{08..10}
+        path{1..3}
 
     """
-    paths = path
-    # For convenience, grab the Pixi activation hook automatically, if using Pixi
-    # environment and activation hook is `None`
-    result = subprocess.run(["pixi", "shell-hook"], capture_output=True, text=True)
-    if activation_hook is None and result.stdout:
-        activation_hook = result.stdout
-
+    paths = paths if paths else (".",)
     subtasks.run_multiple(
         paths=paths,
-        nodes=nodes,
         dir_name=dir_name,
-        activation_hook=activation_hook,
         statuses=list(map(Status, statuses.split(","))),
+        auto_config_flags=auto_config_flags,
+        python_environment=python_environment,
     )
 
 

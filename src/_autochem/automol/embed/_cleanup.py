@@ -38,7 +38,7 @@ from ._dgeom import (
 )
 from ._findif import central_difference
 
-SignedVolumeContraints = dict[tuple[int, int, int, int] : tuple[float, float]]
+SignedVolumeContraints = dict[tuple[int, int, int, int], tuple[float, float]]
 
 
 Sequence2D = Sequence[Sequence[float]]
@@ -474,9 +474,9 @@ def gradient_convergence_checker_(
     def _is_converged(xmat, err, grad):
         assert numpy.shape(xmat) == numpy.shape(grad)
         grad_max = numpy.amax(numpy.abs(grad))
-        logging.info(f"\tError: {err:f}")
-        logging.info(f"\tMax gradient: {grad_max:f}")
-        logging.info("\n")
+        logging.debug(f"\tError: {err:f}")
+        logging.debug(f"\tMax gradient: {grad_max:f}")
+        logging.debug("\n")
         return grad_max < thresh
 
     return _is_converged
@@ -504,12 +504,12 @@ def minimize_error(
 
     sd0 = None
     cd0 = None
-    logging.info(f"Initial error: {err_(xmat):f}")
+    logging.debug(f"Initial error: {err_(xmat):f}")
 
     converged = False
 
     for niter in range(maxiter):
-        logging.info(f"Iteration {niter:d}")
+        logging.debug(f"Iteration {niter:d}")
 
         # 1. Calculate the steepest direction
         sd1 = -grad_(xmat)
@@ -526,8 +526,8 @@ def minimize_error(
 
         # 4. Perform a line search
         alpha = line_search_alpha(err_, xmat, cd1)
-        logging.info(f"{niter} alpha:")
-        logging.info(alpha)
+        logging.debug(f"{niter} alpha:")
+        logging.debug(alpha)
 
         # 5. Check convergence
         if conv_(xmat, err_(xmat), sd1):
@@ -540,8 +540,8 @@ def minimize_error(
         sd0 = sd1
         cd0 = cd1
 
-    logging.info(f"Niter: {niter:d}")
-    logging.info(f"Converged: {('Yes' if converged else 'No'):s}")
-    logging.info("\n")
+    logging.debug(f"Niter: {niter:d}")
+    logging.debug(f"Converged: {('Yes' if converged else 'No'):s}")
+    logging.debug("\n")
 
     return xmat, converged

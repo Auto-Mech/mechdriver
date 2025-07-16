@@ -9,7 +9,14 @@ import yaml
 from . import util
 
 DEFAULT_TASK_GROUPS = ("els", "thermo", "ktp", "proc")
-GROUP_ID = {"els-spc": 0, "els-pes": 1, "thermo": 2, "ktp": 3, "proc-spc": 4, "proc-pes": 5}
+GROUP_ID = {
+    "els-spc": 0,
+    "els-pes": 1,
+    "thermo": 2,
+    "ktp": 3,
+    "proc-spc": 4,
+    "proc-pes": 5,
+}
 GROUP_TASK_AND_KEY_TYPE = {
     "els-spc": ("els", "spc"),
     "els-pes": ("els", "pes"),
@@ -18,7 +25,7 @@ GROUP_TASK_AND_KEY_TYPE = {
     "proc-spc": ("proc", "spc"),
     "proc-pes": ("proc", "pes"),
 }
-COMBINED_TASK_GROUPS = ()#"thermo", "ktp")
+COMBINED_TASK_GROUPS = ()  # "thermo", "ktp")
 
 SUBTASK_DIR = "subtasks"
 INFO_FILE = "info.yaml"
@@ -103,7 +110,7 @@ def setup(
     run_path: str | Path | None = None,
     task_group_keys: Sequence[str] = DEFAULT_TASK_GROUPS,
 ):
-    """Creates run directories for each task/species/TS and returns the paths in tables
+    """Create run directories for each task/species/TS and returns the paths in tables.
 
     Task types: 'els', 'thermo', or 'ktp'
     Subtask types: 'spc', 'pes', or `None` (=all species and/or reactions)
@@ -141,7 +148,7 @@ def setup(
 
     # Set the run and save paths
     inp_dct = util.input_arguments_from_run_dict(
-        run_dct, save_path=save_path, run_path=run_path
+        run_dct, save_path=save_path, run_path=run_path, cwd=path
     )
     run_dct["input"] = "\n".join(f"{k} = {v}" for k, v in inp_dct.items())
 
