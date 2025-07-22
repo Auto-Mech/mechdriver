@@ -7551,7 +7551,7 @@ packages:
 - pypi: ./
   name: mechdriver
   version: 2025.6.12
-  sha256: 8a3fa2dc65f25fe79862f675e3d6b94a1f1a9df34ea276a673f1fb0d83be088c
+  sha256: 2172136ed50ed2198129f3bc3f03d6a6b30a3d691ace2ad9e1d9f1c39a1022ef
   requires_dist:
   - hyperqueue>=0.22.0,<0.23
   requires_python: '>=3.11'

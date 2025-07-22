@@ -2,7 +2,12 @@
 
 set -e  # if any command fails, quit
 
-REPO=${1:-"all"}
+if [[ -z "$1" ]]; then
+    echo "Must specify 'all' or individual repo to pull from."
+    exit 1
+fi
+
+REPO=${1}
 shift 1
 ARGS="$*"  # Additional arguments for git subrepo push
 USERNAME=$(<.username)
