@@ -9,10 +9,10 @@ authors = [
 requires-python = ">= 3.11"
 dependencies = [
     "altair",
-    "ipython>=8.20",
+    "ipython>=8.15",
     "more-itertools",
     "networkx>=3.3",
-    "numpy>=2.0",
+    "numpy>=1.26",
     "pint",
     "py3dmol",
     "pyparsing",
@@ -20,7 +20,7 @@ dependencies = [
     "qcelemental",
     "rdkit",
     "scipy>=1.12",
-    "xarray>=2024.2",
+    "xarray>=2023.8",
 ]
 
 [build-system]
