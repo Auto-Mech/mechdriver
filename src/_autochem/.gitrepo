@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/Auto-Mech/autochem.git
 	branch = dev
-	commit = 9b0ac63ec57c2168d2ca291a90a967bd278a26f4
-	parent = 8334b8e25656e77691d05b35e28f7f3bf19357ac
+	commit = 9e32c84ca9bc3f645b26a4d955a9dd87bf88e2e2
+	parent = 0aec671d5a90ff90b4b78f332e95c3f4e2c85c02
 	method = rebase
 	cmdver = 0.4.9

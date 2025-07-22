@@ -99,7 +99,7 @@ class BaseRate(UnitManager, Frozen, Scalable, SubclassTyped, abc.ABC):
         T_range: tuple[float, float] = (400, 1250),  # noqa: N803
         P: float = 1,  # noqa: N803
         units: UnitsData | None = None,
-    ) -> tuple[NDArray[numpy.float_], NDArray[numpy.float_]]:
+    ) -> tuple[NDArray[numpy.float64], NDArray[numpy.float64]]:
         """Display as an Arrhenius plot.
 
         :param T_range: Temperature range
@@ -205,7 +205,7 @@ class Rate(BaseRate):
         T_range: tuple[float, float] = (400, 1250),  # noqa: N803
         P: float = 1,  # noqa: N803
         units: UnitsData | None = None,
-    ) -> tuple[NDArray[numpy.float_], NDArray[numpy.float_]]:
+    ) -> tuple[NDArray[numpy.float64], NDArray[numpy.float64]]:
         """Display as an Arrhenius plot.
 
         :param T_range: Temperature range

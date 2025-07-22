@@ -1,30 +1,31 @@
 [project]
-authors = [{name = "Andreas Copan", email = "avcopan@gmail.com"}]
-description = "Cheminformatics libraries used by the AutoMech project"
 name = "autochem"
+version = "2025.7.21"
+description = "Cheminformatics libraries used by the AutoMech project"
+readme = "README.md"
+authors = [
+    { name = "Andreas Copan", email = "avcopan@gmail.com" }
+]
 requires-python = ">= 3.11"
-version = "2025.4.23"
 dependencies = [
-    "ipython>=8.15",
-    "ipywidgets",
-    "jupyter",
+    "altair",
+    "ipython>=8.20",
     "more-itertools",
-    "networkx",
-    "numpy",
+    "networkx>=3.3",
+    "numpy>=2.0",
+    "pint",
     "py3dmol",
     "pyparsing",
     "pyyaml",
     "qcelemental",
     "rdkit",
-    "scipy",
-    "xarray",
-    "altair",
-    "pint",
+    "scipy>=1.12",
+    "xarray>=2024.2",
 ]
 
 [build-system]
-build-backend = "hatchling.build"
 requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
 include = ["autochem", "automol", "autoreact", "phydat", "molsym"]
@@ -34,16 +35,16 @@ include = ["autochem", "automol", "autoreact", "phydat", "molsym"]
 
 [dependency-groups]
 dev = [
-    "pip",
+    "black",
+    "jupyter",
+    "mypy",
+    "myst-parser",
+    "pre-commit",
     "pylint",
     "pytest",
-    "black",
-    "ruff",
-    "mypy",
-    "sphinx",
-    "myst-parser",
-    "sphinx-book-theme",
-    "sphinx-autodoc-typehints",
     "pytest-xdist[psutil]",
-    "pre-commit"
+    "ruff",
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx-book-theme",
 ]
