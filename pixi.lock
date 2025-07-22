@@ -2385,24 +2385,22 @@ packages:
   timestamp: 1741918625732
 - pypi: ./src/_autochem
   name: autochem
-  version: 2025.4.23
-  sha256: 3f93a2fef4f73f6890826f7eeafa860a8e8ade6a79a5fdec1c3374786f4fdf21
+  version: 2025.7.21
+  sha256: 26cbb5095303cea63f51b6e3310feb574213e0b064453dc2f5094611711abd16
   requires_dist:
+  - altair
   - ipython>=8.15
-  - ipywidgets
-  - jupyter
   - more-itertools
-  - networkx
-  - numpy
+  - networkx>=3.3
+  - numpy>=1.26
+  - pint
   - py3dmol
   - pyparsing
   - pyyaml
   - qcelemental
   - rdkit
-  - scipy
-  - xarray
-  - altair
-  - pint
+  - scipy>=1.12
+  - xarray>=2023.8
   requires_python: '>=3.11'
   editable: true
 - pypi: ./src/_autofile
