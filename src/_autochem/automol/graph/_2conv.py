@@ -2,10 +2,11 @@
 
 import functools
 import itertools
-from typing import Any, Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Dict, Optional
+from xml.etree import ElementTree
 
 import IPython.display as ipd
-import ipywidgets
 import more_itertools as mit
 import numpy
 from phydat import phycon
@@ -28,7 +29,7 @@ from .base import (
     has_stereo,
     inchi_is_bad,
     is_ts_graph,
-    relabel,
+    nonoverlapping_keys_for_sequence,
     smiles,
     standard_keys,
     stereo_corrected_geometry,
@@ -37,6 +38,10 @@ from .base import (
     union_from_sequence,
     without_stereo,
 )
+
+NAMESPACES = {"": "http://www.w3.org/2000/svg"}
+for namespace in NAMESPACES.items():
+    ElementTree.register_namespace(*namespace)
 
 
 # # conversions
@@ -255,7 +260,7 @@ def rdkit_molecule(gra, stereo=True, exp=False, label=False, label_dct=None):
 def svg_string(
     gra, stereo=True, exp=False, label=False, label_dct=None, image_size=200
 ):
-    """Get an SVG string for visualizing the graph
+    """Get an SVG string for visualizing the graph.
 
     :param gra: molecular graph
     :type gra: automol graph data structure
@@ -273,16 +278,33 @@ def svg_string(
     :return: The SVG string, in svg+xml format
     :rtype: str
     """
-    rdm = rdkit_molecule(gra, stereo=stereo, exp=exp, label=label, label_dct=label_dct)
-    svg_str = rdkit_.to_svg_string(rdm, image_size=image_size)
-    return svg_str
+    # If this is not a TS graph, use RDKit directly
+    if not is_ts_graph(gra):
+        rdm = rdkit_molecule(
+            gra, stereo=stereo, exp=exp, label=label, label_dct=label_dct
+        )
+        return rdkit_.to_svg_string(rdm, image_size=image_size)
+
+    rgra = ts.reactants_graph(gra, stereo=stereo)
+    pgra = ts.products_graph(gra, stereo=stereo)
+    return reaction_svg_string(
+        [rgra],
+        [pgra],
+        stereo=stereo,
+        exp=exp,
+        label=label,
+        label_dct=label_dct,
+        image_size=image_size,
+    )
 
 
-def ipywidget(gra, stereo=True, exp=False, label=False, label_dct=None, image_size=300):
-    """Get an ipywidget object for visualizing the graph
+def reaction_svg_string(
+    rgras, pgras, stereo=True, exp=False, label=False, label_dct=None, image_size=200
+):
+    """Get an SVG string for visualizing the graph.
 
-    :param gra: molecular graph
-    :type gra: automol graph data structure
+    :param rgra: reactants molecular graph
+    :param pgra: products molecular graph
     :param stereo: Include stereochemistry information?
     :type stereo: bool
     :param exp: Include explicit hydrogens that aren't needed for stereochemistry?
@@ -294,24 +316,88 @@ def ipywidget(gra, stereo=True, exp=False, label=False, label_dct=None, image_si
     :param label_dct: bool
     :param image_size: The image size, defaults to 150
     :type image_size: int, optional
-    :return: The widget object
-    :rtype: ipywidgets.Image
+    :return: The SVG string, in svg+xml format
+    :rtype: str
     """
-    svg_str = svg_string(
-        gra,
+    height = int(image_size)
+    width = int(2.5 * image_size)
+
+    #  1. Prepare new SVG canvas with reaction arrow
+    root = ElementTree.Element(
+        "svg",
+        attrib={
+            "version": "1.1",
+            "baseProfile": "full",
+            "xmlns:rdkit": "http://www.rdkit.org/xml",
+            "xmlns:xlink": "http://www.w3.org/1999/xlink",
+            "xml:space": "preserve",
+            "width": f"{width}px",
+            "height": f"{height}px",
+            "viewBox": f"0 0 {width} {height}",
+        },
+    )
+    canvas = ElementTree.Element(
+        "rect",
+        attrib={
+            "style": "opacity:1.0;fill:#FFFFFF;stroke:none",
+            "width": f"{width}",
+            "height": f"{height}",
+            "x": "0.0",
+            "y": "0.0",
+        },
+    )
+    arrow = reaction_arrow_svg_element(
+        x_start=int(1.1 * image_size),
+        x_end=int(1.4 * image_size),
+        y_mid=int(0.5 * image_size),
+        stroke_width=3,
+    )
+    root.append(canvas)
+    root.append(arrow)
+
+    #   2. Form combined reactant and product graphs
+    rgras, rkey_dcts = nonoverlapping_keys_for_sequence(rgras)
+    pgras, pkey_dcts = nonoverlapping_keys_for_sequence(pgras)
+    rgra = union_from_sequence(rgras)
+    pgra = union_from_sequence(pgras)
+    rlabel_dct = dict_.merge_sequence(map(dict_.invert, rkey_dcts))
+    plabel_dct = dict_.merge_sequence(map(dict_.invert, pkey_dcts))
+
+    if not label and not label_dct:
+        rlabel_dct = plabel_dct = None
+
+    if label_dct:
+        rlabel_dct = dict_.transform_keys(label_dct, rlabel_dct.get)
+        plabel_dct = dict_.transform_keys(label_dct, plabel_dct.get)
+
+    #   3. Generate SVGs for reactants and products
+    rsvg = svg_string(
+        rgra,
         stereo=stereo,
         exp=exp,
         label=label,
-        label_dct=label_dct,
+        label_dct=rlabel_dct,
         image_size=image_size,
     )
-    widget = ipywidgets.Image(
-        value=svg_str.encode("utf-8"),
-        format="svg+xml",
-        width=image_size,
-        height=image_size,
+    psvg = svg_string(
+        pgra,
+        stereo=stereo,
+        exp=exp,
+        label=label,
+        label_dct=plabel_dct,
+        image_size=image_size,
     )
-    return widget
+
+    #   3. Add contents from reactant/product SVGs to combined SVG
+    r_group = ElementTree.Element("g")
+    p_group = ElementTree.Element("g", attrib={"transform": "translate(300 0)"})
+    r_group.extend(ElementTree.fromstring(rsvg).iterfind("path", namespaces=NAMESPACES))
+    p_group.extend(ElementTree.fromstring(psvg).iterfind("path", namespaces=NAMESPACES))
+    root.append(r_group)
+    root.append(p_group)
+    return ElementTree.tostring(
+        root, encoding="unicode", method="xml", xml_declaration=True
+    )
 
 
 def rdkit_reaction(rgras, pgras, stereo=True, res_stereo=False):
@@ -343,7 +429,7 @@ def rdkit_reaction(rgras, pgras, stereo=True, res_stereo=False):
 
 
 def display(gra, stereo=True, exp=False, label=False, label_dct=None):
-    """Display graph to IPython using the RDKit visualizer
+    """Display graph to IPython using the RDKit visualizer.
 
     :param gra: molecular graph
     :type gra: automol graph data structure
@@ -357,23 +443,17 @@ def display(gra, stereo=True, exp=False, label=False, label_dct=None):
         `True`, the atom keys themselves will be used as labels.
     :param label_dct: bool
     """
-    rdkit_.turn_3d_visualization_off()
-    if is_ts_graph(gra):
-        rgra = ts.reactants_graph(gra, stereo=stereo)
-        pgra = ts.products_graph(gra, stereo=stereo)
-        display_reaction(
-            [rgra], [pgra], stereo=stereo, exp=exp, label=label, label_dct=label_dct
-        )
-    else:
-        ipd.display(
-            rdkit_molecule(
-                gra, stereo=stereo, exp=exp, label=label, label_dct=label_dct
+    return ipd.display(
+        ipd.SVG(
+            svg_string(
+                gra=gra, stereo=stereo, exp=exp, label=label, label_dct=label_dct
             )
         )
+    )
 
 
 def display_reaction(rgras, pgras, stereo=True, exp=False, label=False, label_dct=None):
-    """Display reaction to IPython using the RDKit visualizer
+    """Display reaction to IPython using the RDKit visualizer.
 
     :param rgras: reactant graphs
     :param pgras: product graphs
@@ -387,53 +467,55 @@ def display_reaction(rgras, pgras, stereo=True, exp=False, label=False, label_dc
         `True`, the atom keys themselves will be used as labels.
     :param label_dct: bool
     """
-    arrow_svg_str = """
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
-    <defs>
-        <marker id="arrowhead" markerWidth="5" markerHeight="5" 
-        refX="0" refY="2.5" orient="auto">
-        <polygon points="0 0, 5 2.5, 0 5" />
-        </marker>
-    </defs>
-    <line x1="20" y1="50" x2="120" y2="50" stroke="#000" 
-    stroke-width="10" marker-end="url(#arrowhead)" />
-    </svg>
-    """
-
-    def _union(gras):
-        label_dct_ = {}
-        start = 0
-        gras_ = []
-        for gra in gras:
-            keys = atom_keys(gra)
-            if min(keys) < start:
-                key_dct = {k: k + start for k in keys}
-                gra = relabel(gra, key_dct)
-                label_dct_.update(dict(map(reversed, key_dct.items())))
-            else:
-                label_dct_.update({k: k for k in keys})
-            gras_.append(gra)
-            start = start + max(keys) + 1
-        return union_from_sequence(gras_), label_dct_
-
-    rdkit_.turn_3d_visualization_off()
-
-    rgra, rlabel_dct = _union(rgras)
-    pgra, plabel_dct = _union(pgras)
-
-    if not label and not label_dct:
-        rlabel_dct = plabel_dct = None
-
-    if label_dct:
-        rlabel_dct = dict_.transform_keys(label_dct, rlabel_dct.get)
-        plabel_dct = dict_.transform_keys(label_dct, plabel_dct.get)
-
-    rwid = ipywidget(rgra, stereo=stereo, exp=exp, label=label, label_dct=rlabel_dct)
-    pwid = ipywidget(pgra, stereo=stereo, exp=exp, label=label, label_dct=plabel_dct)
-    arrow_widget = ipywidgets.Image(
-        value=arrow_svg_str.encode("utf-8"), format="svg+xml", width=100, height=50
+    return ipd.display(
+        ipd.SVG(
+            reaction_svg_string(
+                rgras, pgras, stereo=stereo, exp=exp, label=label, label_dct=label_dct
+            )
+        )
     )
-    ipd.display(ipywidgets.HBox([rwid, arrow_widget, pwid]))
+
+
+def reaction_arrow_svg_element(
+    x_start: int, x_end: int, y_mid: int, stroke_width: int = 3
+) -> ElementTree.Element:
+    """Generate SVG string for reaction arrow.
+
+    All units are in pixels (px).
+
+    :param x_start: Start x-value
+    :param x_end: End x-value
+    :param y_mid: Middle y-value
+    :param stroke_width: Stroke width, defaults to 3
+    :return: SVG string
+    """
+    x1 = x_start
+    x2 = x_end - 3 * stroke_width
+    assert x1 < x2, f"{x1} !< {x2}"
+    return ElementTree.fromstring(f"""
+        <g>
+            <defs>
+                <marker
+                id="arrow"
+                viewBox="0 0 12 10"
+                refX="9"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse">
+                    <polygon points="0 0, 12 5, 0 10" />
+                </marker>
+            </defs>
+            <line
+                x1="{x1}"
+                y1="{y_mid}"
+                x2="{x2}"
+                y2="{y_mid}"
+                stroke="black"
+                stroke-width="{stroke_width}px"
+                marker-end="url(#arrow)" />
+        </g>
+    """)
 
 
 # # TS geometry helpers

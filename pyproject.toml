@@ -31,13 +31,13 @@ mechanalyzer = { path = "src/_mechanalyzer", editable = true }
 
 # Tasks
 [tool.pixi.tasks]
-pull = { cmd = "./scripts/pull.sh", cwd = "." }
 push = { cmd = "./scripts/push.sh", cwd = "." }
 status = { cmd = "./scripts/status.sh", cwd = "." }
-validate = { cmd = "./scripts/validate.sh", cwd = "." }
 node = { cmd = "./scripts/node.sh" }
-subtasks = { cmd = "./scripts/subtasks.sh" }
 test = { cmd = "./scripts/test.py" }
+
+[tool.pixi.feature.dev.tasks]
+pull = { cmd = "./scripts/pull.sh", cwd = "." }
 
 [tool.pixi.dependencies]
 python = "3.11.*"
