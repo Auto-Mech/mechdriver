@@ -7,7 +7,7 @@ pes
 end pes
 
 spc
-    2,4-5
+    1-4
 end spc
 
 els
@@ -15,7 +15,7 @@ els
     spc conf_samp     runlvl=pm3    inplvl=pm3 
     spc conf_hess     runlvl=pm3    inplvl=pm3 cnf_range=n100 
     spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=min_noHB
-    spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=n2_HB
+    spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=n2_noHB
     spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=union(n1, n2)
     spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=e0.5 sort=freqs(pm3),sp(pm3),gibbs(1000)
     spc conf_energy   runlvl=dft    inplvl=pm3 cnf_range=min sort=freqs(pm3),sp(pm3),enthalpy(300)
@@ -35,9 +35,9 @@ proc
    spc freqs cnf_range=all scale=off
    spc date cnf_range=all
    spc coeffs cnf_range=min
-   spc messpf_inp cnf_range=min
-   spc pf cnf_range=min
-   spc sidata cnf_range=min
+   spc messpf_inp cnf_range=all
+   spc pf cnf_range=all
+   spc sidata cnf_range=all
 end proc
 
 ktp
