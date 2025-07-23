@@ -2386,7 +2386,7 @@ packages:
 - pypi: ./src/_autochem
   name: autochem
   version: 2025.7.21
-  sha256: 26cbb5095303cea63f51b6e3310feb574213e0b064453dc2f5094611711abd16
+  sha256: bce9967b9f21d46fda5efef68de1039df4f557dcf9147a55077019ad76a4ee83
   requires_dist:
   - altair
   - ipython>=8.15
