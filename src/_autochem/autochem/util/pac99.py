@@ -1,11 +1,8 @@
 """Utility functions for reading and writing PAC99 data."""
 
 import re
-from collections import defaultdict
-from collections.abc import Callable, Sequence
 
 import more_itertools as mit
-import numpy
 import pydantic
 import pyparsing as pp
 from pyparsing import common as ppc
@@ -13,6 +10,8 @@ from pyparsing import common as ppc
 
 # Thermo
 class Pac99ThermoParseResults(pydantic.BaseModel):
+    """PAC99 thermo parse results."""
+
     name: str
     formula: dict[str, int]
     ranges: list[tuple[float, float]]
@@ -42,7 +41,7 @@ def parse_thermo(therm_str: str) -> Pac99ThermoParseResults:
     formula = dict(FORM_ENTRIES.parse_string(line2[9:50]).as_list())
     phase = int(line2[51])
     weight = float(line2[52:65])
-    Hf_298 = float(line2[65:80])
+    Hf_298 = float(line2[65:80])  # noqa: N806
 
     # Parse remaining lines, only storing those that match the NASA-7 form
     coeff_head_ = (
@@ -70,8 +69,8 @@ def parse_thermo(therm_str: str) -> Pac99ThermoParseResults:
             assert heat_exps == heat_exps_nasa, f"{heat_exps} != {heat_exps_nasa}"
 
             # Get temperature range
-            T_min = res.get(Key.min)
-            T_max = res.get(Key.max)
+            T_min = res.get(Key.min)  # noqa: N806
+            T_max = res.get(Key.max)  # noqa: N806
             ranges.append((T_min, T_max))
 
             # Parse coefficients
@@ -96,8 +95,9 @@ def parse_thermo(therm_str: str) -> Pac99ThermoParseResults:
 
 
 # Helpers
-#  - Pyparsing token keys
 class Key:
+    """Pyparsing token keys."""
+
     min = "min"
     max = "max"
     num_heat_coeffs = "num_heat_coeffs"

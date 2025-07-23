@@ -3,7 +3,7 @@
 import abc
 from typing import ClassVar, Literal
 
-import numpy
+import numpy as np
 import pydantic
 from numpy.typing import ArrayLike, NDArray
 
@@ -13,23 +13,26 @@ from ..util.type_ import Frozen
 
 
 class Bounded(pydantic.BaseModel):
+    """Mixin to define bounded calculator."""
+
     T_min: float
     T_max: float
 
     def in_bounds(
         self,
         T: ArrayLike,  # noqa: N803
+        *,
         include_max: bool = True,
-    ) -> NDArray[numpy.bool_]:
+    ) -> NDArray[np.bool_]:
         """Determine whether temperature(s) are in bounds.
 
         :param T: Temperature(s)
         :return: Boolean value(s)
         """
-        T = numpy.array(T, dtype=numpy.float64)
-        T_greater_than_min = T >= self.T_min
-        T_less_than_max = (T <= self.T_max) if include_max else (T < self.T_max)
-        return T_greater_than_min & T_less_than_max
+        T = np.array(T, dtype=np.float64)  # noqa: N806
+        greater_than_min = self.T_min <= T
+        less_than_max = (self.T_max >= T) if include_max else (self.T_max > T)
+        return greater_than_min & less_than_max
 
     def all_in_bounds(
         self,
@@ -40,7 +43,7 @@ class Bounded(pydantic.BaseModel):
         :param T: Temperature(s)
         :return: `True` if they are
         """
-        return numpy.all(self.in_bounds(T))
+        return np.all(self.in_bounds(T))
 
     def assert_all_in_bounds(
         self,
@@ -62,7 +65,7 @@ class ThermCalculator(Frozen, abc.ABC):
         T: ArrayLike,  # noqa: N803
         const: Literal["P", "V"] = "P",
         units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+    ) -> NDArray[np.float64]:
         """Evaluate heat capacity, Cv(T) or Cp(T).
 
         :param T: Temperature(s)
@@ -70,13 +73,12 @@ class ThermCalculator(Frozen, abc.ABC):
         :param units: Unit system
         :return: Function value(s)
         """
-        pass
 
     def heat_capacity_constant_pressure(
         self,
         T: ArrayLike,  # noqa: N803
         units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+    ) -> NDArray[np.float64]:
         """Evaluate heat capacity at constant pressure, Cp(T).
 
         :param T: Temperature(s)
@@ -89,7 +91,7 @@ class ThermCalculator(Frozen, abc.ABC):
         self,
         T: ArrayLike,  # noqa: N803
         units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+    ) -> NDArray[np.float64]:
         """Evaluate heat capacity at constant volume, Cv(T).
 
         :param T: Temperature(s)
@@ -103,45 +105,44 @@ class ThermCalculator(Frozen, abc.ABC):
         self,
         T: ArrayLike,  # noqa: N803
         units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+    ) -> NDArray[np.float64]:
         """Evaluate entropy, S(T).
 
         :param T: Temperature(s)
         :param units: Unit system
         :return: Function value(s)
         """
-        pass
 
     @abc.abstractmethod
     def enthalpy(
         self,
         T: ArrayLike,  # noqa: N803
         units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+    ) -> NDArray[np.float64]:
         """Evaluate enthalpy, H(T).
 
         :param T: Temperature(s)
         :param units: Unit system
         :return: Function value(s)
         """
-        pass
 
     @abc.abstractmethod
     def delta_enthalpy(
         self,
         T: ArrayLike,  # noqa: N803
         units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+    ) -> NDArray[np.float64]:
         """Evaluate enthalpy change, dH(T).
 
         :param T: Temperature(s)
         :param units: Unit system
         :return: Function value(s)
         """
-        pass
 
 
 class Nasa7Calculator(Bounded, ThermCalculator):
+    """Nasa Polynomial calculator (7 coefficients)."""
+
     a1: float
     a2: float
     a3: float
@@ -168,7 +169,15 @@ class Nasa7Calculator(Bounded, ThermCalculator):
         """Create a Nasa7Calculator from coefficients."""
         a1, a2, a3, a4, a5, a6, a7 = coeffs
         return cls(
-            T_min=T_min, T_max=T_max, a1=a1, a2=a2, a3=a3, a4=a4, a5=a5, a6=a6, a7=a7
+            T_min=T_min,
+            T_max=T_max,
+            a1=a1,
+            a2=a2,
+            a3=a3,
+            a4=a4,
+            a5=a5,
+            a6=a6,
+            a7=a7,
         )
 
     @unit_.manage_units([], D.energy_per_substance / D.temperature)
@@ -176,8 +185,8 @@ class Nasa7Calculator(Bounded, ThermCalculator):
         self,
         T: ArrayLike,  # noqa: N803
         const: Literal["P", "V"] = "P",
-        units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+        units: UnitsData | None = None,  # noqa: ARG002
+    ) -> NDArray[np.float64]:
         """Evaluate heat capacity, Cv(T) or Cp(T).
 
         Formula:
@@ -191,20 +200,20 @@ class Nasa7Calculator(Bounded, ThermCalculator):
         """
         self.assert_all_in_bounds(T)
 
-        R = unit_.const.value(C.gas, UNITS)
-        T = numpy.array(T, dtype=numpy.float64)
-        C_ = R * (
+        R = unit_.const.value(C.gas, UNITS)  # noqa: N806
+        T = np.array(T, dtype=np.float64)  # noqa: N806
+        C_ = R * (  # noqa: N806
             self.a1 + self.a2 * T + self.a3 * T**2 + self.a4 * T**3 + self.a5 * T**4
         )
-        C_ -= R if const == "V" else 0.0
+        C_ -= R if const == "V" else 0.0  # noqa: N806
         return C_
 
     @unit_.manage_units([], D.energy_per_substance / D.temperature)
     def entropy(
         self,
         T: ArrayLike,  # noqa: N803
-        units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+        units: UnitsData | None = None,  # noqa: ARG002
+    ) -> NDArray[np.float64]:
         """Evaluate entropy, S(T).
 
         Formula:
@@ -216,24 +225,23 @@ class Nasa7Calculator(Bounded, ThermCalculator):
         """
         self.assert_all_in_bounds(T)
 
-        R = unit_.const.value(C.gas, UNITS)
-        T = numpy.array(T, dtype=numpy.float64)
-        S = R * (
-            self.a1 * numpy.log(T)
+        R = unit_.const.value(C.gas, UNITS)  # noqa: N806
+        T = np.array(T, dtype=np.float64)  # noqa: N806
+        return R * (
+            self.a1 * np.log(T)
             + self.a2 * T
             + (self.a3 / 2) * T**2
             + (self.a4 / 3) * T**3
             + (self.a5 / 4) * T**4
             + self.a7
         )
-        return S
 
     @unit_.manage_units([], D.energy_per_substance)
     def enthalpy(
         self,
         T: ArrayLike,  # noqa: N803
-        units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+        units: UnitsData | None = None,  # noqa: ARG002
+    ) -> NDArray[np.float64]:
         """Evaluate enthalpy, H(T).
 
         Formula:
@@ -247,15 +255,15 @@ class Nasa7Calculator(Bounded, ThermCalculator):
         """
         self.assert_all_in_bounds(T)
 
-        R = unit_.const.value(C.gas, UNITS)
+        R = unit_.const.value(C.gas, UNITS)  # noqa: N806
         return R * self.a6 + self.delta_enthalpy(T)
 
     @unit_.manage_units([], D.energy_per_substance)
     def delta_enthalpy(
         self,
         T: ArrayLike,  # noqa: N803
-        units: UnitsData | None = None,
-    ) -> NDArray[numpy.float64]:
+        units: UnitsData | None = None,  # noqa: ARG002
+    ) -> NDArray[np.float64]:
         """Evaluate enthalpy change, dH(T).
 
         Formula:
@@ -267,16 +275,15 @@ class Nasa7Calculator(Bounded, ThermCalculator):
         """
         self.assert_all_in_bounds(T)
 
-        R = unit_.const.value(C.gas, UNITS)
-        T = numpy.array(T, dtype=numpy.float64)
-        dH = R * (
+        R = unit_.const.value(C.gas, UNITS)  # noqa: N806
+        T = np.array(T, dtype=np.float64)  # noqa: N806
+        return R * (
             self.a1 * T
             + (self.a2 / 2) * T**2
             + (self.a3 / 3) * T**3
             + (self.a4 / 4) * T**4
             + (self.a5 / 5) * T**5
         )
-        return dH
 
     @classmethod
     def fit(
@@ -315,24 +322,32 @@ class Nasa7Calculator(Bounded, ThermCalculator):
         :param H: Enthalpies
         :return: Fitted object
         """
-        T = numpy.array(T, dtype=numpy.float64)
-        _0 = numpy.zeros_like(T)
-        _1 = numpy.ones_like(T)
+        T = np.array(T, dtype=np.float64)  # noqa: N806
+        _0 = np.zeros_like(T)
+        _1 = np.ones_like(T)
 
         # Transformation matrix
-        M_Cp = numpy.column_stack([_1, T, T**2, T**3, T**4, _0, _0])
-        M_S = numpy.column_stack(
-            [numpy.log(T), T, T**2 / 2, T**3 / 3, T**4 / 4, _0, _1]
+        M_Cp = np.column_stack([_1, T, T**2, T**3, T**4, _0, _0])  # noqa: N806
+        M_S = np.column_stack(  # noqa: N806
+            [np.log(T), T, T**2 / 2, T**3 / 3, T**4 / 4, _0, _1],
         )
-        M_H = numpy.column_stack([T, T**2 / 2, T**3 / 3, T**4 / 4, T**5 / 5, _1, _0])
-        M = numpy.vstack((M_Cp, M_S, M_H))
+        M_H = np.column_stack([T, T**2 / 2, T**3 / 3, T**4 / 4, T**5 / 5, _1, _0])  # noqa: N806
+        M = np.vstack((M_Cp, M_S, M_H))  # noqa: N806
 
         # Data vector
-        R = unit_.const.value(C.gas, UNITS)
-        v = numpy.concatenate((Cp / R, S / R, H / R))
+        R = unit_.const.value(C.gas, UNITS)  # noqa: N806
+        v = np.concatenate((Cp / R, S / R, H / R))
 
-        T_min, T_max = numpy.min(T), numpy.max(T)
-        (a1, a2, a3, a4, a5, a6, a7), *_ = numpy.linalg.lstsq(M, v, rcond=1e-24)
+        T_min, T_max = np.min(T), np.max(T)  # noqa: N806
+        (a1, a2, a3, a4, a5, a6, a7), *_ = np.linalg.lstsq(M, v, rcond=1e-24)
         return cls(
-            T_min=T_min, T_max=T_max, a1=a1, a2=a2, a3=a3, a4=a4, a5=a5, a6=a6, a7=a7
+            T_min=T_min,
+            T_max=T_max,
+            a1=a1,
+            a2=a2,
+            a3=a3,
+            a4=a4,
+            a5=a5,
+            a6=a6,
+            a7=a7,
         )

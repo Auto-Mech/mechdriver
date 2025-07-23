@@ -2,29 +2,19 @@
 
 import itertools
 from collections.abc import Sequence
-from typing import Literal, Protocol
 
-import altair
-import numpy
-import pandas
-from numpy.typing import ArrayLike, NDArray
+import altair as alt
+import numpy as np
+import pandas as pd
+from numpy.typing import ArrayLike
 
 from .. import unit_
 from ..unit_ import UNITS, Units, UnitsData
 
 
-class RateFunction(Protocol):
-    """Protocol for callable rate function."""
-
-    def __call__(
-        self,
-        T: ArrayLike,  # noqa: N803
-        P: ArrayLike = 1,  # noqa: N803
-        units: UnitsData | None = None,
-    ) -> NDArray[numpy.float128]: ...
-
-
 class Color:
+    """Color hex values."""
+
     # Line colors:
     blue = "#0066ff"
     red = "#ff0000"
@@ -60,6 +50,8 @@ POINT_COLOR_CYCLE = [
 
 
 class Mark:
+    """Altair mark types."""
+
     point = "point"
     line = "line"
 
@@ -67,18 +59,19 @@ class Mark:
 MARKS = (Mark.point, Mark.line)
 
 
-def arrhenius(
+def arrhenius(  # noqa: PLR0913
     ks: ArrayLike,
     T: Sequence[float],  # noqa: N803
+    *,
     order: int = 1,
     units: UnitsData | None = None,
     labels: Sequence[str] | None = None,
     colors: Sequence[str] | None = None,
     x_label: str = "1000/𝑇",  # noqa: RUF001
-    y_label: str = "𝑘",
+    y_label: str = "𝑘",  # noqa: RUF001
     mark: str = Mark.line,
     domain: tuple[float, float] | None = None,
-) -> altair.Chart:
+) -> alt.Chart:
     """Display as an Arrhenius plot.
 
     :param others: Other rate constants
@@ -94,10 +87,10 @@ def arrhenius(
     assert mark in MARKS, f"{mark} not in {MARKS}"
     color_cycle = LINE_COLOR_CYCLE if mark == Mark.line else POINT_COLOR_CYCLE
 
-    nk, nT = numpy.shape(ks)
+    nk, nT = np.shape(ks)  # noqa: N806
     colors = colors or list(itertools.islice(itertools.cycle(color_cycle), nk))
     keep_legend = labels is not None
-    labels = labels or [f"k{i+1}" for i in range(nk)]
+    labels = labels or [f"k{i + 1}" for i in range(nk)]
     assert len(T) == nT, f"{T} !~ {ks}"
     assert len(labels) == nk, f"{labels} !~ {ks}"
 
@@ -112,37 +105,37 @@ def arrhenius(
 
     # Gather data from functons
     data_dct = dict(zip(labels, ks, strict=True))
-    data = pandas.DataFrame({"x": numpy.divide(1000, T), **data_dct})
+    data = pd.DataFrame({"x": np.divide(1000, T), **data_dct})
 
     # Determine exponent range
     if domain is None:
-        vals_arr = numpy.array(list(data_dct.values()))
-        is_nan = numpy.isnan(vals_arr)
-        exp_arr = numpy.log10(vals_arr, where=~is_nan)
+        vals_arr = np.array(list(data_dct.values()))
+        is_nan = np.isnan(vals_arr)
+        exp_arr = np.log10(vals_arr, where=~is_nan)
         exp_arr[is_nan] = 0.0
-        exp_arr = numpy.rint(exp_arr).astype(int)
-        exp_max = numpy.max(exp_arr).item()
-        exp_min = numpy.min(exp_arr).item()
+        exp_arr = np.rint(exp_arr).astype(int)
+        exp_max = np.max(exp_arr).item()
+        exp_min = np.min(exp_arr).item()
         y_vals = [10**x for x in range(exp_min, exp_max + 2)]
-        domain = altair.Undefined
+        domain = alt.Undefined
     else:
-        y_vals = altair.Undefined
+        y_vals = alt.Undefined
 
     # Prepare encoding parameters
-    x = altair.X("x", title=x_label, scale=altair.Scale(zero=False))
+    x = alt.X("x", title=x_label, scale=alt.Scale(zero=False))
     y = (
-        altair.Y("value:Q", title=y_label)
+        alt.Y("value:Q", title=y_label)
         .scale(type="log", domain=domain)
         .axis(format=".1e")
         .axis(format=".1e", values=y_vals)
     )
     color = (
-        altair.Color("key:N", scale=altair.Scale(domain=labels, range=colors))
+        alt.Color("key:N", scale=alt.Scale(domain=labels, range=colors))
         if keep_legend
-        else altair.value(colors[0])
+        else alt.value(colors[0])
     )
 
-    chart = altair.Chart(data)
+    chart = alt.Chart(data)
     chart = (
         chart.mark_point(filled=True, opacity=1)
         if mark == Mark.point
@@ -151,5 +144,7 @@ def arrhenius(
 
     # Create chart
     return chart.transform_fold(fold=list(data_dct.keys())).encode(
-        x=x, y=y, color=color
+        x=x,
+        y=y,
+        color=color,
     )

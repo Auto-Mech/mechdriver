@@ -35,11 +35,10 @@ include = ["autochem", "automol", "autoreact", "phydat", "molsym"]
 
 [dependency-groups]
 dev = [
-    "black",
     "jupyter",
+    "lefthook",
     "mypy",
     "myst-parser",
-    "pre-commit",
     "pylint",
     "pytest",
     "pytest-xdist[psutil]",
@@ -47,4 +46,24 @@ dev = [
     "sphinx",
     "sphinx-autodoc-typehints",
     "sphinx-book-theme",
+]
+
+# Ruff configurations
+[tool.ruff]
+target-version = "py311"
+exclude = ["automol", "autoreact", "molsym", "phydat", "tests", "docs"]
+output-format = "concise"
+fix = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",   # missing trailing comma (handled by format)
+    "RUF022",   # `__all__` is not sorted
+    "PLR2004",  # magic value in comparison
+    "S101",     # assert statement (may want to remove this eventually)
+    "TID252",   # relative import
+    # resolve rule conflicts:
+    "D203",     # incorrect blank line before class (uses D211 instead)
+    "D213",     # multi-line summary second line (uses D212 instead)
 ]

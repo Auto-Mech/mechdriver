@@ -3,11 +3,11 @@
 import functools
 import operator
 from collections.abc import Mapping
-from typing import Any, TypeAlias
+from typing import TypeAlias
 
-import numpy
+import numpy as np
 import pint
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from .system import UNITS, Units
 
@@ -15,41 +15,43 @@ from .system import UNITS, Units
 class Dimension:
     """Dimension class."""
 
-    _data: dict[str, int]
+    unit_exponents: dict[str, int]
     log: bool = False
 
     def __init__(
         self,
         arg: "str | Mapping[str, int] | Dimension | None" = None,
+        *,
         log: bool | None = None,
-        **kwargs,
-    ):
+        **kwargs: object,
+    ) -> None:
+        """Initialize dimension object."""
         if arg is not None:
             assert not kwargs, f"Invalid arguments: {arg}, {kwargs}"
 
         match arg:
             case Dimension():
-                self._data = arg._data
+                self.unit_exponents = arg.unit_exponents
                 self.log = log or arg.log or False
             case str():
-                self._data = {arg: 1}
+                self.unit_exponents = {arg: 1}
                 self.log = log or False
             case Mapping():
                 self.log = log or False
-                self._data = dict(arg)
+                self.unit_exponents = dict(arg)
             case _:
                 assert arg is None, f"Cannot combine arg={arg} and kwargs={kwargs}"
                 self.log = kwargs.pop("log", log or False)
-                self._data = kwargs
+                self.unit_exponents = kwargs
 
-        assert all(hasattr(UNITS, k) for k in self._data), (
-            f"Invalid names: {self._data}"
+        assert all(hasattr(UNITS, k) for k in self.unit_exponents), (
+            f"Invalid names: {self.unit_exponents}"
         )
-        self._data = {k: int(v) for k, v in self._data.items()}
+        self.unit_exponents = {k: int(v) for k, v in self.unit_exponents.items()}
 
     def items(self) -> list[tuple[str, int]]:
         """Get items of dimension."""
-        return sorted(self._data.items(), key=lambda t: t[::-1], reverse=True)
+        return sorted(self.unit_exponents.items(), key=lambda t: t[::-1], reverse=True)
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -65,9 +67,10 @@ class Dimension:
         :return: New dimension
         """
         if self.log:
-            raise ValueError("Cannot raise logarithmic dimension to a power")
-        data = {k: v * power for k, v in self._data.items()}
-        return self.__class__(data)
+            msg = "Cannot raise logarithmic dimension to a power"
+            raise ValueError(msg)
+        unit_exponents = {k: v * power for k, v in self.unit_exponents.items()}
+        return self.__class__(unit_exponents)
 
     def __mul__(self, other: "Dimension") -> "Dimension":
         """Multiply two dimensions together.
@@ -76,12 +79,13 @@ class Dimension:
         :return: New dimension
         """
         if self.log or other.log:
-            raise ValueError("Cannot multiply logarithmic dimensions")
-        data = {
-            k: self._data.get(k, 0) + other._data.get(k, 0)
-            for k in set(self._data) | set(other._data)
+            msg = "Cannot multiply logarithmic dimensions"
+            raise ValueError(msg)
+        unit_exponents = {
+            k: self.unit_exponents.get(k, 0) + other.unit_exponents.get(k, 0)
+            for k in set(self.unit_exponents) | set(other.unit_exponents)
         }
-        return self.__class__(data)
+        return self.__class__(unit_exponents)
 
     __rmul__ = __mul__
 
@@ -92,10 +96,11 @@ class Dimension:
         :return: New dimension
         """
         if self.log or other.log:
-            raise ValueError("Cannot divide logarithmic dimensions")
+            msg = "Cannot divide logarithmic dimensions"
+            raise ValueError(msg)
         data = {
-            k: self._data.get(k, 0) - other._data.get(k, 0)
-            for k in set(self._data) | set(other._data)
+            k: self.unit_exponents.get(k, 0) - other.unit_exponents.get(k, 0)
+            for k in set(self.unit_exponents) | set(other.unit_exponents)
         }
         return self.__class__(data)
 
@@ -119,7 +124,7 @@ class D:
     rate_constant = Dimension("rate_constant")
 
 
-def unit(units: Units, dim: DimensionData, **kwargs) -> pint.Unit:
+def unit(units: Units, dim: DimensionData, **kwargs: object) -> pint.Unit:
     """Determine the unit for a dimension.
 
     :param units: Unit system
@@ -143,7 +148,7 @@ unit_ = unit
 
 
 def conversion_factor(
-    units: Units, new_units: Units, dim: DimensionData, **kwargs
+    units: Units, new_units: Units, dim: DimensionData, **kwargs: object
 ) -> float:
     """Convert dimension value to new units.
 
@@ -163,8 +168,12 @@ def conversion_factor(
 
 
 def convert(
-    units: Units, new_units: Units, dim: DimensionData, val: Any, **kwargs
-) -> NDArray[numpy.float64]:
+    units: Units,
+    new_units: Units,
+    dim: DimensionData,
+    val: ArrayLike,
+    **kwargs: object,
+) -> NDArray[np.float64]:
     """Convert dimension value to new units.
 
     :param units: Units sytem
@@ -176,8 +185,8 @@ def convert(
     """
     dim = Dimension(dim)
     factor = conversion_factor(units=units, new_units=new_units, dim=dim, **kwargs)
-    val = numpy.array(val, dtype=numpy.float64)
-    return val * factor if not dim.log else val + numpy.log(factor)
+    val = np.array(val, dtype=np.float64)
+    return val * factor if not dim.log else val + np.log(factor)
 
 
 def log(dim: DimensionData) -> Dimension:

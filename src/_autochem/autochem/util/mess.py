@@ -1,6 +1,6 @@
 """Utility functions for reading and writing MESS input/output data."""
 
-import numpy
+import numpy as np
 import pydantic
 import pyparsing as pp
 from pyparsing import pyparsing_common as ppc
@@ -9,6 +9,8 @@ from .type_ import NDArray_
 
 
 class MessOutputChannelParseResults(pydantic.BaseModel):
+    """Mess output channel parse results."""
+
     T: list[float]
     P: list[float]
     k_data: NDArray_
@@ -18,6 +20,8 @@ class MessOutputChannelParseResults(pydantic.BaseModel):
 
 
 class Key:
+    """Pyparsing token keys."""
+
     id1 = "id1"
     id2 = "id2"
     T = "T"
@@ -25,12 +29,12 @@ class Key:
     high = "high"
 
 
-NAN = pp.Keyword("***").set_parse_action(pp.replace_with(numpy.nan))
+NAN = pp.Keyword("***").set_parse_action(pp.replace_with(np.nan))
 NUMBERS = pp.OneOrMore(ppc.number, stop_on=pp.LineEnd())
 NUMBERS_ = pp.OneOrMore(ppc.number | NAN, stop_on=pp.LineEnd())
 ID = pp.Combine(pp.Char("WP") + pp.Word(pp.nums))
 CHAN = ID(Key.id1) + pp.Literal("->") + ID(Key.id2)
-TEMP_LINE = pp.Suppress(pp.Literal("P\T")) + NUMBERS
+TEMP_LINE = pp.Suppress(pp.Literal(r"P\T")) + NUMBERS
 RATE_LINE = ppc.number + NUMBERS_
 RATE_LINES = pp.OneOrMore(pp.Group(RATE_LINE))
 HIGH_LINE = pp.Suppress(pp.Keyword("O-O")) + NUMBERS_
