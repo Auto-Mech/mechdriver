@@ -3,6 +3,7 @@
 
 import os
 import socket
+import warnings
 
 import click
 
@@ -28,7 +29,7 @@ def status():
     "-f",
     "--auto-config-flags",
     default=None,
-    required=True,
+    required=False,
     help="Automatically configure HyperQueue with these sbatch/qsub flags.",
 )
 def local(auto_config_flags: str | None = None):
@@ -40,6 +41,13 @@ def local(auto_config_flags: str | None = None):
     """
     print("Process ID:", os.getpid())
     print("Host name:", socket.gethostname())
+
+    if auto_config_flags is None:
+        msg = (
+            "\nWARNING: Running without -f requires manual HyperQueue configuration."
+            "\nMake sure you have a server running with the appropriate workers."
+        )
+        warnings.warn(msg, stacklevel=1)
 
     test_paths = tu.setup_tests()
     mechdriver.subtasks.setup_multiple(test_paths)
