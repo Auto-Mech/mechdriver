@@ -125,7 +125,7 @@ hq worker start \\
     --manager "pbs" \\
     --cpus "{cpus:d}" \\
     --resource "mem=sum({mem_mib})" \\
-    --on-server-lost "finish-running" \\
+    --on-server-lost "stop" \\
     --time-limit "1h"
 
 """
