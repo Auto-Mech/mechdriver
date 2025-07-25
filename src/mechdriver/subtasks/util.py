@@ -36,6 +36,7 @@ def read_input_files(run_dir: str | Path) -> dict[str, str]:
             "models.dat",
             "mechanism.dat",
             "species.csv",
+            "species.dat",
             "pes_groups.dat",
         ]
         if (inp_dir / fname).exists()
