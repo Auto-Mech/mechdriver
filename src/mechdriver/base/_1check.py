@@ -14,8 +14,7 @@ class Status(enum.Enum):
     # Status codes for multiple or non-existent log files
     RUNNING = "RUNNING"  # Currently running
     TBD = "TBD"  # Not yet started
-    OK_1E = "OK_1E"  # All but 1 log file succeeded
-    OK_2E = "OK_2E"  # All but 2 log files succeeded
+    OK_IE = "OK_IE"  # All but 1 log file succeeded
 
 
 class Extension:
@@ -91,8 +90,7 @@ def colored_status_string(status: Status, width: int | None = None) -> str:
         Status.ERROR: "\033[91m",  # bright red
         Status.RUNNING: "\033[96m",  # bright cyan
         Status.TBD: "\033[90m",  # gray
-        Status.OK_1E: "\033[95m",  # bright magenta
-        Status.OK_2E: "\033[95m",  # bright magenta
+        Status.OK_IE: "\033[95m",  # bright magenta
     }.get(status)
     color_end_code = "\033[0m"
     width = max(len(s.value) for s in Status) if width is None else width
