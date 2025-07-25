@@ -2,9 +2,9 @@
 
 import abc
 from collections.abc import Callable, Mapping
-from typing import Annotated, Any, ClassVar, Self, TypeAlias, TypeVar
+from typing import Annotated, ClassVar, Self, TypeAlias, TypeVar
 
-import numpy
+import numpy as np
 import pint
 import pydantic
 from numpy.typing import ArrayLike, NDArray
@@ -20,7 +20,7 @@ S = TypeVar("S", bound="SubclassTyped")
 
 # Type aliases
 Number: TypeAlias = float | int
-Scalers: TypeAlias = dict[str, Callable[[ArrayLike, ArrayLike], NDArray[numpy.float64]]]
+Scalers: TypeAlias = dict[str, Callable[[ArrayLike, ArrayLike], NDArray[np.float64]]]
 
 
 # Abstract base classes
@@ -69,11 +69,11 @@ class SubclassTyped(pydantic.BaseModel, abc.ABC):
     @classmethod
     def model_validate(
         cls,
-        obj: Any,
+        obj: object,
         *,
         strict: bool | None = None,
         from_attributes: bool | None = None,
-        context: Any | None = None,
+        context: object | None = None,
     ) -> Self:
         """Validate a pydantic model instance."""
         if isinstance(obj, Mapping) and "type" in obj:
@@ -83,15 +83,22 @@ class SubclassTyped(pydantic.BaseModel, abc.ABC):
             sub = next((s for s in subclasses(cls) if s.type_ == typ), None)
             if sub is not None:
                 return sub.model_validate(
-                    obj, strict=strict, from_attributes=from_attributes, context=context
+                    obj,
+                    strict=strict,
+                    from_attributes=from_attributes,
+                    context=context,
                 )
 
         return super().model_validate(
-            obj, strict=strict, from_attributes=from_attributes, context=context
+            obj,
+            strict=strict,
+            from_attributes=from_attributes,
+            context=context,
         )
 
 
 def subclasses(cls: type[SubclassTyped]) -> list[type[SubclassTyped]]:
+    """Determine subclasses of a class."""
     subs = []
 
     for sub in cls.__subclasses__():
@@ -110,7 +117,7 @@ class Scalable(pydantic.BaseModel, abc.ABC):
 
     _scalers: ClassVar[Scalers | None] = None
 
-    def __mul__(self, c: ArrayLike):
+    def __mul__(self, c: ArrayLike) -> Self:
         """Scalar multiplication.
 
         :param c: Scalar value to multiply by
@@ -122,11 +129,12 @@ class Scalable(pydantic.BaseModel, abc.ABC):
             for key, scaler in self._scalers.items():
                 data[key] = scaler(c, getattr(self, key))
         else:
-            raise NotImplementedError("Scalar multiplication not implemented.")
+            msg = "Scalar multiplication not implemented."
+            raise NotImplementedError(msg)
 
         return self.model_validate(data)
 
-    def __truediv__(self, c: ArrayLike):
+    def __truediv__(self, c: ArrayLike) -> Self:
         """Scalar division.
 
         :param c: Scalar value to divide by
@@ -144,7 +152,7 @@ Unit_ = Annotated[
     # Use abbreviated unit names upon serialization
     pydantic.PlainSerializer(lambda x: format(x, "~")),
     pydantic.GetPydanticSchema(
-        lambda _, handler: core_schema.with_default_schema(handler(str))
+        lambda _, handler: core_schema.with_default_schema(handler(str)),
     ),
 ]
 
@@ -154,16 +162,16 @@ Quantity_ = Annotated[
     # Use abbreviated unit names upon serialization
     pydantic.PlainSerializer(lambda x: format(x, "~")),
     pydantic.GetPydanticSchema(
-        lambda _, handler: core_schema.with_default_schema(handler(str))
+        lambda _, handler: core_schema.with_default_schema(handler(str)),
     ),
 ]
 
 NDArray_ = Annotated[
-    pydantic.SkipValidation[numpy.ndarray],
-    pydantic.BeforeValidator(lambda x: numpy.array(x, dtype=numpy.float64)),
-    pydantic.PlainSerializer(lambda x: numpy.array(x).tolist()),
+    pydantic.SkipValidation[np.ndarray],
+    pydantic.BeforeValidator(lambda x: np.array(x, dtype=np.float64)),
+    pydantic.PlainSerializer(lambda x: np.array(x).tolist()),
     pydantic.GetPydanticSchema(
-        lambda _, handler: core_schema.with_default_schema(handler(list[float]))
+        lambda _, handler: core_schema.with_default_schema(handler(list[float])),
     ),
 ]
 
@@ -171,16 +179,6 @@ Formula_ = Annotated[
     Formula,
     pydantic.BeforeValidator(form.normalize_input),
     pydantic.GetPydanticSchema(
-        lambda _, handler: core_schema.with_default_schema(handler(Formula))
+        lambda _, handler: core_schema.with_default_schema(handler(Formula)),
     ),
 ]
-
-# # Annotated type for xarray
-# DataArray_ = Annotated[
-#     pydantic.SkipValidation[xarray.DataArray],
-#     pydantic.BeforeValidator(lambda x: xarray.DataArray(x)),
-#     pydantic.PlainSerializer(lambda x: xarray.DataArray(x).to_dict()),
-#     pydantic.GetPydanticSchema(
-#         lambda _, handler: core_schema.with_default_schema(handler(dict[str, object]))
-#     ),
-# ]

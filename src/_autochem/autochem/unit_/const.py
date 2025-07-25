@@ -8,6 +8,8 @@ from .system import Units
 
 
 class C:
+    """Pint constant names."""
+
     gas = "molar_gas_constant"
     boltzmann = "boltzmann_constant"
 
@@ -37,7 +39,8 @@ def dimension(const: str) -> Dimension:
     # Look up dimension
     const = const.strip().lower()
     if const not in dim_dct:
-        raise ValueError(f"Unknown constant: {const}")
+        msg = f"Unknown constant: {const}"
+        raise ValueError(msg)
     return dim_dct[const]
 
 

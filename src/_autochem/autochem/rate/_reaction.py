@@ -5,8 +5,8 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import ClassVar
 
-import altair
-import numpy
+import altair as alt
+import numpy as np
 import pydantic
 
 from ..unit_ import UnitsData
@@ -25,7 +25,7 @@ class Reaction(Scalable):
     rate: Rate_ = pydantic.Field(
         default_factory=lambda data: ArrheniusRateFit(
             A=1, b=0, E=0, order=len(data["reactants"])
-        )
+        ),
     )
 
     # Private attributes
@@ -39,7 +39,10 @@ class Reaction(Scalable):
 
 # Constructors
 def from_chemkin_string(
-    rxn_str: str, units: UnitsData | None = None, strict: bool = True
+    rxn_str: str,
+    *,
+    units: UnitsData | None = None,
+    strict: bool = True,
 ) -> Reaction:
     """Read rate from Chemkin string.
 
@@ -69,7 +72,9 @@ def from_chemkin_string(
     )
 
 
-def from_mess_channel_output(mess_chan_out: str, reversible: bool = True) -> Reaction:
+def from_mess_channel_output(
+    mess_chan_out: str, *, reversible: bool = True
+) -> Reaction:
     """Extract rate data from MESS output.
 
     :param mess_chan_out: MESS output channel string
@@ -119,7 +124,7 @@ def expand_lumped(
     :return: Component reactions
     """
 
-    def _expand(name: str, rev: bool) -> tuple[float, list[dict[int, str]]]:
+    def _expand(name: str, *, rev: bool = True) -> tuple[float, list[dict[int, str]]]:
         """Determine reaction expansion and scale factor for one lumped species.
 
         Reaction expansion given as list of index -> name mappings representing
@@ -194,7 +199,7 @@ def chemkin_equation(rxn: Reaction) -> str:
     )
 
 
-def chemkin_string(rxn: Reaction, eq_width: int = 55, dup: bool = False) -> str:
+def chemkin_string(rxn: Reaction, *, eq_width: int = 55, dup: bool = False) -> str:
     """Get Chemkin rate string.
 
     :param rxn: Reaction
@@ -222,7 +227,7 @@ def fit_high(rxn: Reaction) -> Reaction:
     return rxn
 
 
-def fit_plog(rxn: Reaction, sanitize: bool = False) -> Reaction:
+def fit_plog(rxn: Reaction, *, sanitize: bool = False) -> Reaction:
     """Fit rate data to Plog.
 
     :param rxn: Reaction with rate data
@@ -234,14 +239,19 @@ def fit_plog(rxn: Reaction, sanitize: bool = False) -> Reaction:
     if sanitize:
         rate = rate.without_nan()
     rxn.rate = PlogRateFit.fit(
-        T=rate.T, P=rate.P, k_data=rate.k_data, k_high=rate.k_high, order=rate.order
+        T=rate.T,
+        P=rate.P,
+        k_data=rate.k_data,
+        k_high=rate.k_high,
+        order=rate.order,
     )
     return rxn
 
 
 # Display
-def display(
+def display(  # noqa: PLR0913
     rxn: Reaction | Sequence[Reaction],
+    *,
     T_range: tuple[float, float] = (400, 1250),  # noqa: N803
     P: float = 1,  # noqa: N803
     units: UnitsData | None = None,
@@ -249,7 +259,7 @@ def display(
     color: str | Sequence[str] | None = None,
     x_label: str = "1000/𝑇",  # noqa: RUF001
     y_label: str = "𝑘",  # noqa: RUF001
-):
+) -> alt.Chart:
     """Display one or more reaction rates on an Arrhenius plot.
 
     :param rxn_: Reaction rate(s)
@@ -271,7 +281,7 @@ def display(
     order = rate0.order
 
     nr = len(rates)
-    labels = labels or ([f"k{i+1}" for i in range(nr)] if nr > 1 else None)
+    labels = labels or ([f"k{i + 1}" for i in range(nr)] if nr > 1 else None)
 
     def make_chart(
         ixs: Sequence[int],
@@ -279,16 +289,16 @@ def display(
         labels: Sequence[str] | None,
         colors: Sequence[str] | None,
         mark: str,
-    ) -> altair.Chart:
+    ) -> alt.Chart:
         rates_ = [rates[i] for i in ixs]
         labels_ = None if labels is None else [labels[i] for i in ixs]
         colors_ = None if colors is None else [colors[i] for i in ixs]
-        (T, *Ts), ks = zip(
-            *(r._plot_data(T_range=T_range, P=P, units=units) for r in rates_),
+        (T, *Ts), ks = zip(  # noqa: N806
+            *(r.plot_data(T_range=T_range, P=P, units=units) for r in rates_),
             strict=True,
         )
-        for T_ in Ts:
-            assert numpy.allclose(T, T_), f"{T} !~ {T_}"
+        for T_ in Ts:  # noqa: N806
+            assert np.allclose(T, T_), f"{T} !~ {T_}"
         return plot.arrhenius(
             ks=ks,
             T=T,
@@ -303,7 +313,7 @@ def display(
 
     charts = []
     for mark in (plot.Mark.line, plot.Mark.point):
-        ixs = [i for i, r in enumerate(rates) if r._plot_mark == mark]
+        ixs = [i for i, r in enumerate(rates) if r.plot_mark == mark]
         if ixs:
             chart = make_chart(
                 ixs, rates=rates, labels=labels, colors=colors, mark=mark
@@ -312,7 +322,5 @@ def display(
 
     chart, *others = charts
     return (
-        chart
-        if not others
-        else altair.layer(*charts).resolve_scale(color="independent")
+        chart if not others else alt.layer(*charts).resolve_scale(color="independent")
     )

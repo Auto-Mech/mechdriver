@@ -113,3 +113,6 @@ save/
 
 # User configuration
 .username
+
+# Directory of worker scripts
+.workers

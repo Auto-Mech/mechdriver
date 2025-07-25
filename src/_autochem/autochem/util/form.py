@@ -26,11 +26,10 @@ def normalize_input(fml: FormulaData) -> Formula:
         for sym, count in fml_lst:
             fml[sym.title()] += int(count)
 
-    fml = {k.title(): int(v) for k, v in fml.items() if v}
-    return fml
+    return {k.title(): int(v) for k, v in fml.items() if v}
 
 
-def string(fml_inp: FormulaData, ones: bool = False, upper: bool = False) -> str:
+def string(fml_inp: FormulaData, *, ones: bool = False, upper: bool = False) -> str:
     """Convert formula input to string.
 
     :param fml_inp: Formula input

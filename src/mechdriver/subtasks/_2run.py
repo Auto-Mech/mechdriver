@@ -340,9 +340,7 @@ def memory_mib(mem: int) -> int:
 def start_hyperqueue_server() -> None:
     """Re-start HyperQueue server."""
     print("Starting HyperQueue server...")
-    subprocess.Popen(
-        ["hq", "server", "start"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-    )
+    subprocess.Popen(["hq", "server", "start"])
     # Wait up to 1 second for the file to appear
     for _ in range(10):
         time.sleep(0.1)
@@ -377,7 +375,7 @@ def add_hyperqueue_allocation(mem: int, cpus: int, flags: str) -> None:
             *flags.split(),
         ]
         print(" ".join(args))
-        subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        subprocess.run(args)
     elif shutil.which("qsub"):
         print("Detected PBS on system. HyperQueue allocation command:")
         args = [
@@ -393,7 +391,7 @@ def add_hyperqueue_allocation(mem: int, cpus: int, flags: str) -> None:
             *flags.split(),
         ]
         print(" ".join(args))
-        subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        subprocess.run(args)
     else:
         msg = (
             "No SLURM or PBS detected. Please manually configure HyperQueue allocation."

@@ -5,12 +5,12 @@ from collections import defaultdict
 from collections.abc import Callable, Sequence
 
 import more_itertools as mit
-import numpy
+import numpy as np
 import pydantic
 import pyparsing as pp
 from pyparsing import common as ppc
 
-COMMENT_REGEX = re.compile(r"# .*$|!.*$", flags=re.M)
+COMMENT_REGEX = re.compile(r"# .*$|!.*$", flags=re.MULTILINE)
 
 
 # Readers
@@ -53,6 +53,8 @@ def read_equation_reagents(chem_str: str) -> tuple[list[str], list[str]]:
 
 # Thermo
 class ChemkinThermoParseResults(pydantic.BaseModel):
+    """Chemkin thermo parse results."""
+
     name: str
     formula: dict[str, int]
     T_min: float
@@ -97,6 +99,8 @@ def parse_thermo(therm_str: str) -> ChemkinThermoParseResults:
 
 # Rates
 class ChemkinRateParseResults(pydantic.BaseModel):
+    """Chemkin rate parse results."""
+
     reactants: list[str]
     products: list[str]
     reversible: bool
@@ -197,6 +201,7 @@ def parse_rate(rate_str: str) -> ChemkinRateParseResults:
 def write_equation(
     reactants: Sequence[str],
     products: Sequence[str],
+    *,
     reversible: bool = True,
     third_body: str | None = None,
     pressure_dependent: bool = False,
@@ -221,7 +226,7 @@ def write_equation(
     return arrow.join([reac, prod])
 
 
-def write_with_dup(reac_str: str, dup: bool = True) -> str:
+def write_with_dup(reac_str: str, *, dup: bool = True) -> str:
     """Format Chemkin reaction string with DUP keyword.
 
     :param reac_str: Chemkin reaction string
@@ -251,9 +256,10 @@ def write_efficiencies(
     return " " * indent + "  ".join(f"{k} /{v:.3f}/" for k, v in eff.items())
 
 
-def write_aux(
+def write_aux(  # noqa: PLR0913
     key: str,
     val: str | float | Sequence[float] | None = None,
+    *,
     head_width: int = 55,
     key_width: int = 5,
     indent: int = 4,
@@ -285,16 +291,17 @@ def write_aux(
     return " " * indent + f"{key:<{key_width}} /{val_str:>{val_width}}/"
 
 
-def write_therm_entry_header(
+def write_therm_entry_header(  # noqa: PLR0913
     name: str,
     form_dct: dict[str, int],
     T_min: float,  # noqa: N803
     T_max: float,  # noqa: N803
+    *,
     T_mid: float | None = None,  # noqa: N803
     charge: int = 0,
     phase: str = "G",
     date: str = "",
-):
+) -> str:
     """Write the header line for a Chemkin thermo entry.
 
     :param name: Name of the species
@@ -363,6 +370,7 @@ def symbol_sort_key(
 # Helpers
 def write_numbers(
     nums: Sequence[float],
+    *,
     digits: int = 4,
     always_sci: bool = False,
     as_int: bool = False,
@@ -383,7 +391,7 @@ def write_numbers(
 
 
 def write_number(
-    num: float | int, digits: int = 4, always_sci: bool = False, as_int: bool = False
+    num: float, *, digits: int = 4, always_sci: bool = False, as_int: bool = False
 ) -> str:
     """Write a number to a formatted string.
 
@@ -400,8 +408,8 @@ def write_number(
         num = int(num)
         return f"{num:>{max_width}d}"
 
-    exp = int(numpy.floor(numpy.log10(numpy.abs(num)))) if num else 0
-    float_width = max(exp + 1, digits + 1) if exp > 0 else numpy.abs(exp) + 1 + digits
+    exp = int(np.floor(np.log10(np.abs(num)))) if num else 0
+    float_width = max(exp + 1, digits + 1) if exp > 0 else np.abs(exp) + 1 + digits
 
     if always_sci or float_width > max_width:
         decimals = digits - 1
@@ -413,7 +421,7 @@ def write_number(
 
 # Parse helpers
 def parenthetical(
-    expr: pp.ParserElement, open: str = "(", close: str = ")"
+    expr: pp.ParserElement, open_: str = "(", close: str = ")"
 ) -> pp.ParserElement:
     """Add slashes on either side of a parse expression.
 
@@ -422,12 +430,13 @@ def parenthetical(
     :param close: Close parenthesis
     :return: Expression
     """
-    return pp.Suppress(pp.Literal(open)) + expr + pp.Suppress(pp.Literal(close))
+    return pp.Suppress(pp.Literal(open_)) + expr + pp.Suppress(pp.Literal(close))
 
 
 # Helpers
-#  - Pyparsing token keys
 class Key:
+    """Pyparsing token keys."""
+
     reaction = "reaction"
     arrhenius = "arrhenius"
     collider = "collider"
@@ -462,7 +471,7 @@ AUX_ENTRY = COLL_ENTRY(Key.collider) ^ NUMS_ENTRY(Key.numbers) ^ MISC_ENTRY(Key.
 PLUS = pp.Suppress(pp.Literal("+"))
 FALLOFF = parenthetical(PLUS + pp.Word(pp.alphanums))
 REAC_SIDE_FALLOFF = pp.SkipTo(FALLOFF ^ pp.StringEnd())(Key.reagents) + pp.Opt(FALLOFF)(
-    Key.falloff
+    Key.falloff,
 )
 #   - Thermo entry formula
 FORM_KEY = pp.Word(pp.alphas, max=2)

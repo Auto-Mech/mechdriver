@@ -23,4 +23,4 @@ jobs:
       # Lint
       - name: Lint
         run: |
-          uv run ./old-lint.sh
+          uv run ./lint.sh

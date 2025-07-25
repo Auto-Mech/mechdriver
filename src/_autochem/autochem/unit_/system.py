@@ -60,7 +60,7 @@ Units_ = Annotated[
     pydantic.BeforeValidator(lambda x: Units.model_validate(x)),
     pydantic.PlainSerializer(lambda x: Units.model_validate(x).model_dump()),
     pydantic.GetPydanticSchema(
-        lambda _, handler: core_schema.with_default_schema(handler(pydantic.BaseModel))
+        lambda _, handler: core_schema.with_default_schema(handler(pydantic.BaseModel)),
     ),
 ]
 
@@ -84,7 +84,7 @@ def from_unit_sequence(unit_seq: Sequence[pint.Unit]) -> Units:
     """
     # Split into components and chain them
     unit_iter = itertools.chain.from_iterable(
-        map(pint.util.to_units_container, unit_seq)
+        map(pint.util.to_units_container, unit_seq),
     )
     unit_pool = list(map(pint.Unit, unit_iter))
 
