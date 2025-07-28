@@ -31,8 +31,26 @@ def classify_species(gra):
     return fc_grps.dct_count_grps
     # returns dct: number of groups for each type
 
-
+RM_IF_OTHER_BASES = ["C3.DD-M", "C3.ST-M"]
+#perhaps unnecessary since we filter other groups?
+# TO ADD
+# C3.D-M : C4H6, C3H6
+# C3.DD-RSR : C3H3
+# C4.DD-R : C4H5
+# C4.DD-M : C4H6
+# C4.DT-R : C4H3
+# C3.D-RSR ; IC4H7, C4H71-3
+# C5H4CCH2-RSR : FULVENALLENYL
+# C5OH-RSR : C5H6OH
+# A1,O2-M: BENZOQUINONE; FIND PROPER FUNCTIONAL GROUP
+# A1CO-RSR: C6H5CO
+# A1,H2-M : OC6H5CH3
+# A1CH2O-R ? C6H5CH2O
+# A1,C2H2-R; A1,C2H4-R => DIFFICILE PERCHé RAD NON è SU ANELLO
+# A1,C3.DD-RSR: ELIMINA? reattività di A1CH2-RSR
 BASE_GRP_DCT = {
+    "C3.DD-M": "allene", # basis: should perhaps separate those without rings?
+    "C3.ST-M": "propyne", 
     "C5-M": "cyclopentadiene",
     "C5O-M": "cyclopentadienone",
     "C5CH2-M": "fulvene",
@@ -59,6 +77,8 @@ SUBSTITUENTS_GRP_DCT = {
     "C3.DD": "allene",
     "C3.ST": "propyne",
     "OCH3": "alkoxy_oc",
+    "C5": "cyclopentadiene",
+    "A1": "aromatic", #as substituent: less restrictive
 }
 
 # POTENTIALLY, THE COMPOSITE GROUP LIST CAN BE MADE
@@ -72,22 +92,30 @@ COMPOSITE_GRP_LIST = [
     "A1,CH3-M",
     "A1,C2H-M",
     "A1,C2H3-M",
+    "A1,C2H5-M",
     "A1,C3.DD-M",
     "A1,C3.ST-M",
+    # to add: alkyl groups with radicals
     # molecules - oxygenated
+    "C5,C5-M",
     "C5,OH-M",
     "A1,OH-M",
     "A1,OH,OH-M",
     "A1,OH,CH3-M",
+    "A1,CH3,CH3-M",
     "A1,OH,CHO-M",
     "A1,OH,OCH3-M",
     "A1,CHO-M",
     "A1,OCH3-M",
     # radicals
     "C5,CH3-RSR",
+    "C5,A1-RSR",
     "A1,CH3-R",
     "A1,OH-R",
     "A1O,OH-RSR",
+    "A1O,CH3-RSR",
+    "A1CH2,OH-RSR",
+    "A1,C2H-R",
 ]
 
 
@@ -112,14 +140,24 @@ class SuperFunctionalGroup:
         # assign base groups
         for key, fct in BASE_GRP_DCT.items():
             self.sup_grps[key] = self.grp_fct_dct[fct]
+        if len(self.sup_grps.keys()) > 1:
+            for key in RM_IF_OTHER_BASES:
+                self.sup_grps.pop(key, None)
         base_grps_0 = list(itertools.chain(*[
             grp for grp in self.sup_grps.values() if len(grp) > 0]))
+        # if -RSR found but also -M and -R found: delete RSR
+        # should have fixed this directly in functional group assignment
+        # rtypes = [kk.split('-')[1] for kk in base_grps_0]
+        # rsrtypes = [kk for kk in base_grps_0 if kk.split('-')[1] == 'RSR']
+        # if len(rtypes) != len(rsrtypes): # 'RSR' but also other
+        # e.g., 'R' and 'M' present: remove RSR types
+        #     [self.sup_grps.pop(key, None) for key in rsrtypes]
+        #     base_grps_0 = [base for base in base_grps_0 if '-RSR' not in base]
         # assign substituents
         subs_fct_dct = {}
         for key, fct in SUBSTITUENTS_GRP_DCT.items():
             subs_fct_dct[key] = self.grp_fct_dct[fct]
-
-        # CH3CK C6H5C2H2, C6H5C2H4!!
+        # CHECK C6H5C2H2, C6H5C2H4!!
         # assign composite
         heavy_atms = list(implicit(gra)[0].keys())
         for comp_grp in COMPOSITE_GRP_LIST:
