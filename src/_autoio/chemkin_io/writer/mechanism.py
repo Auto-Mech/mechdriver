@@ -22,7 +22,7 @@ def write_chemkin_file(mech_spc_dct=None, spc_nasa7_dct=None,
         :return total_str: the raw text for the Chemkin-formatted file
         :rtype: str
         :param sortrxns: reorder dict keys alphabetically 
-                        (otherwise, order may change every time if other operations have been done before)
+        (otherwise, order may change every time if other operations have been done before)
         :type sortrxns: bool
     """
 
@@ -65,7 +65,7 @@ def species_block(mech_spc_dct):
     """
 
     spc_str = 'SPECIES\n\n'
-    spc_str += spc.write_species(mech_spc_dct) 
+    spc_str += spc.write_species(mech_spc_dct)
     spc_str += '\nEND\n\n\n'
 
     return spc_str

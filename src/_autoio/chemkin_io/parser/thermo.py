@@ -22,7 +22,6 @@ def create_spc_nasa7_dct(block_str):
     # Get the list of entries; at least four lines each
     # (possibly more for comment lines)
     entry_lst = create_entry_list(block_str)
-    
     # Get the default midpoint temp
     default_temp_limits = get_default_temp_limits(block_str)
     default_midpoint = default_temp_limits[1]
@@ -344,6 +343,5 @@ def fix_lines(entry_lst):
                     line = ' '*(80 - len(line)) + line
                 entry[idx2] = line
         entry_lst[idx1] = entry
-        
 
     return entry_lst

@@ -5,12 +5,14 @@ import collections
 import itertools
 import numpy as np
 import pyparsing as pp
+from phydat import phycon
+from autoreact.params import RxnParams
 import autoparse.pattern as app
 import autoparse.find as apf
 from autoparse import cast as ap_cast
 from ioformat import headlined_sections
-from phydat import phycon
-from autoreact.params import RxnParams
+from ioformat import remove_comment_lines
+
 
 # gearing up to replace autoparse with pyparsing
 PP_ARROW = pp.Combine(pp.Opt("<") + pp.Char("=") + pp.Opt(">"))
@@ -208,8 +210,11 @@ def get_rxn_strs_dct(block_str):
     for rxn_str in rxn_strs:
         rxn = get_rxn_name(rxn_str)
         rxn_str_orig = []
-
         for line in rxn_str.split("\n"):
+            # skip empty lines
+            if line.strip() in ['', 'REACTIONS', 'END']:
+                continue
+            # skip lines 
             for idx, str_orig in enumerate(block_strs_lst):
                 if line in str_orig and not used_indices[idx]:
                     rxn_str_orig.append(str_orig)  # add to original list
@@ -258,7 +263,7 @@ def get_rxn_cmt(rxn_str):
     """
     rxn_and_cmt = rxn_str.split("\n")[0].split("!")
     if len(rxn_and_cmt) > 1:
-        cmt_str = "!".join(rxn_and_cmt[1:])
+        cmt_str = "!" + "!".join(rxn_and_cmt[1:])
     else:
         cmt_str = ""
     return cmt_str
@@ -291,7 +296,8 @@ def get_pes_dct(block_str):
                 continue
             idx_inf = get_pes_info(rxn_str)
             if idx_inf is not None:
-                rxns.append(rxn) #add rxn found- dup rxns might not be classified and then throw an error
+                rxns.append(rxn)#add rxn found- 
+                # dup rxns might not be classified and then throw an error
                 pes_idx, subpes_idx, chnl_idx = idx_inf
                 pes_inf = ("PES", pes_idx, subpes_idx)
                 chnl_inf = (chnl_idx, rxn)
@@ -469,7 +475,10 @@ def get_rxn_strs(block_str, remove_bad_fits=False):
                 if not any(string in dstr for string in BAD_STRS)
             ]
         # remove lines if they start with a comment !
-        rxn_strs = [dstr for dstr in rxn_strs if dstr.strip()[0] != "!"]
+        rxn_strs = [remove_comment_lines(dstr, delim_pattern=app.escape("!"))
+                    for dstr in rxn_strs if dstr.strip()[0] != "!" and
+                    'HTYPE' not in dstr] # ignore R+MOLEC types from CRECK model
+
     else:
         rxn_strs = None
 

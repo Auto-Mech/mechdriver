@@ -15,14 +15,12 @@ def write_species(mech_spc_dct):
     # Get the max species name length
     max_spc_len = 0
     for spc in mech_spc_dct.keys():
-        if len(spc) > max_spc_len:
-            max_spc_len = len(spc)
+        max_spc_len = max(len(spc), max_spc_len)
 
     # Get the max SMILES name length
     max_smiles_len = 0
     for spc, ident_dct in mech_spc_dct.items():
-        if len(ident_dct['smiles']) > max_smiles_len:
-            max_smiles_len = len(ident_dct['smiles'])
+        max_smiles_len = max(len(ident_dct['smiles']), max_smiles_len)
 
     buffer = 5
 
@@ -77,4 +75,3 @@ def write_elements(mech_spc_dct):
         elem_str += unique_elem + '\n'
 
     return elem_str
-

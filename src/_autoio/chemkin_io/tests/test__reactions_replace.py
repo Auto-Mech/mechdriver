@@ -24,6 +24,8 @@ keys_to_replace = [
     (('C4H2', 'C6H5'), ('C10H7',), (None,)), #dup
     (('C6H5', 'C6H4C2H'), ('C14H10',), (None,)), #simple
     (('CH3C6H4', 'C6H5C2H5'), ('C6H5C2H4C6H5', 'CH3'), (None,)), # written as irrev, but with no bw
+    (('C7H5', 'C3H3'),('C10H8',), (None,)), # plog
+    (('XYLENE',), ('RXYLENE', 'H'), ('(+M)',)),  # troe
 ]
 params = [PLOG_PARAMS]*len(keys_to_replace)
 rxn_param_dct_new = dict(zip(keys_to_replace, params))
@@ -35,7 +37,7 @@ keys0 = keys_to_replace + [(('A','B'), ('C',), (None,))]
 def test_replace():
     # read existing mechanism
     ckin_str = ioformat.pathtools.read_file(DAT_PATH, 'pah_block.dat')
-    rxn_block_comments = reaction_block(ckin_str, remove_comments=False)
+    rxn_block_comments = reaction_block(ckin_str, remove_comments=False, remove_whitespaces=False)
     rxn_block_nocomments = reaction_block(ckin_str)
     rxn_param_dct_old = get_rxn_param_dct(rxn_block_nocomments, 'cal/mole', 'moles')
     
@@ -44,8 +46,21 @@ def test_replace():
 
     # update rxn params for a "simple" and a "duplicate" reaction
     ckin_str_new = replace_rxn_in_cki(
-        rxn_block_comments, rxn_strs_dct, rxn_param_dct_new, rxn_cmts_dct)
+        rxn_block_comments, rxn_strs_dct, rxn_param_dct_new, rxn_cmts_dct_new=rxn_cmts_dct)
 
+    # check that replaced rxns are not written twice
+    """ throws assertion error bc it does not find exact string
+    for key in keys0:
+        found = 0
+        reacs_tofind, prods_tofind = key[0], key[1]
+        for line in ckin_str_new.split('\n'):
+            if (all(i in line.split('=')[0] for i in reacs_tofind) and
+                all(i in line.split('=')[1] for i in prods_tofind)):
+                found += 1
+    
+        if found > 1:
+            raise AssertionError('reaction {} found multiple times in new file'.format(key))
+    """
     # extract again the dictionaries and check that the parameters are the same
     ckin_str_new_nocmt = reaction_block('REACTIONS\n' + ckin_str_new + '\nEND\n')
     rxn_param_dct_rewritten = get_rxn_param_dct(ckin_str_new_nocmt, 'cal/mole', 'moles')

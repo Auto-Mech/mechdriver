@@ -116,7 +116,7 @@ def get_ped(pedoutput_str, energy_dct, sp_labels='auto'):
 
         # if issues : keep only max value like dirac delta
         if any(np.isnan(prob_en.values)) or any(np.isinf(prob_en.values)):
-            prob_en = np.NaN
+            prob_en = np.nan
 
         try:
             if max(prob_en) > 1:
