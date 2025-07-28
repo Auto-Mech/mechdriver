@@ -1,12 +1,22 @@
 """ extract formulas from spc dct and put in dataframes
 """
-
+import numpy as np
 import pandas as pd
 import automol
 
 # da string a dct
 #>>> automol.form.from_string('C6H4O2')
 # {'C': 6, 'H': 4, 'O': 2}
+
+def sum_heavy_atoms_fmls(fml_list):
+    """ get total atomic number from heavy atoms in list of formulas
+        useful to e.g., check total atomic number for reactants in a reaction
+
+    Args:
+        fml_list (list(fml_dct)): list of formula dictionaries
+    """
+    heavy_atoms_sum = np.array([automol.form.heavy_atom_count(fml_dct) for fml_dct in fml_list])
+    return np.sum(heavy_atoms_sum)
 
 def extract_fml_list_fromstr(fmlstr):
     """ 'C6H4O2' => [6, 4, 2, 0, 0, 0]
@@ -76,7 +86,7 @@ def extract_species_core(n_at, fml_df):
     species_set = list(fml_df[(fml_df['nC'] <= n_at[0]) & (
         fml_df['nN'] <= n_at[3]) & (fml_df['nS'] <= n_at[4]) & (
         fml_df['nCl'] <= n_at[5])].index)
-    
+
     if 'N2' not in species_set:
         species_set.append('N2')
     return species_set
@@ -87,8 +97,8 @@ def extract_species_above(n_at, fml_df):
     species_set = list(fml_df[(fml_df['nC'] >= n_at[0] ) & (
         fml_df['nN'] >= n_at[3]) & (fml_df['nS'] >= n_at[4]) & (
         fml_df['nCl'] >= n_at[5]) & (fml_df['nO'] >= n_at[2])].index)
-    
+
     if 'N2' in species_set:
         species_set.remove('N2')
-    
+
     return species_set

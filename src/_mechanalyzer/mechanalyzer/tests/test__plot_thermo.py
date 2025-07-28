@@ -28,7 +28,7 @@ ALGN_SPC_THERM_DCT = {
 def test_build_plots():
     """ Test the build_plots function
     """
-    figs, _ = thermo.build_plots(ALGN_SPC_THERM_DCT)
+    figs, _, _= thermo.build_plots(ALGN_SPC_THERM_DCT)
     build_pdf(figs, FILENAME, TMP_DIR)
 
 

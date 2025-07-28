@@ -621,7 +621,7 @@ def show_sccs(G, plt_title=None, save=False):
         "alpha": 0.6, "linewidths": 3}
     nx.draw_networkx_nodes(
         G, pos,
-        nodelist=_prod_nodes(G.nodes), node_color="tab:red", 
+        nodelist=_prod_nodes(G.nodes), node_color="tab:red",
         node_shape="s", **options)
 
     nx.draw_networkx_edges(
@@ -732,10 +732,10 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False, connect_enants=True):
     edge_colors = [
         #'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
         #'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
-        #'tab:gray', 'tab:brown', 'tomato', 'lightgreen', 
+        #'tab:gray', 'tab:brown', 'tomato', 'lightgreen',
         'red', 'blue', 'orange', 'pink',
         'green', 'purple', 'cyan', 'olive',
-        'gray', 'brown', 'tomato', 'lightgreen', 
+        'gray', 'brown', 'tomato', 'lightgreen',
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',

@@ -335,11 +335,11 @@ class PEDModels:
 
             # calculate rho_non1(ene1_vect)
             rho_non1 = []
-            #for idx in self.ene1_vect: 
+            #for idx in self.ene1_vect:
             ###old, relied on the fact that energy vector had spacing of 1, however not always accurate
             for idx, _ in enumerate(self.ene1_vect[:-1]):
                 # the sum of the energies in rhovib_prod2 and
-                # rho_trasl is always ene1 
+                # rho_trasl is always ene1
                 # ene1 = ene1_vect_w0[idx_ene_int] + ene1_vect_w0[idx_ene_int[::-1]]
                 # old # idx_ene_int = np.arange(0, idx+1, dtype=int)
                 idx_ene_int = np.arange(0, idx+2, dtype=int)
@@ -441,7 +441,7 @@ class PEDModels:
                 except AttributeError:
                     print('empty ped at {:.0f} K and {:.1e} atm, skipping'.format(temp, pressure))
                     continue
-                
+
                 if distr_type != 'therm':
                     ene = ped_series.index
                     if ene[0] > 0:

@@ -7,9 +7,15 @@ from matplotlib import cm
 from matplotlib.ticker import FormatStrFormatter
 import numpy
 from chemkin_io.writer import _util as writer
+from chemkin_io.writer import format_rxn_name
 
 
-LINES = ['-', '--', '-.', ':']  # for plot formatting
+LINES = ['-', ':', '--', '-.', (0, (1, 10)), (0, (1, 5)), (0, (1, 1)), (5, (10, 3)),
+         (0, (5, 10)), (0, (5, 5)),   (0, (5, 1)), (0, (3, 10, 1, 10)),
+     (0, (3, 5, 1, 5)),    (0, (3, 1, 1, 1)),   (0, (3, 5, 1, 5, 1, 5)), (0, (3, 10, 1, 10, 1, 10)), (0, (3, 1, 1, 1, 1, 1))]
+
+
+
 K_UNITS_DCT = {1: '(s$^{-1}$)',
                2: '(cm$^3$ mol$^{-1}$ s$^{-1}$)',
                3: '(cm$^6$ mol$^{-2}$ s$^{-1}$)',
@@ -64,10 +70,61 @@ def build_plots(algn_rxn_ktp_dct, mech_names=None, ratio_sort=False):
         molecularity = get_molecularity(rxn)
         fig, axs = build_fig_and_axs(molecularity, ratio_dcts, mech_names)
         fig = plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
+        # get max and min ratio and filter- to extend for more than 2 mechs ([1] is the second mech)
+        if ratio_dcts[1]:
+            maxratio = max([max(ratiop[1]) for ratiop in ratio_dcts[1].values()])
+            minratio = min([min(ratiop[1]) for ratiop in ratio_dcts[1].values()])
+            if maxratio < 2 and minratio > 0.5:
+                continue #do not append to figs!
+        figs.append(fig)
+
+    return figs, algn_rxn_ratio_dct
+
+
+def build_plots_byclass(class_rxn_ktp_dct):
+    """ Build plots of an algn_rxn_ktp_dct, with one reaction class per page. Also calculate ratios
+        relative to other mechs and plot the ratios. Output a PDF.
+
+        :param algn_rxn_ktp_dct: aligned dct containing rates for each mech
+        :type class_rxn_ktp_dct: dct{classname: {'sub_ktp_dct': {rxn1: [ktp_dct], rxn2: [ktp_dct ...]...}
+
+
+        :param ratio_sort: whether or not to sort plots by the max value of the ratio
+        :type ratio_sort: Bool
+        :return figs: list of MatPlotLib figure objects
+        :rtype: list [fig1, fig2, ...]
+    """
+
+    # Loop over each rxn and plot
+    figs = []
+
+    for rxnclass, class_dcts in class_rxn_ktp_dct.items():
+        classname = ((rxnclass,),('prods',),(None,))#fake formatting as rxn name to use always same functions
+        rxn_ktp_dcts = dict(sorted(class_dcts['sub_ktp_dct'].items()))
+        ktp_dcts = list(rxn_ktp_dcts.values())
+        # get list of unique pressures
+        pressures = get_pressures({classname: ktp_dcts})
+        # defines color and label for each pressure
+        format_dct = get_format_dct(pressures)
+        ratio_dcts = [class_dcts['ratios_dct'][rxn] for rxn in rxn_ktp_dcts.keys()]
+        names = [format_rxn_name(rxn) for rxn in rxn_ktp_dcts.keys()]
+
+        # get reference reaction
+        if len(ratio_dcts) > 0:
+            # reaction for which ratio closest to 1 (i.e., to array length)
+            pref = list(set.intersection(*map(set, ratio_dcts)))[0]
+            sum_ratios = numpy.array([numpy.sum(ratios[pref][1]) for ratios in ratio_dcts])
+            ref_idx = numpy.argmin(abs(sum_ratios - len(ratio_dcts[0][pref][0])))
+        else:
+            ref_idx = 0
+        molecularity = get_molecularity(list(rxn_ktp_dcts.keys())[ref_idx])
+
+        fig, axs = build_fig_and_axs(molecularity, ratio_dcts, names, ref_idx=ref_idx)
+        fig = plot_single_rxn(classname, ktp_dcts, ratio_dcts,
+                              fig, axs, names, format_dct)
         figs.append(fig)
 
     return figs
-
 
 def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct):
     """ Plot a single reaction's k(T,P) values from all mechanisms and the ratio values relative to
@@ -86,22 +143,25 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
         :type axs: list [ax1, ax2]
         :param mech_names:
         :type mech_names: list [mech_name1, mech_name2]
-        :param format_dct: dct containing color and label for each pressure
-        :type: dct {pressure1: (color1, label1), pressure2: ...}
+        :param format_dct: dct containing linestyle and label for each pressure
+        :type: dct {pressure1: (linestyle, label1), pressure2: ...}
     """
-
+    if len(ktp_dcts) <= 6:
+        COLORS = ['g', 'r', 'c', 'm', 'b', 'y']
+    else:
+        COLORS = cm.get_cmap('rainbow')(numpy.linspace(0, 1, len(ktp_dcts)))
     ratios_plotted = False
     for mech_idx, ktp_dct in enumerate(ktp_dcts):
         if ktp_dct is not None:
             for pressure, (temps, kts) in ktp_dct.items():
-                (_color, _label) = format_dct[pressure]
+                (_lstyle, _label) = format_dct[pressure]
                 _label += ', ' + mech_names[mech_idx]
 
                 # Plot the rate constants
                 axs[0].plot(1000 / temps,
                             numpy.log10(kts), label=_label,
-                            color=_color,
-                            linestyle=LINES[mech_idx])
+                            color=COLORS[mech_idx],
+                            linestyle=_lstyle)
 
                 # Plot the ratios if they exist
                 if ratio_dcts[mech_idx] is not None:
@@ -111,8 +171,9 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
                         ratios_plotted = True
                         axs[1].plot(1000 / temps,
                                     numpy.log10(ratios), label=_label,
-                                    color=_color,
-                                    linestyle=LINES[mech_idx])
+                                    color=COLORS[mech_idx],
+                                    linestyle=_lstyle)
+
             # Check for the 'max_to_high' case
             # Grab set of temps to calculate ratio
             # BELOW CODE ASSUMES ALL TEMP RANGES IN KTP DCT THE SAME
@@ -121,18 +182,26 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
                 if 'max_to_high' in ratio_dcts[mech_idx].keys():
                     (_, ratios) = ratio_dcts[mech_idx]['max_to_high']
                     ratios_plotted = True
-                    _color = 'k'
+                    #_color = 'k'
                     _label = 'max to P-indep, ' + mech_names[mech_idx]
                     axs[1].plot(1000/ratio_temps, numpy.log10(ratios),
-                                label=_label, color=_color,
-                                linestyle=LINES[mech_idx])
+                                label=_label, color=COLORS[mech_idx],
+                                linestyle=_lstyle)
 
     # Do some formatting
-    axs[0].legend(fontsize=12, loc='upper right')
+    axs[0].legend(fontsize=12 - 4*(len(ktp_dcts)>4),loc='best') # center',
+                  #bbox_to_anchor=(0.5, 1.1),)  # loc='upper right')
     if ratios_plotted:
-        axs[1].legend(fontsize=12, loc='upper right')
+        # shaded area for factor of 2
+        factor = 2
+        axs[1].fill_between(1000 / temps, numpy.log10(numpy.array([1/factor]*len(ratio_temps))),
+                            numpy.log10(numpy.array([factor]*len(ratio_temps))), alpha=0.1, color='k')
+
+        # legend will be the same as above but with fewer entries
+        axs[1].legend(fontsize=12 - 4*(len(ktp_dcts) > 4), loc='best')
+
     rxn_name_formatted = writer.format_rxn_name(rxn)
-    fig.suptitle(rxn_name_formatted, x=0.5, y=0.94, fontsize=20)
+    fig.suptitle(rxn_name_formatted, x=0.5, y=0.94, fontsize=15)
 
     return fig
 
@@ -291,26 +360,23 @@ def get_molecularity(rxn):
 
 
 def get_format_dct(pressures):
-    """ Set up the formatting dictionary that describes colors and labels
+    """ Set up the formatting dictionary that describes linestyle and labels
 
         :param pressures: pressures at which calculations were performed
         :type pressures: list
         :return format_dct: dct containing color and label for each pressure
-        :rtype: dct {pressure1: (color1, label1), pressure2: ...}
+        :rtype: dct {pressure1: (linestyle, label1), pressure2: ...}
     """
-    if len(pressures) <= 6:
-        colors = ['r', 'b', 'g', 'm', 'c', 'y']
-    else:  # account for unlikely case where there are more than 6 pressures
-        colors = cm.get_cmap('rainbow')(numpy.linspace(0, 1, len(pressures)))
+
     format_dct = {}
     for idx, pressure in enumerate(pressures):
-        format_dct[pressure] = (colors[idx % 6], str(pressure) + ' atm')
-    format_dct['high'] = ('k', 'P-indep')
+        format_dct[pressure] = (LINES[idx], str(pressure) + ' atm')
+    format_dct['high'] = ('-', 'P-indep')
 
     return format_dct
 
 
-def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
+def build_fig_and_axs(molecularity, ratio_dcts, mech_names, ref_idx=None):
     """ Build a figure with two axes
 
         :param molecularity: molecularity of a reaction
@@ -325,8 +391,8 @@ def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
     ratio_label = ''
     for mech_idx, ratio_dct in enumerate(ratio_dcts):
         if ratio_dct is not None:
-            ref_mech_name = mech_names[mech_idx-1]
-            ratio_label = ('log$_{10}$ of $k$ ratio relative to' +
+            ref_mech_name = mech_names[ref_idx if ref_idx else mech_idx-1]
+            ratio_label = ('log$_{10}$($k$/$k_{ref}$) ' +
                            f' {ref_mech_name}')
             break
 
@@ -366,18 +432,18 @@ def plot_k_vs_p(ktp_dct):
     kpt, temps, pressures = get_kpt(ktp_dct)
     # Plot a line for every temperature in the array
     for temp_idx, temp in enumerate(temps):
-        plt.plot(numpy.log10(pressures), numpy.log10(kpt[temp_idx] / k_high[temp_idx]), 
+        plt.plot(numpy.log10(pressures), numpy.log10(kpt[temp_idx] / k_high[temp_idx]),
                  label=f'{temp:.0f} K')
     axs[0].legend(fontsize=12, loc='upper left')
-    
+
     return [fig]
-    
+
 
 def get_k_high(ktp_dct):
     """ Gets the HPL values as a function of T
 
         numpy array of shape (num_temps,)
-    """ 
+    """
 
     k_high = ktp_dct['high'][1]
 
@@ -395,15 +461,15 @@ def get_kpt(ktp_dct):
     def get_temps_pressures(ktp_dct):
         """ Reads a ktp_dct and gets the list of pressure and corresponding list of
             temperature arrays
-    
+
             :param ktp_dct: k(T,P) values
             :type ktp_dct: dict {pressure: (temps, kts)}
-            :return temps_lst: list of temperature arrays at each pressure (K) 
+            :return temps_lst: list of temperature arrays at each pressure (K)
             :rtype: list [numpy.ndarray1, numpy.ndarray2, ...]
             :return pressures: list of pressures (atm)
             :rtype: list
-        """ 
-    
+        """
+
         temps_lst = []
         pressures = []
         if 'high' in ktp_dct:
@@ -411,9 +477,9 @@ def get_kpt(ktp_dct):
         for pressure, (temps, _) in ktp_dct.items():
             temps_lst.append(temps)
             pressures.append(pressure)
-    
+
         return temps_lst, pressures
-    
+
     # Get the rates as functions of pressure
     temps_lst, pressures = get_temps_pressures(ktp_dct)
     temps = temps_lst[0]
@@ -423,10 +489,10 @@ def get_kpt(ktp_dct):
         for pressure in pressures:
             pressure
             k_of_p.append(ktp_dct[pressure][1][temp_idx])
-        
+
         kpt.append(k_of_p)
 
-    kpt = numpy.array(kpt)    
+    kpt = numpy.array(kpt)
 
     return kpt, temps, pressures
 

@@ -30,14 +30,14 @@ ALGN_RXN_KTP_DCT = {
 def test_build_plots():
     """ Test the build_plots function
     """
-    figs = rates.build_plots(ALGN_RXN_KTP_DCT)
+    figs, _ = rates.build_plots(ALGN_RXN_KTP_DCT)
     build_pdf(figs, FILENAME, TMP_DIR)
 
 
 def test_build_plots_ratio_sort():
     """ Test the build_plots function with sorting by ratio
     """
-    figs = rates.build_plots(ALGN_RXN_KTP_DCT, ratio_sort=True)
+    figs, _ = rates.build_plots(ALGN_RXN_KTP_DCT, ratio_sort=True)
     build_pdf(figs, FILENAME, TMP_DIR)
 
 

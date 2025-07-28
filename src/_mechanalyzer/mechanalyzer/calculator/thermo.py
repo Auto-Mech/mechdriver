@@ -7,7 +7,6 @@ from phydat import phycon
 
 RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 
-
 def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
     """ Create a spc_therm_dct. If left with default input rval=phycon.RC_cal,
         thermo quantities will have units of cal/mol for h(T) and g(T),
@@ -57,11 +56,21 @@ def spc_therm_dct_df(spc_therm_dct):
     spc_therm_df = {}
     for spc, vals in spc_therm_dct.items():
         matrix_data = numpy.array([vals[1], vals[2], vals[3], vals[4], vals[5]], dtype = float).T
-        spc_therm_df[spc] = pandas.DataFrame(
+        spc_therm_df_spc = pandas.DataFrame(
             matrix_data, index=numpy.array(vals[0], dtype=float), columns=['H', 'Cp', 'S', 'G', 'lnQ'])
-        spc_therm_df[spc].sort_index()
-        
+        spc_therm_df[spc] = spc_therm_df_spc.sort_index()
+
     return spc_therm_df
+
+def spc_therm_df_dct(spc_therm_df):
+    """ convert thermo dataframe back to dictionary
+    """
+    spc_therm_dct = {}
+    for spc, vals in spc_therm_df.items():
+        vals = vals.sort_index()
+        spc_therm_dct[spc] = (numpy.array(vals.index), vals['H'].values, vals['Cp'].values,
+                              vals['S'].values, vals['G'].values, vals['lnQ'].values)
+    return spc_therm_dct
 
 def extract_deltaX_therm(therm_df, rcts, prds, var):
     """ extract from thermo file the DH/DG/DCP/DS of rxn rcts->prds

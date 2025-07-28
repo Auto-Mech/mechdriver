@@ -42,7 +42,7 @@ CMTS = '!'  # character used to define comments
 
 
 def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
-                       chk_match=False, verbose=True, canon_ent=True):
+                       chk_match=False, verbose=True, canon_ent=True, allow_multiple=False):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
         :param filenames: filenames of the spc.csv files to be read
@@ -64,13 +64,14 @@ def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
         print(f'Loading mech_spc_dct for the file {filename}...')
         mech_spc_dct = load_mech_spc_dct(
             filename, path, quotechar=quotechar, chk_ste=chk_ste,
-            chk_match=chk_match, verbose=verbose, canon_ent=canon_ent)
+            chk_match=chk_match, verbose=verbose, canon_ent=canon_ent,
+            allow_multiple=allow_multiple)
         mech_spc_dcts.append(mech_spc_dct)
 
     return mech_spc_dcts
 
 
-def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False, 
+def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False,
                       chk_match=False, verbose=True, canon_ent=True, allow_multiple=False):
     """ Obtains a single mech_spc_dct given a spc.csv filename
 
@@ -172,12 +173,12 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
                         # skip if InChI is the same- probably just written twice by mistake
                         if spc_dct['inchi'] in found_inchis:
                             continue
-                        
+
                         if spc in dup_spc_idx:
                             lumped_idx = dup_spc_idx[spc] + 1
                         else:
                             lumped_idx = 1
-                            
+
                         dup_spc_idx[spc] = lumped_idx
                         lumped_spc_name = '{}-LUMPED-{}'.format(spc, lumped_idx)
 
@@ -277,12 +278,12 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
         smi = full_spc_dct['smiles']
         check_smi(smi, spc)
         full_spc_dct['inchi'] = automol.smiles.chi(smi)
-        
+
     elif full_spc_dct['smiles'] == '':
         ich = full_spc_dct['inchi']
         check_ich(ich, spc, chk_ste=chk_ste)
         full_spc_dct['smiles'] = ich_to_smi(ich)
-        
+
     else:  # if smiles and inchi were both already included
         if chk_match:
             check_smi_and_ich(
@@ -290,7 +291,7 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
                 chk_ste=chk_ste)
         else:
             check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
-                
+
     # add AMChI
     full_spc_dct = mech_inchi_to_amchi({spc: full_spc_dct}, convert=canon_ent)[spc]
 
@@ -508,7 +509,11 @@ def check_for_dups(mech_spc_dct, printwarnings=True):
 def mech_inchi_to_amchi(mech_spc_dct, convert = True):
     """ convert inchi to amchi where needed """
     for spc_dct in mech_spc_dct.values():
-        spc_dct['inchi'] = inchi_to_amchi(spc_dct['inchi'], convert=convert)
+        try:
+            spc_dct['inchi'] = inchi_to_amchi(spc_dct['inchi'], convert=convert)
+        except: #if errors are raised
+            print('*Warning- failed conversion to AMChI, but spc will be read')
+            continue
 
     return mech_spc_dct
 
@@ -548,7 +553,7 @@ def add_fct_grp_dct(mech_spc_dct, species_subset = 'all'):
             print(f'{spc} skipped for failure in geom generation')
             mech_spc_dct[spc]['fct_grp'] = {}
             continue
-        
+
         mech_spc_dct[spc]['fct_grp'] = automol.graph.classify_species(gra)
 
     return mech_spc_dct

@@ -15,7 +15,7 @@ DFG = {
     'H5H3ratio': 0,
     'kratio': 1e50, #depends too much on temperature to make it a default that makes sense
     'kabs': 1e50,
-    'lookforpromptchains': 0 
+    'lookforpromptchains': 0
 }
 
 # Functions to take the mechanism strings (may want to further simplify)
@@ -51,7 +51,7 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dc
                 plese update ref value in dct_flt_grps[Tref] or add Tref to therm dct'.format(DFG['Tref'], T_thermdct))
         elif len(T_thermdct) < 4:
             raise ValueError('therm dictionary should contain at least 3 temperatures for interpolation purposes')
-        
+
         srt_mch.filter_groups_prompt(
             spc_therm_dct, DFG)
         pes_groups = srt_mch.grps
@@ -62,7 +62,7 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dc
 
     sorted_idx, cmts_dct, spc_dct_ord = srt_mch.return_mech_df()
     rxn_param_dct_sort = reordered_mech(rxn_param_dct, sorted_idx)
-    
+
     return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups, rxns_filter
 
 

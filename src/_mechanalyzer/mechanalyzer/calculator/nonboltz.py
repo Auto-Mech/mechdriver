@@ -29,7 +29,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         dos_df, energy_dct = ped_info(
             ped_inp_str, ped_ped_str, ped_ke_out_str)
     dof_dct = calc_dof_dct(ped_inp_str, ped_spc)
-    
+
     # HOTEN INFO
     hot_frag_dct, hot_spc_en, hoten_dct, fne_bf = \
         hot_info(hot_inp_str, hot_log_str)
@@ -92,7 +92,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
                 label, -ene_bw_dct[label]))
             continue
 
-        #################################################################################################
+        ######################################################################################
 
         # DERIVE PED OF THE HOT FRAGMENT
         print('deriving fragment energy distributions for {} to {}'.format(reacs, prods))
@@ -113,7 +113,8 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         if hot_ke_out_str and hot_ped_str:
             # frag1 hotspecies - devi prendere quella distribuzione dalle hot
             pedhot_df_dct_spc, ene_bw_spc = build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
-                                                                frag1, ped_df_frag1, ene_bw_dct[label], model, label)
+                                                                frag1, ped_df_frag1,
+                                                                ene_bw_dct[label], model, label)
             pedhot_df_dct.update(pedhot_df_dct_spc)
             ene_bw_dct.update(ene_bw_spc)
 
@@ -127,7 +128,7 @@ def prompt_chain_ktp_dct(rxn_ktp_dct, ene_start_df_dct,
     """ Starts from rxn_ktp_dct
         rxn_ktp_dct: ktp dct to update with prompt fractions
         ene_start_df_dct: starting energy distribution for given reaction chain
-                     {(reacs,),(prods,),(None,): {frag1: energy_distr, frag2: energy_distr}
+        {(reacs,),(prods,),(None,): {frag1: energy_distr, frag2: energy_distr}
 
     """
     # HOTEN INFO
@@ -167,8 +168,10 @@ def prompt_chain_ktp_dct(rxn_ktp_dct, ene_start_df_dct,
         pedhot_df_dct = {}
         if hot_ke_out_str and hot_ped_str:
             # frag1 è hotspecies - devi prendere quella distribuzione dalle hot
-            pedhot_df_dct_spc, ene_bw_spc = build_pedhot_df_dct(pedhot_inp_str, hot_ped_str, hot_ke_out_str,
-                                                                frag, ene_start_df[frag], ene_bw_dct[label], model, label)
+            pedhot_df_dct_spc, ene_bw_spc = build_pedhot_df_dct(pedhot_inp_str, hot_ped_str,
+                                                                hot_ke_out_str,
+                                                                frag, ene_start_df[frag],
+                                                                ene_bw_dct[label], model, label)
             pedhot_df_dct.update(pedhot_df_dct_spc)
             ene_bw_dct.update(ene_bw_spc)
 
@@ -212,7 +215,8 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
     ped_df_fromhot = hot_ped_dct[label]
 
     ped_df_rescaled = calculator.ene_partition.ped_df_rescale(
-        starthot_df, ped_df_fromhot, save = True, name = '+'.join(newlabel[0]) + '=' + '+'.join(newlabel[1]))
+        starthot_df, ped_df_fromhot, save = True, name = '+'.join(newlabel[0])
+        + '=' + '+'.join(newlabel[1]))
 
     ########################################################################################
     # stupid test to delete later: try to just have the starthot_df but rescale the energy
@@ -259,7 +263,8 @@ def calc_bf_ktp(full_prompt_rxn_ktp_dct, model, bf_thresh,
         label, hot_frag_dct)
 
     # Merge Prompt Rates with all current; Rates added if rxn is prev. found
-    # print(modeltype, full_prompt_rxn_ktp_dct[modeltype], '\n', prompt_rxn_ktp_dct[modeltype], '\n','\n','stop')
+    # print(modeltype, full_prompt_rxn_ktp_dct[modeltype], '\n',
+    # prompt_rxn_ktp_dct[modeltype], '\n','\n','stop')
     full_prompt_rxn_ktp_dct = calculator.rates.merge_rxn_ktp_dcts(
         full_prompt_rxn_ktp_dct,
         prompt_rxn_ktp_dct
@@ -276,7 +281,7 @@ def calc_dof_dct(ped_inp_str, ped_spc):
         # Derive dofs involved
         dof_dct[prods] = calculator.spinfo_frommess.get_info(
             spc_blocks_ped[prods])
-        
+
     return dof_dct
 
 
@@ -289,30 +294,31 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
 
     dhmin = 1e8  # put unphysical value for sure higher than all
     kmax = -1e-6
-    allunimol = all([len(rcts) == 1 and len(prds) ==1 for rcts in hot_sp_df['rct_names_lst'].values 
+    allunimol = all([len(rcts) == 1 and len(prds) ==1 for rcts in hot_sp_df['rct_names_lst'].values
                      for prds in hot_sp_df['prd_names_lst'].values])
 
     for rxn in hot_sp_df.index:
         rcts = hot_sp_df['rct_names_lst'][rxn]
         prds = hot_sp_df['prd_names_lst'][rxn]
-        # used to filter out too fast isomerization channels, but causes failure when only unimol channels are present
-        if not allunimol and ((hot_sp in prds and (len(rcts) != 2 or len(prds) != 1)) 
+        # used to filter out too fast isomerization channels,
+        # but causes failure when only unimol channels are present
+        if not allunimol and ((hot_sp in prds and (len(rcts) != 2 or len(prds) != 1))
             or (hot_sp in rcts and (len(prds) != 2 or len(rcts) != 1))):
             # consider only unimol chnls to bimol species
             continue
-        
+
         label = rxn[0]
-        
+
         # analyze DH
         dh_rxn = thermo.extract_deltaX_therm(therm_df, rcts, prds, 'H')/1000
         if hot_sp in prds:  # revert sign
             dh_rxn = -dh_rxn
             label = '{}={}'.format(rxn[0].split('=')[-1], rxn[0].split('=')[0])
-            
+
         if dh_rxn[T0] < dhmin:
             dh_min_hot = copy.deepcopy(dh_rxn)
             dhmin = copy.deepcopy(dh_rxn[T0])
-        
+
         # analyze k
         k_series = pd.Series(
             hot_sp_df['param_vals'][rxn][0][1.][1], index=hot_sp_df['param_vals'][rxn][0][1.][0])
@@ -360,25 +366,29 @@ def kt_star(DH0, Cp, T0, k_series):
     def tozero(T_star, DH0, f_cp, T0):
         int_fct, _ = quad(f_cp, T0, T_star)
         return DH0 - int_fct
-    
+
     try:
-        f_cp = interp1d(numpy.array(Cp.index, dtype=float), numpy.array(Cp.values, dtype=float), kind='cubic')
-        f_k = interp1d(numpy.array(k_series.index, dtype=float), numpy.array(k_series.values, dtype=float), kind='cubic')
+        f_cp = interp1d(numpy.array(Cp.index, dtype=float),
+                        numpy.array(Cp.values, dtype=float), kind='cubic')
+        f_k = interp1d(numpy.array(k_series.index, dtype=float),
+                       numpy.array(k_series.values, dtype=float), kind='cubic')
     except TypeError as e:
         print('error in interpolation for Cp: {}'.format(e))
         print('Setting T* as T0 : {} K'.format(T0))
         return T0, k_series[T0]
     except ValueError as e:
-        print('Interpolation failed - Cp vector must have at least four values. T vals are {}'.format(list(Cp.index)))
+        print('Interpolation failed - Cp vector must have at least four values.' \
+        'T vals are {}'.format(list(Cp.index)))
         print('Setting T* as T0 : {} K'.format(T0))
         print(e)
         return T0, k_series[T0]
-    
+
     try:
         T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))[0]
     except ValueError:
         print(
-            '*Warning: fsolve failed to compute T*, out of range - using fixed Cp at {:.0f} K'.format(T0))
+            '*Warning: fsolve failed to compute T*, out of range - ' \
+            'using fixed Cp at {:.0f} K'.format(T0))
         T_star = T0+DH0/Cp[T0]
     try:
         k_star = f_k(T_star)
@@ -386,7 +396,8 @@ def kt_star(DH0, Cp, T0, k_series):
         k_series = k_series.sort_index()
         k_star = k_series.iloc[-1]
         print(
-            '*Warning: k* out of range at T of {} K - determine k at max T of {} K'.format(T_star, k_series.index[-1]))
+            '*Warning: k* out of range at T of {} K - ' \
+            'determine k at max T of {} K'.format(T_star, k_series.index[-1]))
 
     return T_star, k_star
 

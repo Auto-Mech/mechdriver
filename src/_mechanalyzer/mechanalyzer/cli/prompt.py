@@ -24,7 +24,7 @@ def main(
     fitmethod: str = 'plog',
     outputrates: str = 'rates_prompt.txt'
 ):
-    
+
     list_strs_dct = []
     # Read the input and output files for MESS calculation of 1st PES
     # if no directories are listed: add all directories from the current one

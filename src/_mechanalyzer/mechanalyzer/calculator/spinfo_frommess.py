@@ -36,7 +36,7 @@ def get_info(block, get_ts = True):
                             'name', 'n_atoms', 'vib dof', 'rot dof', 'mw',
                             'geometry', 'symmetry', 'freqs', 'hr'],
                             dtype = object)
-    
+
     atoms_ts = 0
     hr_dct = {}
     # extract N of dofs and MW
@@ -44,10 +44,10 @@ def get_info(block, get_ts = True):
         info = block_i.splitlines()
         where_name = find.where_in('Species', info)[0]
         where_hind = find.where_in('Hindered', info)
-        
+
         name = info[where_name].strip().split()[1]
         dof_info.loc[i,'name'] = name
-        
+
         if 'Frequencies' in block_i: # more than 1 atom
             where_geom = find.where_in('Geometry', info)[0]
             where_freq = find.where_in('Frequencies', info)[0]
@@ -71,7 +71,7 @@ def get_info(block, get_ts = True):
             list(map(freqsarr.extend, freqs))
             freqsarr = np.array(freqsarr, dtype=np.float32)
             dof_info.loc[i,'freqs'] = freqsarr
-            
+
             # save hrs
             for hrn, linehr in enumerate(where_hind):
                 hr_dct[hrn] = {}
@@ -95,7 +95,7 @@ def get_info(block, get_ts = True):
                 rot_dof = 2
         # save symm
             dof_info.loc[i,'symmetry'] = float(info[where_symmtot].strip().split()[1])
-            
+
         else: # 1 atom only
             # if 1 atom only: no 'Frequencies', set to 0
             vib_dof = 0
@@ -106,9 +106,9 @@ def get_info(block, get_ts = True):
             else:
                 where_geom = find.where_in('Mass[amu]', info)[0]
             atoms_array = np.array([info[where_geom].strip().split()[1]])
-            
+
         atoms_ts += num_atoms
-        
+
         # this allows to get 3N-5 or 3N-6 without analyzing the geometry
         dof_info.loc[i,['n_atoms', 'vib dof', 'rot dof', 'symmetry']] = [num_atoms, vib_dof, rot_dof, 1]
 
@@ -117,14 +117,14 @@ def get_info(block, get_ts = True):
             geom_in = where_geom+1
             geom_fin = geom_in+num_atoms
             # freq qui
-            geom_array = [(geomline.strip().split()[0], 
-                                tuple(np.array(geomline.strip().split()[1:], dtype=np.float32)/0.529)) 
-                                for geomline in info[geom_in:geom_fin]]	
-            atoms_array = np.array([geomi[0] for geomi in geom_array])    
+            geom_array = [(geomline.strip().split()[0],
+                                tuple(np.array(geomline.strip().split()[1:], dtype=np.float32)/0.529))
+                                for geomline in info[geom_in:geom_fin]]
+            atoms_array = np.array([geomi[0] for geomi in geom_array])
             dof_info.loc[i,'geometry'] = tuple(geom_array)
             dof_info.loc[i,'mw'] = np.sum(np.array([MW_dct_elements[at]
                                                 for at in atoms_array], dtype=float))
-            
+
     # ts info: assume first 2 blocks are 2 reactants of bimol reaction
     # and derive the DOFs of the TS
     if get_ts:
@@ -132,9 +132,9 @@ def get_info(block, get_ts = True):
         if len(block) == 2:
             mwts = dof_info.loc[i, 'mw'] + dof_info.loc[i-1, 'mw']
         elif len(block) == 1:
-            mwts = dof_info.loc[i, 'mw'] 
+            mwts = dof_info.loc[i, 'mw']
         dof_info.loc[i+1,['name', 'n_atoms',
-                           'vib dof', 'rot dof', 'mw']] = ['TS', atoms_ts, 
+                           'vib dof', 'rot dof', 'mw']] = ['TS', atoms_ts,
                                                            3*atoms_ts - 7, 3, mwts]
     # reindex
     dof_info = dof_info.set_index('name')
@@ -168,11 +168,11 @@ def get_dof_info_fromspcdct(sp, spc_dct):
         try:
             ilin = int(geom.is_linear(geom_sp))
         except AssertionError:
-            # failed for some reason .. set to 0. check HCO, fails there 
+            # failed for some reason .. set to 0. check HCO, fails there
             ilin = 0
         dof_info['rot dof'] = 3 - 1*ilin
         dof_info['vib dof'] = 3*Nat - 6 + 1*ilin
-        
+
     return dof_info
 
 

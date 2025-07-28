@@ -23,6 +23,7 @@ def main(
     bfthresh: float = 1e-4,
     thermofile: str = None,
     outputrates: str = 'pssa_rates.txt',
+    fitduptol: float = 15.,
 ):
     Tvect = [np.arange(temprange[0], temprange[1]+100, 100)]
     pvect = list(pvect)
@@ -49,12 +50,12 @@ def main(
         for rxn, k in rxn_ktp_dct.items():
             newlabel = (rxn[1], rxn[0], rxn[2])
             if newlabel not in rxn_ktp_dct.keys():
-                newentry = calculator.rates.get_bw_ktp_dct(k, rxn[0], rxn[1], spc_term_df)
+                newentry = calculator.rates.get_bw_ktp_dct(copy.deepcopy(k), rxn[0], rxn[1], spc_term_df)
                 rxn_ktp_dct_bw[newlabel] = newentry
         # merge
         rxn_ktp_dct = calculator.rates.merge_rxn_ktp_dcts(
             rxn_ktp_dct, rxn_ktp_dct_bw)
-    
+
     rxn_ktp_dct_new = {}
     for SP_TOREPLACE in pssa_spcs:
         rxn_ktp_dct_new = {} # new ktp dct
@@ -68,23 +69,23 @@ def main(
                     # write a new reaction having the new species as product
                     print({rxn: k}, bf_sp)
                     ktp_sp = calculator.bf.merge_bf_rates({rxn: k}, bf_sp)
-                    newlabel = (rxn[0], tuple(prd.split('+')), rxn[2])   
+                    newlabel = (rxn[0], tuple(prd.split('+')), rxn[2])
                     rxn_ktp_dct_new = calculator.rates.merge_rxn_ktp_dcts(
                         rxn_ktp_dct_new, {newlabel: ktp_sp[rxn]})
-    
+
             elif tuple(SP_TOREPLACE.split('+')) == rxn[0]:
                 continue # the species is a reactant - do not add the reaction
             else:
                 # add the reaction with the rest
                 rxn_ktp_dct_new = calculator.rates.merge_rxn_ktp_dcts(
-                    rxn_ktp_dct_new, {rxn: k})  
+                    rxn_ktp_dct_new, {rxn: k})
         # the new ktp dct will become the rxt_ktp_dct from which you will extract new product branching fractions
         rxn_ktp_dct = copy.deepcopy(rxn_ktp_dct_new)
 
     # Generate CKIN files
     # Fit
     rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
-        rxn_ktp_dct_new, 'arr', arrfit_dct={'dbltol': 1.},
+        rxn_ktp_dct_new, 'arr', arrfit_dct={'dbltol': fitduptol},
         pdep_dct={'temps': (500, 1000, 2000), 'tol': 0.01,
                 'plow': None, 'phigh': None, 'pval': 1.0}
     )
