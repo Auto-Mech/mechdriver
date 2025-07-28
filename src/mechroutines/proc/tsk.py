@@ -88,6 +88,11 @@ def run_tsk(tsk, obj_queue,
                 nprocs=proc_keyword_dct['nprocs'])
             species_csv_data = {}
             species_miss_data = ()
+            if 'freqs' in tsk:                                                
+                species_csv_data['freq'] = {}                                 
+                species_csv_data['tfreq'] = {}                                 
+                species_csv_data['allfreq'] = {}                                 
+                species_csv_data['scalefactor'] = {}                                 
             for (csv_data_j, col_array, miss_data_j) in ret_lst:
                 if 'weight' in tsk:
                     if not 'hf_array' in species_csv_data:
@@ -97,6 +102,17 @@ def run_tsk(tsk, obj_queue,
                     species_csv_data['hf_array'] += csv_data_j['hf_array']
                     species_csv_data['locs_lst'] += csv_data_j['locs_lst']
                     species_csv_data['pf_array'] += csv_data_j['pf_array']
+                elif 'freqs' in tsk:                                                             
+                    if 'freq' in csv_data_j:                                                     
+                        species_csv_data['freq'].update(csv_data_j['freq'])                      
+                    if 'tfreq' in csv_data_j:                                                     
+                        species_csv_data['tfreq'].update(csv_data_j['tfreq'])                      
+                    if 'allfreq' in csv_data_j:                                                     
+                        species_csv_data['allfreq'].update(csv_data_j['allfreq'])                      
+                    if 'scalefactor' in csv_data_j:                                                     
+                        species_csv_data['scalefactor'].update(csv_data_j['scalefactor'])                      
+                    else:                                                                        
+                        print(csv_data_j)                                                        
                 else:
                     species_csv_data.update(csv_data_j)
                 species_miss_data += miss_data_j
@@ -111,9 +127,12 @@ def run_tsk(tsk, obj_queue,
                     csv_data[label] = [weight]
             elif 'freqs' in tsk:
                 csv_data['freq'].update(species_csv_data['freq'])
-                csv_data['tfreq'].update(species_csv_data['tfreq'])
-                csv_data['allfreq'].update(species_csv_data['allfreq'])
-                csv_data['scalefactor'].update(species_csv_data['scalefactor'])
+                if 'tfreq' in species_csv_data:                                                     
+                    csv_data['tfreq'].update(species_csv_data['tfreq'])
+                if 'allfreq' in species_csv_data:                                                     
+                    csv_data['allfreq'].update(species_csv_data['allfreq'])
+                if 'scalefactor' in species_csv_data:                                                     
+                    csv_data['scalefactor'].update(species_csv_data['scalefactor'])
                 print("species: ",species_csv_data)
                 print("total: ", csv_data)
             else:
@@ -272,16 +291,16 @@ def _run_task_for_locs_lst(
 
         elif 'messpf_inp' in tsk:
             ret = collect.messpf_input(
-                spc_name, spc_dct_i, spc_mod_dct_i,
+                spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
                 pes_mod_dct_i, locs, locs_path,
                 cnf_fs, run_prefix, save_prefix)
             csv_data_i, _, miss_data_i = ret
             print(csv_data_i)
             csv_data[label] = csv_data_i
 
-        if 'pf' in tsk or 'weight' in tsk:
+        elif 'pf' in tsk or 'weight' in tsk:
             ret = collect.partition_function(
-                spc_name, spc_dct_i, spc_mod_dct_i,
+                spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
                 pes_mod_dct_i, locs, locs_path,
                 cnf_fs, run_prefix, save_prefix)
             csv_data_i, miss_data_i = ret

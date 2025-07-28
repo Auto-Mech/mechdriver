@@ -129,8 +129,8 @@ def frequencies(
     if spc_mod_dct_i is not None:
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_mod_dct_i,
-            run_prefix, save_prefix,
-            name=spc_name, saddle=saddle)
+            run_prefix, save_prefix, saddle=saddle,
+            name=spc_name, spc_locs=locs)
 
         vib_anal_dct = vib.full_vib_analysis(
             spc_dct_i, pf_filesystems, spc_mod_dct_i, 
@@ -172,8 +172,8 @@ def frequencies(
 
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_mod_dct_i,
-            run_prefix, save_prefix,
-            name=spc_name, saddle=saddle)
+            run_prefix, save_prefix, saddle=saddle,
+            name=spc_name, spc_locs=locs)
 
         # Do a TED check
         if zrxn is not None:
@@ -202,8 +202,8 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
     saddle = 'ts_' in spc_name
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
-        run_prefix, save_prefix,
-        name=spc_name, saddle=saddle, spc_locs=locs)
+        run_prefix, save_prefix, saddle=saddle,
+        name=spc_name, spc_locs=locs)
     # Do initial check to see if a torsions file exists
     if pf_filesystems['tors'] is not None:
         [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['tors']
@@ -283,8 +283,8 @@ def energy(spc_name, spc_dct_i,
         sp_save_fs = autofile.fs.single_point(locs_path)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_mod_dct_i,
-            run_prefix, save_prefix,
-            name=spc_name, saddle=saddle)
+            run_prefix, save_prefix, saddle=saddle,
+            name=spc_name)
         _ene = ene.electronic_energy(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             conf=(locs, locs_path, cnf_fs))
@@ -332,8 +332,8 @@ def enthalpy(
 
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
-        run_prefix, save_prefix,
-        name=spc_name, saddle=saddle, spc_locs=locs)
+        run_prefix, save_prefix, saddle=saddle,
+        name=spc_name, spc_locs=locs)
     if cnf_fs[-1].file.hessian.exists(locs):
         # print(pf_filesystems)
         ene_abs = ene.read_energy(
@@ -398,7 +398,7 @@ def relative_gibbs(
  
 
 def partition_function(
-        spc_name, spc_dct_i, spc_mod_dct_i,
+        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
         pes_mod_dct_i,
         locs, locs_path,
         cnf_fs, run_prefix, save_prefix):
@@ -406,7 +406,7 @@ def partition_function(
     """
     pf_arrays = []
     messpf_inp_str, dat_str_dct, miss_data = messpf_input(
-        spc_name, spc_dct_i, spc_mod_dct_i,
+        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
         pes_mod_dct_i,
         locs, locs_path,
         cnf_fs, run_prefix, save_prefix)
@@ -453,7 +453,7 @@ def pf_weights(
 
 
 def messpf_input(
-        spc_name, spc_dct_i, spc_mod_dct_i,
+        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
         pes_mod_dct_i,
         locs, locs_path,
         cnf_fs, run_prefix, save_prefix):
@@ -471,13 +471,18 @@ def messpf_input(
     # print('spc_mod_dct_i', spc_mod_dct_i)
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
-        run_prefix, save_prefix,
-        name=spc_name, saddle=saddle, spc_locs=locs)
+        run_prefix, save_prefix, saddle=saddle,
+        name=spc_name, spc_locs=locs)
     geom = rot.read_geom(pf_filesystems)
     ret = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        run_prefix, zrxn=zrxn)
-    freqs, imag, zpe, _, tors_strs, _, _, _, rotors = ret 
+        spc_dct, run_prefix, zrxn=zrxn)
+    freqs = ret['fund_proj_RTimagTors']
+    imag = ret['harm_imag']
+    zpe = ret['anharm_zpe']
+    tors_strs = ret['mess_tors_strs']
+    rotors = ret['rotors'] 
+
     if freqs or imag:
         allr_str = tors_strs[0]
 
