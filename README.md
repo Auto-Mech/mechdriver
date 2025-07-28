@@ -77,11 +77,28 @@ git config --global user.name "<username>"
 You can then run tests locally as follows (see [below](#subtasks) for further details).
 ```
 # For SLURM:
-pixi run test local -f "--partition=<partition name>"
+pixi run test local -m slurm -f "--partition=<partition name>"
 
 # For PBS:
-pixi run test local -f "-q <queue name> -A <account name>"
+pixi run test local -m pbs -f "-q <queue name> -A <account name>"
 ```
+The above will auto-configure a HyperQueue server to execute the testing workflow.
+If the `-m` flag is ommitted, MechDriver will attempt to auto-detect Slurm or
+PBS on the system.
+
+> [!NOTE]
+> On permissive clusters that allow direct SSH access to compute nodes,
+> Slurm/PBS will not be aware of the resources consumed by processes executed directly over SSH.
+> In this case, it may be better to manually configure the server, setting up workers to run on
+> particular nodes, which can be done as follows:
+> ```
+> hq server start &> server.log &
+> pixi run test local &> test.log &
+> pixi run test create-node-worker <node 1 name> -q <queue name> -A <account name>
+> pixi run test create-node-worker <node 2 name> -q <queue name> -A <account name>
+> ...
+> ```
+
 You can check the progress of this local test run as follows.
 ```
 pixi run test status
