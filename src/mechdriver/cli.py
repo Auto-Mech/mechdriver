@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Sequence
 
 import click
@@ -128,7 +129,7 @@ def subtasks_setup_(
     "-f",
     "--auto-config-flags",
     default=None,
-    help="Sbatch/qsub flags for HyperQueue autoconfiguration",
+    help="Automatically configure HyperQueue with these sbatch/qsub flags.",
 )
 @click.option(
     "-e",
@@ -136,12 +137,19 @@ def subtasks_setup_(
     default=None,
     help="Command to activate Python environment",
 )
+@click.option(
+    "-m",
+    "--workload-manager",
+    default=None,
+    help="Specify workload manager (PBS or Slurm) instead of autodetecting",
+)
 def subtasks_run_(
     paths: Sequence[str] = (".",),
     dir_name: str = subtasks.SUBTASK_DIR,
     statuses: str = f"{Status.TBD.value}",
     auto_config_flags: str | None = None,
     python_environment: str | None = None,
+    workload_manager: str | None = None,
 ):
     """Run subtasks in parallel using HyperQueue.
 
@@ -151,6 +159,16 @@ def subtasks_run_(
         path{1..3}
 
     """
+    if auto_config_flags is None:
+        msg = (
+            "\nWARNING: Running without -f requires manual HyperQueue configuration."
+            "\nMake sure you have a server running with the appropriate workers."
+        )
+        warnings.warn(msg, stacklevel=1)
+
+    if workload_manager is None:
+        print("No workload manager specified with -m. Will attempt autodetection...")
+
     paths = paths if paths else (".",)
     subtasks.run_multiple(
         paths=paths,
@@ -158,6 +176,7 @@ def subtasks_run_(
         statuses=list(map(Status, statuses.split(","))),
         auto_config_flags=auto_config_flags,
         python_environment=python_environment,
+        workload_manager=workload_manager,
     )
 
 
