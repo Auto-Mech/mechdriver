@@ -43,6 +43,7 @@ def run_multiple(
     statuses: Sequence[Status] = (Status.TBD,),
     auto_config_flags: str | None = None,
     python_environment: str | None = None,
+    workload_manager: str | None = None,
 ) -> None:
     """Run multiple sets of subtasks in parallel using HyperQueue.
 
@@ -54,6 +55,8 @@ def run_multiple(
     :param statuses: A comma-separated list of status to run or re-run
     :param auto_config_flags: Sbatch/qsub flags for HyperQueue autoconfiguration
     :param python_environment: Command to activate Python environment
+    :param workload_manager: Specify workload manager (PBS or Slurm) instead of
+        autodetecting
     """
     if auto_config_flags is not None:
         start_hyperqueue_server()
@@ -74,6 +77,7 @@ def run_multiple(
             dir_name=dir_name,
             statuses=statuses,
             auto_config_flags=auto_config_flags,
+            workload_manager=workload_manager,
             job=job,
         )
 
@@ -86,6 +90,7 @@ def setup_job(
     dir_name: str = SUBTASK_DIR,
     statuses: Sequence[Status] = (Status.TBD,),
     auto_config_flags: str | None = None,
+    workload_manager: str | None = None,
     job: Job | None = None,
 ) -> Job:
     """Run subtasks in parallel using HyperQueue.
@@ -96,6 +101,8 @@ def setup_job(
     :param dir_name: The subtask directory name
     :param statuses: A comma-separated list of status to run or re-run
     :param auto_config: Automatically configure HyperQueue with these sbatch/qsub flags
+    :param workload_manager: Specify workload manager (PBS or Slurm) instead of
+        autodetecting
     :param job: Append to an existing job
     """
     path = Path(path).resolve()
@@ -107,7 +114,12 @@ def setup_job(
         all_tasks = list(itertools.chain.from_iterable(info.task_groups))
         mem = max(t.mem for t in all_tasks)
         cpus = max(t.nprocs for t in all_tasks)
-        add_hyperqueue_allocation(mem=mem, cpus=cpus, flags=auto_config_flags)
+        add_hyperqueue_allocation(
+            mem=mem,
+            cpus=cpus,
+            flags=auto_config_flags,
+            workload_manager=workload_manager,
+        )
 
     # Make sure the run and save directories exist
     info.run_path.mkdir(exist_ok=True)
@@ -349,7 +361,9 @@ def start_hyperqueue_server() -> None:
     assert os.path.exists(HQ_PATH), f"Could not start server at {HQ_PATH}"
 
 
-def add_hyperqueue_allocation(mem: int, cpus: int, flags: str) -> None:
+def add_hyperqueue_allocation(
+    mem: int, cpus: int, flags: str, workload_manager: str | None = None
+) -> None:
     """Create a HyperQueue allocation.
 
     :param mem: Memory (GB)
@@ -358,8 +372,48 @@ def add_hyperqueue_allocation(mem: int, cpus: int, flags: str) -> None:
     """
     print(f"Adding HyperQueue allocation with mem={mem}GB, cpus={cpus}, flags={flags}")
 
-    if shutil.which("sbatch"):
-        print("Detected SLURM on system. HyperQueue allocation command:")
+    workload_manager = None if workload_manager is None else str.lower(workload_manager)
+
+    if workload_manager is not None:
+        print(f"User-specified workload manager: {workload_manager}")
+    elif shutil.which("qsub"):
+        workload_manager = "pbs"
+        print(f"Auto-detected workload manager: {workload_manager}")
+    elif shutil.which("sbatch"):
+        workload_manager = "slurm"
+        print(f"Auto-detected workload manager: {workload_manager}")
+
+    if workload_manager is None:
+        msg = (
+            "No SLURM or PBS detected. Please manually configure HyperQueue allocation."
+        )
+        raise ValueError(msg)
+
+    if workload_manager not in ("pbs", "slurm"):
+        msg = (
+            f"Workload manager '{workload_manager}' is not a valid option.\n"
+            f"Please choose 'pbs' or 'slurm'."
+        )
+        raise ValueError(msg)
+
+    if workload_manager == "pbs":
+        print("HyperQueue allocation command:")
+        args = [
+            "hq",
+            "alloc",
+            "add",
+            "pbs",
+            "--time-limit",
+            "1h",
+            f"--cpus={cpus}",
+            f"--resource=mem=sum({memory_mib(mem)})",
+            "--",
+            *flags.split(),
+        ]
+        print(" ".join(args))
+        subprocess.run(args)
+    elif workload_manager == "slurm":
+        print("Detected PBS on system. HyperQueue allocation command:")
         args = [
             "hq",
             "alloc",
@@ -376,24 +430,3 @@ def add_hyperqueue_allocation(mem: int, cpus: int, flags: str) -> None:
         ]
         print(" ".join(args))
         subprocess.run(args)
-    elif shutil.which("qsub"):
-        print("Detected PBS on system. HyperQueue allocation command:")
-        args = [
-            "hq",
-            "alloc",
-            "add",
-            "pbs",
-            "--time-limit",
-            "1h",
-            f"--cpus={cpus}",
-            f"--resource=mem=sum({memory_mib(mem)})",
-            "--",
-            *flags.split(),
-        ]
-        print(" ".join(args))
-        subprocess.run(args)
-    else:
-        msg = (
-            "No SLURM or PBS detected. Please manually configure HyperQueue allocation."
-        )
-        raise ValueError(msg)

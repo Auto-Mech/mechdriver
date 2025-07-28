@@ -35,10 +35,15 @@ def status():
     "-f",
     "--auto-config-flags",
     default=None,
-    required=False,
     help="Automatically configure HyperQueue with these sbatch/qsub flags.",
 )
-def local(auto_config_flags: str | None = None):
+@click.option(
+    "-m",
+    "--workload-manager",
+    default=None,
+    help="Specify workload manager (PBS or Slurm) instead of autodetecting",
+)
+def local(auto_config_flags: str | None = None, workload_manager: str | None = None):
     """Run local tests on one or more nodes.
 
     Runs hidden local_
@@ -55,9 +60,16 @@ def local(auto_config_flags: str | None = None):
         )
         warnings.warn(msg, stacklevel=1)
 
+    if workload_manager is None:
+        print("No workload manager specified with -m. Will attempt autodetection...")
+
     test_paths = tu.setup_tests()
     mechdriver.subtasks.setup_multiple(test_paths)
-    mechdriver.subtasks.run_multiple(test_paths, auto_config_flags=auto_config_flags)
+    mechdriver.subtasks.run_multiple(
+        test_paths,
+        auto_config_flags=auto_config_flags,
+        workload_manager=workload_manager,
+    )
     tu.wrap_up_tests(from_archive=False, allow_override=False)
 
 
@@ -95,7 +107,7 @@ def create_node_worker(host: str, queue: str, account: str):
 
 
 # Helper functions
-def host_cpus(host: str) -> float:
+def host_cpus(host: str) -> int:
     """Determine host number of CPUs."""
     cpus_query = subprocess.run(
         ["ssh", host, "nproc --all"], capture_output=True, text=True
@@ -103,7 +115,7 @@ def host_cpus(host: str) -> float:
     return int(cpus_query.stdout)
 
 
-def host_memory(host: str, unit: str = "GB") -> float:
+def host_memory(host: str, unit: str = "GB") -> int:
     """Determine host memory."""
     mem_query = subprocess.run(
         ["ssh", host, "grep MemTotal /proc/meminfo"], capture_output=True, text=True
