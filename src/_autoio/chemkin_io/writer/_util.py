@@ -18,20 +18,15 @@ def max_rxn_length(rxn_param_dct):
     """ Gets the maximum length of the formatted reaction names in a mechanism
     """
 
-    max_len = 0 
+    max_len = 0
     for rxn, params in rxn_param_dct.items():
         # Check if the pdep flag should be True or False
         forms = params.get_existing_forms()
-        if 'troe' in forms or 'lind' in forms:
-            pdep = True 
-        else:
-            pdep = False 
+        pdep = bool('troe' in forms or 'lind' in forms)
         rxn_name = format_rxn_name(rxn, pdep=pdep)
-        if len(rxn_name) > max_len:
-            max_len = len(rxn_name)
+        max_len = max(len(rxn_name), max_len)
 
     return max_len
-
 
 def max_spc_length(mech_spc_dct):
     """ Gets the maximum length of the species names in a mechanism
@@ -39,10 +34,9 @@ def max_spc_length(mech_spc_dct):
         (Will also work fine on any dict with species as the keys)
     """
 
-    max_len = 0 
+    max_len = 0
     for spc in mech_spc_dct.keys():
-        if len(spc) > max_len:
-            max_len = len(spc)
+        max_len = max(len(spc), max_len)
 
     return max_len
 
@@ -71,7 +65,7 @@ def format_rxn_name(rxn, pdep=False, rxnkeys = []):
         :return rxn_name: formatted reaction name for writing in the mech
         :rtype: str
     """
-    # order names for consistent search 
+    # order names for consistent search
     rxnkeys_sorted = []
     for rxnk in rxnkeys:
         rxnkeys_sorted.append(

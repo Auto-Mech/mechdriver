@@ -43,7 +43,7 @@ def comb_mechs(rxn_param_dct1, rxn_param_dct2, spc_nasa7_dct1, spc_nasa7_dct2,
                                    ste_dct=ste_dct)
     comb_spc_nasa7_dct = comb_dcts(spc_nasa7_dct1, spc_nasa7_dct2,
                                    rename_instr, target_type='spc')
-    comb_mech_spc_dct = comb_dcts(mech_spc_dct1, mech_spc_dct2, 
+    comb_mech_spc_dct = comb_dcts(mech_spc_dct1, mech_spc_dct2,
                                   rename_instr, target_type='spc')
 
     #print('Inside comb_mechs: comb_mech_spc_dct:\n', comb_mech_spc_dct)
@@ -59,12 +59,12 @@ def comb_mult_mechs(rxn_param_dcts, spc_nasa7_dcts, mech_spc_dcts):
     ncombs = len(dcts) - 1  # n-1 combinations to do
     for idx in range(ncombs):
         tot_rxn_param_dct, tot_spc_nasa7_dct, tot_mech_spc_dct = comb_mechs(
-            tot_rxn_param_dct, rxn_param_dcts[idx+1], 
-            tot_spc_nasa7_dct, spc_nasa7_dcts[idx+1], 
+            tot_rxn_param_dct, rxn_param_dcts[idx+1],
+            tot_spc_nasa7_dct, spc_nasa7_dcts[idx+1],
             tot_mech_spc_dct, mech_spc_dcts[idx+1])
 
     return tot_rxn_param_dct, tot_spc_nasa7_dct, tot_mech_spc_dct
-    
+
 
 def comb_dcts(dct1, dct2, rename_instr, target_type='rxn', ste_dct=None):
     """ Combines two dictionaries; can be rxn_param_dcts, spc_nasa7_dcts, or
@@ -90,7 +90,7 @@ def comb_dcts(dct1, dct2, rename_instr, target_type='rxn', ste_dct=None):
     # Fix reactions that have one or more stereoisomers but are not in dct1
     #if target_type == 'rxn':
     #    for rxn, params in renamed_dct2.items():
-    #         remap_dct = _remap_dct(rxn, rename_instr, ste_spc_dct)    
+    #         remap_dct = _remap_dct(rxn, rename_instr, ste_spc_dct)
 
     # Add renamed and cleaned up dct2 to the combined dct
     comb_dct = copy.deepcopy(dct1)  # combined dct is initially just dct1
@@ -103,7 +103,7 @@ def comb_dcts(dct1, dct2, rename_instr, target_type='rxn', ste_dct=None):
 def _remap_dct(rxn, rename_instr, ste_spc_dct):
 
     def check_spcs(spcs, remap_dct):
-    
+
         remap_dct = copy.deepcopy(remap_dct)
         for spc in spcs:
             for non_ste_spc, ste_spc_list in ste_spc_dct.items():
@@ -112,16 +112,16 @@ def _remap_dct(rxn, rename_instr, ste_spc_dct):
                     break  # stop looking through the ste_spc_dct
 
         return remap_dct
-        
+
     rcts, prds, _ = rxn
     remap_dct = {}
-    remap_dct = check_spcs(rcts, remap_dct)   
-    remap_dct = check_spcs(prds, remap_dct)   
+    remap_dct = check_spcs(rcts, remap_dct)
+    remap_dct = check_spcs(prds, remap_dct)
     if remap_dct == {}:
         remap_dct = None
 
     return remap_dct
-    
+
 
 
 

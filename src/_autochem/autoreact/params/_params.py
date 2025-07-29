@@ -114,17 +114,20 @@ class RxnParams:
         params.combine_objects(other)
         return params
 
+    def __scale__(self, scale_A, scale_n, scale_EA):
+        return scale_factor(self, factor_A=scale_A, factor_n=scale_n, factor_EA=scale_EA)
+    
     def __mul__(self, number):
-        return multiply_factor(self, number)
-
+        return scale_factor(self, factor_A=number)
+    
     def __rmul__(self, number):
-        return multiply_factor(self, number)
+        return scale_factor(self, factor_A=number)
 
     def __truediv__(self, number):
-        return multiply_factor(self, 1/number)
+        return scale_factor(self, factor_A=1/number)
 
     def __div__(self, number):
-        return multiply_factor(self, 1/number)
+        return scale_factor(self, factor_A=1/number)
 
     def set_arr(self, arr_dct):
         """ Sets Arrhenius parameters
@@ -489,34 +492,43 @@ class RxnParams:
         return dups, dup_counts
 
 
-def multiply_factor(params, factor):
-    """ Multiply all rates by some factor
+def scale_factor(params, factor_A=None, factor_n=None, factor_EA=None):
+    """ scale all rates by some factor
+        A = A*factor_A
+        n = n+factor_n
+        EA = EA+factor_EA
     """
-    def single_form(params, form, factor):
+    def single_form(params, form, factor_A=None, factor_n=None, factor_EA=None):
         if form == 'arr':
             arr_tuples = params.arr
             arr_collid = params.arr_collid
-            new_arr = fix_arr_tuples(arr_tuples, factor)
+            new_arr = fix_arr_tuples(
+                arr_tuples, factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
             new_arr_dct = {'arr_tuples': new_arr, 'arr_collid': arr_collid}
             new_params = RxnParams(arr_dct=new_arr_dct)
         elif form == 'plog':
             plog_dct = params.plog
             new_plog_dct = {}
             for pressure, arr_tuples in plog_dct.items():
-                new_arr = fix_arr_tuples(arr_tuples, factor)
+                new_arr = fix_arr_tuples(
+                    arr_tuples, factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
                 new_plog_dct[pressure] = new_arr
             new_params = RxnParams(plog_dct=new_plog_dct)
         elif form == 'lind':
             lind_dct = params.lind
-            new_highp = fix_arr_tuples(lind_dct['highp_arr'], factor)
-            new_lowp = fix_arr_tuples(lind_dct['lowp_arr'], factor)
+            new_highp = fix_arr_tuples(
+                lind_dct['highp_arr'], factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
+            new_lowp = fix_arr_tuples(
+                lind_dct['lowp_arr'], factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
             new_lind_dct = {'highp_arr': new_highp, 'lowp_arr': new_lowp,
                             'collid': lind_dct['collid']}
             new_params = RxnParams(lind_dct=new_lind_dct)
         elif form == 'troe':
             troe_dct = params.troe
-            new_highp = fix_arr_tuples(troe_dct['highp_arr'], factor)
-            new_lowp = fix_arr_tuples(troe_dct['lowp_arr'], factor)
+            new_highp = fix_arr_tuples(
+                troe_dct['highp_arr'], factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
+            new_lowp = fix_arr_tuples(
+                troe_dct['lowp_arr'], factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
             new_troe_dct = {'highp_arr': new_highp, 'lowp_arr': new_lowp,
                             'collid': troe_dct['collid'],
                             'troe_params': troe_dct['troe_params']}
@@ -526,11 +538,16 @@ def multiply_factor(params, factor):
 
         return new_params
 
-    def fix_arr_tuples(old_arr_tuples, factor):
+    def fix_arr_tuples(old_arr_tuples, factor_A=None, factor_n=None, factor_EA=None):
         new_arr_tuples = []
         for arr_tuple in old_arr_tuples:
             new_arr_tuple = list(arr_tuple)
-            new_arr_tuple[0] *= factor
+            if factor_A:
+                new_arr_tuple[0] *= factor_A
+            if factor_n:
+                new_arr_tuple[1] += factor_n
+            if factor_EA:
+                new_arr_tuple[2] += factor_EA
             new_arr_tuples.append(new_arr_tuple)
 
         return new_arr_tuples
@@ -538,9 +555,11 @@ def multiply_factor(params, factor):
     forms = params.get_existing_forms()
     for idx, form in enumerate(forms):
         if idx == 0:
-            new_params = single_form(params, form, factor)
+            new_params = single_form(
+                params, form, factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
         else:  # allows for more than one rate form; stupid, but general
-            curr_params = single_form(params, form, factor)
+            curr_params = single_form(
+                params, form, factor_A=factor_A, factor_n=factor_n, factor_EA=factor_EA)
             new_params.combine_objects(curr_params)
 
     return new_params

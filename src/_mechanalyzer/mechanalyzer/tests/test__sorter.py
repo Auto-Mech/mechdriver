@@ -255,7 +255,7 @@ def test__sortby_rxnclass():
         (('CH3', 'CH3'), ('H', 'C2H5'), (None,)):
             '  unclassified.Recombination-decomposition - propagation',
          #'  substitution.Recombination-decomposition - propagation',
-         
+
         # removed because classifer is not working well right now
         # [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),
         # '  elimination.Decomposition'],
@@ -361,11 +361,11 @@ def test__sort_ktp():
     sorted_idx, cmts_dct, _ = srt_mch.return_mech_df()
     al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
     assert al_ktp_dct_sorted.keys() == results.keys()
-    newdct = dict.fromkeys(al_ktp_dct_sorted.keys())
-    for rxn in al_ktp_dct_sorted.keys():
-        newdct[rxn] = cmts_dct[rxn]['cmts_inline'].split('ratio')[1].strip()
 
-    assert newdct == results
+    for rxn in al_ktp_dct_sorted.keys():
+        assert results[rxn] == cmts_dct[rxn]['cmts_inline'].split('ratio')[1].strip()
+
+
 
 
 def test__sortby_subpes_chnl():
@@ -450,7 +450,7 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-       
+    test__sort_ktp()
     test__sortby_rxnclass() # does not work only if filter_pesgroups active
     test__readwrite_thirdbody()
     test__sortby_mult()
@@ -458,7 +458,7 @@ if __name__ == '__main__':
     test__sortby_pes_dct()
     test__sortby_species_subpes()
     test__sortby_subpes_chnl()
-    test__sort_ktp()
 
-    
-    
+
+
+

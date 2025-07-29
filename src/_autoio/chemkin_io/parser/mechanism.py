@@ -46,19 +46,22 @@ def reactions(mech_str):
     return rxn_param_dct
 
 
-def reaction_block(mech_str, remove_comments=True):
+def reaction_block(mech_str, remove_comments=True, remove_whitespaces=True):
     """Parses the reaction block out of the mechanism input file.
 
     :param mech_str: string of mechanism input file
     :type mech_str: str
-    :param remove_comments: elect to remove comment liness from string
+    :param remove_comments: elect to remove comment lines from string
     :type remove_comments: bool
+    :param cleanup: clean strings or not from e.g., whitespaces
+    :type cleanup: bool
     :return block_str: string containing reaction block
     :rtype: string
     """
 
     block_str = _block(
-        string=_clean_up(mech_str, remove_comments=remove_comments),
+        string=_clean_up(mech_str, remove_comments=remove_comments,
+                         remove_whitespaces=remove_whitespaces),
         start_pattern=app.one_of_these(["REACTIONS", "REAC"]),
         end_pattern="\nEND",
         # at least ensure that "end" is on a new line,
@@ -189,7 +192,7 @@ def reaction_units(mech_str):
 
 
 # Clean up the ChemKin mechanism strings
-def _clean_up(mech_str, remove_comments=True):
+def _clean_up(mech_str, remove_comments=True, remove_whitespaces=True):
     """Cleans up mechanism input string by converting specific comment
     lines that are used later and removes other comments and
     whitespace from mech string.
@@ -202,7 +205,8 @@ def _clean_up(mech_str, remove_comments=True):
     mech_str = _convert_comment_lines(mech_str)
     if remove_comments:
         mech_str = remove_comment_lines(mech_str, delim_pattern=app.escape("!"))
-    mech_str = remove_whitespace_from_string(mech_str)
+    if remove_whitespaces:
+        mech_str = remove_whitespace_from_string(mech_str)
 
     return mech_str
 

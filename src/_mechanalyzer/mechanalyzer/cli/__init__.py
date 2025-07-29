@@ -1,7 +1,9 @@
 import click
 import numpy as np
-from mechanalyzer.cli import prompt, sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_, pes_diagram_from_mess as pes_diagram_from_mess_
-
+from mechanalyzer.cli import pssa, prompt, sort, ste_mech
+from mechanalyzer.cli import compare_rates as compare_rates_
+from mechanalyzer.cli import compare_thermo as compare_thermo_
+from mechanalyzer.cli import pes_diagram_from_mess as pes_diagram_from_mess_
 
 @click.group()
 def main():
@@ -413,9 +415,16 @@ def promptcalc(
 @click.option(
     "-or",
     "--outputrates",
-    default="rates_prompt.txt",
+    default="rates_pssa.txt",
     show_default=True,
-    help="Output prompt rates file name",
+    help="Output pssa rates file name",
+)
+@click.option(
+    "-tol",
+    "--fitduptol",
+    default=15.,
+    show_default=True,
+    help="% Tolerance to switch from single to double arrhenius fit",
 )
 def runpssa(
     startmech: str='kin.CKI',
@@ -425,6 +434,7 @@ def runpssa(
     bfthresh: float = 1e-4,
     thermofile: str = None,
     outputrates: str = 'pssa_rates.txt',
+    fitduptol: float = 15.,
 ):
     """Sort the reactions in a mechanism"""
     pssa.main(
@@ -435,8 +445,8 @@ def runpssa(
     bfthresh=bfthresh,
     thermofile=thermofile,
     outputrates=outputrates,
+    fitduptol=fitduptol,
     )
-
 
 # PES diagram
 @main.command()

@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/Auto-Mech/autoio.git
 	branch = dev
-	commit = 9610c41bec5ec13f4ed97541e390c378acd1f5ae
-	parent = 946253ffb9fc01aca2cdf554bcfc387189950d8d
+	commit = 5166b2c80d746f8ae029999d78d5775d4c4616df
+	parent = b7a9ab751ab4fecce21c406375e00e02ee057018
 	method = rebase
 	cmdver = 0.4.9

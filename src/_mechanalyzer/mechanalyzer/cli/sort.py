@@ -71,7 +71,7 @@ def main(
         )
     )
     rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(rxn_sort_dct=cmts_dct)
-    
+
     # Write the output files (need to make general at some point)
     headers = sparser.csv_headers(mech_spc_dct)
     sortd_csv_str = sparser.csv_string(mech_spc_dct, headers)

@@ -33,14 +33,14 @@ def prescreen_species_subset(spc_dct, fuel = None, stoich = None, stoich_def = N
         starting list of species and corresponding dataframe
         species dictionary and formulas of excluded species
     """
-    
+
     if stoich is not None:
         # extract stoichiometry from string
         stoich = formulas.extract_fml_list_fromstr(stoich)
-        
+
     if fuel is None and stoich is None:
         raise ValueError('submech called, but neither fuel nor stoich filter specified')
-    
+
     elif fuel is not None:
         # extract fuel subset first
         species_list, species_subset_df, stoich_fuel = species_subset_fuel(fuel, spc_dct)
@@ -49,13 +49,13 @@ def prescreen_species_subset(spc_dct, fuel = None, stoich = None, stoich_def = N
         if stoich is None:
             print('No stoich. filter specified: set as default as stoich {} of fuel + C H O N S Cl: {}'.format(stoich_fuel, stoich_def))
             stoich = stoich_fuel + stoich_def # add also other stoichiometries to the list
-            
+
         return stoich, species_list, species_subset_df, fml_df_excluded, spc_dct_excluded
-    
+
     elif fuel is None:
         # no filter applied, so extract regular fml_df
         fml_df_excluded = formulas.extract_fml_df(spc_dct)
-        
+
         return stoich, [], pd.Series(), fml_df_excluded, spc_dct
 
 
@@ -66,7 +66,7 @@ def species_subset_excluded(species_list, spc_dct):
     spc_dct_excluded = copy.deepcopy(spc_dct)
     [spc_dct_excluded.pop(sp) for sp in species_list] #all remaining species
     fml_df_excluded = formulas.extract_fml_df(spc_dct_excluded) #all remaining formulas
-    
+
     return fml_df_excluded, spc_dct_excluded
 
 def species_subset_keep(spc_dct, fuel = None, stoich = None):
@@ -75,7 +75,7 @@ def species_subset_keep(spc_dct, fuel = None, stoich = None):
         in the reaction, all of the reactants OR all of the products will have to be in the species list
     """
     stoich, species_list, species_subset_df, fml_df_excluded, _ = prescreen_species_subset(spc_dct, fuel = fuel, stoich = stoich, stoich_def = STOICH_DEFAULT)
-        
+
     # extract sub-species : species with stoich. <= the given one (must apply to all species)
     species = formulas.extract_species_sub(stoich, fml_df_excluded) # extract all species with stoichiometry <= stoich
     print('Core (subfuel) species: \n')
@@ -96,10 +96,10 @@ def species_subset_del(spc_dct, fuel = None, stoich = None):
     # add to the species list all species above a certain stoichiometry
     # useful if you want to keep e.g. growth but not oxidation
     # extract all species with stoichiometry above the selected one
-    species_del = formulas.extract_species_above(stoich, fml_df_excluded) 
+    species_del = formulas.extract_species_above(stoich, fml_df_excluded)
     [spc_dct_excluded.pop(sp) for sp in species_del] # delete all species above that stoichiometry
     species_list += list(spc_dct_excluded.keys()) #consider all the other species
-    
+
     # from excluded species, extract core rxns vs rxns of bigger species
     fml_df_excluded = formulas.extract_fml_df(spc_dct_excluded)
     if fuel:
@@ -121,7 +121,7 @@ def species_subset_del(spc_dct, fuel = None, stoich = None):
         [print(sp) for sp in species_list]
         series = pd.Series('CORE', index=species_list)
         species_subset_df = species_subset_df._append(series)
-    
+
     return species_list, species_subset_df
 
 

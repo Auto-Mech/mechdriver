@@ -6,10 +6,8 @@ Sorter module - sorting of the mechanism according to various options
 - species subsets
 - submechanism
 """
-import enum
-from multiprocessing.sharedctypes import Value
-from re import T
-import time
+
+
 import sys
 import copy
 import pandas as pd
@@ -23,7 +21,6 @@ from mechanalyzer.calculator import rates as calc_rates
 from mechanalyzer.calculator import thermo
 from mechanalyzer.calculator.ene_partition import phi_equip_fromdct
 from mechanalyzer.calculator import nonboltz
-from mechanalyzer.calculator import ktp_util
 from mechanalyzer.parser import pes
 from mechanalyzer.parser.spc import name_inchi_dct
 from mechanalyzer.parser._util import count_atoms
@@ -36,7 +33,7 @@ from mechanalyzer.parser._util import get_fml
 FUELGROUP = ['FUEL','FUEL_RAD','FUEL_ADD_H','FUEL_ADD_CH3','FUEL_ADD_O','FUEL_ADD_OH','FUEL_ADD_O2','R_CH3','R_O','R_O2','R_O4','R_O3-H']
 SUBMECHGROUP = ['CORE']
 SUPMECHGROUP = ['SUPFUEL','SUBFUEL']
-        
+
 def mech_info(rxn_param_dct, spc_dct):
     """ Build mech_info object for mech sorting
 
@@ -76,7 +73,7 @@ def mech_info(rxn_param_dct, spc_dct):
                 print('  ', name)
             print('Unable to finish parsing mechanism. Exiting...')
             sys.exit()
-        
+
         return all_mech_names
 
     def _inf(rct_names, prd_names, ich_dct):
@@ -112,7 +109,7 @@ def mech_info(rxn_param_dct, spc_dct):
     all_mech_names =_check_names(rct_names, prd_names, thrdbdy_lst, set(spc_dct.keys()))
     # filter species dictionary to make processing lighter from now on
     spc_dct ={k: spc_dct[k] for k in all_mech_names}
-    
+
     # formulas and reaction names (repplace with the mech info from ckin
     ich_dct = name_inchi_dct(spc_dct)
     formula_dct, formula_str, rxn_name = _inf(rct_names, prd_names, ich_dct)
@@ -184,7 +181,7 @@ def conn_chn_df(mech_df): # moved outside of the class - taken for granted: clas
     """
     conn_chn_df = pd.DataFrame(
             index = mech_df.index, columns=['subpes'])
-    
+
     pes_dct_df = pd.DataFrame(
         index=mech_df.index,
         columns=['chnl', 'pes_chnl_tuple'],
@@ -221,7 +218,7 @@ def conn_chn_df(mech_df): # moved outside of the class - taken for granted: clas
                     chnl_idx+idx_start, rxn_name)
 
             idx_start += len(rxns)
-        
+
     conn_chn_df = pd.concat([conn_chn_df, pes_dct_df], axis=1)
 
     return conn_chn_df
@@ -291,7 +288,7 @@ class SortMech:
         # empty list for initialization (otherwise pylint warning)
         self.species_subset_df = ()
         self.species_list = ()
-    
+
     def sort(self, hierarchy, species_list):
         """ Main flow of the sorter: takes a set of reactions and classifies
             them as indicated in hierarchy; possibly filters the species
@@ -352,7 +349,7 @@ class SortMech:
 
         # now that you fixed it, save it in self
         self.hierarchy = hierarchy
-        
+
         # if species_list is not empty: pre-process the mechanism
         self.preproc_specieslist(species_list)
 
@@ -399,8 +396,8 @@ class SortMech:
         # rxn vals, ratio and names are descending
         asc_val[-3:] = [False, False, False]
         asc_series = pd.Series(asc_val, index=criteria_all + ['rxn_names'])
-        
-            
+
+
         try:
             # last "standard" criterion: rxn name
             asclst = list(
@@ -412,7 +409,7 @@ class SortMech:
             raise KeyError(
                 'Error: Reactions not sorted according ',
                 f'to all criteria: missing {err}, exiting') from err
-                
+
         # 2. assign class headers
         labels = pd.Series(labels_all, index=criteria_all)
         self.class_headers(self.hierarchy, labels)
@@ -455,14 +452,14 @@ class SortMech:
             print('If you want only reactions where {} appears, add "singlespecies = True "'.format(species_list[0]))
             print(' in sort_mech section "singlespecies" in the sort_lst input')
             submech_name = 'submech'
-            
+
         elif len(species_list) > 1 and len(submech_name) == 0:
             print('Multiple species selected and no submech specifications: will extract reactions where {} are involved'.format(species_list))
             submech_name = 'singlespecies'
-            
+
         elif len(species_list) > 1 and submech_name != 'submech_prompt':
-            raise ValueError('Error: multiple species only available for submech_prompt sorting')      
-                    
+            raise ValueError('Error: multiple species only available for submech_prompt sorting')
+
         elif len(species_list) == 0 and submech_name == 'submech_prompt':
             # species list includes all radicals in the mech
             print('WARNING: Prompt selected w/o species specification: \
@@ -483,14 +480,14 @@ class SortMech:
             species_list, species_subset_df = sumbech_optns_dct[submech_name]['fun_name'](
                 self.spc_dct, fuel = fuel, stoich = stoich)
             self.species_subset_df = species_subset_df
-            
+
         elif submech_name == 'submech' and len(species_list) == 1:
             # 'submech' option (either declared explicitly or implicitly by indicating one species to isolate)
             print('Submech extracted for fuel {}'.format(species_list[0]))
             species_list, species_subset_df, _ = sumbech_optns_dct[submech_name]['fun_name'](
                 species_list[0], self.spc_dct)
             self.species_subset_df = species_subset_df
-                   
+
 
         if len(species_list) > 0:
             self.mech_df_full = copy.deepcopy(self.mech_df)
@@ -516,7 +513,7 @@ class SortMech:
 
         # add classification by subpes first
         if filtertype == 'submech_prompt':
-            # reset the classification 
+            # reset the classification
             self.mech_df_full[['submech_prompt', 'rxn_ped']] = ''
 
         # deepcopy
@@ -542,14 +539,14 @@ class SortMech:
                 _pchk = any(
                     prd == _spc for _spc in species_list for prd in prds)
                 chk = int(_rchk or _pchk)
-                
+
             elif filtertype in ['submech_deletelarge', 'submech_keepsubfuel']:
-                
+
                 _rchk = int(all(any(rct == _spc for _spc in species_list)
                                for rct in rcts))
                 _pchk = int(all(any(prd == _spc for _spc in species_list)
                                for prd in prds))
-                
+
                 if filtertype == 'submech_deletelarge':
                     chk = int(_rchk and _pchk)
                     # all species of reactants and products have to be in the list
@@ -558,11 +555,11 @@ class SortMech:
                     # equivalent to saying: at least all reactants (also single react works) or all products
                     # must be in the species list
                     chk = int(_rchk or _pchk)
-                    
+
             if chk >= 1 and filtertype != 'submech_prompt':
                 spc_list.extend(rcts)
                 spc_list.extend(prds)
-                  
+
             elif chk >= 1 and filtertype == 'submech_prompt':
                 for sp in species_list:
                     if len(rcts) == 2 and any(rct == sp for rct in rcts) and len(prds) <= 2:
@@ -586,14 +583,14 @@ class SortMech:
                     elif (len(rcts) == 1 and rcts[0] == sp and len(prds) > 2):
                         mech_df.at[rxn, 'submech_prompt'] = 'RAD_DECO_LUMPED_{}'.format(
                             sp)
-                   
+
                     if len(mech_df.at[rxn, 'submech_prompt']) > 0:
                         break
 
             elif chk == 0 and filtertype != 'submech_prompt':  # reaction filtered out
                 # don't filter for submech_prompt - you'll need it later to check for wellskipping channels
-                mech_df = mech_df.drop(index=[rxn]) 
-                        
+                mech_df = mech_df.drop(index=[rxn])
+
         if filtertype == 'submech_prompt':
             mech_df_new = pd.DataFrame(columns = mech_df.columns, dtype=object)
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
@@ -612,12 +609,12 @@ class SortMech:
                         mech_df_new = pd.concat([mech_df_new, added_rxns_df], axis=0)
 
             mech_df = copy.deepcopy(mech_df_new)
-    
+
         # filter spc_list: unique elements
         spc_list = sorted(list(set(spc_list)))
         if filtertype == 'submech_deletelarge':
             musthaves = ['HE', 'AR', 'N2']
-            [spc_list.append(m) for m in musthaves if m not in spc_list 
+            [spc_list.append(m) for m in musthaves if m not in spc_list
             if m in self.spc_dct_full.keys()] # also consider 'must haves' that might not appear in reactions
         # new spc_dct
         spc_dct_val = list(map(self.spc_dct_full.get, spc_list))
@@ -641,13 +638,13 @@ class SortMech:
                 rad = subpes_df['submech_prompt'][rxn].split('_')[2]
                 rad_list.append(rad)
                 if rad in subpes_df['prd_names_lst_ord'][rxn]:
-                    rad_bimol.append(subpes_df['prd_names_lst_ord'][rxn])   
+                    rad_bimol.append(subpes_df['prd_names_lst_ord'][rxn])
                 elif rad in subpes_df['rct_names_lst_ord'][rxn]:
                     rad_bimol.append(subpes_df['rct_names_lst_ord'][rxn])
-                    
+
         rad_list = sorted(list(set(rad_list))) # reduce lists, might have found > 1 radical
         rad_bimol = sorted(list(set(rad_bimol)))
-                
+
         # get reaction names
         rxn_list_ordered = list(
             zip(subpes_df['rct_names_lst_ord'].values, subpes_df['prd_names_lst_ord'].values))
@@ -671,7 +668,7 @@ class SortMech:
             rxn = '{}={}'.format(
                 '+'.join(rcts[0]), '+'.join(rcts[1]))
             new_wellskipping_idxs.append((rxn, (None,)))
-            
+
         #print(subpes_df, '\n', rad_list, rad_bimol, '\n')
         wellskipp_rxns_df = pd.DataFrame(
             index=new_wellskipping_idxs, columns=subpes_df.columns, dtype=object)
@@ -740,11 +737,11 @@ class SortMech:
         # if ANY of reactants belongs to
         # lbl as submech_df columns -> so it works with both submech and submech_keepsubfuel
         lbl_col = submech_df.columns[0]
-        
+
         def assign_group(spcs_subset):
             # prioritize when a species is in fuel group;
             # assign "core" only when all species are in the core mech
-            
+
             if any(subset in FUELGROUP for subset in spcs_subset):
                 for fuelgroup in FUELGROUP:
                     if any(subset == fuelgroup for subset in spcs_subset):
@@ -754,18 +751,18 @@ class SortMech:
                 for submechgroup in SUBMECHGROUP:
                     if any(subset == submechgroup for subset in spcs_subset):
                         group = submechgroup
-                        break   
+                        break
             elif any(subset in SUPMECHGROUP for subset in spcs_subset):
                 for supmechgroup in SUPMECHGROUP:
                     if any(subset == supmechgroup for subset in spcs_subset):
                         group = supmechgroup
-                        break  
+                        break
             else:
                 group = ''
                 print('warning: species do not seem to belong to any group - check code')
-                
+
             return group
-            
+
         for rxn in submech_df.index:
             rcts = list(self.mech_df['rct_names_lst'][rxn])
             prds = list(self.mech_df['prd_names_lst'][rxn])
@@ -775,7 +772,7 @@ class SortMech:
             for spc in spcs:
                 if spc in self.species_list:
                     species_subset.append(self.species_subset_df[spc])
-                    
+
             spcs_grp = assign_group(species_subset)
             # check species hierarchically (hierarchy fixed in species list)
             submech_df.at[rxn, lbl_col] = spcs_grp
@@ -846,10 +843,10 @@ class SortMech:
                 grps.append(grp_dct)
 
             self.grps = grps
-            
+
         submech_df = pd.DataFrame(
             index=self.mech_df.index)
-  
+
         return submech_df # aligned with other functions, but does not return a dataframe
 
     def filter_groups_prompt(self, therm_dct, DFG, T0=300.):
@@ -880,8 +877,8 @@ class SortMech:
         self.k_max_hot = dict.fromkeys(self.species_list)
         self.labels_hot = dict.fromkeys(self.species_list)
         hot_sp_df_dct = dict.fromkeys(self.species_list)
-        
-                
+
+
         for hot_sp in self.species_list:
             hot_sp_df_dct[hot_sp] = self.mech_df[self.mech_df['submech_prompt']
                                                  == 'RAD_DECO_{}'.format(hot_sp)]
@@ -897,8 +894,8 @@ class SortMech:
                             'dhtot({:.0f}K)'.format(T0), 'k({:.0f}K)'.format(self.Tref), 'k*(T*({:.0f}K))'.format(self.Tref), 'T*({:.0f}K)'.format(self.Tref), 'keep?'], dtype=object)
 
         self.rxns_dh = numpy.vstack((fmt_lbls, lbls))
-              
-        
+
+
         for grp in self.grps:
             grp_new = {'grp': 0, 'idxs': [],
                        'peds': [], 'hot': [], 'modeltype': ''}
@@ -916,11 +913,11 @@ class SortMech:
                     print('analyze ped .. {}'.format(ped_i))
                     rcts = ped_i.split('=')[0].split('+')
                     prds = ped_i.split('=')[1].split('+')
-                    
+
                     hot_spcs = sorted(list(set(self.species_list) & set(prds)))
 
                     for hot_sp in hot_spcs:
-                        
+
                         nonhot = list(set([hot_sp]) ^ set(prds))
                         if len(nonhot) == 0:
                             nonhot = hot_sp #it means you have something like A+B=>2C (disproport. or dissociation)
@@ -976,10 +973,10 @@ class SortMech:
                         array_info = numpy.array(
                             [ped_i, hot_sp, dh[T0]*phi, self.dh_min_hot[hot_sp][T0], dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_star, T_star, keep], dtype=object)
                         self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
-                        
+
                     if check_ped_i >= 1:
                         newped.append(ped_i)
-                    
+
                 if exceptions == len(newped) and len(newped) > 0:
                     check = 1  # keep things you were unable to compute stuff for that ped
                     print(
@@ -1033,7 +1030,7 @@ class SortMech:
         # self.mech_df = self.mech_df.drop(index=rxns_fake)
         # resort because you added reactions
         self.sort_and_label(self.criteria_all, self.labels_all)
-                        
+
     def rxn_chain_prompt(self, T0, dh_tot, rad, sp_df_dct):
         """ from a given hot product (rad), derive prompt reaction chain complying with thresholds
         """
@@ -1056,13 +1053,13 @@ class SortMech:
             # if you have 2 products, just analyze both; select the one
             # most 'compliant' with the conditions (e.g., smallest dhtot ratio)
             # and go on with that.
-            
+
             if len(prds) != 2:
                 break
 
             phis, T_stars, k_stars, dh_tots, add_check, hot_mech_df, hot_spc_dct, pesN, subpesN = (
                 {prd: None for prd in prds} for _ in range(9))
-            
+
             for prd in prds:
                 if sum(automol.chi.formula(
                         self.spc_dct[prd]['inchi']).values()) < 3:
@@ -1074,7 +1071,7 @@ class SortMech:
                         [prd], 'submech_prompt')
                     sp_df_dct[prd] = hot_mech_df[prd][hot_mech_df[prd]['submech_prompt']
                                                  == 'RAD_DECO_{}'.format(prd)]
-                    
+
                     if len(sp_df_dct[prd]) == 0:
                         continue  # it's possible that the radical deco is not present in the mech!
                     pesN[prd] = sp_df_dct[prd]['pes'].iloc[0]
@@ -1084,14 +1081,14 @@ class SortMech:
                         prd, sp_df_dct[prd], self.therm_df, T0, self.Tref)  # high T to get bimol faster
                 else:
                     add_check[prd] = 0
-                    
+
                 try:
                     nonprd = list(set([prd]) ^ set(prds))[0]
                     phis[prd] = phi_equip_fromdct(prd, nonprd, self.spc_dct)
 
                     T_stars[prd], k_stars[prd], dh_tots[prd] = nonboltz.estimate_hot_hk(
                         dh_start*phis[prd]*1000, self.Tref, self.therm_df[prd]['Cp'], self.k_max_hot[prd], self.dh_min_hot[prd]*1000)
-                
+
                 except TypeError:
                     print('dh failed for: {}'.format(self.labels_hot[rad]))
                     break
@@ -1105,7 +1102,7 @@ class SortMech:
                 dh_tots_T0 = [dh_tots[prds[0]][T0], dh_tots[prds[1]][T0]]
                 min_dhtot = min(dh_tots_T0)
                 hot_sp = prds[dh_tots_T0.index(min_dhtot)]
-                
+
             dh_tot = dh_tots[hot_sp]
             print('prompt chain for {}'.format(self.labels_hot[rad]),
                   'hot species is {}'.format(hot_sp),
@@ -1293,7 +1290,7 @@ class SortMech:
         # extract maximum value for each ktp dictionary
         for rxn in rxn_maxvals_df.index:
             param_vals_dct = self.mech_df['param_vals'][rxn]
-            max_val = ktp_util.get_max_aligned_values(param_vals_dct)
+            max_val = calc_rates.get_max_aligned_values(param_vals_dct)
             rxn_maxvals_df.at[rxn, 'rxn_max_vals'] = max_val
 
         return rxn_maxvals_df
@@ -1301,6 +1298,7 @@ class SortMech:
     def rxn_max_ratio(self, rxn_maxratio_df):
         """ Determines the maximum value of the ratios between
             different rates of ktp dct.
+            (compares two dictionaries at the same pressure)
 
         :param rxn_maxratio_df:
             empty dataframe index=rxns, column: 'rxn_max_ratio'
@@ -1312,9 +1310,9 @@ class SortMech:
         for rxn in rxn_maxratio_df.index:
             param_vals_dct = self.mech_df['param_vals'][rxn]
             # get the ratio:
-            param_ratio_dct = ktp_util.get_aligned_rxn_ratio_dct(
+            param_ratio_dct = calc_rates.get_aligned_rxn_ratio_dct(
                 param_vals_dct)
-            max_val = ktp_util.get_max_aligned_values(param_ratio_dct)
+            max_val = calc_rates.get_max_aligned_values([param_ratio_dct[1]])
             rxn_maxratio_df.at[rxn, 'rxn_max_ratio'] = max_val
 
         return rxn_maxratio_df

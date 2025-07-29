@@ -133,6 +133,7 @@ PLOG/ 0.5	2.70E+35	-6.77	24304	/\n \
 PLOG/ 10	2.96E+18	-1.97	17957	/\n \
 PLOG/ 300	3.34E-12	4.14	6779	/\n \
 !#[ENDREACTIONCLASS][C4.DT-R][ADD_C2.T-M]\n \
+!#[REACTIONCLASS][A1,CH3-M][BONDFISSION_CH]\n \
 END\n\
 "
 NONINT_RXN_PRODUCTS_AND_OTHER_EXCEPTIONS = "REACTIONS\n\
@@ -157,6 +158,7 @@ LOW /                                             +2.35301810E+024 -2.29293580E+
 TROE /                                            +4.30000000E-001 +1.00000000E-030 +1.00000000E+030 /\n\
 HE / +0.4400 / O2 / +0.7900 / CO2 / +1.0600 / N2 / +1.5000 / CO / +2.8000 / H2 / +3.7000 / H2O / +5.1000 / H2O2 / +5.2000 / \n\
 TIC4H7Q2-I=>ET12IC4-1OOH+OH                       +4.45000000E+009 +8.60000000E-001 +1.08000000E+004 \n\
+C6H5C3H3+C6H5=>C14H10+CH3                                     +1.00000E+012 +0.00000E+000 +8.00000E+003 \n\
 END\n"
 
 
@@ -169,7 +171,7 @@ def test_cmts():
         (('CH3C6H4', 'C6H5C2H5'), ('C6H5C2H4C6H5', 'CH3'), (None,)), # written as irrev, but with no bw
     ]
     cmts_to_check = [
-        ' LPM 01-21-2021 UPDATE C3 ! DUPLICATE CAUSE THERE WERE 2 DIFFERENT RADICALS OF C10H7; HPLIM IS OLD CRECK !lumped C10H8tyl as CRECK  ',
+        '! LPM 01-21-2021 UPDATE C3 ! DUPLICATE CAUSE THERE WERE 2 DIFFERENT RADICALS OF C10H7; HPLIM IS OLD CRECK !lumped C10H8tyl as CRECK  ',
         '', 
         '',]
         
@@ -184,8 +186,10 @@ def test_cmts():
 def test_rxn_strs():
     """ Test reaction string dictionary from file
     """       
+
+
     check_one = ['C4H2+C6H5=C10H7                               5.000E+12    0.000     5000.00 ! LPM 01-21-2021 UPDATE C3 ! DUPLICATE CAUSE THERE WERE 2 DIFFERENT RADICALS OF C10H7; HPLIM IS OLD CRECK !lumped C10H8tyl as CRECK  \nPLOG / 0.01\t1.25E+88\t-21.83\t48863/\t!800-1700\nPLOG / 0.1\t1.54E+81\t-19.48\t50784/\t!800-1800\nPLOG / 1\t1.28E+76\t-17.68\t55146/\t!800-2000\nPLOG / 10\t2.22E+58\t-12.44\t49974/\t!800-2500\nPLOG / 100\t1.02E+35\t-5.809\t39347/\t!800-2500\nDUPLICATE', 
-                 'C4H2+C6H5=C10H7                      5.00E+12    0.000     5000.00 !2-naphthyl\nPLOG / 0.01\t1.83E+87\t-21.56\t48728/\nPLOG / 0.1\t4.57E+85\t-20.72\t54421/\nPLOG / 1\t7.82E+72\t-16.75\t53604/\nPLOG / 10\t3.74E+63\t-13.83\t55912/\nPLOG / 100\t2.55E+45\t-8.515\t52892/\nDUPLICATE\n\n!#[REACTIONCLASS][A1-R][ADD_C4.TT-M]\n!#[ENDREACTIONCLASS][A1-R][ADD_C4.TT-M]']
+                 'C4H2+C6H5=C10H7                      5.00E+12    0.000     5000.00 !2-naphthyl\nPLOG / 0.01\t1.83E+87\t-21.56\t48728/\nPLOG / 0.1\t4.57E+85\t-20.72\t54421/\nPLOG / 1\t7.82E+72\t-16.75\t53604/\nPLOG / 10\t3.74E+63\t-13.83\t55912/\nPLOG / 100\t2.55E+45\t-8.515\t52892/\nDUPLICATE']
     ckin_str = ioformat.pathtools.read_file(DAT_PATH, 'pah_block.dat')
     rxn_strs_dct = get_rxn_strs_dct(ckin_str)
     
@@ -196,7 +200,7 @@ def test_rxn_osclass():
     """
     dct_class = {(('C6H5',), ('LC6H4', 'H'), (None,)): {'speciestype': 'A1-R', 'reactiontype': 'ROPEN'}, 
                  (('C4H3', 'C2H2'), ('LC6H4', 'H'), (None,)): {'speciestype': 'C4.DT-R', 'reactiontype': 'ADD_C2.T-M'}, 
-                 (('C4H3', 'C2H2'), ('CYC6H4', 'H'), (None,)): {'speciestype': 'C4.DT-R', 'reactiontype': 'ADD_C2.T-M'}}
+                 (('C4H3', 'C2H2'), ('CYC6H4', 'H'), (None,)): {'speciestype': 'C4.DT-R', 'reactiontype': 'ADD_C2.T-M'},}
     
     os_class = get_rxn_osclass_dct(REACTION_BLOCK_OSCLASS)
     assert os_class == dct_class
@@ -214,6 +218,7 @@ def test_nonint_rxn_products():
         (('O', 'O'), ('O2',), ('+M',)),
         (('H', 'O'), ('OHV',), ('+M',)),
         (('TIC4H7Q2-I',), ('ET12IC4-1OOH', 'OH'), (None,)),
+        (('C6H5C3H3', 'C6H5'), ('C14H10', 'CH3'), (None,))
         }
 
     rxn_param_dct1 = get_rxn_param_dct(NONINT_RXN_PRODUCTS_AND_OTHER_EXCEPTIONS, 'cal/mole', 'moles')
@@ -276,7 +281,7 @@ def test_plog2():
     """ Test PLOG with comments
     """
     rxn_param_dct1 = get_rxn_param_dct(REACTION_BLOCK_OSCLASS, 'cal/mole', 'moles')
-    # 3 reactions found
+    # 4 reactions found
     assert len(rxn_param_dct1.keys()) == 3
     for params in rxn_param_dct1.values():
         plog_dct = params.plog
@@ -573,8 +578,8 @@ def test_pes_dct():
     for key, val in pes_info.items():
         assert val == REACTION_BLOCK_PESUBPES_WDUP_INFO[key]
 if __name__ == '__main__':
-    test_rxn_strs()
     test_cmts()
+    test_rxn_strs()
     test_rxn_osclass()
     test_nonint_rxn_products()
     test_arr()

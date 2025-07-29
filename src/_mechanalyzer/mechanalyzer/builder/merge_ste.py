@@ -5,9 +5,7 @@
 import copy
 import numpy as np
 from automol import amchi
-from automol import inchi
 from automol import chi
-from mechanalyzer.builder import strip_ste
 from mechanalyzer.calculator import compare
 from autoreact import params as params_module
 
@@ -142,7 +140,7 @@ def expand_one_rxn(rxn, params, name_maps, sing_chiral, mult_chiral):
         new_rxn_names.append(new_rxn)
 
     # Scale rate constants by the factor
-    new_params = params_module.multiply_factor(params, factor)
+    new_params = params_module.scale_factor(params, factor_A = factor)
 
     # If either rcts or prds had mult_chiral, set to True
     has_mult_chiral = False

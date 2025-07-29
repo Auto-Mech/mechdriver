@@ -395,6 +395,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
       - pypi: https://files.pythonhosted.org/packages/15/80/44286939ca215e88fa827b2aeb6fa3fd2b4a7af322485c7170d6f9fd96e0/cloudpickle-2.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/a7/b6c37d6ead398922a75cbb63fe3e02a70026e74659e1e0e443ea1af3641a/hyperqueue-0.22.0-cp39-abi3-manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/81/e6/03acdc349320e2ff3ed1e257d56c67907e66a6d0b442e54dc75e02ca108c/python_igraph-0.11.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
       - pypi: ./
       - pypi: ./src/_autochem
@@ -780,6 +781,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
       - pypi: https://files.pythonhosted.org/packages/15/80/44286939ca215e88fa827b2aeb6fa3fd2b4a7af322485c7170d6f9fd96e0/cloudpickle-2.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/a7/b6c37d6ead398922a75cbb63fe3e02a70026e74659e1e0e443ea1af3641a/hyperqueue-0.22.0-cp39-abi3-manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/ac/37/3fb69b17599b4c76f75bdf00ea4b78394d3cbf1fc0ba31179861153c239f/python_igraph-0.11.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
       - pypi: ./
       - pypi: ./src/_autochem
@@ -1189,6 +1191,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/e7/d3/c622950d87a2ffd1654208733b5bd1c5645930014abed8f4c0d74863988b/pydata_sphinx_theme-0.15.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/de/afa024cbe022b1b318a3d224125aa24939e99b4ff6f22e0ba639a2eaee47/pytest-8.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0d/b2/0e802fde6f1c5b2f7ae7e9ad42b83fd4ecebac18a8a8c2f2f14e39dce6e1/pytest_xdist-3.7.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/ac/37/3fb69b17599b4c76f75bdf00ea4b78394d3cbf1fc0ba31179861153c239f/python_igraph-0.11.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/53/97/d2cbbaa10c9b826af0e10fdf836e1bf344d9f0abb873ebc34d1f49642d3f/roman_numerals_py-3.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/75/f0/782e7d681d660eda8c536962920c41309e6dd4ebcea9a2714ed5127d44bd/ruff-0.11.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/c8/78/3565d011c61f5a43488987ee32b6f3f656e7f107ac2782dd57bdd7d91d9a/snowballstemmer-3.0.1-py3-none-any.whl
@@ -1625,6 +1628,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
       - pypi: https://files.pythonhosted.org/packages/15/80/44286939ca215e88fa827b2aeb6fa3fd2b4a7af322485c7170d6f9fd96e0/cloudpickle-2.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/a7/b6c37d6ead398922a75cbb63fe3e02a70026e74659e1e0e443ea1af3641a/hyperqueue-0.22.0-cp39-abi3-manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/ac/37/3fb69b17599b4c76f75bdf00ea4b78394d3cbf1fc0ba31179861153c239f/python_igraph-0.11.8-py3-none-any.whl
       - pypi: ./
       - pypi: ./src/_autochem
       - pypi: ./src/_autofile
@@ -2014,6 +2018,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/de/afa024cbe022b1b318a3d224125aa24939e99b4ff6f22e0ba639a2eaee47/pytest-8.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0d/b2/0e802fde6f1c5b2f7ae7e9ad42b83fd4ecebac18a8a8c2f2f14e39dce6e1/pytest_xdist-3.7.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/ac/37/3fb69b17599b4c76f75bdf00ea4b78394d3cbf1fc0ba31179861153c239f/python_igraph-0.11.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
       - pypi: ./
       - pypi: ./src/_autochem
@@ -2405,14 +2410,25 @@ packages:
   editable: true
 - pypi: ./src/_autofile
   name: autofile
-  version: 2025.6.12
-  sha256: 5e68a4fe352d54aeedec1ecf797c144b845b6c466a0aa52bf90af6b7bfdf05e8
+  version: 2025.7.28
+  sha256: 4dd13e2e6578dd9f66731435b261b3c2a14b247b32f23f4cfb99b182b36d2b3c
+  requires_dist:
+  - numpy
+  - pyyaml
   requires_python: '>=3.11'
   editable: true
 - pypi: ./src/_autoio
   name: autoio
-  version: 2025.6.12
-  sha256: e1446c470349cededa09aac42a42eecf7eeea9cf1a4497837f7b39cff7ce3fe9
+  version: 2025.7.28
+  sha256: cd3e35db0850ef55c717a52590dbf0197450c864f69d32857f5177d07ab11b35
+  requires_dist:
+  - mako
+  - more-itertools
+  - numpy
+  - pint
+  - pyparsing
+  - pyyaml
+  - qcelemental
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/auto-mech/noarch/automech-toolbox-2025.4.11-h4616a5c_0.conda
@@ -7542,8 +7558,18 @@ packages:
   requires_python: '>=3.7'
 - pypi: ./src/_mechanalyzer
   name: mechanalyzer
-  version: 2025.6.12
-  sha256: d1845a421261cd92889b8a2f46765308ebb900fdedddc35876b32f5ef1e799c7
+  version: 2025.7.28
+  sha256: 0704bb6b3a6c568c0a76b62d662d55e136a1bfc6f241adf2a60edd4ec7fce660
+  requires_dist:
+  - click>=8.2.1
+  - mako
+  - matplotlib
+  - networkx
+  - numpy
+  - pandas
+  - python-igraph
+  - pyyaml
+  - scipy
   requires_python: '>=3.11'
   editable: true
 - pypi: ./
@@ -9085,6 +9111,28 @@ packages:
   purls: []
   size: 47472
   timestamp: 1749048180043
+- pypi: https://files.pythonhosted.org/packages/81/e6/03acdc349320e2ff3ed1e257d56c67907e66a6d0b442e54dc75e02ca108c/python_igraph-0.11.6-py3-none-any.whl
+  name: python-igraph
+  version: 0.11.6
+  sha256: 39b2157eb819cea2b9ec18975c443f0ac36c001ec7a89e145c56a8bdf28a6bf1
+  requires_dist:
+  - igraph==0.11.6
+  - cairocffi>=1.2.0 ; extra == 'cairo'
+  - matplotlib>=3.3.0 ; platform_python_implementation != 'PyPy' and extra == 'matplotlib'
+  - plotly>=5.3.0 ; extra == 'plotly'
+  - cairocffi>=1.2.0 ; extra == 'plotting'
+  requires_python: '>=3.6'
+- pypi: https://files.pythonhosted.org/packages/ac/37/3fb69b17599b4c76f75bdf00ea4b78394d3cbf1fc0ba31179861153c239f/python_igraph-0.11.8-py3-none-any.whl
+  name: python-igraph
+  version: 0.11.8
+  sha256: f917c7ed8fbaa08d31bd47e9ca8f68305fc53b294c304190f285392eb3f2dc13
+  requires_dist:
+  - igraph==0.11.8
+  - cairocffi>=1.2.0 ; extra == 'cairo'
+  - matplotlib>=3.3.0 ; platform_python_implementation != 'PyPy' and extra == 'matplotlib'
+  - plotly>=5.3.0 ; extra == 'plotly'
+  - cairocffi>=1.2.0 ; extra == 'plotting'
+  requires_python: '>=3.6'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/python-igraph-0.11.6-py311h6e6d189_0.conda
   sha256: 3445fdc2a22117f328817dd969d348882b8dd1318959a33e505631f44b4e86bc
   md5: 558d6b9cd82bacd56d0e3aeaeb943294

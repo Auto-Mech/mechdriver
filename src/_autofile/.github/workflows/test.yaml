@@ -17,25 +17,16 @@ jobs:
         uses: actions/checkout@v4
 
       # Environment
-      - name: Download environment files
-        run: |
-          wget https://raw.githubusercontent.com/Auto-Mech/amech-dev/main/pyproject.toml -P ..
-          wget https://raw.githubusercontent.com/Auto-Mech/amech-dev/main/pixi.lock -P ..
-          mkdir -p ../src/automech
-          touch ../src/automech/__init__.py
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
 
-      - name: Set up Pixi
-        uses: prefix-dev/setup-pixi@v0.8.1
-        with:
-          manifest-path: ../pyproject.toml
-
-      - name: Pip install
+      - name: Create environment and install AutoChem from source
         run: |
-          pixi run pip install git+https://github.com/Auto-Mech/autochem.git --no-deps
-          pixi run pip install git+https://github.com/Auto-Mech/autoio.git --no-deps
-          pixi run pip install -e . --no-deps
+          uv venv
+          uv pip install git+https://github.com/Auto-Mech/autochem.git
+          uv pip install git+https://github.com/Auto-Mech/autoio.git
 
       # Test
       - name: Test
         run: |
-          pixi run pytest -v
+          uv run pytest -v

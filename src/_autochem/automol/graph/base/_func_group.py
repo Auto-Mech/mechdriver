@@ -112,13 +112,15 @@ def functional_group_dct(gra):
     # Build a dictionary by calling all the functional group functions
     # Certain smaller groups are removed when they are a part of larger groups
     aromatic_grps = aromatic_groups(gra)
-    cpd_grps = cyclopentadiene_groups(gra)
+    benzene_grps = benzene_groups(gra)
+    phenyl_grps = phenyl_groups(gra)
+    c5h5o_grps = c5h5o_groups(gra)
+    cpd_grps = cyclopentadiene_groups(gra, filterlst=c5h5o_grps)
     fulv_grps = fulvene_groups(gra)
     cpdyl_grps = cyclopentadienyl_groups(gra)
     allyl_grps = allyl_groups_lowestspin(gra, filterlst=cpdyl_grps)
     cpdone_grps = cyclopentadienone_groups(gra)
     cptyl_grps = cyclopentenyl_groups(gra)
-    c5h5o_grps = c5h5o_groups(gra)
     furan_grps = furan_groups(gra)
     allene_grps = allene_sites(gra, filterlst=allyl_grps)
     propyne_grps = propyne_sites(gra)
@@ -162,10 +164,8 @@ def functional_group_dct(gra):
     halide_grps = halide_groups(gra)
     thiol_grps = thiol_groups(gra)
     methyl_grps = methyl_groups(gra, filterlst=propyne_grps)
-    benzene_grps = benzene_groups(gra)
-    phenyl_grps = phenyl_groups(gra)
     amine_grps = amine_groups(gra)
-    benzyl_grps = benzyl_groups(gra)
+    benzyl_grps = benzyl_groups(gra, filterlst = benzene_grps + phenyl_grps)
     phenoxy_grps = phenoxy_groups(gra)
 
     # might have to filter it to remove ketone/oh if carbox acids are ther
@@ -752,7 +752,7 @@ def benzene_groups(gra):
     return benz_grps
 
 
-def benzyl_groups(gra):
+def benzyl_groups(gra, filterlst=()):
     """Determine location of benzyl groups as keys of heavy atoms
     Args:
     param gra: molecular graph (kekule)
@@ -760,6 +760,8 @@ def benzyl_groups(gra):
     rtype: tuple(tuple) with non-H keys
     """
     bzyl_grps = tuple()
+    if len(filterlst) > 0:
+        return bzyl_grps
     # multiple kekules to check for resonance
     all_bd_ords = kekules_bond_orders_collated(gra)
     # get sp2 rings
@@ -1019,15 +1021,17 @@ def allyl_groups_lowestspin(gra, filterlst=()):
     return allyl_grps
 
 
-def cyclopentadiene_groups(gra):
+def cyclopentadiene_groups(gra, filterlst=()):
     """Determine location of cyclopentadiene-like groups as keys of heavy atoms
     Args:
     param gra: molecular graph (kekule)
     type gra: tuple(dct)
     rtype: tuple(tuple) with non-H keys
     """
-    cpd_grps = ()
+    cpd_grps = tuple()
 
+    if len(filterlst) > 0:
+        return cpd_grps
     # get 5-memebered rings with at least two double bonds
     cpd_rings = ring_by_size_and_hyb(gra, hyb=2, ring_size=5, accept_notspX=1)
     # needs at least 1 sp3 atom

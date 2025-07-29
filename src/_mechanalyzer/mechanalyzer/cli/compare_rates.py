@@ -46,7 +46,7 @@ def main(
         remove_loners=remove_loners)
 
     # Run the plotter
-    figs = plot_rates.build_plots(
+    figs, _ = plot_rates.build_plots(
         algn_rxn_ktp_dct,
         mech_names=labels,
         ratio_sort=bool(sort_method == 'ratios'))

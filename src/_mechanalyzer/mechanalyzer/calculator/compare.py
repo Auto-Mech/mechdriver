@@ -274,7 +274,7 @@ def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=True):
             if spc2 in already_done:
                 continue  # skip everything below and go to next spc2
             # Check if species are identical
-            spc_same = are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, 
+            spc_same = are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2,
                                     strip_ste=strip_ste)
             # If species are identical
             if spc_same:
@@ -289,13 +289,13 @@ def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=True):
     return rename_instr
 
 
-def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False, 
+def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False,
                  canon_ent=False):
     """ Compares two species dictionaries to see if they are the same
 
         Note: inputting spc1 in pieces for faster implementation in loop
     """
-    
+
     def are_fml_same(fml1, fml2):
         """ Compares two formula dictionaries to see if they are the same
         """
@@ -327,7 +327,7 @@ def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False,
     if ich1 != ich2:
         return False
     return True
-        
+
 
 def get_comb_mech_spc_dct(mech_spc_dct1, mech_spc_dct2):
     """ Combine two mech_spc_dcts by adding to mech_spc_dct1 any spcs unique to mech_spc_dct2
@@ -713,7 +713,7 @@ def write_comparison(algn_dct, dct_type='rxn', buffer=4):
         max_len = writer_util.max_rxn_length(algn_dct)
     else:  # 'therm'
         max_len = writer_util.max_spc_length(algn_dct)
-        
+
     fstr = ''
     for key, mech_items in algn_dct.items():
         if dct_type == 'rxn':
@@ -728,7 +728,7 @@ def write_comparison(algn_dct, dct_type='rxn', buffer=4):
         fstr += '\n'
 
     return fstr
-                
+
 def _read_spc_dct(spc_dct, canon_ent=False):
     """ Reads the relevant info for comparing species
     """
@@ -743,7 +743,7 @@ def _read_spc_dct(spc_dct, canon_ent=False):
     fml = spc_dct['fml']
 
     return ich, mlt, chg, exc, fml
-    
+
 
 def write_ordered_str(algn_dct, dct_type='rxn', comb_mech_spc_dct=None,
                       print_missing=False):
@@ -751,7 +751,7 @@ def write_ordered_str(algn_dct, dct_type='rxn', comb_mech_spc_dct=None,
     """
     def _ordered_mech_spc_dct(algn_therm_dct, comb_mech_spc_dct, print_missing):
         """ Creates a mech_spc_dct in the same order as the aligned thermo
-        """  
+        """
         ordered_mech_spc_dct = {}
         for spc in algn_therm_dct.keys():
             if comb_mech_spc_dct.get(spc) is not None:
@@ -759,17 +759,17 @@ def write_ordered_str(algn_dct, dct_type='rxn', comb_mech_spc_dct=None,
             # If spc not in the combined dct and if print_missing is True
             elif print_missing:  # if spc not in the combined dct and i
                 print(f'{spc} has no info in the mech_spc_dct; skipping...')
-            
+
         return ordered_mech_spc_dct
 
     fstr = ''
     if dct_type == 'rxn':
-        for rxn in algn_dct.keys():    
+        for rxn in algn_dct.keys():
             fstr += f'writer_util.format_rxn_name(rxn)\n'
     elif dct_type == 'therm':
         if comb_mech_spc_dct is None:  # if no mech_spc_dct, simply write spcs
             for spc in algn_dct.keys():
-                fstr += f'{spc}\n' 
+                fstr += f'{spc}\n'
         else:  # if mech_spc_dct given, write a spc.csv
             ordered_mech_spc_dct = _ordered_mech_spc_dct(
                 algn_dct, comb_mech_spc_dct, print_missing=print_missing)
@@ -779,5 +779,5 @@ def write_ordered_str(algn_dct, dct_type='rxn', comb_mech_spc_dct=None,
         raise NotImplementedError(f'dct_type {dct_type} not valid!')
 
     return fstr
-    
+
 

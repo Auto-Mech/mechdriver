@@ -9,7 +9,8 @@ INLINE_BUFFER = 2  # buffer between Arr params and inline comment
 INDENT = 2  # indent for things like TROE, PLOG
 
 
-def replace_rxn_in_cki(ckin_str, rxn_strs_dct, rxn_param_dct_new, rxn_cmts_dct_new={}):
+def replace_rxn_in_cki(ckin_str, rxn_strs_dct, rxn_param_dct_new, 
+                       rxn_cmts_dct_new={}, add_rxns=True):
     """Replace the reactions of ckin_str with parameters identified in rxn_strs_dct
         with the new parameters assigned in rxn_param_dct_new
 
@@ -18,6 +19,7 @@ def replace_rxn_in_cki(ckin_str, rxn_strs_dct, rxn_param_dct_new, rxn_cmts_dct_n
         rxn_strs_dct (dict {rxn: strings}): strings of each reaction in the original file
         rxn_param_dct_new (dict {rxn: params}): reaction parameter dictionary
         rxn_cmts_dct_new (dict {rxn: str}, optional): comments dictionary
+        add_rxns (bool, default = True): add reactions if not present in the original rxn_strs_dct
     """
     # Get the length of the longest reaction name
     max_len = util.max_rxn_length(rxn_param_dct_new)
@@ -29,6 +31,10 @@ def replace_rxn_in_cki(ckin_str, rxn_strs_dct, rxn_param_dct_new, rxn_cmts_dct_n
         ckin_str_rxn = single_rxn(
             rxn, params, cmts_dct=cmts_dct, max_len=max_len, rxnkeys=rxn_strs_dct.keys()
         )
+        # remove extra new lines
+        ckin_str_rxn = '\n'.join([ckstr for ckstr in ckin_str_rxn.split('\n')
+                                  if ckstr.strip() != ''])
+
         if rxn in rxn_strs_dct.keys():
             # get the position of the first occurrence of the reaction
             rxn_strs = rxn_strs_dct[rxn]
@@ -40,7 +46,11 @@ def replace_rxn_in_cki(ckin_str, rxn_strs_dct, rxn_param_dct_new, rxn_cmts_dct_n
             )
             # delete strings from initial file
             for rxn_str in rxn_strs:
-                ckin_str = ckin_str.replace(rxn_str, "")
+                if rxn_str not in ckin_str:
+                    print('*Warning- was unable to find this string in file,' \
+                    'probably wrong formatting: \n {}'.format(rxn_str))
+                    print('reaction will be written twice in the final CKI, check!!!')
+                ckin_str = ckin_str.replace(rxn_str, "!DELETE")
 
             # convert connector to => if necessary and print warning
             if connector == "=>" and "=>" not in ckin_str_rxn:
@@ -56,8 +66,11 @@ def replace_rxn_in_cki(ckin_str, rxn_strs_dct, rxn_param_dct_new, rxn_cmts_dct_n
             ckin_str_lst = ckin_str.split("\n")
             ckin_str_lst.insert(idx, ckin_str_rxn)
             # reconstruct string
-            ckin_str = "\n".join(ckin_str_lst)
-        else:  # add the reaction if not present
+            #ckin_str = "\n".join(ckin_str_lst)
+            ckin_str = "\n".join([ckin_str for ckin_str in ckin_str_lst
+                                  if ckin_str.strip() != "!DELETE"])
+
+        elif add_rxns:  # add the reaction if not present
             print(
                 "Using replace function, but rxn {} \
                 was not present before- check".format(
@@ -80,7 +93,7 @@ def write_rxn_param_dct(rxn_param_dct, rxn_cmts_dct=None, sortrxns=False):
     :param rxn_cmts_dct: comments for all reactions
     :type rxn_cmts_dct: dict {rxn: cmts_dct}
     :param sortrxns: reorder dict keys alphabetically
-                    (otherwise, order may change every time if other operations have been done before)
+    (otherwise, order may change every time if other operations have been done before)
     :type sortrxns: bool
     """
     if sortrxns:
@@ -118,7 +131,8 @@ def single_rxn(rxn, params, cmts_dct=None, max_len=45, rxnkeys=[]):
     :type cmt_dct: dict {'header': cmt, 'inline': cmt, 'footer': cmt}
     :param max_len: length of the longest reaction name in the mechanism
     :type max_len: int
-    :param rxnkeys: all keys of the reaction dictionary to be fitted (needed to assing "=" or "=>" sign in header)
+    :param rxnkeys: all keys of the reaction dictionary to be fitted
+    (needed to assing "=" or "=>" sign in header)
     :type rxnkeys: list(tuple)
     :return ckin_str: Chemkin-formatted string describing the reaction
     :rtype: str
@@ -593,7 +607,7 @@ def _misc_troe_cheb(header, params, newline=False, val="exp"):
     :return params_str: a string containing the formatted params
     :rtype: str
     """
-
+    val_str = ""
     if val == "exp":
         val_str = "{0:12.3E}"
     elif val == "float":

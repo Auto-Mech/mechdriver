@@ -37,7 +37,7 @@ def input_file(nsamp, smin, smax, ranseed=None,
     if ranseed is not None:
         assert isinstance(ranseed, int)
     else:
-        ranseed = randrange(1.0e7, 9.9e7)
+        ranseed = randrange(int(1.0e7), int(9.9e7))
 
     assert isinstance(nsamp, int)
     assert target_xyz_name.endswith('.xyz')

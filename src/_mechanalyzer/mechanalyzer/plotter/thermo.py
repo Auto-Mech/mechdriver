@@ -4,15 +4,16 @@
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy
+import pandas as pd
 import math
-
+from chemkin_io.writer import format_rxn_name
 
 LINES = ['-', '--', '-.', ':']  # for plot formatting
 SORT_DCT = {'h': 1, 'cp': 2, 's': 3, 'g': 4, 'lnq': 5}
 
 
-def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, 
-                sort_method='h', sort_temp=None):
+def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None,
+                sort_method='h', sort_temp=None, diff_dg_threshold=0.):
     """ Builds plots of an algn_spc_therm_dct, with one species per page.
         Also plots differences relative to other mechs.
 
@@ -28,6 +29,8 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None,
         :type sort_method: None or str
         :param sort_temp:
         :type sort_temp:
+        :param diff_dg_threshold: difference in dg above which to plot [kcal/mol]
+        :type diff_dg_threshold: float
         :return figs: list of MatPlotLib figure objects
         :rtype: list [fig1, fig2, ...]
     """
@@ -49,10 +52,10 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None,
 
     # Get the algn_spc_diff_dct
     algn_spc_diff_dct = get_algn_spc_diff_dct(algn_spc_therm_dct)
-    for spc in algn_spc_diff_dct:
-        if algn_spc_diff_dct[spc][1] is None:
-            continue
-        temps, h_t, cp_t, s_t, g_t, lnq_t = algn_spc_diff_dct[spc][1]
+    # for spc in algn_spc_diff_dct:
+        # if algn_spc_diff_dct[spc][1] is None:
+        #     continue
+        # temps, h_t, cp_t, s_t, g_t, lnq_t = algn_spc_diff_dct[spc][1]
         #sarahs prints
         #for (temp, g) in zip(temps, g_t):
         #    if temp > 650 and temp < 750:
@@ -67,6 +70,12 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None,
     figs = []
     for spc, therm_arrays in algn_spc_therm_dct.items():
         diff_arrays = algn_spc_diff_dct[spc]
+        # plot only if difference in DG above 2 kcal/mol
+        #print(diff_arrays)
+        maxdiff_dg = max(abs(diff_arrays[1][4]/1000))
+        #print(maxdiff_dg)
+        if maxdiff_dg < diff_dg_threshold:
+            continue
         if spc_dct is not None:
             if spc_dct.get(spc) is not None:
                 smiles = spc_dct.get(spc).get('smiles')
@@ -79,8 +88,33 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None,
         fig = plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names)
         figs.append(fig)
 
-    return figs, algn_spc_therm_dct
+    return figs, algn_spc_therm_dct, algn_spc_diff_dct
 
+def build_plots_byclass(class_rxn_therm_dct):
+    """ Builds plots of an class_rxn_therm_dct, with reaction class per page.
+        Also plots differences relative to other reactions.
+
+        :param class_rxn_therm_dct: aligned dct with thermo for each rxn
+        :type class_rxn_therm_dct: dct {classname: {'therm_rxn_dct': {rxn1: [therm1], rxn2: [therm2],..},
+            'therm_rxn_diff_dct': {rxn1: [therm1], rxn2: [therm2],..},
+
+        :return figs: list of MatPlotLib figure objects
+        :rtype: list [fig1, fig2, ...]
+    """
+
+    # Loop over each spc and plot
+    figs = []
+
+    for rxnclass, therm_dcts in class_rxn_therm_dct.items():
+        names = [format_rxn_name(rxn) for rxn in therm_dcts['therm_rxn_dct'].keys()]
+        therm_arrays = list(therm_dcts['therm_rxn_dct'].values())
+        diff_arrays = list(therm_dcts['therm_rxn_diff_dct'].values())
+
+        fig, axs = initialize_fig_and_axes(rxnclass)
+        fig = plot_single_spc(therm_arrays, diff_arrays, fig, axs, names)
+        figs.append(fig)
+
+    return figs
 
 def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
     """ Plot thermo values of a single species from all mechanisms, as well as
@@ -130,24 +164,35 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
                         diff_ydata = diff_array[idx + 1]
                     else:  # otherwise, divide by 1000
                         diff_ydata = diff_array[idx + 1] / 1000
-                    axs[(idx * 2) + 1].plot(temps, diff_ydata, label=_label, 
+                    axs[(idx * 2) + 1].plot(temps, diff_ydata, label=_label,
                                             color=_color, linestyle=_line)
                     # Set the limits to prevent weird scaling
-                    if max(diff_ydata) - min(diff_ydata) < 1:  # if range < 1
-                        avg_val = (max(diff_ydata) + min(diff_ydata)) / 2
-                        axs[(idx * 2) + 1].set_ylim((
-                            avg_val - 1, avg_val + 1))
+                    axs[(idx * 2) + 1].set_ylim(min(diff_ydata), max(diff_ydata))
+                    # if max(diff_ydata) - min(diff_ydata) < 1:  # if range < 1
+                    #    avg_val = (max(diff_ydata) + min(diff_ydata)) / 2
+                    #    axs[(idx * 2) + 1].set_ylim((
+                    #        avg_val - 1, avg_val + 1))
 
     # Do some formatting
-    for idx in range(4):
-        axs[(idx * 2)].legend(fontsize=12, loc='upper right')
+    # one legend is enough
+    axs[4].legend(fontsize=11 - 4*(len(mech_names)>4),loc='upper right')
+    # for idx in range(4):
+    #    axs[(idx * 2)].legend(fontsize=12 - 4*(len(mech_names)>4),loc='best')
     if diffs_plotted:  # prevents annoying warning about legends being empty
+        # axs[1].legend(fontsize=12 - 4*(len(mech_names)>4),loc='upper right')
+        # plot shaded area
+        factor = 2
         for idx in range(4):
-            axs[(idx * 2) + 1].legend(fontsize=12, loc='upper right')
+            axs[(idx * 2) + 1].fill_between(temps, numpy.array([-factor]*len(temps)),
+                                numpy.array([factor]*len(temps)), alpha=0.1, color='k')
+
+        # for idx in range(4):
+        #     axs[(idx * 2) + 1].legend(fontsize=12, loc='upper right')
     # If no differences were plotted, plot a white line at 0 to get axis labels
     else:
         for therm_array in therm_arrays:
             if therm_array is not None:  # find an existent therm array
+                blanks = numpy.zeros_like(therm_array[0])
                 for idx in range(4):
                     blanks = numpy.zeros_like(therm_array[0])
                     axs[(idx * 2) + 1].plot(therm_array[0], blanks, color='w')
@@ -304,7 +349,7 @@ def initialize_fig_and_axes(spc, smiles=None, inchi=None):
         :type inchi: str
     """
     fig = plt.figure(figsize=(8.5, 11))
-    fig.suptitle(spc, x=0.5, y=0.94, fontsize=20)
+    fig.suptitle(spc, x=0.5, y=0.94, fontsize=16)
     rows = 7
     columns = 2
     grid = plt.GridSpec(rows, columns, wspace=0.3, hspace=0.12)
@@ -335,10 +380,11 @@ def initialize_fig_and_axes(spc, smiles=None, inchi=None):
 
     # Add some annotations
     if smiles is None:
-        smiles = 'not specified'
+        smiles = ''
     if inchi is None:
-        inchi = 'not specified'
-    footnotes = f'SMILES: {smiles}\nInChi: {inchi}'
+        inchi = ''
+    # footnotes = f'SMILES: {smiles}\nInChi: {inchi}'
+    footnotes = f'{smiles} \n{inchi}'
     header = 'Large plots: values\nSmall plots: residuals'
     plt.figtext(0.5, 0.05, footnotes, fontsize=10, va="top", ha="center")
     plt.figtext(0.02, 0.98, header, fontsize=8, va="top", ha="left")

@@ -52,6 +52,7 @@ SPCS_GRPS = {
     'C9H7O': {'C5O-RSR': ((4, 5, 8, 7, 6, 9),) ,},
     'C5H4O': {'C5O-M': ((0, 1, 3, 4, 2, 5),) ,},
     'OC6H4CH3': {'A1O-RSR': ((1, 2, 4, 6, 5, 3, 7),) ,
+                 'A1O,CH3-RSR': ((1, 2, 4, 6, 5, 3, 7, 0),),
             },
     'HOC6H4CH3': {
         'A1-M': ((1, 2, 5, 4, 6, 3),) ,
@@ -108,6 +109,8 @@ def test_super_functional_group_dct():
         fgrps.assign_grps(gra)
         for key, val in fgrps.sup_grps.items():
             if len(val) > 0:
+                if key not in DCT.keys():
+                    print(key, val)
                 assert val == DCT[key]
 
             

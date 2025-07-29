@@ -3,7 +3,7 @@ REACTIONS
 XYLENE(+M)=RXYLENE+H(+M)                                                                  +7.00000E+015 +1.70000E-001 +9.11680E+004 ! LPM as tol ; tol is 5.6 !would be 2.78           !S.J. Klippenstein Proceedings of the Combustion Institute 31.1 (2007): 221-229.
 LOW /                                                                                     +1.00000E+098 -2.28550E+001 +9.98820E+004/
 TROE /                                                                      +6.547194E-02 +1.511253E+01 +9.999996E+09  7.596123E+07/ 
- H2 / 2.0 / H2O / 6.0 / CH4 / 2.0 / CO / 1.5 / CO2 / 2.0 / C2H6 / 3.0 / !
+    H2 / 2.0 / H2O / 6.0 / CH4 / 2.0 / CO / 1.5 / CO2 / 2.0 / C2H6 / 3.0 / !
 !#[ENDREACTIONCLASS][A1,CH3-M][BONDFISSION_CH]
 !#[REACTIONCLASS][A1,CH3-M][BONDFISSION_CC] 
 XYLENE(+M)=CH3+CH3C6H4(+M)                                                                +3.90000E+027 -3.16000E+000 +1.07447E+005 ! LPM as tol, x2 (N of sites)   !S.J. Klippenstein Proceedings of the Combustion Institute 31.1 (2007): 221-229.

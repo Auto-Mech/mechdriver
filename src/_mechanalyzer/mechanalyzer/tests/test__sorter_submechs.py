@@ -1,7 +1,6 @@
 """ test mechanalyzer.parser.sort for different mechanisms in 'data/'
     using different sorting options
 """
-
 import os
 import tempfile
 import numpy as np
@@ -18,7 +17,7 @@ TMP_OUT = tempfile.mkdtemp()
 # Set types for parsing mechanisms
 SPC_TYPE = 'csv'
 MECH_TYPE = 'chemkin'
-    
+
 def test__sort_submech():
     """ submech with and without "singlespecies" option
     """
@@ -62,8 +61,8 @@ def test__sort_submech():
 
     for rxn in param_dct_sort.keys():
         assert cmts_dct[rxn]['cmts_inline'] == results[rxn]
-    
-    # now sort with the singlespecies option active    
+
+    # now sort with the singlespecies option active
     results = [
         [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),
          '! pes.subpes.NR.rxntype  1.1.1.Decomposition'],
@@ -102,14 +101,14 @@ def test__sort_submech():
 
     for rxn in param_dct_sort.keys():
         assert cmts_dct[rxn]['cmts_inline'] == results[rxn]
-    
+
 def test__sortby_submech_deletelarge():
     """ test mechanalyzer.parser.sort
 
         sort by fuel submechanism: extract reactions of
         fuel, fuel radicals, R+O2, R+O4
         and exclude all reactions above a given stoichiometry
-        
+
         rests show different options
     """
 
@@ -854,25 +853,25 @@ def test__sortby_submech_deletelarge():
 
     param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     check_results = {}
     for rxn in param_dct_sort.keys():
         check_results[rxn] =  cmts_dct[rxn]['cmts_inline'].split('submech_deletelarge')[1].strip()
 
     check_results = dict(check_results)
     for key, val in results.items():
-        assert val == check_results[key]  
+        assert val == check_results[key]
 
 ############ COMMENTED TO SPEED UP TESTS
-    # option 2: do not sort according to submech_deletelarge, but e.g., according to pes. # 
+    # option 2: do not sort according to submech_deletelarge, but e.g., according to pes. #
     # the list of reactions should be the same though
     # isolate_spc = ['CH4', 'deleteabove C2O']
     # sort_lst = ['pes', 0]
     # param_dct_sort2, _, _, _, _ = sorter.sorted_mech(
     #     spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     # assert all(key in param_dct_sort.keys() for key in param_dct_sort2.keys())
-  ############ COMMENTED TO SPEED UP TESTS  
+  ############ COMMENTED TO SPEED UP TESTS
     # option 2b: does not specify the stoichiometry, but classifies according to submech_deletelarge.
     # it will give the same result as +1C, +2O, which would be 'deleteabove C2H4O2' i.e., the default subfuel options.
     examples_keys_tocheck = [[(('SC2H4OH',), ('PC2H4OH',), (None,)) ,'CORE'],
@@ -1028,15 +1027,15 @@ def test__sortby_submech_deletelarge():
         [(('AC3H5OCH2',), ('C2H3COCH3','H'), (None,)) ,'SUPFUEL'],
 ]
     examples_keys_tocheck = dict(examples_keys_tocheck)
-    
+
     isolate_spc = ['CH4'] # equivalent to ['CH4', 'deleteabove C2H4O2']
     sort_lst = ['submech_deletelarge', 0]
     param_dct_sort2b, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     assert all(key in param_dct_sort2b.keys() for key in examples_keys_tocheck.keys())
-    assert all(key not in param_dct_sort.keys() for key in examples_keys_tocheck.keys())              
-            
+    assert all(key not in param_dct_sort.keys() for key in examples_keys_tocheck.keys())
+
     # option 4: same deleteabove C2H4O2 as option2b, but without fuel specification and submech option:
     # it will exclude some of the reactions of the fuel similar to deleteabove C2O, but fewer
     checks_in_4_and_2b_but_not_in_1 = [(('CH', 'CO'), ('HCCO',), ('+M',)),
@@ -1120,15 +1119,15 @@ def test__sortby_submech_deletelarge():
     sort_lst = ['pes', 0]
     param_dct_sort4, _, _, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     for key in param_dct_sort4.keys(): # compare with less restrictive
         assert key in param_dct_sort2b.keys()
     for key in param_dct_sort.keys(): #compare with more restrictive
         assert key in param_dct_sort4.keys()
-    
+
     assert all(key in param_dct_sort2b.keys() and key not in param_dct_sort.keys() for key in checks_in_4_and_2b_but_not_in_1)
     assert all(key in param_dct_sort4.keys() and key not in param_dct_sort.keys() for key in checks_in_4_and_2b_but_not_in_1)
-    
+
 def test__sortby_submech_keepsubfuel():
     """ test mechanalyzer.parser.sort
 
@@ -1187,26 +1186,26 @@ def test__sortby_submech_keepsubfuel():
 
     param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     check_results = {}
     for rxn in param_dct_sort.keys():
         check_results[rxn] =  cmts_dct[rxn]['cmts_inline'].split('submech_keepsubfuel')[1].strip()
 
     check_results = dict(check_results)
     for key, val in must_be_in_results.items():
-        assert val == check_results[key]  
+        assert val == check_results[key]
 
 ############ COMMENTED TO SPEED UP TESTS
-    # option 2: do not sort according to submech_keepsubfuel, but e.g., according to pes. # 
+    # option 2: do not sort according to submech_keepsubfuel, but e.g., according to pes. #
     # the list of reactions should be the same though
     # isolate_spc = ['C2H4', 'keepbelow C2H6O2']
     # sort_lst = ['pes', 0]
     # param_dct_sort2, _, _, _, _ = sorter.sorted_mech(
     #     spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     # for key in param_dct_sort2.keys():
     #     assert key in param_dct_sort
-    
+
 ############ COMMENTED TO SPEED UP TESTS
     # option 2b: does not specify the keepbelow, but classifies according to submech_keepsubfuel.
     # it will give the same result as +2H, +2O are the default subfuel options.
@@ -1214,10 +1213,10 @@ def test__sortby_submech_keepsubfuel():
     # sort_lst = ['submech_keepsubfuel', 0]
     # param_dct_sort2b, _, _, _, _ = sorter.sorted_mech(
     #     spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     # for key in param_dct_sort2b.keys():
     #     assert key in param_dct_sort
-            
+
     # option 3: only specify the stoichiometry, so does NOT filter according to the fuel.
     # all rxns will be classified as "SUBFUEL". there won't be as many reactions as those kept above,
     #because many are those of the fuel submech.
@@ -1281,27 +1280,27 @@ def test__sortby_submech_keepsubfuel():
         (('C2H5CHCO', 'O'), ('C3H6', 'CO2'), (None,)),
         (('AC3H5OCH2',), ('C3H6', 'HCO'), (None,)),
     ]
-    
+
     isolate_spc = ['keepbelow C2H6O2']
     sort_lst = ['submech_keepsubfuel', 0]
     param_dct_sort3, _, _, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     assert param_dct_sort3 != param_dct_sort
     for key in examples_keys_tocheck:
         assert key in param_dct_sort.keys()
         assert key not in param_dct_sort3.keys()
-        
-############ COMMENTED TO SPEED UP TESTS      
+
+############ COMMENTED TO SPEED UP TESTS
     # option 4: as above, but does not specify classification
     # isolate_spc = ['keepbelow C2H6O2']
     # sort_lst = ['pes', 0]
     # param_dct_sort4, _, _, _, _ = sorter.sorted_mech(
     #     spc_str, mech_str, isolate_spc, sort_lst)
-    
+
     # for key in param_dct_sort4.keys():
-    #     assert key in param_dct_sort3      
-        
+    #     assert key in param_dct_sort3
+
 def test__sortby_submech_class():
     """ test mechanalyzer.parser.sort
 
@@ -1440,13 +1439,13 @@ def test__filter_pesgroups():
     """
     results = [
         {'grp': 1, 'idxs': ['113:8', '113:9', '113:11', '111:1'], 'peds': [['C4H8-1+H=C4H71-3+H2'], ['C4H8-1+H=C4H71-4+H2'], [
-            'C4H8-2+H=C4H72-2+H2'], []], 'hot': [[], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']], 'modeltype': 'rovib_dos'}, 
-        {'grp': 2, 'idxs': ['121:6', '111:1'], 'peds': [['C4H8-1+O=C4H71-4+OH'], []], 'hot': [[], ['C4H71-4']], 'modeltype': 'rovib_dos'}, 
+            'C4H8-2+H=C4H72-2+H2'], []], 'hot': [[], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']], 'modeltype': 'rovib_dos'},
+        {'grp': 2, 'idxs': ['121:6', '111:1'], 'peds': [['C4H8-1+O=C4H71-4+OH'], []], 'hot': [[], ['C4H71-4']], 'modeltype': 'rovib_dos'},
         {'grp': 3, 'idxs': ['122:21', '122:22', '122:23', '122:24', '111:1'], 'peds': [['C4H8-1+OH=C4H71-3+H2O'], ['C4H8-1+OH=C4H71-4+H2O'], [
-            'C4H8-2+OH=C4H71-3+H2O'], ['C4H8-2+OH=C4H72-2+H2O'], []], 'hot': [[], [], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']], 
-         'modeltype': 'rovib_dos'}, 
-        {'grp': 4, 'idxs': ['153:7', '153:9', '111:1'], 'peds': [['C4H8-1+CH3=C4H71-4+CH4'], ['C4H8-2+CH3=C4H72-2+CH4'], []], 
-         'hot': [[], [], ['C4H71-4', 'C4H72-2']], 'modeltype': 'rovib_dos'}, 
+            'C4H8-2+OH=C4H71-3+H2O'], ['C4H8-2+OH=C4H72-2+H2O'], []], 'hot': [[], [], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']],
+         'modeltype': 'rovib_dos'},
+        {'grp': 4, 'idxs': ['153:7', '153:9', '111:1'], 'peds': [['C4H8-1+CH3=C4H71-4+CH4'], ['C4H8-2+CH3=C4H72-2+CH4'], []],
+         'hot': [[], [], ['C4H71-4', 'C4H72-2']], 'modeltype': 'rovib_dos'},
         {'grp': 5, 'idxs': ['161:6', '111:1'], 'peds': [['C4H8-1+CH3O=C4H71-4+CH3OH'], []], 'hot': [[], ['C4H71-4']], 'modeltype': 'rovib_dos'}
         ]
 
@@ -1464,7 +1463,7 @@ def test__filter_pesgroups():
     sort_lst = ['submech_prompt', 0]
 
     _, _, _, pes_groups, _ = sorter.sorted_mech(
-        spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, dct_flt_grps={'DH':30., 'lookforpromptchains': 0}) # 
+        spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, dct_flt_grps={'DH':30., 'lookforpromptchains': 0}) #
 
     assert results == pes_groups
 
@@ -1498,6 +1497,6 @@ if __name__ == '__main__':
     test__filter_pesgroups() #165 s
     test__sortby_submech_class() #34 s
 
-  
-    
+
+
 
