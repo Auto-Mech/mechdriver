@@ -11,7 +11,7 @@ from mechlib import filesys
 
 
 def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
-                   id_missing=True, re_id=False):
+                   id_missing=True, re_id=False, canonical=True):
     """ For a given reaction, attempt to identify its reaction class obtain
         the corresponding Z-Matrix reaction object.
 
@@ -51,7 +51,8 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
     if status == 'MISSING':
         if id_missing:
             print('    No info found. Identifying class...')
-            zrxns, zmas = _id_reaction(rxn_info, ini_thy_info, save_prefix)
+            zrxns, zmas = _id_reaction(
+                rxn_info, ini_thy_info, save_prefix, canonical=canonical)
             status = 'FOUND' if zrxns is not None else 'MISSING-SKIP'
         else:
             status = 'MISSING-ADD'
@@ -69,7 +70,7 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
     return zrxns, zmas, rclasses, status
 
 
-def _id_reaction(rxn_info, thy_info, save_prefix):
+def _id_reaction(rxn_info, thy_info, save_prefix, canonical=True):
     """ Identify the reaction and build the object
 
         :param rxn_info: reaction info object
@@ -79,7 +80,7 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
 
     # Check the save filesystem for the reactant and product geometries
     rct_geos, prd_geos, rct_paths, prd_paths = reagent_geometries(
-        rxn_info, thy_info, save_prefix)
+        rxn_info, thy_info, save_prefix, canonical=canonical)
     # Identify reactants and products from geoms or InChIs, depending
     # We automatically assess and add stereo to the reaction object, as needed
     if any(rct_geos) and any(prd_geos):
@@ -202,7 +203,7 @@ def set_reaction_direction(reacs, prods, rxn_info,
 
 
 # Functions for the exothermicity check
-def reagent_geometries(rxn_info, thy_info, save_prefix):
+def reagent_geometries(rxn_info, thy_info, save_prefix, canonical=True):
     """ Identify the reaction and build the object
 
         :param rxn_info: reaction info object
@@ -220,13 +221,19 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
 
     # Check the save filesystem for the reactant and product geometries
     rct_info = rinfo.rgt_info(rxn_info, 'reacs')
-    canon_enant_rct_info = _canonical(rct_info)
     prd_info = rinfo.rgt_info(rxn_info, 'prods')
-    canon_enant_prd_info = _canonical(prd_info)
-    _rcts_cnf_fs = filesys.rcts_cnf_fs(
-        canon_enant_rct_info, thy_info, None, save_prefix)
-    _prds_cnf_fs = filesys.rcts_cnf_fs(
-        canon_enant_prd_info, thy_info, None, save_prefix)
+    if canonical:
+        canon_enant_rct_info = _canonical(rct_info)
+        canon_enant_prd_info = _canonical(prd_info)
+        _rcts_cnf_fs = filesys.rcts_cnf_fs(
+            canon_enant_rct_info, thy_info, None, save_prefix)
+        _prds_cnf_fs = filesys.rcts_cnf_fs(
+            canon_enant_prd_info, thy_info, None, save_prefix)
+    else:
+        _rcts_cnf_fs = filesys.rcts_cnf_fs(
+            rct_info, thy_info, None, save_prefix)
+        _prds_cnf_fs = filesys.rcts_cnf_fs(
+            prd_info, thy_info, None, save_prefix)
 
     # If min cnfs found for all rcts and prds, read the geometries
     rct_geos, prd_geos = (), ()
@@ -236,15 +243,17 @@ def reagent_geometries(rxn_info, thy_info, save_prefix):
     ):
         for idx, (_, cnf_save_fs, min_locs, _) in enumerate(_rcts_cnf_fs):
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
-            if rct_info[idx] != canon_enant_rct_info[idx]:
-                geo = automol.geom.reflect_coordinates(geo)
+            if canonical:
+                if rct_info[idx] != canon_enant_rct_info[idx]:
+                    geo = automol.geom.reflect_coordinates(geo)
             path = cnf_save_fs[-1].file.geometry.path(min_locs)
             rct_geos += (geo,)
             rct_paths += (path,)
         for idx, (_, cnf_save_fs, min_locs, _) in enumerate(_prds_cnf_fs):
             geo = cnf_save_fs[-1].file.geometry.read(min_locs)
-            if prd_info[idx] != canon_enant_prd_info[idx]:
-                geo = automol.geom.reflect_coordinates(geo)
+            if canonical:
+                if prd_info[idx] != canon_enant_prd_info[idx]:
+                    geo = automol.geom.reflect_coordinates(geo)
             path = cnf_save_fs[-1].file.geometry.path(min_locs)
             prd_geos += (geo,)
             prd_paths += (path,)

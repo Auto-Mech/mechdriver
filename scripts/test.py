@@ -133,12 +133,12 @@ PBS_SCRIPT = """
 #PBS -q {queue} -A {account}
 
 hq worker start \\
-    --idle-timeout "10m" \\
+    --idle-timeout "1h" \\
     --manager "pbs" \\
     --cpus "{cpus:d}" \\
     --resource "mem=sum({mem_mib})" \\
     --on-server-lost "stop" \\
-    --time-limit "1h"
+    --time-limit "2h"
 
 """
 

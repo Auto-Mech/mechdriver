@@ -22,6 +22,7 @@ SPC_VAL_DCT = {
     'charge': ((int,), (), None),
     'inchi': ((str,), (), None),
     'canon_enant_ich': ((str,), (), None),
+    'canonical': ((bool,), (), True),
     'inchikey': ((str,), (), None),
     'smiles': ((str,), (), None),
     'exc_flag': ((int,), (), 0),
@@ -86,7 +87,8 @@ def species_dictionary(
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 
     # Merge all of the species inputs into a dictionary
-    mod_spc_dct, glob_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct, act_dct)
+    mod_spc_dct, glob_dct = modify_spc_dct(
+        spc_dct, dat_dct, geo_dct, act_dct, canonical=run_dct['canonical'])
     # Assess if the species.dat information is valid
     for name, dct in mod_spc_dct.items():
         # last comment breaks since TS only partially built at this stage
@@ -102,7 +104,7 @@ def species_dictionary(
 
 
 # Format spc
-def modify_spc_dct(spc_dct, amech_dct, geo_dct, act_dct):
+def modify_spc_dct(spc_dct, amech_dct, geo_dct, act_dct, canonical=True):
     """ Modify the species dct using input from the additional AMech file
     """
 
@@ -162,6 +164,7 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct, act_dct):
     for spc in spc_dct:
         spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
         spc_dct[spc]['geo'] = geo_dct.get(spc, None)
+        spc_dct[spc]['canonical'] = canonical
 
     # Perform similar conversions where needed for glob dct
     if 'hind_inc' in glob_dct:
@@ -340,10 +343,12 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     # Unpack the reaction object
     chnl_idx, (reacs, prods) = reaction
-
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
+    
+    canonical = True if any(
+        spc_dct[spc]['canonical'] == True for spc in reacs + prods) else False 
     canon_rxn_info = rxn_info
-    if not automol.chi.is_canonical_enantiomer_reaction(
+    if canonical and not automol.chi.is_canonical_enantiomer_reaction(
             rxn_info[0][0], rxn_info[0][1]):
         print('flipping enantiomer reaction to canonical form...')
         canon_rxn_info = (automol.chi.canonical_enantiomer_reaction(
@@ -351,7 +356,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
     print(f'\n  Preparing TS for PES-Channel {pes_idx+1}-{chnl_idx+1} : '
           f'{rct_str} = {prd_str}')
-
+    print('tmp print parser/spc', canon_rxn_info)
     # Set the reacs and prods for the desired direction
     reacs_forw, prods_forw = rxnid.set_reaction_direction(
         reacs, prods, canon_rxn_info,
@@ -365,7 +370,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     # hbond_cutoffs = spc_dct[reacs[0]]['hbond_cutoffs']
     zrxns, zmas, rclasses, status = rxnid.build_reaction(
         canon_rxn_info, ini_thy_info, zma_locs, save_prefix,
-        id_missing=id_missing, re_id=re_id)
+        id_missing=id_missing, re_id=re_id, canonical=canonical)
     # , hbond_cutoffs=hbond_cutoffs)
 
     # Could reverse the spc dct
@@ -419,6 +424,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
             }
             if sorted(ts_reac_ichs[0]) != sorted(reac_ichs) and sorted(ts_reac_ichs[1]) != sorted(reac_ichs):
                 print('Warning: no stereo saved in filesys. Checking rxn direction w/o stereo ... ')
+                print(sorted(ts_reac_ichs[0]),  sorted(reac_ichs), sorted(ts_reac_ichs[1]))
                 ts_reac_ichs = list(ts_reac_ichs)
                 ts_reac_ichs[0] = tuple([automol.chi.without_stereo(ich) for ich in ts_reac_ichs[0]])
                 ts_reac_ichs[1] = tuple([automol.chi.without_stereo(ich) for ich in ts_reac_ichs[1]])
