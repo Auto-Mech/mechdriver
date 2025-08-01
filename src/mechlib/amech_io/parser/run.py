@@ -44,7 +44,7 @@ RUN_INP_VAL_DCT = {
     'print_debug': ((bool,), (True, False), False),
     'run_prefix': ((str,), (), None),
     'save_prefix': ((str,), (), None),
-    'canonical': ((bool,), (True, False), False)
+    'canonical': ((bool,), (True, False), True)
 }
 
 # HANDLE TASK KEYS
