@@ -98,7 +98,7 @@ def orthogonalize(
     :param xyz1: 3D vector
     :param xyz2: 3D vector
     :param normalize: Whether to normalize the result
-    :return: The orthoganol component.
+    :return: The orthogonal component.
     """
     require_vector_like(xyz1)
     require_vector_like(xyz2)
