@@ -80,6 +80,7 @@ from ._0core import transform
 from ._0core import transform_by_matrix
 from ._0core import reflect_coordinates
 from ._0core import shift_atom_position
+from ._0core import align_to_atoms
 # comparison functions
 # # properties used for comparisons
 from ._1comp import coulomb_spectrum
@@ -172,6 +173,7 @@ __all__ = [
     'transform_by_matrix',
     'reflect_coordinates',
     'shift_atom_position',
+    'align_to_atoms',
     # comparison functions
     # # properties used for comparisons
     'coulomb_spectrum',

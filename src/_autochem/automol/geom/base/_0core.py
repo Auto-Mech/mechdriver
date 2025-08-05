@@ -1293,3 +1293,57 @@ def shift_atom_position(geo, idx1, idx2):
     geo_move = tuple(tuple(x) for x in geo)
 
     return geo_move
+
+
+def align_to_atoms(geo, idxs: Sequence[int], oop_idxs: tuple[int, int] | None = None):
+    """Align geometry to a set of 3 atoms.
+
+    The geometry is aligned to 3 atoms specified by `idxs` as follows:
+        Origin: Position of atom 1
+        X axis: Unit vector along atom 1 -> atom 2
+        Y axis: Unit vector toward atom 1 -> atom 3, perpendicular to X
+        Z axis: Unit vector completing a right-handed coordinate system (X cross Y)
+
+    Optionally, one can specify an additional pair of atoms, `oop_idxs`, to
+    define the out-of-plane direction, reflecting the geometry if necessary. If
+    atom 1 -> atom 2 does not point out-of-plane (along the +Z Axis) for this
+    pair, then the geometry will be reflected through the XY plane so that it
+    does.
+
+    :param geo: Geometry
+    :param idxs: Indices of up to 3 atoms for alignment
+    :param oop_idxs: Indices of 2 atoms for reflection
+    :return: Geometry
+    """
+    if not 1 <= len(idxs) <= 4:
+        msg = f"Expected 1-4 indices, but got {len(idxs)}: {idxs}"
+        raise ValueError(msg)
+
+    # 0. Translate to origin
+    origin, *axes = map(numpy.array, coordinates(geo, idxs=idxs))
+    geo = translate(geo, -origin)
+    axes = [v - origin for v in axes]
+
+    # 1. Define x-axis from atom 1
+    x_axis = axes.pop(0) if axes else [1, 0, 0]
+    x_axis = util.vector.unit_norm(x_axis)
+
+    # 2. Define y-axis from atom 2
+    y_axis = axes.pop(0) if axes else util.vector.arbitrary_unit_perpendicular(x_axis)
+    y_axis = util.vector.orthogonalize(x_axis, y_axis, normalize=True)
+
+    # 3. Define z-axis from atom 3
+    z_axis = util.vector.unit_perpendicular(x_axis, y_axis)
+
+    # Transform into alignment
+    change_basis = numpy.column_stack((x_axis, y_axis, z_axis)).T
+    geo = transform_by_matrix(geo, mat=change_basis)
+
+    # If requested, reflect to match out-of-plane vector
+    if oop_idxs is not None:
+        pos1, pos2 = map(numpy.array, coordinates(geo, idxs=oop_idxs))
+        z_comp = numpy.vdot(pos2 - pos1, [0, 0, 1])
+        if z_comp < 0:
+            geo = reflect_coordinates(geo, axes=["z"])
+
+    return geo
