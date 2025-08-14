@@ -3,6 +3,7 @@ authors = [{name = "Andreas Copan", email = "avcopan@gmail.com"}]
 name = "mechdriver"
 requires-python = ">= 3.11"
 version = "2025.8.13"
+dependencies = ["hyperqueue"]
 
 [build-system]
 build-backend = "hatchling.build"
@@ -12,7 +13,6 @@ requires = ["hatchling"]
 automech = 'mechdriver.cli:main'
 
 [dependency-groups]
-hpc = ["hyperqueue"]
 test = ["pytest", "pytest-xdist[psutil]"]
 lint = ["ruff", "mypy", "pre-commit"]
 docs = ["sphinx", "myst-parser", "sphinx-book-theme", "sphinx-autodoc-typehints"]
@@ -102,9 +102,9 @@ pyarrow = "*"
 gh = "*"
 
 [tool.pixi.environments]
-test = ["hpc", "test"]
-dev = ["hpc", "test", "lint", "docs", "dev"]
-dev2 = ["hpc", "test", "lint", "docs", "dev", "new_arch"]
+test = ["test"]
+dev = ["test", "lint", "docs", "dev"]
+dev2 = ["test", "lint", "docs", "dev", "new_arch"]
 build = ["build"]
 proto = ["proto"]
 
