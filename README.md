@@ -29,7 +29,14 @@ which includes all of the necessary dependencies.
 ```
 pixi install -e dev
 ```
-3. Check that the installation worked by running the following help command.
+3. Run the following extra command, which will install extra developer
+dependencies that cannot be installed via Pixi
+(see [Appendix A](#appendix-a-extra-developer-dependencies) for further
+details).
+```
+pixi run extra-dev-installs
+```
+4. Check that the installation worked by running the following help command.
 ```
 pixi shell  # activate the environment
 automech --help
@@ -64,16 +71,20 @@ We cannot currently run a full test workflow on GitHub Actions because our curre
 set-up depends on proprietry electronic structure software.
 Testing therefore involves a local workflow step, which must be done before submitting a
 pull request to trigger the remaining GitHub Actions workflows.
-To run these, you will need to install
-[HyperQueue](https://it4innovations.github.io/hyperqueue/stable/) as described in
-[Appendix A](#appendix-a-install-hyperqueue) below.
+This local testing workflow is run using
+[HyperQueue](https://it4innovations.github.io/hyperqueue/stable/),
+which was installed with the extra developer dependencies above.
+You can use the following command to confirm that the installation worked.
+```
+which hq
+```
+See [Appendix A](#appendix-a-extra-developer-dependencies) if this command was not found.
 
 #### Running local tests
 
-The first time you run tests on a new machine, you will need to configure your GitHub username.
-```
-git config --global user.name "<username>"
-```
+Before continuing, make sure your `git` username configuration matches your
+username on GitHub
+(see [Appendix B](#appendix-b-configure-your-git-username)).
 You can then run tests locally as follows (see [below](#subtasks) for further details).
 ```
 # For SLURM:
@@ -136,25 +147,21 @@ This repository includes several submodules that also exist as separate reposito
  - [AutoIO](./src/_autoio/): I/O interfaces to external programs (see [here](https://github.com/Auto-Mech/autoio))
  - [AutoChem](./src/_autochem/): Cheminformatics and coordinate transformation (see [here](https://github.com/Auto-Mech/autochem))
 
-If you are actively working on any of these "subrepos", you should fork them and create
-a `.username` file in this directory containing the GitHub username of your forks.
+If you wish to be able to sync these submodules with their remote repositories,
+this can be done using
+[Git Subrepo](https://github.com/ingydotnet/git-subrepo?tab=readme-ov-file#commands),
+which was installed with the extra developer dependencies above.
+You can use the following command to confirm that the installation worked.
 ```
-echo "<username>" > .username
+git subrepo -h
 ```
-You will also need to install `git-subrepo`, which can easily be done as follows.
-```
-git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
-echo 'source /path/to/git-subrepo/.rc' >> ~/.bashrc
-```
+See [Appendix A](#appendix-a-extra-developer-dependencies) if this command was not found.
 
 ### Syncing
 
-The fullowing commands require some dependencies from the `dev` environment to run, so
-you will either need to activate this environment as follows, or add a `-e dev` flag to
-each command below.
-```
-pixi shell -e dev
-```
+Before continuing, make sure your `git` username configuration matches your
+username on GitHub
+(see [Appendix B](#appendix-b-configure-your-git-username)).
 
 To pull updates for one or more subrepos, you can use the `pull` task.
 ```
@@ -199,7 +206,8 @@ gh repo sync <username>/autoio -b <branch name>
 Workflow parallelization is currently not fully automated in AutoMech. However, you can
 run the following commands to split an AutoMech workflow into subtasks and then run them
 using [HyperQueue](https://it4innovations.github.io/hyperqueue/stable/).
-See [Appendix A](#appendix-a-install-hyperqueue) for instructions on installing HyperQueue.
+See [Appendix A](#appendix-a-extra-developer-dependencies) for instructions on
+installing HyperQueue.
 
 To see if it works, you can test the following steps on the same
 ["quick" example](examples/quick/) that you ran above.
@@ -229,14 +237,43 @@ automech subtasks status
 This will print a color-coded table showing which tasks have failed for which species/reactions. It will also generate a `check.log` file with the paths to log files that have have not completed successfully or have a warning.
 
 
-## Appendix A: Install HyperQueue
+## Appendix A: Extra Developer Dependencies
 
+The simplest way to install the extra developer dependencies is by running the
+following Pixi task.
+```
+pixi run extra-dev-installs
+```
+If you run into issues with this, you can manually install the two dependencies,
+HyperQueue and Git Subrepo, as follows.
+
+**HyperQueue**
 HyperQueue allows you to execute parallel workflows on PBS or SLURM.
 You can install it as follows.
 ```
-wget https://github.com/It4innovations/hyperqueue/releases/download/v0.22.0/hq-v0.22.0-linux-x64.tar.gz
-tar -zxvf hq-v0.22.0-linux-x64.tar.gz -C /directory/in/shell/path
+wget https://github.com/It4innovations/hyperqueue/releases/download/v0.20.0/hq-v0.20.0-linux-x64.tar.gz
+tar -zxvf hq-v0.20.0-linux-x64.tar.gz -C /directory/in/shell/path
 ```
 The second command puts the HyperQueue executable into a directory that is in your shell
 path.  For example, this might be `$HOME/bin` if you have `export PATH=$PATH:$HOME/bin`
 in your `.bashrc`.
+
+
+**Git Subrepo**
+Git Subrepo allows you to sync the submodules in this repository with their
+remote counterparts.
+You can install it as follows.
+```
+git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
+echo 'source /path/to/git-subrepo/.rc' >> ~/.bashrc
+```
+
+
+## Appendix B: Configure Your Git Username
+
+The first time you run tests on a new machine, you will need to configure your
+username with `git`.
+```
+git config --global user.name "<username>"
+```
+Make sure this matches your username on GitHub.

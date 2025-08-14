@@ -10,7 +10,7 @@ fi
 REPO=${1}
 shift 1
 ARGS="$*"  # Additional arguments for git subrepo pull
-USERNAME=$(<.username)
+USERNAME=$(git config --global user.name)
 
 if [[ $REPO == "all" ]]; then
    REPOS=("autochem" "autoio" "autofile" "mechanalyzer")
