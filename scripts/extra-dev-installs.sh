@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 PREFIX=$1
+HQ_TGZ_URL=$2
 
 if [ -z "${1}" ]; then
     read -p "Install prefix (default: $HOME/bin): " PREFIX
@@ -10,7 +11,7 @@ else
 fi
 
 # # 1. Install HyperQueue
-HQ_TGZ_URL="https://github.com/It4innovations/hyperqueue/releases/download/v0.20.0/hq-v0.20.0-linux-x64.tar.gz"
+HQ_TGZ_URL=${HQ_TGZ_URL:-"https://github.com/It4innovations/hyperqueue/releases/download/v0.20.0/hq-v0.20.0-linux-x64.tar.gz"}
 echo
 echo Downloading HyperQueue executable into $PREFIX from $HQ_TGZ_URL
 curl -sL $HQ_TGZ_URL | tar xzf - -C $PREFIX
