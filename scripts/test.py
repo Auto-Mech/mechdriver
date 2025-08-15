@@ -32,18 +32,21 @@ def status():
 
 @main.command("local")
 @click.option(
-    "-f",
-    "--auto-config-flags",
-    default=None,
-    help="Automatically configure HyperQueue with these sbatch/qsub flags.",
-)
-@click.option(
     "-m",
-    "--workload-manager",
+    "--manager",
     default=None,
     help="Specify workload manager (PBS or Slurm) instead of autodetecting",
 )
-def local(auto_config_flags: str | None = None, workload_manager: str | None = None):
+@click.option(
+    "-f",
+    "--manager-flags",
+    default=None,
+    help=(
+        "Automatically configure HyperQueue allocation with "
+        "these PBS or Slurm submission flags"
+    ),
+)
+def local(manager: str | None = None, manager_flags: str | None = None):
     """Run local tests on one or more nodes.
 
     Runs hidden local_
@@ -53,22 +56,22 @@ def local(auto_config_flags: str | None = None, workload_manager: str | None = N
     print("Process ID:", os.getpid())
     print("Host name:", socket.gethostname())
 
-    if auto_config_flags is None:
+    if manager_flags is None:
         msg = (
             "\nWARNING: Running without -f requires manual HyperQueue configuration."
             "\nMake sure you have a server running with the appropriate workers."
         )
         warnings.warn(msg, stacklevel=1)
 
-    if workload_manager is None:
+    if manager is None:
         print("No workload manager specified with -m. Will attempt autodetection...")
 
     test_paths = tu.setup_tests()
     mechdriver.subtasks.setup_multiple(test_paths)
     mechdriver.subtasks.run_multiple(
         test_paths,
-        auto_config_flags=auto_config_flags,
-        workload_manager=workload_manager,
+        manager=manager,
+        manager_flags=manager_flags,
     )
     tu.wrap_up_tests(from_archive=False, allow_override=False)
 

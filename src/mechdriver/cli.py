@@ -126,30 +126,33 @@ def subtasks_setup_(
     help="A comma-separated list of statuses to run or re-run",
 )
 @click.option(
-    "-f",
-    "--auto-config-flags",
+    "-m",
+    "--manager",
     default=None,
-    help="Automatically configure HyperQueue with these sbatch/qsub flags.",
+    help="Specify workload manager (PBS or Slurm) instead of autodetecting",
+)
+@click.option(
+    "-f",
+    "--manager-flags",
+    default=None,
+    help=(
+        "Automatically configure HyperQueue allocation with "
+        "these PBS or Slurm submission flags"
+    ),
 )
 @click.option(
     "-e",
-    "--python-environment",
+    "--env-prologue",
     default=None,
-    help="Command to activate Python environment",
-)
-@click.option(
-    "-m",
-    "--workload-manager",
-    default=None,
-    help="Specify workload manager (PBS or Slurm) instead of autodetecting",
+    help="Command(s) to activate Python environment",
 )
 def subtasks_run_(
     paths: Sequence[str] = (".",),
     dir_name: str = subtasks.SUBTASK_DIR,
     statuses: str = f"{Status.TBD.value}",
-    auto_config_flags: str | None = None,
-    python_environment: str | None = None,
-    workload_manager: str | None = None,
+    manager: str | None = None,
+    manager_flags: str | None = None,
+    env_prologue: str | None = None,
 ):
     """Run subtasks in parallel using HyperQueue.
 
@@ -159,14 +162,14 @@ def subtasks_run_(
         path{1..3}
 
     """
-    if auto_config_flags is None:
+    if manager_flags is None:
         msg = (
             "\nWARNING: Running without -f requires manual HyperQueue configuration."
             "\nMake sure you have a server running with the appropriate workers."
         )
         warnings.warn(msg, stacklevel=1)
 
-    if workload_manager is None:
+    if manager is None:
         print("No workload manager specified with -m. Will attempt autodetection...")
 
     paths = paths if paths else (".",)
@@ -174,9 +177,9 @@ def subtasks_run_(
         paths=paths,
         dir_name=dir_name,
         statuses=list(map(Status, statuses.split(","))),
-        auto_config_flags=auto_config_flags,
-        python_environment=python_environment,
-        workload_manager=workload_manager,
+        manager=manager,
+        manager_flags=manager_flags,
+        env_prologue=env_prologue,
     )
 
 
