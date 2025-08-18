@@ -1,5 +1,6 @@
 """HyperQueue utilities."""
 
+import contextlib
 import datetime
 import math
 import os
@@ -106,6 +107,9 @@ class WorkerConfig(BaseModel):
         return str(datetime.timedelta(seconds=time_limit_s))
 
 
+WORKER_DIR = Path(".workers")
+
+
 def worker_configuration(
     name: str | None = None,
     mem: int | None = None,
@@ -158,6 +162,9 @@ def submit_worker_script(
     dry_run: bool = False,
 ) -> None:
     """Submit a worker script, optionally based on a template."""
+    # Make sure the worker dir exists
+    WORKER_DIR.mkdir(exist_ok=True)
+
     # Determine worker script template
     manager = worker_config.manager
     template_str = worker_script_template(manager=manager, template_path=template_path)
@@ -168,7 +175,7 @@ def submit_worker_script(
 
     # Write worker script
     script_name = Path(worker_config.name).with_suffix(".sh")
-    script_path = WORKER_SCRIPT_DIR / script_name
+    script_path = WORKER_DIR / script_name
     script_path.write_text(script_str)
     print(f"Script written to {script_path}")
 
@@ -187,18 +194,18 @@ def submit_worker_script(
         raise ValueError(msg)
 
     # Print submission command arguments
-    args = [cmd, str(script_path)]
-    print("Submission command:")
+    args = [cmd, str(script_name)]
+    print(f"Submission command to be executed in {WORKER_DIR}:")
     print(" ".join(args))
 
-    # Execute submission command, unless doing a dry run
+    # If doing a dry run, return early
     if dry_run:
         print("Not submitting because user requested a dry run.")
-    else:
+        return
+
+    # Execute submission command in worker directory
+    with contextlib.chdir(WORKER_DIR):
         subprocess.run(args)
-
-
-WORKER_SCRIPT_DIR = Path(".workers")
 
 
 SLURM_WORKER_SCRIPT = """
