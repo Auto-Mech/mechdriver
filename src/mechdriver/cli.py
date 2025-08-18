@@ -258,9 +258,9 @@ def subtasks_status_(
 @click.option(
     "-i",
     "--idle-timeout",
-    default="5 min",
+    default="15 min",
     show_default=True,
-    help="Worker idle timeout with units, e.g. '5 min'",
+    help="Worker idle timeout with units, e.g. '15 min'",
 )
 @click.option(
     "-w",
@@ -289,7 +289,7 @@ def start_worker(
     mem: int | None = None,
     cpus: int | None = None,
     time_limit: str = "1 hr",
-    idle_timeout: str = "5 min",
+    idle_timeout: str = "15 min",
     manager: str | None = None,
     flags: str | None = None,
     host: str | None = None,
