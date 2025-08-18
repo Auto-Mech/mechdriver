@@ -105,8 +105,8 @@ PBS on the system.
 > ```
 > hq server start &> server.log &
 > pixi run test local &> test.log &
-> pixi run test create-node-worker <node 1 name> -q <queue name> -A <account name>
-> pixi run test create-node-worker <node 2 name> -q <queue name> -A <account name>
+> automech subtasks start-worker -o <node 1 name> -f "<PBS/Slurm flags>"
+> automech subtasks start-worker -o <node 2 name> -f "<PBS/Slurm flags>"
 > ...
 > ```
 

@@ -3,47 +3,28 @@
 import contextlib
 import functools
 import itertools
-import math
-import os
-import shutil
-import subprocess
-import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import networkx as nx
-import pint
 import yaml
-from hyperqueue import Client, Job
-from hyperqueue.ffi.protocol import ResourceRequest
-from hyperqueue.task.function import PythonEnv
-from hyperqueue.task.task import Task as HQTask
 
 from ..base import Extension, Status
 from ..base import run as run_automech
+from . import hq
 from ._0setup import INFO_FILE, SUBTASK_DIR, SubtasksInfo, Task
 from ._1status import log_paths_with_check_results, parse_subtask_status
 
-HQTaskKey = tuple[int, int, str]
-
-HOME = Path(os.environ["HOME"])
-HQ_PATH = HOME / ".hq-server" / "hq-current"
-
-SCRIPT_DIR = Path(__file__).parent / "scripts"
-
-
-class Script:
-    ignore_error = str(SCRIPT_DIR / "ignore_error.sh")
-    lock_file = str(SCRIPT_DIR / "lock_file.sh")
+FunctionKey = tuple[int, int, str]
 
 
 def run_multiple(
     paths: Sequence[str | Path] = (".",),
     dir_name: str = SUBTASK_DIR,
     statuses: Sequence[Status] = (Status.TBD,),
-    auto_config_flags: str | None = None,
-    python_environment: str | None = None,
-    workload_manager: str | None = None,
+    manager: str | None = None,
+    manager_flags: str | None = None,
+    env_prologue: str | None = None,
 ) -> None:
     """Run multiple sets of subtasks in parallel using HyperQueue.
 
@@ -53,33 +34,38 @@ def run_multiple(
     :param dir_name: The subtask directory name
     :param hyperqueue_path: The path to the HyperQueue server directory
     :param statuses: A comma-separated list of status to run or re-run
-    :param auto_config_flags: Sbatch/qsub flags for HyperQueue autoconfiguration
-    :param python_environment: Command to activate Python environment
-    :param workload_manager: Specify workload manager (PBS or Slurm) instead of
-        autodetecting
+    :param manager: Specify workload manager (PBS or Slurm) instead of autodetecting
+    :param manager_flags: Automatically configure HyperQueue allocation with
+        these PBS or Slurm submission flags
+    :param env_prologue: Command(s) to activate Python environment
     """
-    if auto_config_flags is not None:
-        start_hyperqueue_server()
+    # If flags were passed in, attempt to auto-configure
+    if manager_flags is not None:
+        # Start HyperQueue server
+        hq.start_server()
 
-    # Set up the HyperQueue client
-    python_environment = python_environment or subprocess.check_output(
-        ["pixi", "shell-hook"], text=True
-    )
+        # Determine max memory and CPU requirements across all paths
+        grouped_tasks = [subtasks_info_tasks(p, dir_name=dir_name) for p in paths]
+        flat_tasks = list(itertools.chain.from_iterable(grouped_tasks))
+        mem = max(t.mem for t in flat_tasks)
+        cpus = max(t.nprocs for t in flat_tasks)
 
-    client = Client(HQ_PATH, python_env=PythonEnv(prologue=python_environment))
+        # Determine the workload manager
+        manager = hq.determine_manager(manager=manager)
+
+        # Start auto-allocation queue
+        hq.create_allocation_queue(
+            mem=mem, cpus=cpus, flags=manager_flags, manager=manager
+        )
+
+    # Create HyperQueue client
+    client = hq.client(env_prologue=env_prologue)
 
     # Set up the HyperQueue job workflow
-    job = Job()
+    job = hq.job()
 
     for path in paths:
-        job = setup_job(
-            path=path,
-            dir_name=dir_name,
-            statuses=statuses,
-            auto_config_flags=auto_config_flags,
-            workload_manager=workload_manager,
-            job=job,
-        )
+        job = setup_job(path=path, dir_name=dir_name, statuses=statuses, job=job)
 
     submitted_job = client.submit(job)
     client.wait_for_jobs([submitted_job])
@@ -89,10 +75,8 @@ def setup_job(
     path: str | Path = ".",
     dir_name: str = SUBTASK_DIR,
     statuses: Sequence[Status] = (Status.TBD,),
-    auto_config_flags: str | None = None,
-    workload_manager: str | None = None,
-    job: Job | None = None,
-) -> Job:
+    job: hq.Job | None = None,
+) -> hq.Job:
     """Run subtasks in parallel using HyperQueue.
 
     Assumes the subtasks were set up at this path using `automech subtasks setup`
@@ -100,71 +84,55 @@ def setup_job(
     :param path: The path where the AutoMech subtasks were set up
     :param dir_name: The subtask directory name
     :param statuses: A comma-separated list of status to run or re-run
-    :param auto_config: Automatically configure HyperQueue with these sbatch/qsub flags
-    :param workload_manager: Specify workload manager (PBS or Slurm) instead of
-        autodetecting
     :param job: Append to an existing job
     """
-    path = Path(path).resolve()
-    dir_path = path / dir_name
-    info_file = dir_path / INFO_FILE
-    info = SubtasksInfo.model_validate(yaml.safe_load(info_file.read_text()))
-
-    if auto_config_flags is not None:
-        all_tasks = list(itertools.chain.from_iterable(info.task_groups))
-        mem = max(t.mem for t in all_tasks)
-        cpus = max(t.nprocs for t in all_tasks)
-        add_hyperqueue_allocation(
-            mem=mem,
-            cpus=cpus,
-            flags=auto_config_flags,
-            workload_manager=workload_manager,
-        )
+    sub_path = subtasks_path(path=path, dir_name=dir_name)
+    sub_info = subtasks_info(path=path, dir_name=dir_name)
 
     # Make sure the run and save directories exist
-    info.run_path.mkdir(exist_ok=True)
-    info.save_path.mkdir(exist_ok=True)
+    sub_info.run_path.mkdir(exist_ok=True)
+    sub_info.save_path.mkdir(exist_ok=True)
 
     # Set up the HyperQueue job workflow
-    job = job or Job()
+    job = job or hq.job()
 
     # For now, just do this for the first task group
-    hq_task_dct: dict[HQTaskKey, HQTask] = {}
-    dep_graph = dependency_graph(info.task_groups)
-    for group_idx, task_group in enumerate(info.task_groups):
+    func_dct: dict[FunctionKey, hq.Function] = {}
+    dep_graph = dependency_graph(sub_info.task_groups)
+    for group_idx, task_group in enumerate(sub_info.task_groups):
         for task_idx, task in enumerate(task_group):
             for subtask in task.subtasks:
                 # Determine dependencies from dependency graph
-                hq_task_key = (group_idx, task_idx, subtask.key)
-                dep_hq_task_keys = dep_graph.predecessors(hq_task_key)
-                dep_hq_tasks = [hq_task_dct[k] for k in dep_hq_task_keys]
+                func_key = (group_idx, task_idx, subtask.key)
+                dep_func_keys = dep_graph.predecessors(func_key)
+                dep_funcs = [func_dct[k] for k in dep_func_keys]
 
-                hq_task = automech_hyperqueue_task(
+                func = assign_function(
                     job=job,
-                    path=dir_path / subtask.path,
-                    log_path=dir_path / subtask.path / "out.log",
-                    deps=dep_hq_tasks,
+                    path=sub_path / subtask.path,
+                    log_path=sub_path / subtask.path / "out.log",
+                    deps=dep_funcs,
                     cpus=task.nprocs,
                     mem=task.mem,
                     workers=subtask.nworkers,
                 )
 
                 # Add the job to the job dictionary
-                hq_task_dct[hq_task_key] = hq_task
+                func_dct[func_key] = func
 
     return job
 
 
-def automech_hyperqueue_task(
-    job: Job,
+def assign_function(
+    job: hq.Job,
     path: Path,
     log_path: Path,
-    deps: Sequence[HQTask],
+    deps: Sequence[hq.Function],
     cpus: int,
     mem: int,
     workers: int = 1,
-) -> HQTask:
-    r"""Create a HyperQueue task to run automech.
+) -> hq.Function:
+    r"""Assign function(s) to HyperQueue job.
 
     When n > 1 workers are requested, this creates n instances of the task with the
     original dependencies, ignoring any errors that occur. It then creates a final
@@ -193,7 +161,7 @@ def automech_hyperqueue_task(
             log_path.with_stem(f"{log_path.stem}{i:02d}") for i in range(workers)
         ]
         deps = [
-            _automech_hyperqueue_task(
+            assign_atomic_function(
                 job=job,
                 path=path,
                 log_path=p,
@@ -205,21 +173,21 @@ def automech_hyperqueue_task(
             for p in log_paths
         ]
 
-    return _automech_hyperqueue_task(
+    return assign_atomic_function(
         job=job, path=path, log_path=log_path, deps=deps, cpus=cpus, mem=mem
     )
 
 
-def _automech_hyperqueue_task(
-    job: Job,
+def assign_atomic_function(
+    job: hq.Job,
     path: Path,
     log_path: Path,
-    deps: Sequence[HQTask],
+    deps: Sequence[hq.Function],
     cpus: int,
     mem: int,
     lock: bool = True,
     ignore_error: bool = False,
-) -> HQTask:
+) -> hq.Function:
     """Create a HyperQueue task to run automech."""
     run_ = run_automech
 
@@ -230,13 +198,10 @@ def _automech_hyperqueue_task(
     # Ignore errors if requested
     run_ = ignore_error_wrapper(run_) if ignore_error else run_
 
+    resources = hq.resource_request(cpus=cpus, mem=mem)
+    stdout = stderr = str(log_path)
     return job.function(
-        fn=run_,
-        cwd=path,
-        stdout=str(log_path),
-        stderr=str(log_path),
-        deps=deps,
-        resources=ResourceRequest(cpus=cpus, resources={"mem": memory_mib(mem)}),
+        fn=run_, cwd=path, stdout=stdout, stderr=stderr, deps=deps, resources=resources
     )
 
 
@@ -340,93 +305,21 @@ def dependency_graph(task_groups: Sequence[Sequence[Task]]) -> nx.DiGraph:
     return dep_graph
 
 
-def memory_mib(mem: int) -> int:
-    """Convert memory in GB to MiB.
-
-    :param mem: Memory (GB)
-    :return: Memory (MiB)
-    """
-    return math.ceil(pint.Quantity(mem, "GB").m_as("MiB"))
+# Helpers
+def subtasks_path(path: str | Path = ".", dir_name: str = SUBTASK_DIR) -> Path:
+    """Determine absolute path to subtasks directory."""
+    return Path(path).resolve() / dir_name
 
 
-def start_hyperqueue_server() -> None:
-    """Re-start HyperQueue server."""
-    print("Starting HyperQueue server...")
-    subprocess.Popen(["hq", "server", "start"])
-    # Wait up to 1 second for the file to appear
-    for _ in range(10):
-        time.sleep(0.1)
-        if os.path.exists(HQ_PATH):
-            break
-    assert os.path.exists(HQ_PATH), f"Could not start server at {HQ_PATH}"
+def subtasks_info(path: str | Path = ".", dir_name: str = SUBTASK_DIR) -> SubtasksInfo:
+    """Read subtasks info from subtasks directory."""
+    sub_info_path = subtasks_path(path=path, dir_name=dir_name) / INFO_FILE
+    return SubtasksInfo.model_validate(yaml.safe_load(sub_info_path.read_text()))
 
 
-def add_hyperqueue_allocation(
-    mem: int, cpus: int, flags: str, workload_manager: str | None = None
-) -> None:
-    """Create a HyperQueue allocation.
-
-    :param mem: Memory (GB)
-    :param nprocs: Number of processers
-    :param flags: Additional flags for sbatch/qsub
-    """
-    print(f"Adding HyperQueue allocation with mem={mem}GB, cpus={cpus}, flags={flags}")
-
-    workload_manager = None if workload_manager is None else str.lower(workload_manager)
-
-    if workload_manager is not None:
-        print(f"User-specified workload manager: {workload_manager}")
-    elif shutil.which("qsub"):
-        workload_manager = "pbs"
-        print(f"Auto-detected workload manager: {workload_manager}")
-    elif shutil.which("sbatch"):
-        workload_manager = "slurm"
-        print(f"Auto-detected workload manager: {workload_manager}")
-
-    if workload_manager is None:
-        msg = (
-            "No SLURM or PBS detected. Please manually configure HyperQueue allocation."
-        )
-        raise ValueError(msg)
-
-    if workload_manager not in ("pbs", "slurm"):
-        msg = (
-            f"Workload manager '{workload_manager}' is not a valid option.\n"
-            f"Please choose 'pbs' or 'slurm'."
-        )
-        raise ValueError(msg)
-
-    if workload_manager == "pbs":
-        print("HyperQueue allocation command:")
-        args = [
-            "hq",
-            "alloc",
-            "add",
-            "pbs",
-            "--time-limit",
-            "1h",
-            f"--cpus={cpus}",
-            f"--resource=mem=sum({memory_mib(mem)})",
-            "--",
-            *flags.split(),
-        ]
-        print(" ".join(args))
-        subprocess.run(args)
-    elif workload_manager == "slurm":
-        print("Detected PBS on system. HyperQueue allocation command:")
-        args = [
-            "hq",
-            "alloc",
-            "add",
-            "slurm",
-            "--time-limit",
-            "1h",
-            f"--cpus={cpus}",
-            f"--resource=mem=sum({memory_mib(mem)})",
-            "--",
-            f"--mem={mem}G",
-            "--ntasks=1",
-            *flags.split(),
-        ]
-        print(" ".join(args))
-        subprocess.run(args)
+def subtasks_info_tasks(
+    path: str | Path = ".", dir_name: str = SUBTASK_DIR
+) -> list[Task]:
+    """Read subtasks info from subtasks directory."""
+    sub_info = subtasks_info(path=path, dir_name=dir_name)
+    return list(itertools.chain.from_iterable(sub_info.task_groups))
