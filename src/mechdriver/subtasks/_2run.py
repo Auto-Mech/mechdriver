@@ -50,6 +50,9 @@ def run_multiple(
         mem = max(t.mem for t in flat_tasks)
         cpus = max(t.nprocs for t in flat_tasks)
 
+        # Determine the workload manager
+        manager = hq.determine_manager(manager=manager)
+
         # Start auto-allocation queue
         hq.create_allocation_queue(
             mem=mem, cpus=cpus, flags=manager_flags, manager=manager
