@@ -1,13 +1,13 @@
-level pm3
-    method = pm3
+level pm6
+    method = pm6
     orb_res = RU
     program = gaussian16
     mem = 20.0
     nprocs = 2
 end level
 
-level pm6
-    method = pm6
+level pm7
+    method = pm7
     orb_res = RU
     program = gaussian16
     mem = 20.0
