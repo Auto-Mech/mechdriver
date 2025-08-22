@@ -251,9 +251,9 @@ def subtasks_status_(
 @click.option(
     "-l",
     "--time-limit",
-    default="1 hr",
+    default="2 hr",
     show_default=True,
-    help="Worker time limit with units, e.g. '1 hr'",
+    help="Worker time limit with units, e.g. '2 hr'",
 )
 @click.option(
     "-i",
@@ -288,7 +288,7 @@ def start_worker(
     name: str | None = None,
     mem: int | None = None,
     cpus: int | None = None,
-    time_limit: str = "1 hr",
+    time_limit: str = "2 hr",
     idle_timeout: str = "15 min",
     manager: str | None = None,
     flags: str | None = None,
