@@ -16,7 +16,7 @@ def has_normal_exit_message(output_str):
         :rtype: bool
     """
 
-    pattern = app.escape('Normal termination of Gaussian 09')
+    pattern = app.escape('Normal termination of Gaussian')
 
     return apf.has_match(pattern, output_str, case=False)
 

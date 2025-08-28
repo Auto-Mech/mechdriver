@@ -87,7 +87,7 @@ class WorkerConfig(BaseModel):
     name: str
     mem: int
     cpus: int = 1
-    time_limit: str = "1 hr"
+    time_limit: str = "2 hr"
     idle_timeout: str = "15 min"
     manager: str | None = None
     host: str | None = None
@@ -114,7 +114,7 @@ def worker_configuration(
     name: str | None = None,
     mem: int | None = None,
     cpus: int | None = None,
-    time_limit: str = "1 hr",
+    time_limit: str = "2 hr",
     idle_timeout: str = "15 min",
     manager: str | None = None,
     flags: str | None = None,
