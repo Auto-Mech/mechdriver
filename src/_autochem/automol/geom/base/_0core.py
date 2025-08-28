@@ -285,7 +285,7 @@ def from_xyz_trajectory_string(geo_str: str):
         geos.append(geo)
         comments.append(comment)
 
-    return list(zip(geos, comments, strict=True))
+    return tuple(zip(geos, comments, strict=True))
 
 
 def parse_xyz_block(
