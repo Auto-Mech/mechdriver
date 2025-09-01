@@ -729,6 +729,17 @@ class Basis():
                               Program.ORCA4: None,
                               Program.PSI4: None})
 
+    DEF2TZVPP = ('def2-tzvpp', {Program.CFOUR2: None,
+                              Program.GAUSSIAN09: 'def2tzvpp',
+                              Program.GAUSSIAN03: 'def2tzvpp',
+                              Program.GAUSSIAN16: 'def2tzvpp',
+                              Program.MOLPRO2015: None,
+                              Program.MOLPRO2021: None,
+                              Program.MRCC2018: None,
+                              Program.NWCHEM6: None,
+                              Program.ORCA4: None,
+                              Program.PSI4: None})
+
     class Pople:
         """ Pople basis sets """
         P321 = ('3-21g', {Program.CFOUR2: None,
