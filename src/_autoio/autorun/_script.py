@@ -116,7 +116,7 @@ QCHEM5 = (
 ORCA4 = (
     "#!/usr/bin/env bash\n"
     "ulimit -c 0\n"
-    "orca run.inp > run.out"
+    "$(which orca) run.inp > run.out"
 )
 MOLPRO_2021 = (
     "#!/usr/bin/env bash\n"
