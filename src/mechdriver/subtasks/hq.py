@@ -103,8 +103,11 @@ class WorkerConfig(BaseModel):
     @property
     def time_limit_hms(self) -> str:
         """Time limit (HH:MM:SS)."""
-        time_limit_s = pint.Quantity(self.time_limit).m_as("s")
-        return str(datetime.timedelta(seconds=time_limit_s))
+        total_s = pint.Quantity(self.time_limit).m_as("s")
+        h = int(total_s // 3600)
+        m = int((total_s % 3600) // 60)
+        s = int(total_s % 60)
+        return f"{h:02d}:{m:02d}:{s:02d}"
 
 
 WORKER_DIR = Path(".workers")
