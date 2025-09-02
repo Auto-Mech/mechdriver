@@ -121,7 +121,7 @@ def subtasks_setup_(
     help="The subtask directory name",
 )
 @click.option(
-    "-s",
+    "-t",
     "--statuses",
     default=f"{Status.TBD.value}",
     show_default=True,
@@ -143,6 +143,12 @@ def subtasks_setup_(
     ),
 )
 @click.option(
+    "-s",
+    "--server-dir",
+    default=None,
+    help="HyperQueue server directory",
+)
+@click.option(
     "-e",
     "--env-prologue",
     default=None,
@@ -154,6 +160,7 @@ def subtasks_run_(
     statuses: str = f"{Status.TBD.value}",
     manager: str | None = None,
     manager_flags: str | None = None,
+    server_dir: str | None = None,
     env_prologue: str | None = None,
 ):
     """Run subtasks in parallel using HyperQueue.
@@ -181,6 +188,7 @@ def subtasks_run_(
         statuses=list(map(Status, statuses.split(","))),
         manager=manager,
         manager_flags=manager_flags,
+        server_dir=server_dir,
         env_prologue=env_prologue,
     )
 
@@ -281,6 +289,12 @@ def subtasks_status_(
     help="Specify a host name",
 )
 @click.option(
+    "-s",
+    "--server-dir",
+    default=None,
+    help="HyperQueue server directory",
+)
+@click.option(
     "-d", "--dry-run", is_flag=True, help="Dry run: Generate script without submitting."
 )
 def start_worker(
@@ -293,6 +307,7 @@ def start_worker(
     manager: str | None = None,
     flags: str | None = None,
     host: str | None = None,
+    server_dir: str | None = None,
     dry_run: bool = False,
 ):
     """Start a HyperQueue worker for running subtasks."""
@@ -305,6 +320,7 @@ def start_worker(
         manager=manager,
         flags=flags,
         host=host,
+        server_dir=server_dir,
     )
     hq.submit_worker_script(worker_config, template_path=template, dry_run=dry_run)
 
