@@ -186,7 +186,7 @@ def assign_atomic_function(
     cpus: int,
     mem: int,
     lock: bool = True,
-    ignore_error: bool = False,
+    ignore_error: bool = True,
 ) -> hq.Function:
     """Create a HyperQueue task to run automech."""
     run_ = run_automech
