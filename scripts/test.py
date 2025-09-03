@@ -40,7 +40,17 @@ def status():
         "these PBS or Slurm submission flags"
     ),
 )
-def local(manager: str | None = None, manager_flags: str | None = None):
+@click.option(
+    "-s",
+    "--server-dir",
+    default=None,
+    help="HyperQueue server directory",
+)
+def local(
+    manager: str | None = None,
+    manager_flags: str | None = None,
+    server_dir: str | None = None,
+):
     """Run local tests on one or more nodes.
 
     Runs hidden local_
@@ -63,9 +73,7 @@ def local(manager: str | None = None, manager_flags: str | None = None):
     test_paths = tu.setup_tests()
     mechdriver.subtasks.setup_multiple(test_paths)
     mechdriver.subtasks.run_multiple(
-        test_paths,
-        manager=manager,
-        manager_flags=manager_flags,
+        test_paths, manager=manager, manager_flags=manager_flags, server_dir=server_dir
     )
     tu.wrap_up_tests(from_archive=False, allow_override=False)
 

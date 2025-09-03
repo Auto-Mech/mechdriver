@@ -23,13 +23,13 @@ Function: TypeAlias = Task
 
 
 # Instantiate objects
-def client(env_prologue: str | None = None) -> Client:
+def client(server_dir: str | None = None, env_prologue: str | None = None) -> Client:
     """Create HyperQueue client, for connecting to server.
 
     :param python_environment_prologue: Command to activate Python environment
     """
     return Client(
-        server_dir=current_server_path(),
+        server_dir=server_dir or default_server_directory(),
         python_env=PythonEnv(prologue=env_prologue or pixi_environment_prologue()),
     )
 
@@ -49,16 +49,16 @@ def resource_request(cpus: int, mem: int) -> ResourceRequest:
 
 
 # Execute system commands
-def start_server() -> None:
+def start_server(server_dir: str | None = None) -> None:
     """Start HyperQueue server."""
-    server_path = current_server_path()
+    server_dir_ = server_dir or default_server_directory()
     subprocess.Popen(["hq", "server", "start"])
     # Wait up to 1 second for the file to appear
     for _ in range(10):
         time.sleep(0.1)
-        if os.path.exists(server_path):
+        if os.path.exists(server_dir_):
             break
-    assert os.path.exists(server_path), f"Could not start server at {server_path}"
+    assert os.path.exists(server_dir_), f"Could not start server at {server_dir_}"
 
 
 def create_allocation_queue(mem: int, cpus: int, flags: str, manager: str) -> None:
@@ -92,6 +92,7 @@ class WorkerConfig(BaseModel):
     manager: str | None = None
     host: str | None = None
     flags: str | None = None
+    server_dir: str | None = None
 
     @computed_field
     @property
@@ -103,8 +104,11 @@ class WorkerConfig(BaseModel):
     @property
     def time_limit_hms(self) -> str:
         """Time limit (HH:MM:SS)."""
-        time_limit_s = pint.Quantity(self.time_limit).m_as("s")
-        return str(datetime.timedelta(seconds=time_limit_s))
+        total_s = pint.Quantity(self.time_limit).m_as("s")
+        h = int(total_s // 3600)
+        m = int((total_s % 3600) // 60)
+        s = int(total_s % 60)
+        return f"{h:02d}:{m:02d}:{s:02d}"
 
 
 WORKER_DIR = Path(".workers")
@@ -119,6 +123,7 @@ def worker_configuration(
     manager: str | None = None,
     flags: str | None = None,
     host: str | None = None,
+    server_dir: str | None = None,
 ) -> WorkerConfig:
     """Configure a worker."""
     # If `name` is None, use `host`; otherwise, set it to "worker"
@@ -143,6 +148,8 @@ def worker_configuration(
         msg = "Either CPUs or host must be specified."
         raise ValueError(msg)
 
+    server_dir = server_dir or default_server_directory()
+
     # Return worker configuration
     return WorkerConfig(
         name=name,
@@ -153,6 +160,7 @@ def worker_configuration(
         manager=manager,
         flags=flags,
         host=host,
+        server_dir=server_dir,
     )
 
 
@@ -219,6 +227,10 @@ SLURM_WORKER_SCRIPT = """
 #SBATCH {{ flags }}
 {% endif %}
 
+{%- if server_dir is not none %}
+export HQ_SERVER_DIR="{{ server_dir }}"
+{% endif %}
+
 hq worker start \\
     --cpus "{{ cpus }}" \\
     --resource "mem=sum({{ mem_mib }})" \\
@@ -238,6 +250,10 @@ PBS_WORKER_SCRIPT = """
 #PBS -l walltime={{ time_limit_hms }}
 {%- if flags is not none %}
 #PBS {{ flags }}
+{% endif %}
+
+{%- if server_dir is not none %}
+export HQ_SERVER_DIR="{{ server_dir }}"
 {% endif %}
 
 hq worker start \\
@@ -295,9 +311,12 @@ def determine_manager(manager: str | None = None) -> str:
     return manager
 
 
-def current_server_path() -> Path:
+def default_server_directory() -> str:
     """Path to HyperQueue server."""
-    return Path(os.environ["HOME"]) / ".hq-server" / "hq-current"
+    if "HQ_SERVER_DIR" in os.environ:
+        return os.environ["HQ_SERVER_DIR"]
+
+    return str(Path(os.environ["HOME"]) / ".hq-server" / "hq-current")
 
 
 def pixi_environment_prologue() -> str:

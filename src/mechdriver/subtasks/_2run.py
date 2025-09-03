@@ -24,6 +24,7 @@ def run_multiple(
     statuses: Sequence[Status] = (Status.TBD,),
     manager: str | None = None,
     manager_flags: str | None = None,
+    server_dir: str | None = None,
     env_prologue: str | None = None,
 ) -> None:
     """Run multiple sets of subtasks in parallel using HyperQueue.
@@ -37,12 +38,13 @@ def run_multiple(
     :param manager: Specify workload manager (PBS or Slurm) instead of autodetecting
     :param manager_flags: Automatically configure HyperQueue allocation with
         these PBS or Slurm submission flags
+    :param server_dir: HyperQueue server directory
     :param env_prologue: Command(s) to activate Python environment
     """
     # If flags were passed in, attempt to auto-configure
     if manager_flags is not None:
         # Start HyperQueue server
-        hq.start_server()
+        hq.start_server(server_dir=server_dir)
 
         # Determine max memory and CPU requirements across all paths
         grouped_tasks = [subtasks_info_tasks(p, dir_name=dir_name) for p in paths]
@@ -59,7 +61,7 @@ def run_multiple(
         )
 
     # Create HyperQueue client
-    client = hq.client(env_prologue=env_prologue)
+    client = hq.client(server_dir=server_dir, env_prologue=env_prologue)
 
     # Set up the HyperQueue job workflow
     job = hq.job()
@@ -186,7 +188,7 @@ def assign_atomic_function(
     cpus: int,
     mem: int,
     lock: bool = True,
-    ignore_error: bool = False,
+    ignore_error: bool = True,
 ) -> hq.Function:
     """Create a HyperQueue task to run automech."""
     run_ = run_automech
