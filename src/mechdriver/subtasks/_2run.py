@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import networkx as nx
+import numpy as np
 import yaml
 
 from ..base import Extension, Status
@@ -106,21 +107,27 @@ def setup_job(
             for subtask in task.subtasks:
                 # Determine dependencies from dependency graph
                 func_key = (group_idx, task_idx, subtask.key)
-                dep_func_keys = dep_graph.predecessors(func_key)
-                dep_funcs = [func_dct[k] for k in dep_func_keys]
 
-                func = assign_function(
-                    job=job,
-                    path=sub_path / subtask.path,
-                    log_path=sub_path / subtask.path / "out.log",
-                    deps=dep_funcs,
-                    cpus=task.nprocs,
-                    mem=task.mem,
-                    workers=subtask.nworkers,
+                # Determine subtask status
+                subtask_path = sub_path / subtask.path
+                status = parse_subtask_status(
+                    log_paths_with_check_results(sub_path / subtask.path)
                 )
+                if status in statuses:
+                    dep_func_keys = dep_graph.predecessors(func_key)
+                    dep_funcs = [func_dct[k] for k in dep_func_keys if k in func_dct]
+                    func = assign_function(
+                        job=job,
+                        path=subtask_path,
+                        log_path=subtask_path / "out.log",
+                        deps=dep_funcs,
+                        cpus=task.nprocs,
+                        mem=task.mem,
+                        workers=subtask.nworkers,
+                    )
 
-                # Add the job to the job dictionary
-                func_dct[func_key] = func
+                    # Add the job to the job dictionary
+                    func_dct[func_key] = func
 
     return job
 
@@ -305,6 +312,35 @@ def dependency_graph(task_groups: Sequence[Sequence[Task]]) -> nx.DiGraph:
     )
 
     return dep_graph
+
+
+def dependency_graph_layout(
+    task_groups: Sequence[Sequence[Task]],
+) -> dict[FunctionKey, np.ndarray]:
+    """Generate a graph layout."""
+    ystart = 0
+    xstart = 0
+    subtask_xpos = {}
+    pos = {}
+    for group_idx, tasks in enumerate(task_groups):
+        any_subtasks = False
+        for task_idx, task in enumerate(tasks):
+            ypos = ystart + task_idx
+            for subtask in task.subtasks:
+                if subtask.key not in subtask_xpos:
+                    subtask_xpos[subtask.key] = xstart
+                    xstart += 1
+
+                xpos = subtask_xpos[subtask.key]
+
+                func_key = (group_idx, task_idx, subtask.key)
+                pos[func_key] = np.array([xpos, -ypos], dtype=np.float64)
+                any_subtasks = True
+
+        if any_subtasks:
+            ystart += len(tasks) + 1
+
+    return pos
 
 
 # Helpers
