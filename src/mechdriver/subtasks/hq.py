@@ -73,7 +73,7 @@ def create_allocation_queue(mem: int, cpus: int, flags: str, manager: str) -> No
 
     # Extra manager-specific arguments
     if manager == "slurm":
-        args += ("--ntasks=1", f"--mem={mem}G")
+        args += (f"--ntasks={cpus}", f"--mem-per-cpu={mem}G")
 
     print("HyperQueue allocation command:")
     print(" ".join(args))
