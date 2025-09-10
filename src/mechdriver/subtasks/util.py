@@ -17,7 +17,7 @@ from pyparsing import common as ppc
 COMMENT_REGEX = re.compile(r"#.*$", flags=re.M)
 ALL_KEY = "all"
 
-DEFAULT_MEM = 20
+DEFAULT_MEM = 1
 
 
 ROTOR_TASKS = ("hr_scan",)
