@@ -1599,7 +1599,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/8f/d7/9322c609343d929e75e7e5e6255e614fcc67572cfd083959cdef3b7aad79/docutils-0.21.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/43/09/2aea36ff60d16dd8879bdb2f5b3ee0ba8d08cbbdcdfe870e695ce3784385/execnet-2.1.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4d/36/2a115987e2d8c300a974597416d9de88f2444426de9571f4b59b2cca3acc/filelock-3.18.0-py3-none-any.whl
-      - pypi: direct+https://github.com/It4innovations/hyperqueue/releases/download/nightly/hyperqueue-0.23.0-cp39-abi3-manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/ab/5f/6bea67b88a17ae297b165de471bb88ca37ecaa4c8a25e3bcb09c9b5b1313/hyperqueue-0.24.0-cp39-abi3-manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/e7/ce/461b60a3ee109518c055953729bf9ed089a04db895d47e95444071dcdef2/identify-2.6.13-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/62/85c4c919272577931d407be5ba5d71c20f0b616d31a0befe0ae45bb79abd/imagesize-1.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2c/e1/e6716421ea10d38022b952c159d5161ca1193197fb744506875fbb87ea7b/iniconfig-2.1.0-py3-none-any.whl
@@ -5386,9 +5386,10 @@ packages:
   - tqdm>=4.60,<5
   - pydot>=1.4,<2 ; extra == 'all'
   requires_python: '>=3.6'
-- pypi: direct+https://github.com/It4innovations/hyperqueue/releases/download/nightly/hyperqueue-0.23.0-cp39-abi3-manylinux_2_28_x86_64.whl
+- pypi: https://files.pythonhosted.org/packages/ab/5f/6bea67b88a17ae297b165de471bb88ca37ecaa4c8a25e3bcb09c9b5b1313/hyperqueue-0.24.0-cp39-abi3-manylinux_2_28_x86_64.whl
   name: hyperqueue
-  version: 0.23.0
+  version: 0.24.0
+  sha256: 118984ee4aee79e00fcb9b768924dc6162edb0b06a2ed8b24aaee7ed0de3f62f
   requires_dist:
   - cloudpickle>=2.0,<4
   - tqdm>=4.60,<5
@@ -9531,7 +9532,7 @@ packages:
 - pypi: ./
   name: mechdriver
   version: 2025.8.13
-  sha256: d520ab973f8a9786c489d967f74bb86abbbb2f0b2325129af7e5ad88233cfb4b
+  sha256: 1d094ddccb4ae18c9f829dee89fd1330cbe847cc95ec586557f7b8801620029c
   requires_dist:
   - hyperqueue
   requires_python: '>=3.11'
