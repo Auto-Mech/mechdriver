@@ -117,3 +117,4 @@ save/
 # Directory of worker scripts
 .workers
 .server
+.*.sh

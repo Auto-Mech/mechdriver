@@ -46,10 +46,17 @@ def status():
     default=None,
     help="HyperQueue server directory",
 )
+@click.option(
+    "-e",
+    "--env-prologue",
+    default=None,
+    help="Command(s) to activate Python environment",
+)
 def local(
     manager: str | None = None,
     manager_flags: str | None = None,
     server_dir: str | None = None,
+    env_prologue: str | None = None,
 ):
     """Run local tests on one or more nodes.
 
@@ -73,7 +80,11 @@ def local(
     test_paths = tu.setup_tests()
     mechdriver.subtasks.setup_multiple(test_paths)
     mechdriver.subtasks.run_multiple(
-        test_paths, manager=manager, manager_flags=manager_flags, server_dir=server_dir
+        test_paths,
+        manager=manager,
+        manager_flags=manager_flags,
+        server_dir=server_dir,
+        env_prologue=env_prologue,
     )
     tu.wrap_up_tests(from_archive=False, allow_override=False)
 
