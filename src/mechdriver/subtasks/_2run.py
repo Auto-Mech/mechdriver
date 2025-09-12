@@ -306,10 +306,11 @@ def dependency_graph(task_groups: Sequence[Sequence[Task]]) -> nx.DiGraph:
                     (group_idx0, task_idx0, key0), (group_idx, task_idx, key)
                 )
 
-    assert nx.is_weakly_connected(dep_graph), (
-        "Dependency graph must not be disconnected:\n"
-        f"group_idx0_dct = {group_idx0_dct}\ngroup_dct={group_dct}"
-    )
+    if len(task_groups) > 1:
+        assert nx.is_weakly_connected(dep_graph), (
+            "Dependency graph must not be disconnected:\n"
+            f"group_idx0_dct = {group_idx0_dct}\ngroup_dct={group_dct}"
+        )
 
     return dep_graph
 
