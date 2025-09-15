@@ -61,10 +61,14 @@ def start_server(server_dir: str | None = None) -> None:
     assert os.path.exists(server_dir_), f"Could not start server at {server_dir_}"
 
 
-def create_allocation_queue(mem: int, cpus: int, flags: str, manager: str) -> None:
+def create_allocation_queue(
+    mem: int, cpus: int, flags: str, manager: str, time_limit: str = "2 hr"
+) -> None:
     """Create HyperQueue allocation queue."""
+    time_limit_h = math.ceil(pint.Quantity(time_limit).m_as("hours"))
+
     # Base arguments
-    args = ("hq", "alloc", "add", manager, "--time-limit", "4h")
+    args = ("hq", "alloc", "add", manager, "--time-limit", f"{time_limit_h}h")
 
     # Resource arguments and flags
     cpu_arg = f"--cpus={cpus}"

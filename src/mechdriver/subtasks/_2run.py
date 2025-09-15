@@ -23,6 +23,7 @@ def run_multiple(
     paths: Sequence[str | Path] = (".",),
     dir_name: str = SUBTASK_DIR,
     statuses: Sequence[Status] = (Status.TBD,),
+    time_limit: str = "2 hr",
     manager: str | None = None,
     manager_flags: str | None = None,
     server_dir: str | None = None,
@@ -50,16 +51,20 @@ def run_multiple(
         # Determine max memory and CPU requirements across all paths
         grouped_tasks = [subtasks_info_tasks(p, dir_name=dir_name) for p in paths]
         flat_tasks = list(itertools.chain.from_iterable(grouped_tasks))
-        mem = max(t.mem for t in flat_tasks)
-        cpus = max(t.nprocs for t in flat_tasks)
+        specs = set((t.mem, t.nprocs) for t in flat_tasks)
 
         # Determine the workload manager
         manager = hq.determine_manager(manager=manager)
 
         # Start auto-allocation queue
-        hq.create_allocation_queue(
-            mem=mem, cpus=cpus, flags=manager_flags, manager=manager
-        )
+        for mem, cpus in specs:
+            hq.create_allocation_queue(
+                mem=mem,
+                cpus=cpus,
+                flags=manager_flags,
+                manager=manager,
+                time_limit=time_limit,
+            )
 
     # Create HyperQueue client
     client = hq.client(server_dir=server_dir, env_prologue=env_prologue)
