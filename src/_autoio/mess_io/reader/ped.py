@@ -107,9 +107,10 @@ def get_ped(pedoutput_str, energy_dct, sp_labels='auto'):
                     up = -1
 
                 prob_en = prob_en.iloc[low:up]
+        #else:
         # algorithm before 05-25-2022
         # if there are negative values of the probability: remove them
-        #    prob_en = prob_en[prob_en[prob_en < 0].index[-1]+1:]
+        #        prob_en = prob_en[prob_en[prob_en < 0].index[-1]+1:]
         #    print(prob_en, '\n')
         # integrate with trapz
         prob_en /= abs(np.trapz(prob_en.values, x=prob_en.index))
