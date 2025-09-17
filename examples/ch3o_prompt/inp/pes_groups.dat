@@ -1,0 +1,8 @@
+grp 1 
+	 idxs = [10:1, 10:2, 8:1] 
+	 peds = [['H+CH3OH=H2+CH2OH'],['H+CH3OH=H2+CH3O'], []] 
+	 hot = [[], [], ['CH3O','CH2OH']] 
+	 modeltype = rovib_dos 
+	 bf_threshold = 0.1 
+end grp 
+

@@ -1,0 +1,766 @@
+ELEMENTS
+
+C
+H
+O
+
+END
+
+
+SPECIES
+
+C2H2         ! SMILES: C#C                InChI: InChI=1S/C2H2/c1-2/h1-2H
+C2H3         ! SMILES: [CH]=C             InChI: InChI=1S/C2H3/c1-2/h1H,2H2
+C2H3O1-2     ! SMILES: [CH]1OC1           InChI: InChI=1S/C2H3O/c1-2-3-1/h1H,2H2
+C2H3OO       ! SMILES: C=CO[O]            InChI: InChI=1S/C2H3O2/c1-2-4-3/h2H,1H2
+C2H3OOH      ! SMILES: C=COO              InChI: InChI=1S/C2H4O2/c1-2-4-3/h2-3H,1H2
+C2H4         ! SMILES: C=C                InChI: InChI=1S/C2H4/c1-2/h1-2H2
+C2H4O1-2     ! SMILES: C1OC1              InChI: InChI=1S/C2H4O/c1-2-3-1/h1-2H2
+C2H5         ! SMILES: [CH2]C             InChI: InChI=1S/C2H5/c1-2/h1H2,2H3
+C2H5O        ! SMILES: CC[O]              InChI: InChI=1S/C2H5O/c1-2-3/h2H2,1H3
+C2H5O2       ! SMILES: CCO[O]             InChI: InChI=1S/C2H5O2/c1-2-4-3/h2H2,1H3
+C2H5O2H      ! SMILES: CCOO               InChI: InChI=1S/C2H6O2/c1-2-4-3/h3H,2H2,1H3
+C2H5OH       ! SMILES: CCO                InChI: InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3
+C2H6         ! SMILES: CC                 InChI: InChI=1S/C2H6/c1-2/h1-2H3
+CH2(S)       ! SMILES: [CH2]              InChI: InChI=1S/CH2/h1H2
+CH2CHO       ! SMILES: C=C[O]             InChI: InChI=1S/C2H3O/c1-2-3/h2H,1H2
+CH2CO        ! SMILES: C=C=O              InChI: InChI=1S/C2H2O/c1-2-3/h1H2
+CH2O         ! SMILES: C=O                InChI: InChI=1S/CH2O/c1-2/h1H2
+CH2OCHO      ! SMILES: [CH2]OC=O          InChI: InChI=1S/C2H3O2/c1-4-2-3/h2H,1H2
+CH2OH        ! SMILES: [CH2]O             InChI: InChI=1S/CH3O/c1-2/h2H,1H2
+CH3          ! SMILES: [CH3]              InChI: InChI=1S/CH3/h1H3
+CH3CHO       ! SMILES: CC=O               InChI: InChI=1S/C2H4O/c1-2-3/h2H,1H3
+CH3CO        ! SMILES: C[C]=O             InChI: InChI=1S/C2H3O/c1-2-3/h1H3
+CH3CO2       ! SMILES: CC([O])=O          InChI: InChI=1S/C2H3O2/c1-2(3)4/h1H3
+CH3CO3       ! SMILES: CC(=O)O[O]         InChI: InChI=1S/C2H3O3/c1-2(3)5-4/h1H3
+CH3O         ! SMILES: C[O]               InChI: InChI=1S/CH3O/c1-2/h1H3
+CH3O2        ! SMILES: CO[O]              InChI: InChI=1S/CH3O2/c1-3-2/h1H3
+CH3O2H       ! SMILES: COO                InChI: InChI=1S/CH4O2/c1-3-2/h2H,1H3
+CH3OCH2      ! SMILES: [CH2]OC            InChI: InChI=1S/C2H5O/c1-3-2/h1H2,2H3
+CH3OCH3      ! SMILES: COC                InChI: InChI=1S/C2H6O/c1-3-2/h1-2H3
+CH3OCHO      ! SMILES: COC=O              InChI: InChI=1S/C2H4O2/c1-4-2-3/h2H,1H3
+CH3OCO       ! SMILES: CO[C]=O            InChI: InChI=1S/C2H3O2/c1-4-2-3/h1H3
+CH3OH        ! SMILES: CO                 InChI: InChI=1S/CH4O/c1-2/h2H,1H3
+CH3OOCH3     ! SMILES: COOC               InChI: InChI=1S/C2H6O2/c1-3-4-2/h1-2H3
+CH4          ! SMILES: C                  InChI: InChI=1S/CH4/h1H4
+CHCHO        ! SMILES: [CH]=C[O]          InChI: InChI=1S/C2H2O/c1-2-3/h1-2H
+CHOCHO       ! SMILES: O=CC=O             InChI: InChI=1S/C2H2O2/c3-1-2-4/h1-2H
+CO           ! SMILES: [C]=O              InChI: InChI=1S/CO/c1-2
+CO2          ! SMILES: O=C=O              InChI: InChI=1S/CO2/c2-1-3
+H            ! SMILES: [H]                InChI: InChI=1S/H
+H2           ! SMILES: [H][H]             InChI: InChI=1S/H2/h1H
+H2O          ! SMILES: O                  InChI: InChI=1S/H2O/h1H2
+H2O2         ! SMILES: OO                 InChI: InChI=1S/H2O2/c1-2/h1-2H
+HCO          ! SMILES: [CH]=O             InChI: InChI=1S/CHO/c1-2/h1H
+HO2          ! SMILES: O[O]               InChI: InChI=1S/HO2/c1-2/h1H
+HOCH2O       ! SMILES: OC[O]              InChI: InChI=1S/CH3O2/c2-1-3/h2H,1H2
+HOCH2OCO     ! SMILES: OCO[C]=O           InChI: InChI=1S/C2H3O3/c3-1-5-2-4/h3H,1H2
+HOCHO        ! SMILES: OC=O               InChI: InChI=1S/CH2O2/c2-1-3/h1H,(H,2,3)
+O            ! SMILES: [O]                InChI: InChI=1S/O
+O2           ! SMILES: O=O                InChI: InChI=1S/O2/c1-2
+OCH2OCHO     ! SMILES: O=COC[O]           InChI: InChI=1S/C2H3O3/c3-1-5-2-4/h1H,2H2
+OCHO         ! SMILES: O=C[O]             InChI: InChI=1S/CHO2/c2-1-3/h1H
+OH           ! SMILES: [OH]               InChI: InChI=1S/HO/h1H
+PC2H4OH      ! SMILES: [CH2]CO            InChI: InChI=1S/C2H5O/c1-2-3/h3H,1-2H2
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+CH3O (+M) = H + CH2O (+M)                     1.130E+10     1.210    24085  # pes.subpes.channel.submech_prompt  8.1.1.RAD_DECO_CH3O
+  LOW  /                                      6.020E+16    -0.547    18024  /
+  TROE /   3.410E-01   2.800E+01   1.000E+03   2.339E+03 /
+  HE/0.670/   AR/0.850/   O2/1.000/   CO/1.500/   CO2/2.000/   H2/2.000/   CH4/2.000/   CH3OH/3.000/   C2H6/3.000/   H2O/6.000/   
+
+CH3O = CH2OH                                  1.000E+00     0.000        0  # pes.subpes.channel.submech_prompt  8.1.2.RAD_DECO_CH3O
+
+CH2OH (+M) = H + CH2O (+M)                    5.669E+10     0.811    39585  # pes.subpes.channel.submech_prompt  8.1.3.RAD_DECO_CH2OH
+  LOW  /                                      2.690E+21    -1.990    24000  /
+  TROE /   8.440E-01   9.000E+02   1.000E+00   3.315E+03 /
+  HE/0.670/   AR/0.850/   O2/1.000/   CO/1.500/   CO2/2.000/   H2/2.000/   CH4/2.000/   CH2O/2.500/   CH3OH/3.000/   C2H6/3.000/   H2O/6.000/   
+
+OH + CH3 = H2O + CH2(S)                       5.282E+17    -1.518     1772  # pes.subpes.channel.submech_prompt  9.1.1.
+  PLOG /                          1.000E-02   4.936E+14    -0.669     -446 /
+  PLOG /                          1.000E-01   1.207E+15    -0.778     -176 /
+  PLOG /                          1.000E+00   5.282E+17    -1.518     1772 /
+  PLOG /                          1.000E+01   4.788E+23    -3.155     7003 /
+  PLOG /                          1.000E+02   8.433E+19    -1.962     8244 /
+
+OH + CH3 = H + CH2OH                          3.046E+10     0.833     3570  # pes.subpes.channel.submech_prompt  9.1.2.RAD_GEN_CH2OH
+  PLOG /                          1.000E-02   1.054E+10     0.965     3210 /
+  PLOG /                          1.000E-01   1.175E+10     0.950     3250 /
+  PLOG /                          1.000E+00   3.046E+10     0.833     3570 /
+  PLOG /                          1.000E+01   9.912E+12     0.134     5640 /
+  PLOG /                          1.000E+02   2.334E+14    -0.186     8600 /
+
+CH3OH (+M) = OH + CH3 (+M)                    2.084E+18    -0.615    92541  # pes.subpes.channel.submech_prompt  9.1.3.
+  LOW  /                                      1.500E+43    -6.995    97992  /
+  TROE /   7.656E-01   5.951E+01   1.910E+03   9.374E+03 /
+
+CH3OH (+M) = H2O + CH2(S) (+M)                3.121E+18    -1.017    91712  # pes.subpes.channel.submech_prompt  9.1.4.
+  LOW  /                                      1.430E+47    -8.227    99417  /
+  TROE /   9.922E-01   4.731E+04   9.430E+02   4.711E+04 /
+
+CH3OH (+M) = H + CH2OH (+M)                   7.896E-03     5.038    84467  # pes.subpes.channel.submech_prompt  9.1.5.RAD_GEN_CH2OH
+  LOW  /                                      3.390E+42    -7.244   105230  /
+  TROE /   6.843E-01   4.149E+04   3.705E+04   3.980E+03 /
+
+H + CH2OH = H2 + CH2O                         4.000E+06     1.860      147  # pes.subpes.channel.submech_prompt  9.3.7.RAD_GEN_CH2OH
+
+OH + CH3 = H + CH3O                           1.230E+09     1.011    11950  # pes.subpes.channel.submech_prompt  9.6.10.RAD_GEN_CH3O
+  PLOG /                          1.000E-02   1.186E+09     1.016    11940 /
+  PLOG /                          1.000E-01   1.188E+09     1.016    11940 /
+  PLOG /                          1.000E+00   1.230E+09     1.011    11950 /
+  PLOG /                          1.000E+01   1.798E+09     0.965    12060 /
+  PLOG /                          1.000E+02   5.242E+10     0.551    13070 /
+
+H + CH3O = H2 + CH2O                          2.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  9.8.12.RAD_GEN_CH3O
+
+H + CH3OH = H2 + CH2OH                        1.350E+03     3.200     3488  # pes.subpes.channel.submech_prompt  10.1.1.RAD_GEN_CH2OH
+
+H + CH3OH = H2 + CH3O                         4.100E+04     2.658     9221  # pes.subpes.channel.submech_prompt  10.2.2.RAD_GEN_CH3O
+
+O + CH2OH = OH + CH2O                         4.200E+13     0.000        0  # pes.subpes.channel.submech_prompt  14.4.9.RAD_GEN_CH2OH
+
+O2 + CH3 = O + CH3O                           7.546E+12     0.000    28320  # pes.subpes.channel.submech_prompt  14.5.10.RAD_GEN_CH3O
+
+CH3O2H (+M) = OH + CH3O (+M)                  4.050E+19    -1.153    44250  # pes.subpes.channel.submech_prompt  15.1.1.RAD_GEN_CH3O
+  LOW  /                                      3.800E+42    -7.502    46756  /
+  TROE /   8.375E-01   3.656E+04   4.988E+02   9.990E+03 /
+
+OH + CH2OH = H2O + CH2O                       2.400E+13     0.000        0  # pes.subpes.channel.submech_prompt  15.2.2.RAD_GEN_CH2OH
+
+HO2 + CH3 = OH + CH3O                         2.068E+04     2.580    -3788  # pes.subpes.channel.submech_prompt  15.3.3.RAD_GEN_CH3O
+
+OH + CH3O = H2O + CH2O                        3.619E+02     2.498     1889  # pes.subpes.channel.submech_prompt  15.5.5.RAD_GEN_CH3O
+
+H + CH3O2 = OH + CH3O                         9.600E+13     0.000        0  # pes.subpes.channel.submech_prompt  15.6.6.RAD_GEN_CH3O
+
+O + CH3OH = OH + CH2OH                        3.880E+05     2.500     3080  # pes.subpes.channel.submech_prompt  15.7.7.RAD_GEN_CH2OH
+
+O + CH3OH = OH + CH3O                         1.700E+12     0.000     2285  # pes.subpes.channel.submech_prompt  15.8.8.RAD_GEN_CH3O
+
+H + CH3O2H = H2O + CH3O                       8.413E+00     3.830     2100  # pes.subpes.channel.submech_prompt  16.1.1.RAD_GEN_CH3O
+
+OH + CH3OH = H2O + CH2OH                      3.080E+04     2.650     -807  # pes.subpes.channel.submech_prompt  16.3.3.RAD_GEN_CH2OH
+
+OH + CH3OH = H2O + CH3O                       1.500E+02     3.030     -763  # pes.subpes.channel.submech_prompt  16.4.4.RAD_GEN_CH3O
+
+O2 + CH2OH = HO2 + CH2O                       7.200E+13     0.000     3736  # pes.subpes.channel.submech_prompt  20.3.4.RAD_GEN_CH2OH
+  DUP
+O2 + CH2OH = HO2 + CH2O                       2.900E+16    -1.500        0
+  DUP
+
+O2 + CH3O = HO2 + CH2O                        6.177E+10     0.009     2589  # pes.subpes.channel.submech_prompt  20.4.5.RAD_GEN_CH3O
+
+O + CH3O2 = O2 + CH3O                         3.600E+13     0.000        0  # pes.subpes.channel.submech_prompt  20.5.6.RAD_GEN_CH3O
+
+HO2 + CH2OH = H2O + HOCHO                     3.599E+12     0.120      454  # pes.subpes.channel.submech_prompt  21.2.2.RAD_GEN_CH2OH
+
+HO2 + CH2OH = H2O2 + CH2O                     1.200E+13     0.000        0  # pes.subpes.channel.submech_prompt  21.3.3.RAD_GEN_CH2OH
+
+HO2 + CH2OH = OH + HOCH2O                     1.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  21.4.4.RAD_GEN_CH2OH
+
+HO2 + CH3O = O2 + CH3OH                       1.400E+11     0.000        0  # pes.subpes.channel.submech_prompt  21.5.5.RAD_GEN_CH3O
+
+HO2 + CH3O = H2O2 + CH2O                      3.010E+11     0.000        0  # pes.subpes.channel.submech_prompt  21.6.6.RAD_GEN_CH3O
+
+OH + CH3O2 = HO2 + CH3O                       5.110E+15    -0.810        0  # pes.subpes.channel.submech_prompt  21.7.7.RAD_GEN_CH3O
+
+O2 + CH3OH = HO2 + CH2OH                      3.580E+05     2.270    42764  # pes.subpes.channel.submech_prompt  21.11.11.RAD_GEN_CH2OH
+
+HO2 + CH3OH = H2O2 + CH2OH                    2.610E+13     0.000    18782  # pes.subpes.channel.submech_prompt  22.3.3.RAD_GEN_CH2OH
+
+HO2 + CH3OH = H2O2 + CH3O                     1.220E+12     0.000    20071  # pes.subpes.channel.submech_prompt  22.4.4.RAD_GEN_CH3O
+
+OH + C2H5 = H2O + C2H4                        7.941E+22    -2.989     3863  # pes.subpes.channel.submech_prompt  43.1.1.
+  PLOG /                          1.000E-03   1.293E+19    -1.960      273 /
+  PLOG /                          1.000E-02   1.218E+19    -1.953      239 /
+  PLOG /                          1.000E-01   4.105E+19    -2.101      625 /
+  PLOG /                          1.000E+00   7.941E+22    -2.989     3863 /
+  PLOG /                          1.000E+01   2.793E+24    -3.329     7749 /
+  PLOG /                          1.000E+02   4.696E+18    -1.581     7999 /
+
+OH + C2H5 = CH3 + CH2OH                       6.528E+21    -2.352     6023  # pes.subpes.channel.submech_prompt  43.1.2.RAD_GEN_CH2OH
+  PLOG /                          1.000E-03   9.202E+17    -1.299     2505 /
+  PLOG /                          1.000E-02   1.098E+18    -1.321     2569 /
+  PLOG /                          1.000E-01   5.737E+18    -1.518     3185 /
+  PLOG /                          1.000E+00   6.528E+21    -2.352     6023 /
+  PLOG /                          1.000E+01   1.880E+25    -3.249    10576 /
+  PLOG /                          1.000E+02   6.504E+22    -2.443    12647 /
+
+H + C2H5O (+M) = C2H5OH (+M)                  3.100E+11     0.894       13  # pes.subpes.channel.submech_prompt  43.1.3.
+  LOW  /                                      3.800E+51   -15.550    11101  /
+
+C2H5OH = OH + C2H5                            4.460E+65   -14.900   112345  # pes.subpes.channel.submech_prompt  43.1.4.
+  PLOG /                          1.000E-03   8.100E+46   -11.300   111053 /
+  PLOG /                          1.000E-02   1.860E+56   -13.500   107238 /
+  PLOG /                          1.000E-01   4.650E+63   -15.000   109623 /
+  PLOG /                          1.000E+00   4.460E+65   -14.900   112345 /
+  PLOG /                          1.000E+01   2.790E+61   -13.400   113080 /
+  PLOG /                          1.000E+02   6.170E+51   -10.300   109941 /
+
+C2H5OH = H2O + C2H4                           2.110E+47    -9.600    89455  # pes.subpes.channel.submech_prompt  43.1.5.
+  PLOG /                          1.000E-03   3.750E+59   -14.200    83673 /
+  PLOG /                          1.000E-02   2.880E+57   -13.300    85262 /
+  PLOG /                          1.000E-01   1.820E+52   -11.500    84746 /
+  PLOG /                          1.000E+00   2.110E+47    -9.600    89455 /
+  PLOG /                          1.000E+01   6.670E+36    -6.450    83812 /
+  PLOG /                          1.000E+02   4.220E+20    -2.060    69466 /
+
+C2H5OH = CH3 + CH2OH                          1.547E+14     0.000    73666  # pes.subpes.channel.submech_prompt  43.1.6.RAD_GEN_CH2OH
+  PLOG /                          1.000E-03   1.200E+54   -12.900   100006 /
+  PLOG /                          1.000E-02   5.180E+59   -14.000    99906 /
+  PLOG /                          1.000E-01   1.620E+66   -15.300   105390 /
+  PLOG /                          1.000E+00   1.547E+14     0.000    73666 /
+  PLOG /                          1.000E+01   3.282E+14     0.000    71815 /
+  PLOG /                          1.000E+02   1.780E+47    -8.960   101059 /
+
+CH3OCH3 (+M) = CH3 + CH3O (+M)                2.796E+19    -0.661    84139  # pes.subpes.channel.submech_prompt  43.2.7.RAD_GEN_CH3O
+  LOW  /                                      2.060E+59   -11.400    93296  /
+  TROE /   1.000E+00   1.000E-30   8.800E+02 /
+  N2/1.500/   CO/2.250/   H2/3.000/   CH4/3.000/   CO2/3.000/   C2H6/4.500/   CH3OCH3/5.000/   H2O/9.000/   
+
+CH3 + CH3O = CH4 + CH2O                       1.200E+13     0.000        0  # pes.subpes.channel.submech_prompt  43.4.9.RAD_GEN_CH3O
+
+CH3 + CH3OH = CH4 + CH2OH                     2.130E-01     3.953     7055  # pes.subpes.channel.submech_prompt  44.6.6.RAD_GEN_CH2OH
+
+CH3 + CH3OH = CH4 + CH3O                      3.220E+03     2.425     8580  # pes.subpes.channel.submech_prompt  44.7.7.RAD_GEN_CH3O
+
+O2 + C2H3 = OH + CHCHO                        2.750E+14    -1.830        5  # pes.subpes.channel.submech_prompt  48.1.1.
+  PLOG /                          1.000E-02   3.910E+11    -0.110     2131 /
+  PLOG /                          1.000E-02   9.910E+11    -0.660       -1 /
+  PLOG /                          1.000E-01   1.130E+09     0.550       46 /
+  PLOG /                          1.000E-01   6.940E+14    -1.160     4542 /
+  PLOG /                          3.160E-01   8.460E+08     0.560        1 /
+  PLOG /                          3.160E-01   2.790E+13    -0.720     3479 /
+  PLOG /                          1.000E+00   2.750E+14    -1.830        5 /
+  PLOG /                          1.000E+00   4.990E+11    -0.140     1995 /
+  PLOG /                          3.160E+00   2.580E+20    -2.840     7530 /
+  PLOG /                          3.160E+00   2.350E+10     0.230     1573 /
+  PLOG /                          1.000E+01   9.180E+14    -2.260       -0 /
+  PLOG /                          1.000E+01   1.700E+14    -0.820     4450 /
+  PLOG /                          3.160E+01   6.110E+25    -4.210    13050 /
+  PLOG /                          3.160E+01   1.420E+11     0.050     3774 /
+  PLOG /                          1.000E+02   1.650E+30    -5.350    18430 /
+  PLOG /                          1.000E+02   3.170E+11    -0.020     5338 /
+
+O2 + C2H3 = OH + CH2CO                        1.060E+03     2.390     6180  # pes.subpes.channel.submech_prompt  48.1.2.
+  PLOG /                          1.000E-02   8.660E+02     2.410     6061 /
+  PLOG /                          1.000E-02   1.820E-01     3.120     1331 /
+  PLOG /                          1.000E-01   8.910E+02     2.410     6078 /
+  PLOG /                          1.000E-01   2.070E-01     3.110     1383 /
+  PLOG /                          3.160E-01   9.430E+02     2.400     6112 /
+  PLOG /                          3.160E-01   2.710E-01     3.080     1496 /
+  PLOG /                          1.000E+00   1.060E+03     2.390     6180 /
+  PLOG /                          1.000E+00   5.260E-01     3.010     1777 /
+  PLOG /                          3.160E+00   1.090E+03     2.380     6179 /
+  PLOG /                          3.160E+00   1.370E+00     2.900     2225 /
+  PLOG /                          1.000E+01   1.390E+03     2.360     6074 /
+  PLOG /                          1.000E+01   4.190E-01     2.930     2052 /
+  PLOG /                          3.160E+01   2.490E+06     1.420     8480 /
+  PLOG /                          3.160E+01   1.190E-04     4.210     2043 /
+  PLOG /                          1.000E+02   1.660E+10     0.360    12010 /
+  PLOG /                          1.000E+02   1.300E-03     3.970     3414 /
+
+O2 + C2H3 = O + CH2CHO                        5.810E+20    -2.650     6489  # pes.subpes.channel.submech_prompt  48.1.3.
+  PLOG /                          1.000E-02   6.440E+20    -2.670     6742 /
+  PLOG /                          1.000E-02   1.120E+10     0.620     -278 /
+  PLOG /                          1.000E-01   6.320E+20    -2.670     6713 /
+  PLOG /                          1.000E-01   1.160E+10     0.620     -248 /
+  PLOG /                          3.160E-01   8.070E+20    -2.700     6724 /
+  PLOG /                          3.160E-01   1.360E+10     0.600     -162 /
+  PLOG /                          1.000E+00   5.810E+20    -2.650     6489 /
+  PLOG /                          1.000E+00   1.660E+10     0.580       38 /
+  PLOG /                          3.160E+00   3.680E+20    -2.530     6406 /
+  PLOG /                          3.160E+00   7.970E+09     0.670      248 /
+  PLOG /                          1.000E+01   1.440E+23    -3.220     8697 /
+  PLOG /                          1.000E+01   6.000E+09     0.720      778 /
+  PLOG /                          3.160E+01   2.570E+25    -3.770    11530 /
+  PLOG /                          3.160E+01   1.290E+09     0.920     1219 /
+  PLOG /                          1.000E+02   8.340E+25    -3.800    13910 /
+  PLOG /                          1.000E+02   6.430E+07     1.280     1401 /
+
+O2 + C2H3 = HO2 + C2H2                        2.150E+07     1.190     3367  # pes.subpes.channel.submech_prompt  48.1.4.
+  PLOG /                          1.000E-02   1.080E+07     1.280     3322 /
+  PLOG /                          1.000E-02   4.760E+01     2.750     -796 /
+  PLOG /                          1.000E-01   7.750E+06     1.330     3216 /
+  PLOG /                          1.000E-01   5.160E+01     2.730     -768 /
+  PLOG /                          3.160E-01   1.210E+07     1.270     3311 /
+  PLOG /                          3.160E-01   5.550E+01     2.730     -658 /
+  PLOG /                          1.000E+00   2.150E+07     1.190     3367 /
+  PLOG /                          1.000E+00   4.600E+01     2.760     -493 /
+  PLOG /                          3.160E+00   1.130E+08     1.000     3695 /
+  PLOG /                          3.160E+00   3.750E+00     3.070     -601 /
+  PLOG /                          1.000E+01   1.310E+11     0.120     5872 /
+  PLOG /                          1.000E+01   5.480E+00     3.070       86 /
+  PLOG /                          3.160E+01   1.190E+09     0.820     5617 /
+  PLOG /                          3.160E+01   4.470E+08     0.000      955 /
+  PLOG /                          1.000E+02   1.060E+17    -1.450    12230 /
+  PLOG /                          1.000E+02   2.020E+01     2.940     1847 /
+
+O2 + C2H3 = HCO + CH2O                        3.030E+35    -7.320    11820  # pes.subpes.channel.submech_prompt  48.1.5.
+  PLOG /                          1.000E-02   2.770E+36    -7.600    12640 /
+  PLOG /                          1.000E-02   5.040E+15    -1.280      515 /
+  PLOG /                          1.000E-01   2.700E+36    -7.600    12610 /
+  PLOG /                          1.000E-01   5.100E+15    -1.280      513 /
+  PLOG /                          3.160E-01   2.170E+36    -7.570    12490 /
+  PLOG /                          3.160E-01   5.340E+15    -1.290      521 /
+  PLOG /                          1.000E+00   3.030E+35    -7.320    11820 /
+  PLOG /                          1.000E+00   6.760E+15    -1.310      646 /
+  PLOG /                          3.160E+00   1.590E+36    -7.470    12460 /
+  PLOG /                          3.160E+00   1.050E+16    -1.360     1066 /
+  PLOG /                          1.000E+01   5.760E+35    -7.200    13430 /
+  PLOG /                          1.000E+01   2.840E+15    -1.180     1429 /
+  PLOG /                          3.160E+01   3.540E+20    -2.570     5578 /
+  PLOG /                          3.160E+01   1.140E+69   -19.230    14760 /
+  PLOG /                          1.000E+02   3.030E+33    -6.280    16000 /
+  PLOG /                          1.000E+02   4.680E+10     0.190      831 /
+
+O2 + C2H3 = H + CHOCHO                        3.730E+15    -1.290     1441  # pes.subpes.channel.submech_prompt  48.1.6.
+  PLOG /                          1.000E-02   4.790E+14    -1.030      912 /
+  PLOG /                          1.000E-02   2.800E-04     4.040    -7019 /
+  PLOG /                          1.000E-01   5.030E+14    -1.040      922 /
+  PLOG /                          1.000E-01   3.450E-04     4.010    -6978 /
+  PLOG /                          3.160E-01   6.430E+14    -1.070      983 /
+  PLOG /                          3.160E-01   9.730E-04     3.890    -6768 /
+  PLOG /                          1.000E+00   3.730E+15    -1.290     1441 /
+  PLOG /                          1.000E+00   4.980E-01     3.150    -5496 /
+  PLOG /                          3.160E+00   2.440E+18    -2.130     3234 /
+  PLOG /                          3.160E+00   1.340E+05     1.670    -2931 /
+  PLOG /                          1.000E+01   1.300E+15    -1.090     2393 /
+  PLOG /                          1.000E+01   4.500E+15    -3.080    -4836 /
+  PLOG /                          3.160E+01   3.570E+33    -6.500    14910 /
+  PLOG /                          3.160E+01   3.840E+10     0.220      941 /
+  PLOG /                          1.000E+02   3.280E+31    -5.760    16250 /
+  PLOG /                          1.000E+02   2.750E+08     0.830      858 /
+
+O2 + C2H3 = CO + CH3O                         1.030E+11    -0.330     -748  # pes.subpes.channel.submech_prompt  48.1.7.RAD_GEN_CH3O
+  PLOG /                          1.000E-02   8.190E+18    -2.660     3201 /
+  PLOG /                          1.000E-02   1.290E+09     0.180    -1717 /
+  PLOG /                          1.000E-01   4.060E+14    -1.320      886 /
+  PLOG /                          1.000E-01   5.990E+11    -2.930    -9564 /
+  PLOG /                          3.160E-01   4.340E+14    -1.330      901 /
+  PLOG /                          3.160E-01   2.910E+11    -2.930   -10120 /
+  PLOG /                          1.000E+00   1.030E+11    -0.330     -748 /
+  PLOG /                          1.000E+00   5.770E+21    -3.540     4772 /
+  PLOG /                          3.160E+00   1.890E+12    -3.000    -8995 /
+  PLOG /                          3.160E+00   4.990E+15    -1.620     1849 /
+  PLOG /                          1.000E+01   1.930E+24    -5.630        2 /
+  PLOG /                          1.000E+01   9.330E+16    -1.960     3324 /
+  PLOG /                          3.160E+01   1.100E+18    -2.220     5178 /
+  PLOG /                          3.160E+01   1.020E+72   -20.690    15860 /
+  PLOG /                          1.000E+02   5.790E+32    -6.450    16810 /
+  PLOG /                          1.000E+02   1.100E+09     0.310     1024 /
+
+O2 + C2H3 = C2H3OO                            3.340E+61   -15.790    20150  # pes.subpes.channel.submech_prompt  48.1.8.
+  PLOG /                          1.000E-02   1.550E+24    -5.450     9662 /
+  PLOG /                          1.000E-02   1.780E-09     4.150    -4707 /
+  PLOG /                          1.000E-01   3.480E+56   -15.010    19160 /
+  PLOG /                          1.000E-01   2.360E+22    -4.520     2839 /
+  PLOG /                          3.160E-01   1.250E+64   -16.970    21290 /
+  PLOG /                          3.160E-01   2.000E+26    -5.430     2725 /
+  PLOG /                          1.000E+00   3.340E+61   -15.790    20150 /
+  PLOG /                          1.000E+00   6.130E+28    -5.890     3154 /
+  PLOG /                          3.160E+00   7.340E+53   -13.110    17300 /
+  PLOG /                          3.160E+00   2.140E+29    -5.800     3520 /
+  PLOG /                          1.000E+01   4.160E+48   -11.210    16000 /
+  PLOG /                          1.000E+01   3.480E+28    -5.370     3636 /
+  PLOG /                          3.160E+01   2.330E+43    -9.380    14810 /
+  PLOG /                          3.160E+01   3.320E+27    -4.950     3610 /
+  PLOG /                          1.000E+02   3.410E+39    -8.040    14360 /
+  PLOG /                          1.000E+02   1.030E+27    -4.720     3680 /
+
+O + CH2CHO = HCO + CH2O                       5.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  48.1.9.
+
+HO2 + C2H2 = OH + CHCHO                       5.630E+42   -10.050    24770  # pes.subpes.channel.submech_prompt  48.1.10.
+  PLOG /                          1.000E-01   3.640E+42   -10.000    24674 /
+  PLOG /                          1.000E-01   4.440E+17    -1.210    23492 /
+  PLOG /                          1.000E+00   5.630E+42   -10.050    24770 /
+  PLOG /                          1.000E+00   4.580E+17    -1.210    23506 /
+  PLOG /                          1.000E+01   5.230E+42   -10.030    24934 /
+  PLOG /                          1.000E+01   5.290E+17    -1.230    23566 /
+  PLOG /                          1.000E+02   4.290E+42    -9.950    25744 /
+  PLOG /                          1.000E+02   9.810E+18    -1.580    24661 /
+
+HO2 + C2H2 = OH + CH2CO                       5.280E-07     4.780    15460  # pes.subpes.channel.submech_prompt  48.1.11.
+  PLOG /                          1.000E-02   6.250E-07     4.750    15530 /
+  PLOG /                          1.000E-02   1.310E-14     6.580    10270 /
+  PLOG /                          1.000E-01   6.700E-07     4.740    15550 /
+  PLOG /                          1.000E-01   1.290E-14     6.590    10330 /
+  PLOG /                          3.160E-01   4.180E-07     4.810    15410 /
+  PLOG /                          3.160E-01   3.990E-14     6.360    10270 /
+  PLOG /                          1.000E+00   5.280E-07     4.780    15460 /
+  PLOG /                          1.000E+00   3.280E-15     6.700    10090 /
+  PLOG /                          3.160E+00   1.040E-06     4.690    15640 /
+  PLOG /                          3.160E+00   8.710E-21     8.300     8107 /
+  PLOG /                          1.000E+01   4.680E-05     4.220    16780 /
+  PLOG /                          1.000E+01   8.360E-22     8.760     8804 /
+  PLOG /                          3.160E+01   8.990E-01     2.970    19730 /
+  PLOG /                          3.160E+01   6.870E-14     6.670    13130 /
+  PLOG /                          1.000E+02   3.580E+03     1.970    23010 /
+  PLOG /                          1.000E+02   6.630E-12     6.150    14730 /
+
+HO2 + C2H2 = O + CH2CHO                       3.020E+07     0.980    13310  # pes.subpes.channel.submech_prompt  48.1.12.
+  PLOG /                          1.000E-02   5.500E+06     1.190    12880 /
+  PLOG /                          1.000E-02   2.940E-04     4.160     7736 /
+  PLOG /                          1.000E-01   1.160E+08     0.770    13600 /
+  PLOG /                          1.000E-01   6.140E-03     3.810     8394 /
+  PLOG /                          3.160E-01   1.200E+07     1.090    13050 /
+  PLOG /                          3.160E-01   5.440E-04     4.090     8044 /
+  PLOG /                          1.000E+00   3.020E+07     0.980    13310 /
+  PLOG /                          1.000E+00   2.480E-04     4.190     8203 /
+  PLOG /                          3.160E+00   1.980E+74   -16.330   109200 /
+  PLOG /                          3.160E+00   6.570E+04     1.850    12360 /
+  PLOG /                          1.000E+01   7.500E+14    -1.170    18350 /
+  PLOG /                          1.000E+01   2.920E-01     3.380    10590 /
+  PLOG /                          3.160E+01   8.630E+18    -2.270    22230 /
+  PLOG /                          3.160E+01   1.950E+00     3.170    11740 /
+  PLOG /                          1.000E+02   5.780E+18    -2.090    24350 /
+  PLOG /                          1.000E+02   1.100E-01     3.520    11980 /
+
+HO2 + C2H2 = HCO + CH2O                       3.330E+102  -24.180   138600  # pes.subpes.channel.submech_prompt  48.1.13.
+  PLOG /                          1.000E-02   3.900E+13    -1.170    13750 /
+  PLOG /                          1.000E-02   8.430E+00     2.560     7382 /
+  PLOG /                          1.000E-01   4.260E+00     2.640     7253 /
+  PLOG /                          1.000E-01   1.560E+13    -1.050    13520 /
+  PLOG /                          3.160E-01   2.590E-06     4.340     4525 /
+  PLOG /                          3.160E-01   6.900E+09    -0.000    11720 /
+  PLOG /                          1.000E+00   3.330E+102  -24.180   138600 /
+  PLOG /                          1.000E+00   8.070E+07     0.600    10850 /
+  PLOG /                          3.160E+00   5.220E+15    -1.750    15180 /
+  PLOG /                          3.160E+00   3.540E+00     2.690     8025 /
+  PLOG /                          1.000E+01   7.320E+35    -7.770    26970 /
+  PLOG /                          1.000E+01   9.840E+06     0.910    11710 /
+  PLOG /                          3.160E+01   1.780E+28    -5.300    25130 /
+  PLOG /                          3.160E+01   1.790E+04     1.700    11250 /
+  PLOG /                          1.000E+02   2.470E+16    -1.700    20030 /
+  PLOG /                          1.000E+02   4.320E-06     4.310     6829 /
+
+HO2 + C2H2 = H + CHOCHO                       2.180E+09     0.060    12470  # pes.subpes.channel.submech_prompt  48.1.14.
+  PLOG /                          1.000E-02   8.510E+07     0.480    11720 /
+  PLOG /                          1.000E-02   2.430E-06     4.430     5578 /
+  PLOG /                          1.000E-01   7.430E+07     0.500    11690 /
+  PLOG /                          1.000E-01   2.000E-06     4.450     5564 /
+  PLOG /                          3.160E-01   7.910E+07     0.490    11700 /
+  PLOG /                          3.160E-01   1.810E-06     4.460     5654 /
+  PLOG /                          1.000E+00   2.180E+09     0.060    12470 /
+  PLOG /                          1.000E+00   2.240E-05     4.170     6416 /
+  PLOG /                          3.160E+00   7.000E+49   -10.180    77110 /
+  PLOG /                          3.160E+00   7.650E+05     1.180    11340 /
+  PLOG /                          1.000E+01   4.060E+16    -2.030    17630 /
+  PLOG /                          1.000E+01   2.010E-02     3.380     8696 /
+  PLOG /                          3.160E+01   9.380E+16    -2.030    19590 /
+  PLOG /                          3.160E+01   6.060E-03     3.530     9217 /
+  PLOG /                          1.000E+02   5.910E+21    -3.320    25030 /
+  PLOG /                          1.000E+02   6.760E-02     3.270    10760 /
+
+HO2 + C2H2 = CO + CH3O                        8.940E+69   -15.850   102500  # pes.subpes.channel.submech_prompt  48.1.15.RAD_GEN_CH3O
+  PLOG /                          1.000E-02   3.540E+11     0.000    49510 /
+  PLOG /                          1.000E-02   2.890E+04     1.230     9903 /
+  PLOG /                          1.000E-01   2.780E+08     0.010    11920 /
+  PLOG /                          1.000E-01   9.670E-07     4.150     5173 /
+  PLOG /                          3.160E-01   8.060E+07     0.180    11650 /
+  PLOG /                          3.160E-01   1.840E-08     4.620     4517 /
+  PLOG /                          1.000E+00   8.940E+69   -15.850   102500 /
+  PLOG /                          1.000E+00   5.380E+05     0.860    10700 /
+  PLOG /                          3.160E+00   5.660E+12    -1.250    14570 /
+  PLOG /                          3.160E+00   5.370E-04     3.420     7218 /
+  PLOG /                          1.000E+01   3.300E+23    -4.450    21210 /
+  PLOG /                          3.160E+01   2.430E+22    -3.960    22650 /
+  PLOG /                          3.160E+01   8.110E+00     2.300    10560 /
+  PLOG /                          1.000E+02   1.170E+18    -2.570    22360 /
+  PLOG /                          1.000E+02   6.860E-04     3.420     9329 /
+
+HO2 + C2H2 = C2H3OO                           4.060E+50   -13.070    27220  # pes.subpes.channel.submech_prompt  48.1.16.
+  PLOG /                          1.000E-02   4.990E+06    -1.020     9152 /
+  PLOG /                          1.000E-02   1.880E+26    -8.340     9249 /
+  PLOG /                          1.000E-01   6.020E+17    -3.820    10790 /
+  PLOG /                          1.000E-01   5.260E+129  -41.740    35930 /
+  PLOG /                          3.160E-01   2.470E+48   -12.820    25220 /
+  PLOG /                          3.160E-01   1.960E+18    -3.670    10480 /
+  PLOG /                          1.000E+00   4.060E+50   -13.070    27220 /
+  PLOG /                          1.000E+00   4.930E+21    -4.370    12220 /
+  PLOG /                          3.160E+00   9.080E+46   -11.570    26880 /
+  PLOG /                          3.160E+00   1.920E+22    -4.280    13080 /
+  PLOG /                          1.000E+01   4.600E+43   -10.240    26930 /
+  PLOG /                          1.000E+01   2.110E+21    -3.780    13380 /
+  PLOG /                          3.160E+01   5.610E+38    -8.490    26210 /
+  PLOG /                          3.160E+01   1.390E+20    -3.300    13410 /
+  PLOG /                          1.000E+02   2.530E+35    -7.260    26390 /
+  PLOG /                          1.000E+02   1.420E+19    -2.910    13420 /
+
+H + CHOCHO = HCO + CH2O                       5.400E+13     0.000     4300  # pes.subpes.channel.submech_prompt  48.1.17.
+
+C2H3OO = OH + CHCHO                           3.790E+46   -10.720    51900  # pes.subpes.channel.submech_prompt  48.1.18.
+  PLOG /                          1.000E-02   3.640E+49   -12.130    67420 /
+  PLOG /                          1.000E-02   1.170E+56   -14.810    60700 /
+  PLOG /                          1.000E-01   1.440E+36    -9.920    41220 /
+  PLOG /                          1.000E-01   2.320E+40    -9.390    50420 /
+  PLOG /                          3.160E-01   4.180E+40   -10.530    43670 /
+  PLOG /                          3.160E-01   1.610E+43    -9.990    50290 /
+  PLOG /                          1.000E+00   3.790E+46   -10.720    51900 /
+  PLOG /                          1.000E+00   2.330E+124  -36.770    70100 /
+  PLOG /                          3.160E+00   1.600E+49   -11.240    54150 /
+  PLOG /                          3.160E+00   1.880E+103  -29.490    65410 /
+  PLOG /                          1.000E+01   2.380E+51   -11.640    56980 /
+  PLOG /                          1.000E+01   5.960E+86   -23.810    62170 /
+  PLOG /                          3.160E+01   2.000E+54   -12.220    61840 /
+  PLOG /                          3.160E+01   1.510E+57   -13.940    55390 /
+  PLOG /                          1.000E+02   9.540E+195  -52.270   163500 /
+  PLOG /                          1.000E+02   1.790E+34    -6.400    50000 /
+
+C2H3OO = OH + CH2CO                           1.510E+19    -3.610    43060  # pes.subpes.channel.submech_prompt  48.1.19.
+  PLOG /                          1.000E-02   1.150E+47   -12.280    75330 /
+  PLOG /                          1.000E-02   2.310E+02    -0.730    25710 /
+  PLOG /                          1.000E-01   8.430E+09    -2.060    33720 /
+  PLOG /                          1.000E-01   1.830E-23     7.840    20190 /
+  PLOG /                          3.160E-01   6.060E+04     0.170    34220 /
+  PLOG /                          3.160E-01   3.820E+63   -20.440    43420 /
+  PLOG /                          1.000E+00   1.510E+19    -3.610    43060 /
+  PLOG /                          1.000E+00   3.180E+27    -7.760    37230 /
+  PLOG /                          3.160E+00   2.130E+33    -7.390    51610 /
+  PLOG /                          3.160E+00   2.320E-05     3.470    31560 /
+  PLOG /                          1.000E+01   4.440E+36    -7.990    54680 /
+  PLOG /                          1.000E+01   1.060E-01     2.640    34160 /
+  PLOG /                          3.160E+01   1.190E+37    -7.800    56460 /
+  PLOG /                          3.160E+01   5.620E+02     1.700    36450 /
+  PLOG /                          1.000E+02   9.080E+35    -7.210    57550 /
+  PLOG /                          1.000E+02   1.110E+07     0.520    38670 /
+
+C2H3OO = O + CH2CHO                           7.620E+81   -21.280    65080  # pes.subpes.channel.submech_prompt  48.1.20.
+  PLOG /                          1.000E-02   2.700E+180  -48.190   169300 /
+  PLOG /                          1.000E-02   1.470E+30    -6.640    41110 /
+  PLOG /                          1.000E-01   9.650E-12     5.960    22890 /
+  PLOG /                          1.000E-01   3.900E+38    -8.690    42770 /
+  PLOG /                          3.160E-01   4.570E+47   -11.210    47050 /
+  PLOG /                          3.160E-01   3.950E+22    -3.710    36270 /
+  PLOG /                          1.000E+00   7.620E+81   -21.280    65080 /
+  PLOG /                          1.000E+00   2.390E+33    -6.620    41280 /
+  PLOG /                          3.160E+00   1.860E+68   -16.830    60680 /
+  PLOG /                          3.160E+00   6.370E+31    -5.960    41260 /
+  PLOG /                          1.000E+01   2.020E+55   -12.690    55840 /
+  PLOG /                          1.000E+01   2.130E+29    -5.100    40710 /
+  PLOG /                          3.160E+01   1.110E+53   -11.790    56690 /
+  PLOG /                          3.160E+01   4.660E+27    -4.500    40530 /
+  PLOG /                          1.000E+02   4.300E+48   -10.310    56090 /
+  PLOG /                          1.000E+02   5.990E+25    -3.850    40120 /
+
+C2H3OO = HCO + CH2O                           8.640E+33    -6.880    34370  # pes.subpes.channel.submech_prompt  48.1.21.
+  PLOG /                          1.000E-02   1.660E+174  -55.520    60320 /
+  PLOG /                          1.000E-02   2.270E+35    -7.970    31280 /
+  PLOG /                          1.000E-01   9.030E+66   -17.250    48120 /
+  PLOG /                          1.000E-01   2.080E+26    -4.960    28780 /
+  PLOG /                          3.160E-01   1.820E+43    -9.870    37960 /
+  PLOG /                          3.160E-01   1.450E+20    -3.080    26630 /
+  PLOG /                          1.000E+00   8.640E+33    -6.880    34370 /
+  PLOG /                          1.000E+00   1.060E+130  -39.380    54700 /
+  PLOG /                          3.160E+00   7.290E+171  -43.530   191900 /
+  PLOG /                          3.160E+00   2.350E+34    -6.870    35700 /
+  PLOG /                          1.000E+01   1.030E+32    -6.060    35500 /
+  PLOG /                          1.000E+01   2.180E+175  -53.780    68500 /
+  PLOG /                          3.160E+01   1.850E+34    -6.570    38510 /
+  PLOG /                          3.160E+01   1.070E+185  -54.220    88990 /
+  PLOG /                          1.000E+02   5.700E+29    -5.190    36800 /
+  PLOG /                          1.000E+02   4.680E+02     1.810    18100 /
+
+C2H3OO = H + CHOCHO                           1.480E+44   -10.120    40790  # pes.subpes.channel.submech_prompt  48.1.22.
+  PLOG /                          1.000E-02   6.410E+80   -22.200    51750 /
+  PLOG /                          1.000E-02   1.190E+28    -6.010    28740 /
+  PLOG /                          1.000E-01   3.310E+65   -17.010    48090 /
+  PLOG /                          1.000E-01   1.400E+25    -4.800    28940 /
+  PLOG /                          3.160E-01   5.980E+51   -12.620    43000 /
+  PLOG /                          3.160E-01   2.910E+20    -3.290    27550 /
+  PLOG /                          1.000E+00   1.480E+44   -10.120    40790 /
+  PLOG /                          1.000E+00   1.580E+19    -2.820    27620 /
+  PLOG /                          3.160E+00   1.260E+59   -14.330    51390 /
+  PLOG /                          3.160E+00   1.930E+22    -3.540    29980 /
+  PLOG /                          1.000E+01   4.930E+26    -4.670    34320 /
+  PLOG /                          1.000E+01   7.510E+29    -5.750    34490 /
+  PLOG /                          3.160E+01   2.060E+33    -6.380    39520 /
+  PLOG /                          3.160E+01   7.140E+61   -16.160    43280 /
+  PLOG /                          1.000E+02   1.300E+32    -5.920    40660 /
+  PLOG /                          1.000E+02   1.140E+19    -2.560    29670 /
+
+C2H3OO => CO + H + CH2O                       2.020E+34    -6.880    34370  # pes.subpes.channel.submech_prompt  48.1.23.
+  PLOG /                          1.000E-02   3.880E+174  -55.520    60320 /
+  PLOG /                          1.000E-02   5.290E+35    -7.970    31280 /
+  PLOG /                          1.000E-01   2.110E+67   -17.250    48120 /
+  PLOG /                          1.000E-01   4.850E+26    -4.960    28780 /
+  PLOG /                          3.160E-01   4.260E+43    -9.870    37960 /
+  PLOG /                          3.160E-01   3.370E+20    -3.080    26630 /
+  PLOG /                          1.000E+00   2.020E+34    -6.880    34370 /
+  PLOG /                          1.000E+00   2.460E+130  -39.380    54700 /
+  PLOG /                          3.160E+00   1.700E+172  -43.530   191900 /
+  PLOG /                          3.160E+00   5.490E+34    -6.870    35700 /
+  PLOG /                          1.000E+01   2.400E+32    -6.060    35500 /
+  PLOG /                          1.000E+01   5.090E+175  -53.780    68500 /
+  PLOG /                          3.160E+01   4.320E+34    -6.570    38510 /
+  PLOG /                          3.160E+01   2.490E+185  -54.220    88990 /
+  PLOG /                          1.000E+02   1.330E+30    -5.190    36800 /
+  PLOG /                          1.000E+02   1.090E+03     1.810    18100 /
+
+C2H3OO = CO + CH3O                            3.830E+33    -7.200    35100  # pes.subpes.channel.submech_prompt  48.1.24.RAD_GEN_CH3O
+  PLOG /                          1.000E-02   5.200E+33    -7.920    31320 /
+  PLOG /                          1.000E-02   2.310E+129  -41.860    45850 /
+  PLOG /                          1.000E-01   1.260E+98   -27.090    64060 /
+  PLOG /                          1.000E-01   2.420E+28    -5.990    30540 /
+  PLOG /                          3.160E-01   1.800E+33    -7.270    33760 /
+  PLOG /                          3.160E-01   8.690E-50    16.630    -3900 /
+  PLOG /                          1.000E+00   3.830E+33    -7.200    35100 /
+  PLOG /                          1.000E+00   1.190E-39    13.610    -1317 /
+  PLOG /                          3.160E+00   1.280E+79   -19.610    74870 /
+  PLOG /                          3.160E+00   8.800E+86   -23.080    61010 /
+  PLOG /                          1.000E+01   4.070E+32    -6.620    37210 /
+  PLOG /                          1.000E+01   1.270E+03     1.440    18660 /
+  PLOG /                          3.160E+01   6.860E+44   -10.040    47030 /
+  PLOG /                          3.160E+01   1.970E+17    -2.230    28590 /
+  PLOG /                          1.000E+02   8.180E-07     4.747    19712 /
+  PLOG /                          1.000E+02   1.600E+04     1.676    22806 /
+
+CH3OCO = CO2 + CH3                            1.250E+16    -1.830    11341  # pes.subpes.channel.submech_prompt  48.5.31.
+  PLOG /                          5.000E-02   9.720E+12    -1.310     9417 /
+  PLOG /                          1.000E+00   1.250E+16    -1.830    11341 /
+  PLOG /                          1.000E+01   1.040E+18    -2.100    12827 /
+  PLOG /                          1.000E+02   8.690E+17    -1.810    13657 /
+
+CH3OCO = CO + CH3O                            4.090E+05     0.810    21969  # pes.subpes.channel.submech_prompt  48.5.32.RAD_GEN_CH3O
+  PLOG /                          5.000E-02   1.030E+03     1.290    25401 /
+  PLOG /                          1.000E+00   4.090E+05     0.810    21969 /
+  PLOG /                          1.000E+01   9.020E+14    -1.720    21768 /
+  PLOG /                          1.000E+02   2.825E+22    -3.440    23592 /
+
+OH + CH2CO = CO + CH2OH                       3.500E+07     1.410    -1249  # pes.subpes.channel.submech_prompt  48.9.36.RAD_GEN_CH2OH
+  DUP
+OH + CH2CO = CO + CH2OH                       4.090E+06     1.760     2088
+  DUP
+
+OCHO + CH3 = CH3OCHO                          1.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  49.2.2.
+
+HCO + CH3O = CH3OCHO                          3.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  49.2.3.RAD_GEN_CH3O
+
+H + CH3OCO = CH3OCHO                          1.000E+14     0.000        0  # pes.subpes.channel.submech_prompt  49.2.4.
+
+H + CH2OCHO = CH3OCHO                         1.000E+14     0.000        0  # pes.subpes.channel.submech_prompt  49.2.5.
+
+OH + CH2CHO = HCO + CH2OH                     1.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  49.10.15.RAD_GEN_CH2OH
+
+HCO + CH3O = CO + CH3OH                       9.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  49.14.19.RAD_GEN_CH3O
+
+CH2O + CH3O = HCO + CH3OH                     6.620E+11     0.000     2294  # pes.subpes.channel.submech_prompt  50.14.25.RAD_GEN_CH3O
+
+HCO + CH3OH = CH2O + CH2OH                    9.630E+03     2.900    13110  # pes.subpes.channel.submech_prompt  50.17.28.RAD_GEN_CH2OH
+
+CH3OOCH3 = CH3O + CH3O                        1.100E+47   -10.280    46300  # pes.subpes.channel.submech_prompt  51.2.2.RAD_GEN_CH3O
+  PLOG /                          1.000E-02   7.800E+51   -12.410    46100 /
+  PLOG /                          3.000E-02   3.400E+51   -12.140    46300 /
+  PLOG /                          1.000E-01   6.390E+50   -11.740    46500 /
+  PLOG /                          3.000E-01   1.650E+49   -11.100    46500 /
+  PLOG /                          1.000E+00   1.100E+47   -10.280    46300 /
+  PLOG /                          3.000E+00   3.020E+44    -9.370    45900 /
+  PLOG /                          1.000E+01   3.570E+41    -8.350    45400 /
+  PLOG /                          3.000E+01   1.430E+38    -7.210    44595 /
+  PLOG /                          1.000E+02   5.230E+34    -6.070    43700 /
+
+CH3OOCH3 = CH2O + CH3OH                       9.680E+41    -9.329    44700  # pes.subpes.channel.submech_prompt  51.2.3.
+  PLOG /                          1.000E-02   1.200E+49   -12.140    45000 /
+  PLOG /                          3.000E-02   9.470E+47   -11.651    45100 /
+  PLOG /                          1.000E-01   4.480E+46   -11.077    45200 /
+  PLOG /                          3.000E-01   3.570E+44   -10.278    45000 /
+  PLOG /                          1.000E+00   9.680E+41    -9.329    44700 /
+  PLOG /                          3.000E+00   1.330E+39    -8.315    44300 /
+  PLOG /                          1.000E+01   9.560E+35    -7.218    43700 /
+  PLOG /                          3.000E+01   2.130E+32    -5.988    42901 /
+  PLOG /                          1.000E+02   4.970E+28    -4.774    42100 /
+
+CH3O + CH3O = CH2O + CH3OH                    1.440E+05     2.450    -2260  # pes.subpes.channel.submech_prompt  51.2.4.RAD_GEN_CH3O
+
+CH3 + CH3O2 = CH3OOCH3                        1.000E+00     0.000        0  # pes.subpes.channel.submech_prompt  51.2.5.
+  PLOG /                          1.000E+01   4.570E+30    -7.410     4005 /
+  PLOG /                          3.000E+01   3.170E+36    -8.780     4621 /
+  PLOG /                          1.000E+02   8.080E+39    -9.370     5764 /
+
+CH3 + CH3O2 = CH3O + CH3O                     5.440E+11     0.353    -1460  # pes.subpes.channel.submech_prompt  51.2.6.RAD_GEN_CH3O
+
+CH3 + CH3O2 = CH2O + CH3OH                    4.390E+06     1.550    -1890  # pes.subpes.channel.submech_prompt  51.2.7.
+
+CH2OH + CH2OH = CH2O + CH3OH                  3.000E+12     0.000        0  # pes.subpes.channel.submech_prompt  51.10.15.RAD_GEN_CH2OH
+
+CH3O + CH2OH = CH2O + CH3OH                   2.400E+13     0.000        0  # pes.subpes.channel.submech_prompt  51.11.16.RAD_GEN_CH3O
+
+CH3O + CH3OH = CH2OH + CH3OH                  3.000E+11     0.000     4074  # pes.subpes.channel.submech_prompt  52.10.10.RAD_GEN_CH3O
+
+OCH2OCHO = HOCH2OCO                           1.000E+11     0.000    14000  # pes.subpes.channel.submech_prompt  56.2.8.
+
+OCH2OCHO = HCO + HOCHO                        1.000E+00     0.000        0  # pes.subpes.channel.submech_prompt  56.2.9.
+  PLOG /                          1.000E-03   1.647E+22    -4.500    13600 /
+  PLOG /                          4.000E-03   4.398E+23    -4.730    14300 /
+  PLOG /                          1.800E-02   1.145E+25    -4.960    15120 /
+  PLOG /                          7.500E-02   1.439E+26    -5.100    15960 /
+  PLOG /                          3.160E-01   2.363E+26    -4.970    16620 /
+  PLOG /                          1.334E+00   1.213E+25    -4.380    16810 /
+  PLOG /                          5.623E+00   1.346E+22    -3.310    16400 /
+  PLOG /                          2.371E+01   1.583E+18    -1.980    15540 /
+  PLOG /                          1.000E+02   4.147E+14    -0.800    14630 /
+
+HOCH2OCO = CO2 + CH2OH                        1.117E+17    -1.526    20772  # pes.subpes.channel.submech_prompt  56.2.10.RAD_GEN_CH2OH
+
+HOCH2OCO = CO + HOCH2O                        2.920E+18    -1.965    19619  # pes.subpes.channel.submech_prompt  56.2.11.
+
+CH3O2 + CH2OH = CH3O + HOCH2O                 6.343E+08     0.890    -2485  # pes.subpes.channel.submech_prompt  59.7.7.RAD_GEN_CH3O
+
+CH3O2 + CH2OH = CH3O2H + CH2O                 6.188E-01     2.690    -3428  # pes.subpes.channel.submech_prompt  59.8.8.RAD_GEN_CH2OH
+
+CH3O2 + CH2OH = CH3OH + HOCHO                 2.327E+00     2.740    -3566  # pes.subpes.channel.submech_prompt  59.9.9.RAD_GEN_CH2OH
+
+HO2 + PC2H4OH => OH + CH2O + CH2OH            3.000E+13     0.000        0  # pes.subpes.channel.submech_prompt  59.11.11.PROMPT_LUMPED_CH2OH
+
+CH3O2 + CH3OH = CH3O2H + CH2OH                1.810E+12     0.000    13710  # pes.subpes.channel.submech_prompt  60.6.6.RAD_GEN_CH2OH
+
+CH3O2 + CH3OH = CH3O2H + CH3O                 7.940E-04     4.710    13600  # pes.subpes.channel.submech_prompt  60.7.7.RAD_GEN_CH3O
+
+O + CH3CO3 => CO + O2 + CH3O                  1.500E+13     0.000        0  # pes.subpes.channel.submech_prompt  62.2.2.PROMPT_LUMPED_CH3O
+
+CH3O2 + CH3O2 => O2 + CH3O + CH3O             1.400E+16    -1.610     1860  # pes.subpes.channel.submech_prompt  65.3.3.PROMPT_LUMPED_CH3O
+
+C2H4 + CH3O = CH3OH + C2H3                    1.200E+11     0.000     6750  # pes.subpes.channel.submech_prompt  81.2.2.RAD_GEN_CH3O
+
+CH3O + C2H6 = CH3OH + C2H5                    2.410E+11     0.000     7090  # pes.subpes.channel.submech_prompt  82.4.4.RAD_GEN_CH3O
+
+CH3 + C2H3OO = CH3O + CH2CHO                  5.100E+12     0.000    -1411  # pes.subpes.channel.submech_prompt  85.1.1.RAD_GEN_CH3O
+
+CH3O + C2H4O1-2 = CH3OH + C2H3O1-2            1.200E+11     0.000     6750  # pes.subpes.channel.submech_prompt  86.3.3.RAD_GEN_CH3O
+
+CH3O + CH3CHO = CH3OH + CH3CO                 1.690E+05     2.044     2353  # pes.subpes.channel.submech_prompt  86.4.4.RAD_GEN_CH3O
+  DUP
+CH3O + CH3CHO = CH3OH + CH3CO                 9.620E+03     2.501      159
+  DUP
+
+CH3O + CH3CHO = CH3OH + CH2CHO                2.650E+01     3.452     5873  # pes.subpes.channel.submech_prompt  86.5.5.RAD_GEN_CH3O
+  DUP
+CH3O + CH3CHO = CH3OH + CH2CHO                5.640E-06     4.930      628
+  DUP
+
+CH3O2 + C2H5 = CH3O + C2H5O                   8.000E+12     0.000    -1000  # pes.subpes.channel.submech_prompt  87.1.1.RAD_GEN_CH3O
+
+CH3 + C2H5O2 = CH3O + C2H5O                   5.100E+12     0.000    -1411  # pes.subpes.channel.submech_prompt  87.2.2.RAD_GEN_CH3O
+
+CH3O + CH3OCH2 = CH2O + CH3OCH3               2.410E+13     0.000        0  # pes.subpes.channel.submech_prompt  87.3.3.RAD_GEN_CH3O
+
+CH3O + CH3OCH3 = CH3OH + CH3OCH2              6.020E+11     0.000     4074  # pes.subpes.channel.submech_prompt  88.3.3.RAD_GEN_CH3O
+
+CH3OH + C2H3OO = CH2OH + C2H3OOH              4.000E+13     0.000    19400  # pes.subpes.channel.submech_prompt  93.2.2.RAD_GEN_CH2OH
+
+CH3O + CH3OCHO = CH3OH + CH3OCO               5.480E+11     0.000     5000  # pes.subpes.channel.submech_prompt  93.10.10.RAD_GEN_CH3O
+
+CH3O + CH3OCHO = CH3OH + CH2OCHO              2.170E+11     0.000     6458  # pes.subpes.channel.submech_prompt  93.11.11.RAD_GEN_CH3O
+
+CH3OH + C2H5O2 = CH2OH + C2H5O2H              4.000E+13     0.000    19400  # pes.subpes.channel.submech_prompt  94.1.1.RAD_GEN_CH2OH
+
+CH3O2 + CH3CO3 => O2 + CH3O + CH3CO2          1.100E+12     0.000    -1000  # pes.subpes.channel.submech_prompt  98.2.2.PROMPT_LUMPED_CH3O
+
+
+
+END
+
