@@ -113,10 +113,11 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
         print('Well Extension activated')
         tsk_key_dct['well_extension'] = True
         
-    is_abstraction = is_abstraction_pes(spc_dct, rxn_lst, pes_idx)
-    if is_abstraction and tsk_key_dct['well_extension']:
-        well_extend = None # overwrite
-    elif not is_abstraction and tsk_key_dct['well_extension']:
+    #is_abstraction = is_abstraction_pes(spc_dct, rxn_lst, pes_idx)
+    #if is_abstraction and tsk_key_dct['well_extension']:
+    #    well_extend = None # overwrite
+    #elif not is_abstraction and tsk_key_dct['well_extension']:
+    if tsk_key_dct['well_extension']:
         well_extend = 0.001
     else:
         well_extend = None
@@ -158,7 +159,8 @@ def _full_mess_v1(energy_trans_str, rxn_chan_str, dats,
 
 
     # Write the second MESS string (well extended), if needed
-    if not is_abstraction and tsk_key_dct['well_extension']:
+    #if not is_abstraction and tsk_key_dct['well_extension']:
+    if tsk_key_dct['well_extension']:
         print('User requested well extension scheme for rates...')
 
         # Run the base MESSRATE
