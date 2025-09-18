@@ -28,7 +28,7 @@ def main(
     labels, _, therm_files, csv_files = util.read_mechs_yaml(
         mechs_yaml, 'thermo')
     if temps_lst is None or len(temps_lst) < 2:
-        temps_lst = [numpy.linspace(500, 1000, 16)]
+        temps_lst = [numpy.linspace(500, 1500, 16)]
     else:
         temps_lst = [numpy.linspace(temps_lst[0], temps_lst[1], 16)]
 
@@ -45,7 +45,7 @@ def main(
     comb_spc_dct = compare.get_mult_comb_mech_spc_dct(spc_dcts)
 
     # Run the plotter
-    figs, sort_algn_spc_therm_dct = plot_thermo.build_plots(
+    figs, sort_algn_spc_therm_dct,_ = plot_thermo.build_plots(
         algn_spc_therm_dct,
         spc_dct=comb_spc_dct,
         mech_names=labels,

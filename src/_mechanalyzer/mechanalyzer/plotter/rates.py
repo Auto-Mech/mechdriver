@@ -71,11 +71,11 @@ def build_plots(algn_rxn_ktp_dct, mech_names=None, ratio_sort=False):
         fig, axs = build_fig_and_axs(molecularity, ratio_dcts, mech_names)
         fig = plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
         # get max and min ratio and filter- to extend for more than 2 mechs ([1] is the second mech)
-        if ratio_dcts[1]:
-            maxratio = max([max(ratiop[1]) for ratiop in ratio_dcts[1].values()])
-            minratio = min([min(ratiop[1]) for ratiop in ratio_dcts[1].values()])
-            if maxratio < 2 and minratio > 0.5:
-                continue #do not append to figs!
+        # if ratio_dcts[1]:
+            # maxratio = max([max(ratiop[1]) for ratiop in ratio_dcts[1].values()])
+            # minratio = min([min(ratiop[1]) for ratiop in ratio_dcts[1].values(25)])
+            # if maxratio < maxratio_threshold and minratio > minratio_threshold:
+                # continue #do not append to figs!
         figs.append(fig)
 
     return figs, algn_rxn_ratio_dct

@@ -27,7 +27,7 @@ def main(
     labels, mech_files, therm_files, csv_files = util.read_mechs_yaml(
         mechs_yaml, 'rates')
     if temps_lst is None or len(temps_lst) < 2:
-        temps_lst = [numpy.linspace(500, 1000, 16)]
+        temps_lst = [numpy.linspace(500, 1500, 16)]
     else:
         temps_lst = [numpy.linspace(temps_lst[0], temps_lst[1], 16)]
     if pressures is None or len(pressures) < 1:
