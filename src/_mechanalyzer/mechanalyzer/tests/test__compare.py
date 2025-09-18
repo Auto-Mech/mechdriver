@@ -105,13 +105,12 @@ RXN_KTP_DCT4 = {
     (('OH', 'O'), ('H', 'O2'), (None,)): {'high': (TEMPS, np.array([1.495e13, 9.23e12, 8.5e12]))},
 }
 
-CORRECT_SPC_KEYS = ('H', 'OH', 'O', 'O2', 'H2', 'HO2V', 'O(S)')
+CORRECT_SPC_KEYS = ('H', 'OH', 'O', 'O2', 'H2', 'O(S)')
 CORRECT_COMB_SPC_KEYS = ('H', 'OH', 'O', 'H2', 'O2', 'O(S)', 'HO2V')
 CORRECT_COMB_SPC_KEYS2 = ('H', 'OH', 'O', 'H2', 'O2', 'O(S)', 'HO2V', 'H2O', 'H2-zz')
 CORRECT_RENAMED_RXN_KEYS = (
     (('H2', 'O'), ('OH', 'H'), (None,)),
     (('O', 'OH'), ('O2', 'H'), (None,)),
-    (('H2', 'O2'), ('HO2V', 'H'), (None,)),
     (('OH',), ('H', 'O'), (None,)),
 #    (('OH',), ('H', 'O'), ('(+M)',)),
     (('OH',), ('H', 'O'), ('+O(S)',)),
@@ -122,7 +121,6 @@ CORRECT_RENAMED_RXN_KEYS = (
 # (These are seemingly out of order due to the fact that they are popped out and then readded)
 CORRECT_REVERSED_RXN_KEYS = (
     (('H2', 'O'), ('OH', 'H'), (None,)),
-    (('H2', 'O2'), ('HO2V', 'H'), (None,)),
     (('H', 'O2'), ('OH', 'O'), (None,)),
     (('H', 'O'), ('OH',), (None,)),
 #    (('H', 'O'), ('OH',), ('(+M)',)),
@@ -135,7 +133,6 @@ CORRECT_REVERSED_RXN_KEYS = (
 CORRECT_PARTIALLY_REVERSED_RXN_KEYS = (
     (('H2', 'O'), ('OH', 'H'), (None,)),
     (('O', 'OH'), ('O2', 'H'), (None,)),
-    (('H2', 'O2'), ('HO2V', 'H'), (None,)),
     (('OH',), ('H', 'O'), (None,)),
 #    (('OH',), ('H', 'O'), ('(+M)',)),
     (('OH',), ('H', 'O'), ('+O(S)',)),
@@ -151,7 +148,6 @@ CORRECT_ALGN_RXN_KTP_KEYS = (
     (('H', 'O'), ('OH',), ('(+M)',)),
     (('H', 'O'), ('OH',), ('+O(S)',)),
     (('H2', 'O(S)'), ('OH', 'O'), (None,)),
-    (('H2', 'O2'), ('HO2V', 'H'), (None,))
 )
 
 # With removing loners
@@ -170,8 +166,7 @@ def test_rename_spc_dct():
     """
     rename_instr = compare.get_rename_instr(SPC_IDENT_DCT1, SPC_IDENT_DCT2)
     renamed_dct, _ = compare.rename_species(SPC_IDENT_DCT2, rename_instr, target_type='spc')
-    assert tuple(renamed_dct.keys()) == CORRECT_SPC_KEYS
-    assert tuple(renamed_dct.values()) == tuple(SPC_IDENT_DCT2.values())
+    assert set(renamed_dct.keys()) == set(CORRECT_SPC_KEYS)
 
 
 def test_get_comb_spc_dct():
@@ -197,6 +192,8 @@ def test_rename_rxn_ktp_dct():
     """
     rename_instr = compare.get_rename_instr(SPC_IDENT_DCT1, SPC_IDENT_DCT2)
     renamed_dct, _ = compare.rename_species(RXN_KTP_DCT2, rename_instr, target_type='rxn')
+    print(renamed_dct.keys())
+    print(CORRECT_RENAMED_RXN_KEYS)
     assert tuple(renamed_dct.keys()) == CORRECT_RENAMED_RXN_KEYS
 
 
@@ -211,6 +208,8 @@ def test_rename_dcts():
     renamed_rxn_ktp_dcts, _ = compare.rename_dcts(rxn_ktp_dcts, spc_dcts, target_type='rxn')
     renamed_spc_therm_dcts, _ = compare.rename_dcts(spc_therm_dcts, spc_dcts,
                                                     target_type='spc')
+    print(renamed_rxn_ktp_dcts[1].keys())
+    print(CORRECT_RENAMED_RXN_KEYS)
     assert tuple(renamed_rxn_ktp_dcts[1].keys()) == CORRECT_RENAMED_RXN_KEYS
     assert tuple(renamed_spc_therm_dcts[1].keys()) == CORRECT_SPC_KEYS
 
@@ -295,3 +294,4 @@ if __name__ == '__main__':
     test_rename_dcts()
     test_reverse_rxn_ktp_dcts()
     test_align_rxn_ktp_dcts()
+

@@ -118,7 +118,7 @@ def sortmech(
     default=None,
     type=lambda s: [float(temp) for temp in s.split(',')],
     show_default=True,
-    help="Array of temperatures (K). None defaults to 500--1500."
+    help="Comma separated first and last temperatures (K). None defaults to 500,1500."
 )
 @click.option(
     "-p",
@@ -126,7 +126,7 @@ def sortmech(
     default=None,
     type=lambda s: [float(press) for press in s.split(',')],
     show_default=True,
-    help="Array of pressures (atm). None defaults to (1, 10, 100)."
+    help="Comma separated array of pressures (atm). None defaults to '1,10,100'."
 )
 @click.option(
     "-s",
@@ -145,9 +145,9 @@ def sortmech(
 @click.option(
     "-l",
     "--remove_loners",
-    default=True,
+    default=1,
     show_default=True,
-    help="True only plots rates that are in ALL mechanisms, False plots ALL rates in all mechanisms."
+    help="1 only plots rates that are in 2 mechanisms, 2 only plots rates that are in ALL mechanisms, 0 plots ALL rates in all mechanisms."
 )
 def compare_rates(
     mechs_yaml: str,
@@ -158,7 +158,7 @@ def compare_rates(
     pressures: list,
     sort_method: str,
     rev_rates: bool,
-    remove_loners: bool
+    remove_loners: int
 ):
     """Compare the rate constants in a mechanism"""
     compare_rates_.main(
@@ -233,7 +233,7 @@ def compare_rates(
    "--remove_loners",
    default=True,
    show_default=True,
-   help="True only plots species that are in ALL mechanisms, False plots ALL species in all mechanisms."
+   help="1 only plots species that are in at least 2 mechanisms, 2 only plots species that are in ALL mechanisms, and 0 plots ALL species in all mechanisms."
 )
 @click.option(
    "-p",
@@ -250,7 +250,7 @@ def compare_thermo(
    temps_lst: list,
    sort_method: str,
    sort_temp: float,
-   remove_loners: bool,
+   remove_loners: int,
    print_missing: bool
 ):
    """Compare the thermo properties in a mechanism"""

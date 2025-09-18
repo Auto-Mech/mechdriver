@@ -72,10 +72,13 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None,
         diff_arrays = algn_spc_diff_dct[spc]
         # plot only if difference in DG above 2 kcal/mol
         #print(diff_arrays)
-        maxdiff_dg = max(abs(diff_arrays[1][4]/1000))
-        #print(maxdiff_dg)
-        if maxdiff_dg < diff_dg_threshold:
-            continue
+        if diff_arrays:
+            if len(diff_arrays) > 1:
+                if diff_arrays[1]:
+                    maxdiff_dg = max(abs(diff_arrays[1][4]/1000))
+                    #print(maxdiff_dg)
+                    if maxdiff_dg < diff_dg_threshold:
+                        continue
         if spc_dct is not None:
             if spc_dct.get(spc) is not None:
                 smiles = spc_dct.get(spc).get('smiles')

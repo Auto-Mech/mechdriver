@@ -555,11 +555,16 @@ def betasci_gra(geo):
 
 
 def ringformsci_gra(geo):
+    # determine which atm is experiencing both the scission and ring-formation
+    # and then get the bnds to that atom
     ts_gra, oversat_atm = choose_heavy_cutoff_distance(geo)
     atoms_bnd = automol.graph.atoms_bond_keys(ts_gra)
     bnds = list(atoms_bnd[oversat_atm])
     bnded_atms = [list(bnd - set({oversat_atm}))[0] for bnd in bnds]
 
+    # determine which is the scission bond by finding which atms
+    # are a part of a ring by which retain a path after cleavage
+    # certainly there are newer functions to determine rings
     brk_atm_idx = None
     for i in range(len(bnds)):
         gra_i = automol.graph.remove_bonds(ts_gra, (bnds[i],))
@@ -569,23 +574,23 @@ def ringformsci_gra(geo):
                     gra_i, bnded_atms[i], bnded_atms[j])
                 if pth_btwn is None:
                     brk_atm_idx = i
-    frm_atm_idx = None
+
+    # determine which is the ring-forming bond by which is the longest 
+    # bond length of the two options 
+    frm_atm = None
+    frm_length = 0.
     if brk_atm_idx is not None:
-        len_pth_to_brk = 0
-        for i in range(len(bnds)):
-            if i != brk_atm_idx:
-                gra_i = automol.graph.remove_bonds(ts_gra, (bnds[i],))
-                pth_btwn = automol.graph.shortest_path_between_atoms(
-                    gra_i, bnded_atms[i], bnded_atms[brk_atm_idx])
-                if len(pth_btwn) > len_pth_to_brk:
-                    print('bigger path', pth_btwn)
-                    frm_atm_idx = i
-                    len_pth_to_brk = len(pth_btwn)
+        for atm_i in list(
+                set(bnded_atms) - (bnds[brk_atm_idx] - {oversat_atm})):
+            len_i = automol.geom.distance(geo, atm_i, oversat_atm)
+            if  len_i > frm_length:
+                frm_atm = atm_i
+                frm_length = len_i
     breaking_bond = None
     forming_bond = None
-    if frm_atm_idx is not None and brk_atm_idx is not None:
+    if frm_atm is not None and brk_atm_idx is not None:
         breaking_bond = bnds[brk_atm_idx]
-        forming_bond = bnds[frm_atm_idx]
+        forming_bond = frozenset({oversat_atm, frm_atm}) 
     return ts_gra, breaking_bond, forming_bond
 
 
@@ -681,13 +686,12 @@ def all_reaction_graphs(
         back_bnd_ord_dct = {breaking_bond: 0.1, forming_bond: 1}
     forward_gra = automol.graph.set_bond_orders(ts_gra, forw_bnd_ord_dct)
     backward_gra = automol.graph.set_bond_orders(ts_gra, back_bnd_ord_dct)
-    reactant_gras = automol.graph.ts.reactants_graph(forward_gra)
-    reactant_gras = automol.graph.connected_components(reactant_gras)
-    product_gras = automol.graph.ts.reactants_graph(backward_gra)
-    product_gras = automol.graph.connected_components(product_gras)
-    ts_gras = [forward_gra, backward_gra]
+    reactant_gra = automol.graph.ts.reactants_graph(forward_gra)
+    reactant_gras = automol.graph.connected_components(reactant_gra)
+    product_gra = automol.graph.ts.reactants_graph(backward_gra)
+    product_gras = automol.graph.connected_components(product_gra)
     rxn_gras = [reactant_gras, product_gras]
-    return ts_gras, rxn_gras
+    return reactant_gra, rxn_gras
 
 
 def build_zrxn_from_geo(
@@ -710,11 +714,14 @@ def build_zrxn_from_geo(
     rct_strucs = [automol.graph.geometry(gra) for gra in rct_gras]
     prd_strucs = [automol.graph.geometry(gra) for gra in prd_gras]
     rct_keys = []
+    prd_keys = []
+    # convert reactant and product structures to zmas and 
+    # make sure atom numbering is consistent with the ts graph
     for i, gra in enumerate(rct_gras):
         keys = automol.graph.atom_keys(gra)
         key_map = {}
         rev_map = {}
-        for j, key in enumerate(keys):
+        for j, key in enumerate(sorted(keys)):
             key_map[key] = j
             rev_map[j] = key
         gra = automol.graph.relabel(gra, key_map)
@@ -728,7 +735,7 @@ def build_zrxn_from_geo(
         keys = automol.graph.atom_keys(gra)
         key_map = {}
         rev_map = {}
-        for j, key in enumerate(keys):
+        for j, key in enumerate(sorted(keys)):
             key_map[key] = j
             rev_map[j] = key
         gra = automol.graph.relabel(gra, key_map)
@@ -737,7 +744,7 @@ def build_zrxn_from_geo(
         prd_strucs[i] = zma
         prd_zc_.append(zc_)
         prd_keys.append([rev_map[zc_[key][0]] for key in sorted(zc_.keys())])
-    # match_ich_info = _match_info(rxn_info, (ts_forw_gra, ts_back_gra))
+    ##match_ich_info = _match_info(rxn_info, (ts_forw_gra, ts_back_gra))
     std_zrxn = automol.reac.from_data(
         ts_forw_gra, rct_keys, prd_keys,
         rxn_class,
@@ -783,6 +790,7 @@ def get_zrxn(geo, rxn_info, rxn_class):
     """ Automatically determine the ts graph, and the forming and breaking
         bonds from the ts geometry and the user specified reaction class
     """
+    # get forming and breaking bonds from geometry
     breaking_bond2 = None
     if rxn_class in ['hydrogen abstraction', 'hydrogen migration']:
         ts_gra, breaking_bond, forming_bond = h_transfer_gra(geo)
@@ -793,23 +801,20 @@ def get_zrxn(geo, rxn_info, rxn_class):
     elif rxn_class in ['elimination']:
         ts_gra, breaking_bond, breaking_bond2, forming_bond = elim_gra(geo)
 
-    ts_gras, rxn_gras = all_reaction_graphs(
+    # get graphs based on geometry and breaking/forming bonds
+    rct_gra, rxn_gras = all_reaction_graphs(
         ts_gra, breaking_bond, forming_bond,
         rxn_class == 'beta scission', breaking_bond2)
-
+    
+    # check that the reactant/product ichs match those input by user
     match_ich_info = _match_info(rxn_info, rxn_gras)
     if match_ich_info:
-        reactant_keys = []
-        for gra in rxn_gras[0]:
-            reactant_keys.append(automol.graph.atom_keys(gra))
-        product_keys = []
-        for gra in rxn_gras[1]:
-            product_keys.append(automol.graph.atom_keys(gra))
-        std_rxn = automol.reac.from_forward_reverse(
-            rxn_class, *ts_gras, reactant_keys, product_keys)
-        std_zrxn = automol.reac.with_structures(std_rxn, "zmat")
-        ts_zma = automol.reac.ts_structure(std_zrxn)
-        ts_geo = automol.zmat.geometry(ts_zma)
+        forming_bonds = [forming_bond]
+        breaking_bonds = [breaking_bond]
+        if breaking_bond2 is not None:
+            breaking_bonds.append(breaking_bond2)
+        std_zrxn, ts_zma, ts_geo, rxn_info = build_zrxn_from_geo(
+            geo, rxn_info, rxn_class, rct_gra, breaking_bonds, forming_bonds)
     else:
         print(
             'The reactants and products found for the transition state' +

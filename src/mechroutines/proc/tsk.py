@@ -217,9 +217,8 @@ def _run_task_for_locs_lst(
 
         elif 'torsion' in tsk and not _skip(spc_name, spc_dct_i):
             csv_data_i, miss_data_i = collect.torsions(
-                spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
+                spc_name, locs, locs_path, spc_dct_i, spc_dct, spc_mod_dct_i,
                 mod_thy_info, run_prefix, save_prefix)
-            print(csv_data_i)
             csv_data[label] = csv_data_i
 
         elif 'hess_json' in tsk:

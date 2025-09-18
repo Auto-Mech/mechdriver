@@ -16,7 +16,7 @@ RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
 
 def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, mech_spc_dcts, temps,
-                         rev_rates=True, remove_loners=True, write_file=False):
+                         rev_rates=True, remove_loners=1, write_file=False):
     """ Create an algn_rxn_ktp_dct, which contains a single set of rxn keys, where each reaction
         has a ktp_dct for each mechanism. Options exist for reversing rates or not, removing rates
         that don't have entries from all mechanisms, and writing outputs to a file.
@@ -32,7 +32,7 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, mech_spc_dcts, temps,
         :param rev_rates: whether or not rates should be reversed
         :type rev_rates: Bool
         :param remove_loners: whether or not reactions with any None entries should be removed
-        :type remove_loners: Bool
+        :type remove_loners: int
         :param write_file: whether or not to write output to a text file
         :type write_file: Bool
         :return algn_rxn_ktp_dct: single dct with a list of ktp_dcts for each rxn
@@ -60,9 +60,9 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, mech_spc_dcts, temps,
     # Get the algn_rxn_ktp_dct
     algn_rxn_ktp_dct = align_dcts(reversed_rxn_ktp_dcts)
 
-    # If indicated, remove rxns that don't have rates from all the mechanisms
+    # If indicated, remove rxns that don't have rates from all the mechanisms or at least two of them
     if remove_loners:
-        algn_rxn_ktp_dct = remove_incomplete_items(algn_rxn_ktp_dct)
+        algn_rxn_ktp_dct = remove_incomplete_items(algn_rxn_ktp_dct, remove_loners)
 
     # Write to file
     if write_file:
@@ -71,7 +71,7 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, mech_spc_dcts, temps,
     return algn_rxn_ktp_dct
 
 
-def get_algn_spc_therm_dct(spc_therm_dcts, mech_spc_dcts, remove_loners=True,
+def get_algn_spc_therm_dct(spc_therm_dcts, mech_spc_dcts, remove_loners=1,
                            write_file=False):
     """ Create an algn_spc_therm_dct, which contains a single set of spc keys, where each
         species has a thermo_array for each mechanism. Options exist for removing species
@@ -82,7 +82,7 @@ def get_algn_spc_therm_dct(spc_therm_dcts, mech_spc_dcts, remove_loners=True,
         :param mech_spc_dcts: list of mech_spc_dcts
         :type: list of dcts [mech_spc_dct1, mech_spc_dct2, ...]
         :param remove_loners: whether or not species with any None entries should be removed
-        :type remove_loners: Bool
+        :type remove_loners: int
         :param write_file: whether or not to write output to a text file
         :type write_file: Bool
         :return algn_spc_therm_dct: single dct with a list of thermo_arrays for each spc
@@ -99,9 +99,9 @@ def get_algn_spc_therm_dct(spc_therm_dcts, mech_spc_dcts, remove_loners=True,
     # Get the algn_rxn_ktp_dct
     algn_spc_therm_dct = align_dcts(renamed_spc_therm_dcts)
 
-    # If indicated, remove spcs that don't have thermo from all the mechanisms
+    # If indicated, remove spcs that don't have thermo from all the mechanisms or at least two of them
     if remove_loners:
-        algn_spc_therm_dct = remove_incomplete_items(algn_spc_therm_dct)
+        algn_spc_therm_dct = remove_incomplete_items(algn_spc_therm_dct, remove_loners)
 
     # Write to file
     if write_file:
@@ -179,12 +179,14 @@ def write_output_file(rename_instr_lst):
     fid.close()
 
 
-def remove_incomplete_items(algn_dct):
+def remove_incomplete_items(algn_dct, remove_loners=1):
     """ Takes an algn_dct and removes any entries that don't have values from
         all the mechs (i.e., any entries that have any None entries).
 
         :param algn_dct: aligned dct with all keys (rxns or spcs) written in the same way
         :type algn_dct: dct {key1: [val1, val2, ...], key2: ...}
+        :param remove_loners: whether or not species with any None entries should be removed
+        :type remove_loners: int
         :return filtered_algn_dct: aligned dct with only entries that have no None values
         :rtype: dct {key1: [val1, val2, ...], key2: ...}
     """
@@ -193,9 +195,15 @@ def remove_incomplete_items(algn_dct):
         num_values = len(values)
         num_actual_values = len([value for value in values if value is not None])
 
+        # Only add the spc if at least two  mechanisms have an entry for the spc
+        if remove_loners == 1:
+            if num_actual_values >= 2:
+                filtered_algn_dct[key] = values
+
         # Only add the spc if all mechanisms have an entry for the spc
-        if num_actual_values == num_values:
-            filtered_algn_dct[key] = values
+        if remove_loners == 2:
+            if num_actual_values == num_values:
+                filtered_algn_dct[key] = values
 
     return filtered_algn_dct
 
@@ -224,7 +232,7 @@ def rename_dcts(target_dcts, mech_spc_dcts, target_type):
 
     # Loop through each item in the list of dictionaries
     rename_instr_lst = []
-    for mech_idx in range(num_mechs-1):
+    for mech_idx in range(1):
         mech_spc_dct1 = renamed_mech_spc_dcts[mech_idx]
         for idx2 in range(mech_idx+1, num_mechs):
             mech_spc_dct2 = renamed_mech_spc_dcts[idx2]
@@ -281,6 +289,8 @@ def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=True):
                 if spc1 != spc2:  # if spc names different, add to rename_instr
                     rename_instr[spc2] = spc1
                     already_done.append(spc2)
+                else:
+                    rename_instr[spc2] = spc2
             # If species are different but have same name
             elif spc1 == spc2:
                 rename_instr[spc2] = spc2 + rename_str
@@ -422,44 +432,45 @@ def rename_species(target_dct, rename_instr, target_type='rxn'):
     # If a rxn_ktp_dct
     if target_type == 'rxn':
         for rcts, prds, third_bods in target_dct.keys():
-            new_rcts = []
-            new_prds = []
-            new_third_bods = []
-            for spc in rcts:
-                if spc in rename_instr.keys():
-                    new_rcts.append(rename_instr[spc])
+            if all (spc in rename_instr.keys() for spc in rcts + prds):
+                new_rcts = []
+                new_prds = []
+                new_third_bods = []
+                for spc in rcts:
+                    if spc in rename_instr.keys():
+                        new_rcts.append(rename_instr[spc])
+                    else:
+                        new_rcts.append(spc)
+                for spc in prds:
+                    if spc in rename_instr.keys():
+                        new_prds.append(rename_instr[spc])
+                    else:
+                        new_prds.append(spc)
+                for spc in third_bods:
+                    spc, addition = strip_third_bod(spc)  # if not '(+M)' or '+M', strip '(+)'
+                    if spc in rename_instr.keys():
+                        new_third_bod = rename_instr[spc]
+                    else:  # this condition will occur if third_bod is '(+M)' or '+M'
+                        new_third_bod = spc
+    
+                    # Add back on the '(+...)' or '+' if indicated
+                    if addition == 'paren':
+                        new_third_bod = f'(+{new_third_bod})'
+                    elif addition == 'plus only':
+                        new_third_bod = f'+{new_third_bod}'
+                    new_third_bods.append(new_third_bod)
+    
+                new_rcts = tuple(new_rcts)
+                new_prds = tuple(new_prds)
+                new_third_bods = tuple(new_third_bods)
+                # See if new reaction is already in the renamed dct
+                match, _ = assess_rxn_match((new_rcts, new_prds, new_third_bods), renamed_dct)
+                if match:
+                    ste_dct[match].append((rcts, prds, third_bods))
                 else:
-                    new_rcts.append(spc)
-            for spc in prds:
-                if spc in rename_instr.keys():
-                    new_prds.append(rename_instr[spc])
-                else:
-                    new_prds.append(spc)
-            for spc in third_bods:
-                spc, addition = strip_third_bod(spc)  # if not '(+M)' or '+M', strip '(+)'
-                if spc in rename_instr.keys():
-                    new_third_bod = rename_instr[spc]
-                else:  # this condition will occur if third_bod is '(+M)' or '+M'
-                    new_third_bod = spc
-
-                # Add back on the '(+...)' or '+' if indicated
-                if addition == 'paren':
-                    new_third_bod = f'(+{new_third_bod})'
-                elif addition == 'plus only':
-                    new_third_bod = f'+{new_third_bod}'
-                new_third_bods.append(new_third_bod)
-
-            new_rcts = tuple(new_rcts)
-            new_prds = tuple(new_prds)
-            new_third_bods = tuple(new_third_bods)
-            # See if new reaction is already in the renamed dct
-            match, _ = assess_rxn_match((new_rcts, new_prds, new_third_bods), renamed_dct)
-            if match:
-                ste_dct[match].append((rcts, prds, third_bods))
-            else:
-                renamed_dct[new_rcts, new_prds, new_third_bods] = target_dct[rcts, prds, third_bods]
-                ste_dct[new_rcts, new_prds, new_third_bods] = [(rcts, prds, third_bods),]
-
+                    renamed_dct[new_rcts, new_prds, new_third_bods] = target_dct[rcts, prds, third_bods]
+                    ste_dct[new_rcts, new_prds, new_third_bods] = [(rcts, prds, third_bods),]
+    
         # Remove any rxns in ste_dct that only have one item in the list;
         # these are reactions without any stereo reactions
         old_ste_dct = copy.deepcopy(ste_dct)  # this prevents runtime errors
@@ -473,8 +484,6 @@ def rename_species(target_dct, rename_instr, target_type='rxn'):
             if spc in rename_instr.keys():
                 new_spc_name = rename_instr[spc]
                 renamed_dct[new_spc_name] = data
-            else:
-                renamed_dct[spc] = data
 
     return renamed_dct, ste_dct
 
@@ -498,7 +507,7 @@ def reverse_rxn_ktp_dcts(renamed_rxn_ktp_dcts, renamed_spc_therm_dcts, temps, re
     """
     num_mechs = len(renamed_rxn_ktp_dcts)
     reversed_rxn_ktp_dcts = copy.deepcopy(renamed_rxn_ktp_dcts)  # deepcopy so no external changes
-    for mech_idx in range(num_mechs-1):
+    for mech_idx in range(1):
         rxn_ktp_dct1 = renamed_rxn_ktp_dcts[mech_idx]
         for mech_idx2 in range(mech_idx+1, num_mechs):
             rxn_ktp_dct2 = renamed_rxn_ktp_dcts[mech_idx2]
@@ -577,25 +586,26 @@ def reverse_ktp_dct(ktp_dct, spc_therm_dct, rxn, temps):
         :type ktp_dct: dict {pressure1: (temp_array1, rates_array1), pressure2: ...}
     """
     [rcts, prds, _] = rxn
-    k_equils = _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps)
     rev_ktp_dct = {}
-    for pressure, (_, kts) in ktp_dct.items():
+    k_equils = _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps)
+    if k_equils is not None:
+        for pressure, (_, kts) in ktp_dct.items():
 
-        # Calculate density to handle units, if needed
-        if len(rcts) > 1 and len(prds) == 1:
-            densities = ratefit.calc.p_to_m(1.0, temps)
-            kts *= densities
-        elif len(rcts) == 1 and len(prds) > 1:
-            densities = ratefit.calc.p_to_m(1.0, temps)
-            kts /= densities
+            # Calculate density to handle units, if needed
+            if len(rcts) > 1 and len(prds) == 1:
+                densities = ratefit.calc.p_to_m(1.0, temps)
+                kts *= densities
+            elif len(rcts) == 1 and len(prds) > 1:
+                densities = ratefit.calc.p_to_m(1.0, temps)
+                kts /= densities
 
-        # Calculate the reverse rates with K_equil
-        rev_rates = []
-        for forw_k, k_equil in zip(kts, k_equils):
-            rev_rates.append(forw_k / k_equil)
+            # Calculate the reverse rates with K_equil
+            rev_rates = []
+            for forw_k, k_equil in zip(kts, k_equils):
+                rev_rates.append(forw_k / k_equil)
 
-        # Add reversed rates to dict
-        rev_ktp_dct[pressure] = (temps, rev_rates)
+            # Add reversed rates to dict
+            rev_ktp_dct[pressure] = (temps, rev_rates)
 
     return rev_ktp_dct
 
@@ -689,21 +699,19 @@ def _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps):
         :rtype: list [float]
     """
     k_equils = []
-    for temp_idx, temp in enumerate(temps):
-        rct_gibbs = 0.0
-        for rct in rcts:
-            try:
+    if all(spc in spc_therm_dct for spc in rcts + prds):
+        for temp_idx, temp in enumerate(temps):
+            rct_gibbs = 0.0
+            for rct in rcts:
                 rct_gibbs += spc_therm_dct[rct][4][temp_idx]  # [4] accesses Gibbs
-            except:
-                breakpoint()
 
-        prd_gibbs = 0.0
-        for prd in prds:
-            prd_gibbs += spc_therm_dct[prd][4][temp_idx]  # [4] accesses Gibbs
-
-        rxn_gibbs = prd_gibbs - rct_gibbs
-        k_equils.append(numpy.exp(-rxn_gibbs / (RC_CAL * temp)))
-
+            prd_gibbs = 0.0
+            for prd in prds:
+                prd_gibbs += spc_therm_dct[prd][4][temp_idx]  # [4] accesses Gibbs
+            rxn_gibbs = prd_gibbs - rct_gibbs
+            k_equils.append(numpy.exp(-rxn_gibbs / (RC_CAL * temp)))
+    else:
+        k_equils = None
     return k_equils
 
 
