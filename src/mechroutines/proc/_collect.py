@@ -190,7 +190,7 @@ def frequencies(
     return fxn_ret, miss_data
 
 
-def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
+def torsions(spc_name, locs, locs_path, spc_dct_i, spc_dct, spc_mod_dct_i,
              mod_thy_info, run_prefix, save_prefix):
     """ get the torsion potentials
         currently just checks if there any non-empty potentials
@@ -215,7 +215,7 @@ def torsions(spc_name, locs, locs_path, spc_dct_i, spc_mod_dct_i,
         print(f'Checking for torsions at {zma_path}')
         if zma_fs[-1].file.torsions.exists(zma_locs):
             rotors, _, _ = tors.build_rotors(
-                spc_dct_i, pf_filesystems, spc_mod_dct_i)
+                spc_dct_i, pf_filesystems, spc_mod_dct_i, spc_dct)
             names = automol.data.rotor.rotors_torsion_names(rotors, flat=True)
             pots = automol.data.rotor.rotors_potentials(rotors)
             # Just check if there any potentials with
