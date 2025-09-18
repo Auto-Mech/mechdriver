@@ -129,11 +129,16 @@ def _check_stereo_parities(zma, ref_zma, zrxn):
     geo = zmat.geometry(zma, dummy=True)
     ref_geo = zmat.geometry(ref_zma, dummy=True)
 
+    lin_keys = set(graph.linear_atom_keys(gra))
     bad_keys = graph.geometries_parity_mismatches(gra, geo, ref_geo, ste_keys)
 
     viable = True
-    for bnd_key in bad_keys:
-        viable = False
-        print("Invalid stereo at bond ", bnd_key)
+    for key in bad_keys:
+        if isinstance(key, int):
+            viable = False
+            print("Invalid stereo at atom ", key)
+        elif isinstance(key, frozenset) and not key <= lin_keys:
+            viable = False
+            print("Invalid stereo at bond ", key)
 
     return viable

@@ -61,6 +61,9 @@ def extract_hot_branching(hot_log_str, hotspecies_en, species_lst,
     if lbl_dct:
         inv_lbl_dct = invert(lbl_dct)
 
+    species_fake_dct = {sp_i: sp_i.split(
+        'FakeW-')[1] for sp_i in species_lst if 'FakeW' in sp_i}
+
     if sp_labels == 'auto':
         sp_labels = 'inp'*(not not lbl_dct) + 'out'*(not lbl_dct)
 
@@ -128,12 +131,12 @@ def extract_hot_branching(hot_log_str, hotspecies_en, species_lst,
                 raise ValueError('*Error: sp_labels must be "inp" (as in mess input) \
                     or "out" (as in mess output)')
 
-            species_bf_i_nofake = [sp_i for sp_i in species_bf_i if 'FakeW' not in sp_i]
-            species_bf_i_fake_dct = {}
-            for sp_i in species_bf_i:
-                if sp_i not in species_bf_i_nofake:
-                    species_bf_i_fake_dct[sp_i] = sp_i.split('FakeW-')[1]
-
+            #species_bf_i_nofake = [sp_i for sp_i in species_bf_i if 'FakeW' not in sp_i]
+            #species_bf_i_fake_dct = {}
+            #for sp_i in species_bf_i:
+            #    if sp_i not in species_bf_i_nofake:
+            #        species_bf_i_fake_dct[sp_i] = sp_i.split('FakeW-')[1]
+            
             sp_i = apf.where_is(hotspecies_messout, species_bf_i_messout)
 
             for line in lines_block:
@@ -182,7 +185,7 @@ def extract_hot_branching(hot_log_str, hotspecies_en, species_lst,
                 0, index=hot_e_lvl, columns=species_lst)
             bf_hotspecies[species_bf_i] = branch_ratio
 
-            for fakesp, realsp in species_bf_i_fake_dct.items():
+            for fakesp, realsp in species_fake_dct.items():
                 # sum fake species with respective wells
                 bf_hotspecies[realsp] = bf_hotspecies[realsp] + bf_hotspecies[fakesp]
                 bf_hotspecies = bf_hotspecies.drop(columns=[fakesp])
@@ -225,9 +228,8 @@ def extract_fne(log_str, sp_labels='auto'):
                  for line in lines if 'BIMOLECULAR' in line]
         species = wells+bimol
     else:
-        print('*Error: sp_labels must be "inp" (as in mess input) \
+        raise ValueError('*Error: sp_labels must be "inp" (as in mess input) \
             or "out" (as in mess output)')
-        sys.exit()
 
     if lbl_dct:
         n_wells = sum(

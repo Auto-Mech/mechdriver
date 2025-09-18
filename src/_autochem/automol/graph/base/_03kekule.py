@@ -360,8 +360,6 @@ def linear_segment_cap_keys(
     :returns: A dictionary mapping linear segments onto their in-line neighbors
     :rtype: Dict[List[int], Tuple[Optional[int], Optional[int]]]
     """
-    err_msg = f"gra = {gra}\nlin_keys = {lin_keys}\nextend = {extend}"
-
     nkeys_dct = atoms_neighbor_atom_keys(gra)
     lin_nkeys_dct = linear_atoms_neighbor_atom_keys(gra, dummy=True)
     lin_keys = frozenset(lin_nkeys_dct.keys()) if lin_keys is None else lin_keys
@@ -410,13 +408,12 @@ def linear_segment_cap_keys(
             ext_nkey2s = ext_nkeys[1:]
 
         # Add in-line neighbors to the extended keys list, if not None
+        # Bug fix: Require len(ext_nkey1s) == 1 -> only do the extension if unambiguous
         ext_keys = keys
-        if ext_nkey1s:
-            assert len(ext_nkey1s) == 1, f"{err_msg}\next_nkey1s = {ext_nkey1s}"
+        if ext_nkey1s and len(ext_nkey1s) == 1:
             ext_keys = (*ext_nkey1s, *ext_keys)
 
-        if ext_nkey2s:
-            assert len(ext_nkey1s) == 1, f"{err_msg}\next_nkey2s = {ext_nkey2s}"
+        if ext_nkey2s and len(ext_nkey2s) == 1:
             ext_keys = (*ext_keys, *ext_nkey2s)
 
         if extend:

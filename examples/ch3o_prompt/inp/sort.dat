@@ -1,0 +1,20 @@
+isolate_submech # this section is not mandatory
+    HCO
+end
+
+
+sort_mech
+    criteria = (
+        submech_prompt
+    )
+    n_criteria_headers = 0
+end
+
+
+prompt_filter # not mandatory
+    # available: Tref, DH, H5H3ratio, kratio, kabs
+    DH = 8.
+    Tref = 1000
+    lookforpromptchains = 0
+end
+

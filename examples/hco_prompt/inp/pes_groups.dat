@@ -1,0 +1,17 @@
+grp 1 
+	 idxs = [8:6, 6:1] 
+	 peds = [['H+CH2O=H2+HCO'], []] 
+	 hot = [[], ['HCO']] 
+	 modeltype = rovib_dos 
+	 bf_threshold = 0.1 
+end grp 
+
+grp 2 
+	 idxs = [14:3, 14:6, 6:1] 
+	 peds = [['OH+CH2O=H2O+HCO'], ['OH+HCOH=H2O+HCO'], []] 
+	 hot = [[], [], ['HCO']] 
+	 modeltype = rovib_dos 
+	 bf_threshold = 0.1 
+end grp 
+
+
