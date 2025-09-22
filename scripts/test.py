@@ -32,6 +32,13 @@ def status():
     help="Specify workload manager (PBS or Slurm) instead of autodetecting",
 )
 @click.option(
+    "-l",
+    "--time-limit",
+    default="4 hr",
+    show_default=True,
+    help="Worker time limit with units, e.g. '4 hr'",
+)
+@click.option(
     "-f",
     "--manager-flags",
     default=None,
@@ -54,6 +61,7 @@ def status():
 )
 def local(
     manager: str | None = None,
+    time_limit: str = "4 hr",
     manager_flags: str | None = None,
     server_dir: str | None = None,
     env_prologue: str | None = None,
@@ -82,6 +90,7 @@ def local(
     mechdriver.subtasks.run_multiple(
         test_paths,
         manager=manager,
+        time_limit=time_limit,
         manager_flags=manager_flags,
         server_dir=server_dir,
         env_prologue=env_prologue,
