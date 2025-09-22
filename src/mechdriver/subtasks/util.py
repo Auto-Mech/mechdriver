@@ -12,6 +12,7 @@ import automol
 import more_itertools as mit
 import pandas
 import pyparsing as pp
+from autochem.util.chemkin import parse_equation
 from pyparsing import common as ppc
 
 COMMENT_REGEX = re.compile(r"#.*$", flags=re.M)
@@ -344,45 +345,36 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
     :param mechanism_dat: The contents of the mechanism.dat file, as a string
     :return: A list of information for each reaction
     """
+    # Do the parsing
+    pattern = r"REAC\S*(.*?)END"
+    block_match = re.search(pattern, mechanism_dat, re.M | re.I | re.DOTALL)
+    rxn_block_str = block_match.group(1)
 
-    class Key:
-        eq = "eq"
-        arrh = "arrh"
-        comment = "comment"
-
+    # Define sort expression
     sort_key = sort_val = pp.DelimitedList(
         pp.Word(pp.alphanums + "_", exclude_chars="."), delim=".", min=3
     )
     sort_expr = pp.Group(sort_key) + pp.Group(sort_val)
 
-    comm_mark = pp.Suppress(pp.Char("!") ^ pp.Char("#"))
-    comm_expr = pp.SkipTo(pp.LineEnd())
-    arrh_expr = pp.WordStart() + ppc.number[3]
-    eq_expr = pp.SkipTo(arrh_expr).set_parse_action(lambda t: str.rstrip(t[0]))
-    reac_expr = (
-        eq_expr(Key.eq) + arrh_expr(Key.arrh) + comm_mark + comm_expr(Key.comment)
-    )
-
-    reac_block = re.search(
-        "REACTIONS(.*?)END", mechanism_dat, flags=re.M | re.S | re.I
-    ).group(1)
     reac_dct = {}
-    for line in reac_block.splitlines():
-        if reac_expr.matches(line):
-            res = reac_expr.parse_string(line)
-            eq = res.get(Key.eq)
-            comment = res.get(Key.comment)
-            sort_info = dict(
-                itertools.zip_longest(
-                    *sort_expr.parse_string(comment).as_list(), fillvalue="MISSING"
+    for line in rxn_block_str.splitlines():
+        line_match = re.search(r"\d\s*(!.*|# .*)?$", line)
+        if line_match:
+            result = parse_equation(line)
+            reactants = result.reactants
+            products = result.products
+            comment = line_match.group(1)
+
+            if comment:
+                comment = comment[1:]
+                sort_info = dict(
+                    itertools.zip_longest(
+                        *sort_expr.parse_string(comment).as_list(), fillvalue="MISSING"
+                    )
                 )
-            )
-            pes = int(sort_info.get("pes"))
-            channel = int(sort_info.get("channel"))
-            reac_dct[f"{pes}: {channel}"] = tuple(
-                [s.strip() for s in re.split(r"\+(?!\s*\+)", r)]
-                for r in re.split("=|=>|<=>", eq)
-            )
+                pes = int(sort_info.get("pes"))
+                channel = int(sort_info.get("channel"))
+                reac_dct[f"{pes}: {channel}"] = (reactants, products)
 
     return reac_dct
 
