@@ -23,7 +23,7 @@ def run_multiple(
     paths: Sequence[str | Path] = (".",),
     dir_name: str = SUBTASK_DIR,
     statuses: Sequence[Status] = (Status.TBD,),
-    time_limit: str = "2 hr",
+    time_limit: str = "4 hr",
     manager: str | None = None,
     manager_flags: str | None = None,
     server_dir: str | None = None,

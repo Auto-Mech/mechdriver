@@ -62,7 +62,7 @@ def start_server(server_dir: str | None = None) -> None:
 
 
 def create_allocation_queue(
-    mem: int, cpus: int, flags: str, manager: str, time_limit: str = "2 hr"
+    mem: int, cpus: int, flags: str, manager: str, time_limit: str = "4 hr"
 ) -> None:
     """Create HyperQueue allocation queue."""
     time_limit_h = math.ceil(pint.Quantity(time_limit).m_as("hours"))
@@ -91,7 +91,7 @@ class WorkerConfig(BaseModel):
     name: str
     mem: int
     cpus: int = 1
-    time_limit: str = "2 hr"
+    time_limit: str = "4 hr"
     idle_timeout: str = "15 min"
     manager: str | None = None
     host: str | None = None
@@ -122,7 +122,7 @@ def worker_configuration(
     name: str | None = None,
     mem: int | None = None,
     cpus: int | None = None,
-    time_limit: str = "2 hr",
+    time_limit: str = "4 hr",
     idle_timeout: str = "15 min",
     manager: str | None = None,
     flags: str | None = None,

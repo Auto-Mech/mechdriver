@@ -136,9 +136,9 @@ def subtasks_setup_(
 @click.option(
     "-l",
     "--time-limit",
-    default="2 hr",
+    default="4 hr",
     show_default=True,
-    help="Worker time limit with units, e.g. '2 hr'",
+    help="Worker time limit with units, e.g. '4 hr'",
 )
 @click.option(
     "-f",
@@ -165,7 +165,7 @@ def subtasks_run_(
     paths: Sequence[str] = (".",),
     dir_name: str = subtasks.SUBTASK_DIR,
     statuses: str = f"{Status.TBD.value}",
-    time_limit: str = "2 hr",
+    time_limit: str = "4 hr",
     manager: str | None = None,
     manager_flags: str | None = None,
     server_dir: str | None = None,
@@ -268,9 +268,9 @@ def subtasks_status_(
 @click.option(
     "-l",
     "--time-limit",
-    default="2 hr",
+    default="4 hr",
     show_default=True,
-    help="Worker time limit with units, e.g. '2 hr'",
+    help="Worker time limit with units, e.g. '4 hr'",
 )
 @click.option(
     "-i",
@@ -311,7 +311,7 @@ def start_worker(
     name: str | None = None,
     mem: int | None = None,
     cpus: int | None = None,
-    time_limit: str = "2 hr",
+    time_limit: str = "4 hr",
     idle_timeout: str = "15 min",
     manager: str | None = None,
     flags: str | None = None,
