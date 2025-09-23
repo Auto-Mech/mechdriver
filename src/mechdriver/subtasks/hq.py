@@ -61,10 +61,14 @@ def start_server(server_dir: str | None = None) -> None:
     assert os.path.exists(server_dir_), f"Could not start server at {server_dir_}"
 
 
-def create_allocation_queue(mem: int, cpus: int, flags: str, manager: str) -> None:
+def create_allocation_queue(
+    mem: int, cpus: int, flags: str, manager: str, time_limit: str = "4 hr"
+) -> None:
     """Create HyperQueue allocation queue."""
+    time_limit_h = math.ceil(pint.Quantity(time_limit).m_as("hours"))
+
     # Base arguments
-    args = ("hq", "alloc", "add", manager, "--time-limit", "4h")
+    args = ("hq", "alloc", "add", manager, "--time-limit", f"{time_limit_h}h")
 
     # Resource arguments and flags
     cpu_arg = f"--cpus={cpus}"
@@ -73,7 +77,7 @@ def create_allocation_queue(mem: int, cpus: int, flags: str, manager: str) -> No
 
     # Extra manager-specific arguments
     if manager == "slurm":
-        args += ("--ntasks=1", f"--mem={mem}G")
+        args += (f"--ntasks={cpus}", f"--mem-per-cpu={mem}G")
 
     print("HyperQueue allocation command:")
     print(" ".join(args))
@@ -87,7 +91,7 @@ class WorkerConfig(BaseModel):
     name: str
     mem: int
     cpus: int = 1
-    time_limit: str = "2 hr"
+    time_limit: str = "4 hr"
     idle_timeout: str = "15 min"
     manager: str | None = None
     host: str | None = None
@@ -118,7 +122,7 @@ def worker_configuration(
     name: str | None = None,
     mem: int | None = None,
     cpus: int | None = None,
-    time_limit: str = "2 hr",
+    time_limit: str = "4 hr",
     idle_timeout: str = "15 min",
     manager: str | None = None,
     flags: str | None = None,

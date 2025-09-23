@@ -32,6 +32,13 @@ def status():
     help="Specify workload manager (PBS or Slurm) instead of autodetecting",
 )
 @click.option(
+    "-l",
+    "--time-limit",
+    default="4 hr",
+    show_default=True,
+    help="Worker time limit with units, e.g. '4 hr'",
+)
+@click.option(
     "-f",
     "--manager-flags",
     default=None,
@@ -46,10 +53,18 @@ def status():
     default=None,
     help="HyperQueue server directory",
 )
+@click.option(
+    "-e",
+    "--env-prologue",
+    default=None,
+    help="Command(s) to activate Python environment",
+)
 def local(
     manager: str | None = None,
+    time_limit: str = "4 hr",
     manager_flags: str | None = None,
     server_dir: str | None = None,
+    env_prologue: str | None = None,
 ):
     """Run local tests on one or more nodes.
 
@@ -73,7 +88,12 @@ def local(
     test_paths = tu.setup_tests()
     mechdriver.subtasks.setup_multiple(test_paths)
     mechdriver.subtasks.run_multiple(
-        test_paths, manager=manager, manager_flags=manager_flags, server_dir=server_dir
+        test_paths,
+        manager=manager,
+        time_limit=time_limit,
+        manager_flags=manager_flags,
+        server_dir=server_dir,
+        env_prologue=env_prologue,
     )
     tu.wrap_up_tests(from_archive=False, allow_override=False)
 

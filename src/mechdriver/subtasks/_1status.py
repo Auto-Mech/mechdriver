@@ -128,9 +128,10 @@ def log_paths_with_check_results(
     return dict(zip(log_paths, log_checks, strict=True))
 
 
-def parse_subtask_status(
-    log_dct: dict[str, tuple[Status, str | None]], small_thresh: float = 0.2
-) -> Status:
+STATUS_HIERARCHY = [Status.RUNNING, Status.ERROR, Status.WARNING, Status.OK]
+
+
+def parse_subtask_status(log_dct: dict[str, tuple[Status, str | None]]) -> Status:
     """Parse the run status from a subtask directory.
 
     :return: The status
@@ -138,33 +139,17 @@ def parse_subtask_status(
     if not log_dct:
         return Status.TBD
 
+    log_stats, *_ = zip(*log_dct.values(), strict=True)
+    log_stat = sorted(set(log_stats), key=STATUS_HIERARCHY.index)[0]
     main_log_stat = next(
         (stat for path, (stat, _) in log_dct.items() if path.endswith("out.log")),
         None,
     )
 
-    log_stats, *_ = zip(*log_dct.values(), strict=True)
-    log_stat_set = set(log_stats)
-
-    # All log files have the same status -> <common status>
-    if len(log_stat_set) == 1:
-        return next(iter(log_stat_set))
-
-    # Some log files are still runnning -> RUNNING
-    if Status.RUNNING in log_stat_set:
-        return Status.RUNNING
-
-    # Some log files have errors -> ERROR | OK_IE
-    if Status.ERROR in log_stat_set and main_log_stat == Status.OK:
+    if main_log_stat == Status.OK and log_stat == Status.ERROR:
         return Status.OK_IE
 
-    # If we have a status for the main log file, return it
-    if main_log_stat is not None:
-        return main_log_stat
-
-    # Some log fils have warnings -> WARNING
-    assert log_stat_set == {Status.OK, Status.WARNING}
-    return Status.WARNING
+    return log_stat
 
 
 def subtask_keys(tasks: list[Task]) -> list[str]:

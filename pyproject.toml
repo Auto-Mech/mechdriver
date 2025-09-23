@@ -16,7 +16,8 @@ automech = 'mechdriver.cli:main'
 test = ["pytest", "pytest-xdist[psutil]"]
 lint = ["ruff", "mypy", "pre-commit"]
 docs = ["sphinx", "myst-parser", "sphinx-book-theme", "sphinx-autodoc-typehints"]
-new_arch = ["hyperqueue @ https://github.com/It4innovations/hyperqueue/releases/download/nightly/hyperqueue-0.23.0-cp39-abi3-manylinux_2_28_x86_64.whl"]
+new_arch = ["hyperqueue>=0.24.0"]
+dev = ["jupytext"]
 
 # Pixi configurations
 [tool.pixi.workspace]
@@ -40,6 +41,7 @@ test = { cmd = "./scripts/test.py" }
 
 [tool.pixi.feature.dev.tasks]
 pull = { cmd = "./scripts/pull.sh", cwd = "." }
+vis = { cmd = "./scripts/vis.sh" }
 
 [tool.pixi.dependencies]
 python = "3.11.*"

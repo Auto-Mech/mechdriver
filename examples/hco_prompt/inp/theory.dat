@@ -3,8 +3,8 @@ level pm3
     method = pm3
     orb_res = RU
     program = gaussian16 
-    mem = 16.0
-    nprocs = 4
+    mem = 1.0
+    nprocs = 1
  end level
 
 level dft2
@@ -12,23 +12,23 @@ level dft2
     basis = 6-311+g**
     orb_res = RU #restricted for close shell, unrestricted for open shell
     program = gaussian16 
-    mem = 16.0
-    nprocs = 4
+    mem = 2.0
+    nprocs = 1
 end level
 level dft
     method = b3lyp
     basis = 6-31g
     orb_res = RU #restricted for close shell, unrestricted for open shell
     program = gaussian16 
-    mem = 16.0
-    nprocs = 4
+    mem = 2.0
+    nprocs = 1
  end level
 level mp2
     method = mp2
     basis = cc-pvdz
     orb_res = RR
     program = gaussian16
-    mem = 16.0
-    nprocs = 4
+    mem = 2.0
+    nprocs = 1
  end level 
 
