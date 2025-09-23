@@ -4,25 +4,22 @@ input
 end input 
 
 pes 
-8:6
-6:1
-#14:8
-#14:11
+    8:6
+    6:1
 end pes
 
 spc
-15
-39
-40
-42
-45
-#46
-#49
-34
+    15
+    37
+    39
+    40
+    45
+    # basis species:
+    42
+    34
 end spc
 
 els
-#this is executed in the order they are specified 
     spc init_geom  runlvl=dft inplvl=dft 
     ts  find_ts runlvl=dft inplvl=dft
     all conf_opt  runlvl=dft inplvl=dft
