@@ -177,15 +177,15 @@ Before continuing, make sure your `git` username configuration matches your
 username on GitHub
 (see [Appendix B](#appendix-b-configure-your-git-username)).
 
-To pull updates for one or more subrepos, you can use the `pull` task.
+To pull updates for one or more subrepos, you can use the `subrepo-pull` task.
 ```
-pixi run pull all     # pull changes for all subrepos
-pixi run pull autoio  # pull changes for AutoIO only
+pixi run subrepo-pull all     # pull changes for all subrepos
+pixi run subrepo-pull autoio  # pull changes for AutoIO only
 ```
-To push updates back to the subrepos, you can use the `push` task.
+To push updates back to the subrepos, you can use the `subrepo-push` task.
 ```
-pixi run push all     # push changes for all subrepos
-pixi run push autoio  # push changes for AutoIO only
+pixi run subrepo-push all     # push changes for all subrepos
+pixi run subrepo-push autoio  # push changes for AutoIO only
 ```
 
 ### Advanced
@@ -194,8 +194,8 @@ The above Pixi tasks are sufficient for working with the default branches of eac
 and keeping them in sync with their upstream repositories.
 To pull from/push to a specific branch of a subrepo, you can add a `-b` flag.
 ```
-pixi run pull autoio -b <branch name>
-pixi run push autoio -b <branch name>
+pixi run subrepo-pull autoio -b <branch name>
+pixi run subrepo-push autoio -b <branch name>
 ```
 This flag, along with any others added after the repository name, is simply passed along
 to the `git subrepo pull` and `git subrepo push` commands, which are documented

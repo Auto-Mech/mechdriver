@@ -34,13 +34,13 @@ mechanalyzer = { path = "src/_mechanalyzer", editable = true }
 # Tasks
 [tool.pixi.tasks]
 extra-dev-installs = { cmd = "./scripts/extra-dev-installs.sh", cwd = "." }
-push = { cmd = "./scripts/push.sh", cwd = "." }
+subrepo-push = { cmd = "./scripts/subrepo-push.sh", cwd = "." }
 status = { cmd = "./scripts/status.sh", cwd = "." }
 node = { cmd = "./scripts/node.sh" }
 test = { cmd = "./scripts/test.py" }
 
 [tool.pixi.feature.dev.tasks]
-pull = { cmd = "./scripts/pull.sh", cwd = "." }
+subrepo-pull = { cmd = "./scripts/subrepo-pull.sh", cwd = "." }
 vis = { cmd = "./scripts/vis.sh" }
 
 [tool.pixi.dependencies]
