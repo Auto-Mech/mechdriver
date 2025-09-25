@@ -40,6 +40,7 @@ node = { cmd = "./scripts/node.sh" }
 test = { cmd = "./scripts/test.py" }
 
 [tool.pixi.feature.dev.tasks]
+gh-auth = { cmd = "gh auth login -s workflow", cwd = "." }
 subrepo-pull = { cmd = "./scripts/subrepo-pull.sh", cwd = "." }
 vis = { cmd = "./scripts/vis.sh" }
 
