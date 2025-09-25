@@ -147,6 +147,20 @@ This repository includes several submodules that also exist as separate reposito
  - [AutoIO](./src/_autoio/): I/O interfaces to external programs (see [here](https://github.com/Auto-Mech/autoio))
  - [AutoChem](./src/_autochem/): Cheminformatics and coordinate transformation (see [here](https://github.com/Auto-Mech/autochem))
 
+> [!NOTE]
+> To facilitate tracking the history of these submodules, please keep any
+> commits to the `src/_*` directories in this repository separate.
+> That is, if a given commit affects files in `src/_autoio`, for example, it
+> should **only** affect files in that directory. Any other changes should be
+> made as a separate commit.
+
+> [!WARNING]
+> The following functionality is for core developers only.
+> Contributors can simply treat this MechDriver repository as its own standalone
+> repository and make changes not worry about syncing the submodules.
+> The one caveat is that we would like everyone to respect the above note about
+> keeping commits to the submodules separate.
+
 If you wish to be able to sync these submodules with their remote repositories,
 this can be done using
 [Git Subrepo](https://github.com/ingydotnet/git-subrepo?tab=readme-ov-file#commands),
