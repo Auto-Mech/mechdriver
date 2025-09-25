@@ -263,6 +263,9 @@ following Pixi task.
 ```
 pixi run extra-dev-installs
 ```
+This will edit your `.bashrc` file, so you will need to restart your shell for
+the changes to take effect.
+
 If you run into issues with this, you can manually install the two dependencies,
 HyperQueue and Git Subrepo, as follows.
 
