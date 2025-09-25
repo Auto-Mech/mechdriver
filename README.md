@@ -187,6 +187,13 @@ To pull updates for one or more subrepos, you can use the `subrepo-pull` task.
 pixi run subrepo-pull all     # pull changes for all subrepos
 pixi run subrepo-pull autoio  # pull changes for AutoIO only
 ```
+
+> [!NOTE]
+> Before attempting the pull, the above command will try to sync your fork with
+> the upstream `Auto-Mech` repository. If you get an error here, double check
+> that your fork was successfully synced by navigating to the GitHub page for
+> your fork. If it is behind one or more commits, click "Sync fork" to sync it.
+
 To push updates back to the subrepos, you can use the `subrepo-push` task.
 ```
 pixi run subrepo-push all     # push changes for all subrepos
