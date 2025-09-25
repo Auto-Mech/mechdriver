@@ -72,8 +72,11 @@ click = "*"
 python-igraph = "*"
 # MechDriver dependencies
 pydantic = "*"
-automech-toolbox = "*"
 parallel = "*"
+pac99 = "*"
+projrot = "*"
+thermp = "*"
+mess-static = "*"
 
 [tool.pixi.system-requirements]
 linux = "3.10"
