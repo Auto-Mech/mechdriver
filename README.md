@@ -147,6 +147,20 @@ This repository includes several submodules that also exist as separate reposito
  - [AutoIO](./src/_autoio/): I/O interfaces to external programs (see [here](https://github.com/Auto-Mech/autoio))
  - [AutoChem](./src/_autochem/): Cheminformatics and coordinate transformation (see [here](https://github.com/Auto-Mech/autochem))
 
+> [!NOTE]
+> To facilitate tracking the history of these submodules, please keep any
+> commits to the `src/_*` directories in this repository separate.
+> That is, if a given commit affects files in `src/_autoio`, for example, it
+> should **only** affect files in that directory. Any other changes should be
+> made as a separate commit.
+
+> [!WARNING]
+> The following functionality is for core developers only.
+> Contributors can simply treat this MechDriver repository as its own standalone
+> repository and make changes not worry about syncing the submodules.
+> The one caveat is that we would like everyone to respect the above note about
+> keeping commits to the submodules separate.
+
 If you wish to be able to sync these submodules with their remote repositories,
 this can be done using
 [Git Subrepo](https://github.com/ingydotnet/git-subrepo?tab=readme-ov-file#commands),
@@ -159,19 +173,31 @@ See [Appendix A](#appendix-a-extra-developer-dependencies) if this command was n
 
 ### Syncing
 
-Before continuing, make sure your `git` username configuration matches your
-username on GitHub
-(see [Appendix B](#appendix-b-configure-your-git-username)).
+> [!NOTE]
+> Before continuing, make sure your `git` username configuration matches your
+> username on GitHub
+> (see [Appendix B](#appendix-b-configure-your-git-username)).
 
-To pull updates for one or more subrepos, you can use the `pull` task.
+> [!NOTE]
+> Syncing the subrepos should generally be done **after** pulling changes in the
+> main repo, i.e. `git pull --rebase upstream dev`.
+
+To pull updates for one or more subrepos, you can use the `subrepo-pull` task.
 ```
-pixi run pull all     # pull changes for all subrepos
-pixi run pull autoio  # pull changes for AutoIO only
+pixi run subrepo-pull all     # pull changes for all subrepos
+pixi run subrepo-pull autoio  # pull changes for AutoIO only
 ```
-To push updates back to the subrepos, you can use the `push` task.
+
+> [!NOTE]
+> Before attempting the pull, the above command will try to sync your fork with
+> the upstream `Auto-Mech` repository. If you get an error here, double check
+> that your fork was successfully synced by navigating to the GitHub page for
+> your fork. If it is behind one or more commits, click "Sync fork" to sync it.
+
+To push updates back to the subrepos, you can use the `subrepo-push` task.
 ```
-pixi run push all     # push changes for all subrepos
-pixi run push autoio  # push changes for AutoIO only
+pixi run subrepo-push all     # push changes for all subrepos
+pixi run subrepo-push autoio  # push changes for AutoIO only
 ```
 
 ### Advanced
@@ -180,8 +206,8 @@ The above Pixi tasks are sufficient for working with the default branches of eac
 and keeping them in sync with their upstream repositories.
 To pull from/push to a specific branch of a subrepo, you can add a `-b` flag.
 ```
-pixi run pull autoio -b <branch name>
-pixi run push autoio -b <branch name>
+pixi run subrepo-pull autoio -b <branch name>
+pixi run subrepo-push autoio -b <branch name>
 ```
 This flag, along with any others added after the repository name, is simply passed along
 to the `git subrepo pull` and `git subrepo push` commands, which are documented
@@ -244,6 +270,9 @@ following Pixi task.
 ```
 pixi run extra-dev-installs
 ```
+This will edit your `.bashrc` file, so you will need to restart your shell for
+the changes to take effect.
+
 If you run into issues with this, you can manually install the two dependencies,
 HyperQueue and Git Subrepo, as follows.
 

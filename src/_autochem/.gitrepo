@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;
 [subrepo]
-	remote = git@github.com:lpratalimaffei/autochem.git
+	remote = https://github.com/Auto-Mech/autochem.git
 	branch = dev
-	commit = 245ce1911a1afb910eb943e73d32e80de6c5626b
-	parent = 1975aef83f91d6427abea15acd087f9cfda803f6
+	commit = 868a49c987ec8bde27f3082806ecc1bc7f5694ac
+	parent = d5368d74173aeb28ba6c272ff4a51f8de3713343
 	method = rebase
 	cmdver = 0.4.9
