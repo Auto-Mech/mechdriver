@@ -173,9 +173,14 @@ See [Appendix A](#appendix-a-extra-developer-dependencies) if this command was n
 
 ### Syncing
 
-Before continuing, make sure your `git` username configuration matches your
-username on GitHub
-(see [Appendix B](#appendix-b-configure-your-git-username)).
+> [!NOTE]
+> Before continuing, make sure your `git` username configuration matches your
+> username on GitHub
+> (see [Appendix B](#appendix-b-configure-your-git-username)).
+
+> [!NOTE]
+> Syncing the subrepos should generally be done **after** pulling changes in the
+> main repo, i.e. `git pull --rebase upstream dev`.
 
 To pull updates for one or more subrepos, you can use the `subrepo-pull` task.
 ```
