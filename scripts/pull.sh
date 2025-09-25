@@ -20,6 +20,15 @@ fi
 
 for repo in ${REPOS[@]}; do
    if [[ -z ${ARGS} ]]; then
+      if gh auth status; then
+         echo "You are already logged into the GitHub CLI. Make sure you have workflow permissions."
+         echo "If not, you can run the following to add them:"
+         echo pixi run -e dev gh auth login -s workflow
+      else
+         echo "Logging into GitHub CLI... Please follow the prompts to authenticate."
+         gh auth login -s workflow
+      fi
+
       # 1. Sync to make sure the fork is up-to-date
       echo \$ gh repo sync ${USERNAME}/${repo}
       gh repo sync ${USERNAME}/${repo}
