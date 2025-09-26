@@ -29,12 +29,15 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_enes,
     """
 
     tunnel_str, sct_dat = '', {}
-    if treat_tunnel(ts_model, ts_class, ts_inf_dct):
+    forw_barr, rev_barr = calculate_barrier_heights(chnl_enes, ts_idx)
+    if treat_tunnel(
+                ts_model, ts_class, ts_inf_dct, 
+                positive_barriers=all(barr > 0.1 for barr in [forw_barr, rev_barr])):
         tunnel_model = ts_model['tunnel']
         if tunnel_model == 'eckart':
             tunnel_str = write_mess_eckart_str(
-                chnl_enes, ts_inf_dct.get('imag', None),
-                ts_idx=ts_idx, symm_barrier=unstable_chnl)
+                forw_barr, rev_barr, ts_inf_dct.get('imag', None),
+                symm_barrier=unstable_chnl)
         # elif tunnel_model == 'sct':
         #     sct_dat_name = tsname + '_sct.dat'
         #     path = 'cat'
@@ -48,7 +51,37 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_enes,
     return tunnel_str, sct_dat
 
 
-def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
+def calculate_barrier_heights(chnl_enes, ts_idx):
+    """ Calculate the forward and reverse barrier heights
+
+        :param chnl_enes: energies for channel, relative to PES reference
+        :type chnl_enes: dict[str:float]
+        :param ts_idx: idx along eaction path denoting position of saddle point
+        :type ts_idx: int
+        :rtype: (float, float)
+    """
+    ts_ene = chnl_enes['ts'][ts_idx]
+
+    if chnl_enes.get('fake_vdwr', None) is not None:
+        reac_ene = chnl_enes['fake_vdwr']
+    else:
+        reac_ene = chnl_enes['reacs']
+
+    if chnl_enes.get('fake_vdwp', None) is not None:
+        prod_ene = chnl_enes['fake_vdwp']
+    else:
+        prod_ene = chnl_enes['prods']
+
+    # Set the depth of the wells from the transition state
+    ts_reac_barr = ts_ene - reac_ene
+    ts_prod_barr = ts_ene - prod_ene
+    ts_reac_barr = ts_reac_barr if ts_reac_barr > 0.1 else 0.1
+    ts_prod_barr = ts_prod_barr if ts_prod_barr > 0.1 else 0.1
+
+    return ts_reac_barr, ts_prod_barr
+
+def write_mess_eckart_str(
+            ts_reac_barr, ts_prod_barr, imag_freq, symm_barrier=False):
     """ Write a Eckart model `Tunneling` section string for a transition state
         for a MESS input file.
 
@@ -59,8 +92,10 @@ def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
         well-depths are calculated, the depths are set to be 0.1 to avoid
         unphysical master equation simulations..
 
-        :param chnl_enes: energies for channel, relative to PES reference
-        :type chnl_enes: dict[str:float]
+        :param ts_reac_barr: forward barrier height [kcal/mol]
+        :type ts_reac_barr: float
+        :param ts_prod_barr: reverse barrier height [kcal/mol]
+        :type ts_prod_barr: float
         :param imag_freq: imaginary frequency of reaction coordinate [cm-1]
         :type imag_freq: float
         :param ts_idx: idx along eaction path denoting position of saddle point
@@ -69,34 +104,11 @@ def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
         :type symm_barrier: bool
         :rtype: str
     """
-
-    # Get the energies from the enes dct
-    ts_ene = chnl_enes['ts'][ts_idx]
-
-    if chnl_enes.get('fake_vdwr', None) is not None:
-        reac_ene = chnl_enes['fake_vdwr']
-    else:
-        reac_ene = chnl_enes['reacs']
-
     if symm_barrier:
-        prod_ene = reac_ene
-    else:
-        if chnl_enes.get('fake_vdwp', None) is not None:
-            prod_ene = chnl_enes['fake_vdwp']
-        else:
-            prod_ene = chnl_enes['prods']
+        ts_prod_barr = ts_reac_barr
 
-    # Set the depth of the wells from the transition state
-    ts_reac_barr = ts_ene - reac_ene
-    ts_prod_barr = ts_ene - prod_ene
-    ts_reac_barr = ts_reac_barr if ts_reac_barr > 0.1 else 0.1
-    ts_prod_barr = ts_prod_barr if ts_prod_barr > 0.1 else 0.1
-
-    # Write the MESS string
-    tunnel_str = mess_io.writer.tunnel_eckart(
+    return mess_io.writer.tunnel_eckart(
         imag_freq, ts_reac_barr, ts_prod_barr)
-
-    return tunnel_str
 
 
 # def write_mess_sct_strs(ts_inf_dct, save_path,
