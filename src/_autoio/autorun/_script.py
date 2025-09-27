@@ -10,7 +10,7 @@ EXTERN_PATH = os.path.join(PATH, 'extern')
 PROJROT = (
     "#!/usr/bin/env bash\n"
     "ulimit -c 0\n"
-    "RPHt.exe >& rpht.out"
+    "projrot >& rpht.out"
 )
 MESSPF = (
     "#!/usr/bin/env bash\n"

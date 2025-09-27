@@ -149,7 +149,7 @@ def parse_subtask_status(log_dct: dict[str, tuple[Status, str | None]]) -> Statu
     if main_log_stat == Status.OK and log_stat == Status.ERROR:
         return Status.OK_IE
 
-    return log_stat
+    return main_log_stat or log_stat
 
 
 def subtask_keys(tasks: list[Task]) -> list[str]:

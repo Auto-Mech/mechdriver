@@ -140,7 +140,7 @@ def need_fake_wells(reagents, well_model):
     return (well_model == 'fake' and len(reagents) == 2)
 
 
-def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
+def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None, positive_barriers=True):
     """ Determine if master equation treatments of a reaction channel
         should include treatments of quantum tunneling treatments.
 
@@ -153,7 +153,6 @@ def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
     """
 
     treat = True
-
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
     tunnel_model = ts_mod['tunnel']
     if ts_inf_dct:
@@ -163,9 +162,10 @@ def treat_tunnel(ts_mod, rxn_class, ts_inf_dct=None):
         if automol.ReactionInfo.is_radical_radical(rxn_class):
             if ts_nobar in ('pst', 'rpvtst', 'vrctst'):
                 treat = False
-        else:
-            if ts_sadpt == ('pst', 'vrctst'):
+        elif ts_sadpt == ('pst', 'vrctst'):
                 treat = False
+        elif not positive_barriers:
+            treat = False
     return treat
 
 
