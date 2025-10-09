@@ -2,7 +2,7 @@
 """
 
 import autofile
-from drivers import esdriver, ktpdriver, procdriver, thermodriver, transdriver
+from ..drivers import esdriver, ktpdriver, procdriver, thermodriver, transdriver
 from mechlib.amech_io import parser as ioparser
 from mechlib.amech_io import printer as ioprinter
 

@@ -1,9 +1,0 @@
-REACTIONS
-H2+O=OH+H 1 1 1
-H+O2=OH+O 1 1 1
-H2+O=OH+OH 1 1 1
-H+O=OH 1 1 1
-H+O(+M)=OH(+M) 1 1 1
-H+O+M=OH+M 1 1 1 # same as above, but with no parentheses
-H2+O(S)=OH+H 1 1 1
-END
