@@ -1,8 +1,0 @@
-'Name','SMILES','inchi','mult','charge','sens'
-HV,'','InChI=1S/H',2,0,0
-OHV,'','InChI=1S/HO/h1H',2,0,0
-OV,'','InChI=1S/O',3,0,0
-O2V,'','InChI=1S/O2/c1-2',1,0,0
-H2V,'','InChI=1S/H2/h1H',1,0,0
-HO2V,'','InChI=1S/HO2/c1-2/h1H',2,0,0
-O(S)V,'','InChI=1S/O',1,0,0

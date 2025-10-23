@@ -75,6 +75,13 @@ def local(
     print("Process ID:", os.getpid())
     print("Host name:", socket.gethostname())
 
+    official = False
+    if os.environ.get("PIXI_ENVIRONMENT_NAME") == "test":
+        official = True
+        print("Official test run. Test data will be archived and committed.")
+    else:
+        print("Dev test run. Test data will **not** be archived or committed.")
+
     if manager_flags is None:
         msg = (
             "\nWARNING: Running without -f requires manual HyperQueue configuration."
@@ -85,7 +92,7 @@ def local(
     if manager is None:
         print("No workload manager specified with -m. Will attempt autodetection...")
 
-    test_paths = tu.setup_tests()
+    test_paths = tu.setup_tests(official=official)
     mechdriver.subtasks.setup_multiple(test_paths)
     mechdriver.subtasks.run_multiple(
         test_paths,
@@ -95,7 +102,9 @@ def local(
         server_dir=server_dir,
         env_prologue=env_prologue,
     )
-    tu.wrap_up_tests(from_archive=False, allow_override=False)
+    
+    if official:
+        tu.wrap_up_tests(from_archive=False, allow_override=False)
 
 
 @main.command("sign")

@@ -1,6 +1,0 @@
-!===================================================
-!  GLOBAL KEYWORDS
-!===================================================
-Temperature(step[K],size)              100    30
-RelativeTemperatureIncrement           0.001
-AtomDistanceMin[angstrom]              0.60
