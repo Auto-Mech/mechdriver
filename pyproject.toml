@@ -127,3 +127,6 @@ test = { cmd = "./scripts/test.py" }
 [tool.pixi.feature.dev.tasks]
 vis = { cmd = "./scripts/vis.sh" }
 dev-test = { cmd = "./scripts/test.py" }
+
+[tool.pixi.feature.build.tasks]
+upload = "rattler-build upload anaconda -o Auto-Mech *.conda"
