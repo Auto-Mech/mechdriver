@@ -61,17 +61,18 @@ class Test:
 
 
 # Main testing workflow functions
-def setup_tests() -> list[Path]:
+def setup_tests(*, official: bool = False) -> list[Path]:
     """Set up tests to prepare local testing workflow.
 
     :return: List of test paths
     """
-    # 1. Assert that there are no uncommitted Python changes
-    changes = uncommitted_python_changes()
-    assert not changes, f"You have uncommitted changes:\n{changes}"
+    if official:
+        # 1. Assert that there are no uncommitted Python changes
+        changes = uncommitted_python_changes()
+        assert not changes, f"You have uncommitted changes:\n{changes}"
 
-    # 2. Write the test commit hash to file
-    File.commit.write_text(current_commit_line())
+        # 2. Write the test commit hash to file
+        File.commit.write_text(current_commit_line())
 
     # 3. Copy input directories over from examples
     test_paths = Test.paths()

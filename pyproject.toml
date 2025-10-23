@@ -115,9 +115,15 @@ build = ["build"]
 #   - Tasks
 [tool.pixi.tasks]
 node = { cmd = "./scripts/node.sh" }
+dev-setup-repos = { cmd = "./scripts/dev-setup-repos.sh", cwd = "." }
+dev-setup-hq = { cmd = "./scripts/dev-setup-hq.sh", cwd = "." }
+dev-setup = { depends-on = ["dev-setup-repos", "dev-setup-hq"] }
+git = { cmd = "./scripts/git.sh", cwd = "." }
+update = { cmd = "./scripts/update.sh", cwd = "." }
 
 [tool.pixi.feature.test.tasks]
 test = { cmd = "./scripts/test.py" }
 
 [tool.pixi.feature.dev.tasks]
 vis = { cmd = "./scripts/vis.sh" }
+dev-test = { cmd = "./scripts/test.py" }
