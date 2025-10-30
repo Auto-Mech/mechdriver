@@ -1,11 +1,12 @@
 """HyperQueue utilities."""
 
 import contextlib
-import datetime
 import math
 import os
+import re
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import TypeAlias
@@ -51,14 +52,28 @@ def resource_request(cpus: int, mem: int) -> ResourceRequest:
 # Execute system commands
 def start_server(server_dir: str | None = None) -> None:
     """Start HyperQueue server."""
-    server_dir_ = server_dir or default_server_directory()
-    subprocess.Popen(["hq", "server", "start"])
-    # Wait up to 1 second for the file to appear
-    for _ in range(10):
-        time.sleep(0.1)
-        if os.path.exists(server_dir_):
-            break
-    assert os.path.exists(server_dir_), f"Could not start server at {server_dir_}"
+    # Start server and wait until it prints its info
+    server_info_border_regex = re.compile(r"^\s*\+\-+\+\-+\+\s*$")
+    print("Starting HyperQueue server...")
+    proc = subprocess.Popen(
+        ["hq", "server", "start"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+    # The border +---...+---...+ gets printed above and below the server info,
+    # so wait until the second appearance
+    print("Waiting for signal that HyperQueue server is running...")
+    count = 0
+    for line in proc.stdout:
+        sys.stdout.write(line)
+        sys.stdout.flush()
+        if server_info_border_regex.match(line):
+            count += 1
+            if count > 1:
+                break
+    print("HyperQueue server started.")
 
 
 def create_allocation_queue(

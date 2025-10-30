@@ -11,7 +11,7 @@ automech = 'mechdriver.cli:main'
 
 [dependency-groups]
 test = ["pytest"]
-dev = ["jupytext"]
+dev = ["ipykernel", "jupytext"]
 new_arch = ["hyperqueue>=0.24.0"]
 
 [build-system]
