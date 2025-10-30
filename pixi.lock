@@ -1249,15 +1249,15 @@ packages:
   - pint >=0.25
   - py3dmol >=2.5.3
   - pyparsing >=3.2.5
-  - python
-  - python
   - pyyaml >=6.0.3
   - qcelemental >=0.29.0
   - rdkit >=2025.9.1
   - scipy >=1.12
   - xarray >=2023.8
+  - python >=3.11
+  - python *
   input:
-    hash: 522fdcb383c1b0611cbf84669d02a8ef701a106c8a4f7ddfc051d593136e1041
+    hash: 9ea231cbbf8fbf0c2d6567533db191adf36eedc0161a4f2fbbad3cae3d4990a5
     globs:
     - pyproject.toml
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.2-pyh4616a5c_0.conda
@@ -1287,14 +1287,14 @@ packages:
   build: pyh4616a5c_0
   subdir: noarch
   depends:
+  - numpy >=1.26
+  - pyyaml >=6.0.3
   - autochem >=2025.10.0
   - autoio >=2025.10.0
-  - numpy >=1.26
-  - python
-  - python
-  - pyyaml >=6.0.3
+  - python >=3.11
+  - python *
   input:
-    hash: 4fdc5f0b31c84dc1a01c8e82943b92f3a1333e2595a5b5154b44fa165ecfa3b5
+    hash: 43b7ea746732ca692a54ddf1f11b7688ab1c8298bc77f3226f1938d8d39cbc4d
     globs:
     - pyproject.toml
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.1-pyh4616a5c_0.conda
@@ -1315,18 +1315,18 @@ packages:
   build: pyh4616a5c_0
   subdir: noarch
   depends:
-  - autochem >=2025.10.0
   - mako >=1.3.10
   - more-itertools >=10.8.0
   - numpy >=1.26
   - pint >=0.25
   - pyparsing >=3.2.5
-  - python
-  - python
   - pyyaml >=6.0.3
   - qcelemental >=0.29.0
+  - autochem >=2025.10.0
+  - python >=3.11
+  - python *
   input:
-    hash: 032605c5269255fa2239dd9a533c616e9421b5ab32b76169e166c6922b295ec2
+    hash: 0cae80373155b6c51df74fa4b2f576ebd4b499416a36379840e0b7ad7e20571d
     globs:
     - pyproject.toml
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.2-pyh4616a5c_0.conda
@@ -3014,22 +3014,22 @@ packages:
   build: pyh4616a5c_0
   subdir: noarch
   depends:
-  - autochem >=2025.10.0
-  - autofile >=2025.10.0
-  - autoio >=2025.10.0
   - click >=8.2.1
   - mako >=1.3.10
   - matplotlib >=3.10.6
   - networkx >=3.3
   - numpy >=1.26
   - pandas >=2.3.3
-  - python
-  - python
   - python-igraph >=0.11.9
   - pyyaml >=6.0.3
   - scipy >=1.12
+  - autochem >=2025.10.0
+  - autoio >=2025.10.0
+  - autofile >=2025.10.0
+  - python >=3.11
+  - python *
   input:
-    hash: a9f8b7480384b9897db389a7c0bfb81e1db2a42cf73183844b5ede48a8bbfb50
+    hash: ab8ca1eaacfc3696d293063fa59b85da9cf5a46c84c0afce8a54cd1b84c95d11
     globs:
     - pyproject.toml
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/mechanalyzer-2025.10.1-pyh4616a5c_0.conda
