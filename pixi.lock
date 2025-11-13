@@ -18,7 +18,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.2-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.1-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.2-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.11.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -240,7 +240,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.2-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.1-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.2-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.11.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -928,7 +928,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.2-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.1-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.2-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.11.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -1311,7 +1311,7 @@ packages:
   timestamp: 1761230960378
 - conda: ../autoio
   name: autoio
-  version: 2025.10.2
+  version: 2025.11.0
   build: pyh4616a5c_0
   subdir: noarch
   depends:
@@ -1326,12 +1326,12 @@ packages:
   - python >=3.11
   - python *
   input:
-    hash: 0cae80373155b6c51df74fa4b2f576ebd4b499416a36379840e0b7ad7e20571d
+    hash: 5897368aea9db1120c7cbf7edbe293ff13a8608017f6be1463cd03b508284060
     globs:
     - pyproject.toml
-- conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.2-pyh4616a5c_0.conda
-  sha256: 67b1596b56c1aa1eb111b1014a23146b7f0f5d906976a6fea66f1aa7ed773e6d
-  md5: 0c9266e13112e3289380ebb26b643638
+- conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.11.0-pyh4616a5c_0.conda
+  sha256: 7f1dc7dfbb6cbc22c97ea467547fe064b7bad3e6f3cc9752bfe8c660953d85c4
+  md5: 4ea27bf91c14e5d99e6eac787388fffd
   depends:
   - mako >=1.3.10
   - more-itertools >=10.8.0
@@ -1343,8 +1343,8 @@ packages:
   - autochem >=2025.10.0
   - python >=3.11
   - python *
-  size: 5284076
-  timestamp: 1761239725229
+  size: 5284085
+  timestamp: 1763067525204
 - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
   sha256: 294526a54fa13635341729f250d0b1cf8f82cad1e6b83130304cbf3b6d8b74cc
   md5: eaf3fbd2aa97c212336de38a51fe404e
@@ -3055,7 +3055,7 @@ packages:
 - pypi: ./
   name: mechdriver
   version: 2025.10.0
-  sha256: 968ab0cbaf3becef0d79324f8cbc3d585aab49f20e62d94a11e39e3518038731
+  sha256: 2068ec4770c46fd6682205b50d0cf53772873f5fd9f52b2bb5d48282dd97e6f5
   requires_dist:
   - hyperqueue
   requires_python: '>=3.11,<3.14'
