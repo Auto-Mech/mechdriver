@@ -1,6 +1,7 @@
 """HyperQueue utilities."""
 
 import contextlib
+import functools
 import math
 import os
 import re
@@ -14,16 +15,37 @@ from typing import TypeAlias
 import jinja2
 import pint
 import pyparsing as pp
-from hyperqueue import Client, Job
-from hyperqueue.ffi.protocol import ResourceRequest
-from hyperqueue.task.function import PythonEnv
-from hyperqueue.task.task import Task
 from pydantic import BaseModel, computed_field
+
+# Prevent the code from crashing if hyperqueue isn't installed
+try:
+    from hyperqueue import Client, Job
+    from hyperqueue.ffi.protocol import ResourceRequest
+    from hyperqueue.task.function import PythonEnv
+    from hyperqueue.task.task import Task
+
+    _HAS_HQ = True
+except ImportError:
+    _HAS_HQ = False
+    Client = Job = ResourceRequest = PythonEnv = Task = None
 
 Function: TypeAlias = Task
 
 
+def requires_hyperqueue(func):
+    """Decorator that raises if HyperQueue is unavailable."""
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not _HAS_HQ:
+            raise RuntimeError(f"Function '{func.__name__}' requires HyperQueue.")
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 # Instantiate objects
+@requires_hyperqueue
 def client(server_dir: str | None = None, env_prologue: str | None = None) -> Client:
     """Create HyperQueue client, for connecting to server.
 
@@ -35,11 +57,13 @@ def client(server_dir: str | None = None, env_prologue: str | None = None) -> Cl
     )
 
 
+@requires_hyperqueue
 def job() -> Job:
     """Create HyperQueue job."""
     return Job()
 
 
+@requires_hyperqueue
 def resource_request(cpus: int, mem: int) -> ResourceRequest:
     """Create HyperQueue resource request.
 
@@ -50,6 +74,7 @@ def resource_request(cpus: int, mem: int) -> ResourceRequest:
 
 
 # Execute system commands
+@requires_hyperqueue
 def start_server(server_dir: str | None = None) -> None:
     """Start HyperQueue server."""
     # Start server and wait until it prints its info
@@ -76,6 +101,7 @@ def start_server(server_dir: str | None = None) -> None:
     print("HyperQueue server started.")
 
 
+@requires_hyperqueue
 def create_allocation_queue(
     mem: int, cpus: int, flags: str, manager: str, time_limit: str = "4 hr"
 ) -> None:
@@ -133,6 +159,7 @@ class WorkerConfig(BaseModel):
 WORKER_DIR = Path(".workers")
 
 
+@requires_hyperqueue
 def worker_configuration(
     name: str | None = None,
     mem: int | None = None,
