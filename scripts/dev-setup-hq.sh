@@ -34,6 +34,11 @@ echo Downloading HyperQueue executable into $PREFIX from $HQ_TGZ_URL
 curl -sL $HQ_TGZ_URL | tar xzf - -C $PREFIX
 
 echo
-echo Putting HyperQueue in your path by adding this line to $HOME/.bashrc:
-echo "export PATH=\$PATH:$PREFIX"
-echo "export PATH=\$PATH:$PREFIX" >> $HOME/.bashrc
+EXPORT_PATH_LINE="export PATH=\$PATH:$PREFIX"
+if ! grep -Fxq "$EXPORT_PATH_LINE" $HOME/.bashrc; then
+    echo Putting HyperQueue in your path by adding this line to $HOME/.bashrc:
+    echo "export PATH=\$PATH:$PREFIX"
+    echo "export PATH=\$PATH:$PREFIX" >> $HOME/.bashrc
+else
+    echo HyperQueue path is already set in $HOME/.bashrc
+fi
