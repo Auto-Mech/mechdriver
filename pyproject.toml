@@ -93,11 +93,17 @@ mechanalyzer = "==2025.10.1"
 [tool.pixi.feature.build.dependencies]
 rattler-build = ">=0.47.1"
 
-[tool.pixi.feature.dev.dependencies]
-autochem = { path = "../autochem" }
-autoio = { path = "../autoio" }
-autofile = { path = "../autofile" }
-mechanalyzer = { path = "../mechanalyzer" }
+[tool.pixi.feature.dev.pypi-dependencies]
+autochem = { path = "../autochem", editable = true }
+autoio = { path = "../autoio", editable = true }
+autofile = { path = "../autofile", editable = true }
+mechanalyzer = { path = "../mechanalyzer", editable = true }
+
+[tool.pixi.feature.dev.pypi-options.dependency-overrides]
+autochem = { path = "../autochem", editable = true }
+autoio = { path = "../autoio", editable = true }
+autofile = { path = "../autofile", editable = true }
+mechanalyzer = { path = "../mechanalyzer", editable = true }
 
 [tool.pixi.system-requirements]
 linux = "3.10"

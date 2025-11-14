@@ -458,6 +458,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/arpack-3.9.1-nompi_hf03ea27_102.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asttokens-3.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.2-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.1-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.11.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -564,6 +567,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.10.7-py313h78bf25f_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.10.7-py313h683a580_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/mechanalyzer-2025.10.1-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/mess-static-2025.9.0-h4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/more-itertools-10.8.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
@@ -654,10 +658,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/yaml-0.2.5-h280c20c_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.23.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
-      - conda: ../autochem
-      - conda: ../autofile
-      - conda: ../autoio
-      - conda: ../mechanalyzer
       - pypi: https://files.pythonhosted.org/packages/15/80/44286939ca215e88fa827b2aeb6fa3fd2b4a7af322485c7170d6f9fd96e0/cloudpickle-2.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/60/97/891a0971e1e4a8c5d2b20bbe0e524dc04548d2307fee33cdeba148fd4fc7/comm-0.2.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b0/d0/89247ec250369fc76db477720a26b2fce7ba079ff1380e4ab4529d2fe233/debugpy-1.8.17-py2.py3-none-any.whl
@@ -675,6 +675,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/30/28/5e27f4d5a0e347f8e3cc16cd7d35533dbce086c95807f1f0e9cd77e26c10/psutil-7.1.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/04/0b/3c9baedbdf613ecaa7aa07027780b8867f57b6293b6ee50de316c9f3222b/pyzmq-27.1.0.tar.gz
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
+      - pypi: ../autochem
+      - pypi: ../autofile
+      - pypi: ../autoio
+      - pypi: ../mechanalyzer
       - pypi: ./
   dev2:
     channels:
@@ -692,6 +696,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/arpack-3.9.1-nompi_hf03ea27_102.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asttokens-3.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.2-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.1-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.11.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -798,6 +805,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.10.7-py313h78bf25f_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.10.7-py313h683a580_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/mechanalyzer-2025.10.1-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/Auto-Mech/noarch/mess-static-2025.9.0-h4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/more-itertools-10.8.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
@@ -888,10 +896,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/yaml-0.2.5-h280c20c_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.23.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
-      - conda: ../autochem
-      - conda: ../autofile
-      - conda: ../autoio
-      - conda: ../mechanalyzer
       - pypi: https://files.pythonhosted.org/packages/7e/e8/64c37fadfc2816a7701fa8a6ed8d87327c7d54eacfbfb6edab14a2f2be75/cloudpickle-3.1.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/60/97/891a0971e1e4a8c5d2b20bbe0e524dc04548d2307fee33cdeba148fd4fc7/comm-0.2.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b0/d0/89247ec250369fc76db477720a26b2fce7ba079ff1380e4ab4529d2fe233/debugpy-1.8.17-py2.py3-none-any.whl
@@ -909,6 +913,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/30/28/5e27f4d5a0e347f8e3cc16cd7d35533dbce086c95807f1f0e9cd77e26c10/psutil-7.1.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/f8/9b/c108cdb55560eaf253f0cbdb61b29971e9fb34d9c3499b0e96e4e60ed8a5/pyzmq-27.1.0-cp312-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
+      - pypi: ../autochem
+      - pypi: ../autofile
+      - pypi: ../autoio
+      - pypi: ../mechanalyzer
       - pypi: ./
   test:
     channels:
@@ -1235,31 +1243,12 @@ packages:
   - pkg:pypi/attrs?source=compressed-mapping
   size: 60101
   timestamp: 1759762331492
-- conda: ../autochem
+- pypi: ../autochem
   name: autochem
   version: 2025.10.2
-  build: pyh4616a5c_0
-  subdir: noarch
-  depends:
-  - altair >=5.5.0
-  - ipython >=8.15
-  - more-itertools >=10.8.0
-  - networkx >=3.3
-  - numpy >=1.26
-  - pint >=0.25
-  - py3dmol >=2.5.3
-  - pyparsing >=3.2.5
-  - pyyaml >=6.0.3
-  - qcelemental >=0.29.0
-  - rdkit >=2025.9.1
-  - scipy >=1.12
-  - xarray >=2023.8
-  - python >=3.11
-  - python *
-  input:
-    hash: 9ea231cbbf8fbf0c2d6567533db191adf36eedc0161a4f2fbbad3cae3d4990a5
-    globs:
-    - pyproject.toml
+  sha256: 265b855f2177b66e5847dbc11375b5a33d7534cb42f926d06936f87d703f2ed7
+  requires_python: '>=3.11'
+  editable: true
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.2-pyh4616a5c_0.conda
   sha256: 8cc6391a62404e20240873b735c59f65aefaab50c6f1487e6c66ad265b7a4232
   md5: 742095730f86947fc3210ceafb270bab
@@ -1281,22 +1270,12 @@ packages:
   - python *
   size: 605796
   timestamp: 1761230782772
-- conda: ../autofile
+- pypi: ../autofile
   name: autofile
   version: 2025.10.1
-  build: pyh4616a5c_0
-  subdir: noarch
-  depends:
-  - numpy >=1.26
-  - pyyaml >=6.0.3
-  - autochem >=2025.10.0
-  - autoio >=2025.10.0
-  - python >=3.11
-  - python *
-  input:
-    hash: 43b7ea746732ca692a54ddf1f11b7688ab1c8298bc77f3226f1938d8d39cbc4d
-    globs:
-    - pyproject.toml
+  sha256: cef8b4ffba71d0b149d41d47e84596208f9adf1d49565fd293b5f0154c10c6ad
+  requires_python: '>=3.11'
+  editable: true
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.1-pyh4616a5c_0.conda
   sha256: 660db71c69c36165afb3d76ad0c8cb804dd34f75cccd5212c6e6fe4b06460b96
   md5: e3c4250c11cd23bc6602c7da60b89d7e
@@ -1309,26 +1288,12 @@ packages:
   - python *
   size: 43215
   timestamp: 1761230960378
-- conda: ../autoio
+- pypi: ../autoio
   name: autoio
-  version: 2025.11.0
-  build: pyh4616a5c_0
-  subdir: noarch
-  depends:
-  - mako >=1.3.10
-  - more-itertools >=10.8.0
-  - numpy >=1.26
-  - pint >=0.25
-  - pyparsing >=3.2.5
-  - pyyaml >=6.0.3
-  - qcelemental >=0.29.0
-  - autochem >=2025.10.0
-  - python >=3.11
-  - python *
-  input:
-    hash: 5897368aea9db1120c7cbf7edbe293ff13a8608017f6be1463cd03b508284060
-    globs:
-    - pyproject.toml
+  version: 2025.10.2
+  sha256: 3f634db95d830ccba4294985049f1b752e7f7cfe50f8cd8b43ee0359a98be061
+  requires_python: '>=3.11'
+  editable: true
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.11.0-pyh4616a5c_0.conda
   sha256: 7f1dc7dfbb6cbc22c97ea467547fe064b7bad3e6f3cc9752bfe8c660953d85c4
   md5: 4ea27bf91c14e5d99e6eac787388fffd
@@ -3008,30 +2973,12 @@ packages:
   version: 0.1.2
   sha256: 84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8
   requires_python: '>=3.7'
-- conda: ../mechanalyzer
+- pypi: ../mechanalyzer
   name: mechanalyzer
   version: 2025.10.1
-  build: pyh4616a5c_0
-  subdir: noarch
-  depends:
-  - click >=8.2.1
-  - mako >=1.3.10
-  - matplotlib >=3.10.6
-  - networkx >=3.3
-  - numpy >=1.26
-  - pandas >=2.3.3
-  - python-igraph >=0.11.9
-  - pyyaml >=6.0.3
-  - scipy >=1.12
-  - autochem >=2025.10.0
-  - autoio >=2025.10.0
-  - autofile >=2025.10.0
-  - python >=3.11
-  - python *
-  input:
-    hash: ab8ca1eaacfc3696d293063fa59b85da9cf5a46c84c0afce8a54cd1b84c95d11
-    globs:
-    - pyproject.toml
+  sha256: b808ba3ba3a7fff32f668167afbb76695d9c1571b4067118d46917164b75d439
+  requires_python: '>=3.11'
+  editable: true
 - conda: https://conda.anaconda.org/Auto-Mech/noarch/mechanalyzer-2025.10.1-pyh4616a5c_0.conda
   sha256: 77c6988f09124b9845b84c12d15b857e27d9a996ede0f1da1bc1ad2325abefe2
   md5: fe8c19fd71c39545af62c894cbf01ee7
@@ -3055,7 +3002,7 @@ packages:
 - pypi: ./
   name: mechdriver
   version: 2025.10.0
-  sha256: ae637da33b8e63a956839eb17f855cd409e19180139a7907d81da2e5865394ac
+  sha256: 1b11856d7d13961d8a350a9d522dd09d91fd2910fb5272e861582c642dec0da8
   requires_dist:
   - hyperqueue
   requires_python: '>=3.11,<3.14'
