@@ -118,7 +118,8 @@ build = ["build"]
 node = { cmd = "./scripts/node.sh" }
 dev-setup-repos = { cmd = "./scripts/dev-setup-repos.sh", cwd = "." }
 dev-setup-hq = { cmd = "./scripts/dev-setup-hq.sh", cwd = "." }
-dev-setup = { depends-on = ["dev-setup-repos", "dev-setup-hq"] }
+dev-setup-config = { cmd = "./scripts/dev-setup-config.sh", cwd = "." }
+dev-setup = { depends-on = ["dev-setup-repos", "dev-setup-hq", "dev-setup-config"] }
 git = { cmd = "./scripts/git.sh", cwd = "." }
 update = { cmd = "./scripts/update.sh", cwd = "." }
 
