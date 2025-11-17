@@ -18,10 +18,16 @@ UPSTREAM=${2}
 MODE=${3}
 BRANCH=${4:-dev}
 
-if [ -z "${1}" ]; then
+DEFAULT_USERNAME=$(git config --global user.name)
+if [ -z "$DEFAULT_USERNAME" ]; then
     read -p "Please enter your GitHub username: " USERNAME
 fi
-echo "Next, press enter to choose the default values, unless you know what you are doing..."
+
+echo "Press enter to choose the default values..."
+if [ -z "$USERNAME" ]; then
+    read -p "  Git username (${DEFAULT_USERNAME} [default] or enter alternative): " INPUT
+    USERNAME=${INPUT:-$DEFAULT_USERNAME}
+fi
 if [ -z "${2}" ]; then
     read -p "  Update against Auto-Mech upstream? (yes [default] or no): " UPSTREAM
     UPSTREAM=${UPSTREAM:-yes}
