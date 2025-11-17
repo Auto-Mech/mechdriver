@@ -11,8 +11,6 @@ mechdriver = 'mechdriver.cli:main'
 mechanalyzer = "mechanalyzer.cli:main"
 
 [dependency-groups]
-test = ["pytest"]
-dev = ["ipykernel", "jupytext"]
 new_arch = ["hyperqueue>=0.24.0"]
 
 [build-system]
@@ -92,6 +90,13 @@ mechanalyzer = "==2025.10.1"
 
 [tool.pixi.feature.build.dependencies]
 rattler-build = ">=0.47.1"
+
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+
+[tool.pixi.feature.dev.dependencies]
+ipykernel = "*"
+jupytext = "*"
 
 [tool.pixi.feature.dev.pypi-dependencies]
 autochem = { path = "../autochem", editable = true }
