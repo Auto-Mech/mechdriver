@@ -1,6 +1,6 @@
 [project]
 name = "mechdriver"
-version = "2025.10.0"
+version = "2025.11.0"
 description = "Automated workflow routines for calculating theoretical data for reaction mechanisms"
 readme = "README.md"
 dependencies = ["hyperqueue"]
