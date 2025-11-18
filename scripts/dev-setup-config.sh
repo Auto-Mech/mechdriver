@@ -14,15 +14,23 @@ else
     echo Python output buffering is already turned off in $HOME/.bashrc
 fi
 
-# 2. Add alias to activate mechdriver environment
+# 2. Add mechenv function to .bashrc
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 MECHDRIVER_PATH="$( realpath "$SCRIPT_DIR/.." )"
-ENV_CONFIG_LINE="alias mechenv='eval \"\$(pixi shell-hook -e dev --manifest-path $MECHDRIVER_PATH)\"'"
+
+ENV_FUNCTION_BLOCK=$(cat <<EOF
+mechenv() {
+    local env_name="\${1:-dev}"
+    eval "\$(pixi shell-hook -e "\$env_name" --manifest-path "$MECHDRIVER_PATH")"
+}
+EOF
+)
+
 echo
-if ! grep -Fxq "$ENV_CONFIG_LINE" $HOME/.bashrc; then
-    echo Adding alias 'mechenv' for activating dev environment to $HOME/.bashrc:
-    echo $ENV_CONFIG_LINE
-    echo $ENV_CONFIG_LINE >> $HOME/.bashrc
+if ! grep -Fq "mechenv()" "$HOME/.bashrc"; then
+    echo "Adding mechenv() function to $HOME/.bashrc:"
+    echo "$ENV_FUNCTION_BLOCK"
+    echo "$ENV_FUNCTION_BLOCK" >> "$HOME/.bashrc"
 else
-    echo Alias 'mechenv' is already present in $HOME/.bashrc
+    echo "Function mechenv() is already present in $HOME/.bashrc"
 fi
