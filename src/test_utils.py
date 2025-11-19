@@ -167,7 +167,7 @@ def sign_tests(allow_override: bool = False) -> None:
             print("WARNING: New commits since tested version!!")
             print(textwrap.indent("\n".join(new_commits), "    "))
             answer = input(
-                "Do you solemnly swear that these changes will not break tests? (yes/no): "
+                "Do you affirm that these changes will not break tests? (yes/no): "
             )
             print()
             if answer != "yes":

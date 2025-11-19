@@ -1,17 +1,16 @@
 [project]
 name = "mechdriver"
-version = "2025.10.0"
+version = "2025.11.0"
 description = "Automated workflow routines for calculating theoretical data for reaction mechanisms"
 readme = "README.md"
 dependencies = ["hyperqueue"]
 requires-python = ">=3.11,<3.14"
 
 [project.scripts]
-automech = 'mechdriver.cli:main'
+mechdriver = 'mechdriver.cli:main'
+mechanalyzer = "mechanalyzer.cli:main"
 
 [dependency-groups]
-test = ["pytest"]
-dev = ["ipykernel", "jupytext"]
 new_arch = ["hyperqueue>=0.24.0"]
 
 [build-system]
@@ -58,8 +57,8 @@ pac99 = ">=1.6.0"
 projrot = ">=1.8.0"
 thermp = ">=0.7.0"
 mess-static = ">=2025.9.0"
-autochem = "==2025.10.2"
-autoio = "==2025.10.2"
+autochem = "==2025.11.0"
+autoio = "==2025.11.0"
 autofile = "==2025.10.1"
 mechanalyzer = "==2025.10.1"
 
@@ -84,19 +83,32 @@ pac99 = ">=1.6.0"
 projrot = ">=1.8.0"
 thermp = ">=0.7.0"
 mess-static = ">=2025.9.0"
-autochem = "==2025.10.2"
-autoio = "==2025.10.2"
+autochem = "==2025.11.0"
+autoio = "==2025.11.0"
 autofile = "==2025.10.1"
 mechanalyzer = "==2025.10.1"
 
 [tool.pixi.feature.build.dependencies]
 rattler-build = ">=0.47.1"
 
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+
 [tool.pixi.feature.dev.dependencies]
-autochem = { path = "../autochem" }
-autoio = { path = "../autoio" }
-autofile = { path = "../autofile" }
-mechanalyzer = { path = "../mechanalyzer" }
+ipykernel = "*"
+jupytext = "*"
+
+[tool.pixi.feature.dev.pypi-dependencies]
+autochem = { path = "../autochem", editable = true }
+autoio = { path = "../autoio", editable = true }
+autofile = { path = "../autofile", editable = true }
+mechanalyzer = { path = "../mechanalyzer", editable = true }
+
+[tool.pixi.feature.dev.pypi-options.dependency-overrides]
+autochem = { path = "../autochem", editable = true }
+autoio = { path = "../autoio", editable = true }
+autofile = { path = "../autofile", editable = true }
+mechanalyzer = { path = "../mechanalyzer", editable = true }
 
 [tool.pixi.system-requirements]
 linux = "3.10"
@@ -117,7 +129,8 @@ build = ["build"]
 node = { cmd = "./scripts/node.sh" }
 dev-setup-repos = { cmd = "./scripts/dev-setup-repos.sh", cwd = "." }
 dev-setup-hq = { cmd = "./scripts/dev-setup-hq.sh", cwd = "." }
-dev-setup = { depends-on = ["dev-setup-repos", "dev-setup-hq"] }
+dev-setup-config = { cmd = "./scripts/dev-setup-config.sh", cwd = "." }
+dev-setup = { depends-on = ["dev-setup-repos", "dev-setup-hq", "dev-setup-config"] }
 git = { cmd = "./scripts/git.sh", cwd = "." }
 update = { cmd = "./scripts/update.sh", cwd = "." }
 

@@ -11,7 +11,7 @@ from .subtasks import hq
 
 @click.group()
 def main():
-    """AutoMech CLI"""
+    """MechDriver CLI"""
     pass
 
 
