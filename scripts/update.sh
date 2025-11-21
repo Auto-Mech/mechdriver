@@ -3,12 +3,11 @@
 # This script updates each repo against a remote
 # (It also updates the amech-dev repo.)
 #
-# Performs a pull --rebase followed by a push
+# Performs a pull --rebase
 #
 # Arguments:
 #   - Remote to update against (default: upstream)
 #   - Branch to update (default: dev)
-#   - Flags to add to the push command, e.g. --force (default: none)
 
 set -e  # if any command fails, quit
 REPOS=("autochem" "autoio" "autofile" "mechanalyzer" "mechdriver")
@@ -16,12 +15,10 @@ REPOS=("autochem" "autoio" "autofile" "mechanalyzer" "mechdriver")
 # 0. Read arguments
 REMOTE=${1:-upstream}
 BRANCH=${2:-dev}
-FLAGS=${@:3}
 
 echo "The following commands will be run in each repository:"
 echo "    git checkout ${BRANCH}"
 echo "    git pull --rebase ${REMOTE} ${BRANCH}"
-echo "    git push ${FLAGS} origin ${BRANCH}"
 read -p "Is this what you want to do? [y/n] " yn
 
 if [[ $yn =~ ^[Yy]$ ]]; then
@@ -36,8 +33,7 @@ if [[ $yn =~ ^[Yy]$ ]]; then
             (
                 cd ${repo} && \
                 git checkout ${BRANCH} && \
-                git pull --rebase ${REMOTE} ${BRANCH} && \
-                git push ${FLAGS} origin ${BRANCH}
+                git pull --rebase ${REMOTE} ${BRANCH}
             )
             printf "******\n"
         done

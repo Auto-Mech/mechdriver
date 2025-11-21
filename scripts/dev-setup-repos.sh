@@ -80,8 +80,7 @@ fi
                 fi
                 # iii. Rebase the selected branch against upstream
                 git remote add upstream https://github.com/Auto-Mech/${repo} || true
-                git pull --rebase upstream ${BRANCH} && \
-                git push origin ${BRANCH}
+                git pull --rebase upstream ${BRANCH}
             )
         fi
         printf "***\n"
