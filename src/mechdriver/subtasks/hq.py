@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 import jinja2
 import pint
@@ -27,7 +27,7 @@ try:
     _HAS_HQ = True
 except ImportError:
     _HAS_HQ = False
-    Client = Job = ResourceRequest = PythonEnv = Task = None
+    Client = Job = ResourceRequest = PythonEnv = Task = Any
 
 Function: TypeAlias = Task
 
