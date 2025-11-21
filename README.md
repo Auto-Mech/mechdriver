@@ -139,18 +139,28 @@ override the commit hash check on GitHub Actions and allow your tests to pass.
 
 ### Updating Conda Packages
 
-Updating the conda packages for any of the AutoMech repositories is a two step
-process:
+> [!WARNING]
+> Versions are now automatically handled by the BumpVer versioning tool.
+> Therefore, do not manually change the version of a given package in its
+> `pyproject.toml`.  Instead, the version will be automatically updated by
+> triggering the release workflow as described below.
 
-1. Update the version number under the `[project]` table in its `pyproject.toml`.
-2. Submit a pull request from your fork on GitHub and, assuming the tests pass, merge it into the AutoMech upstream repository.
+To update the conda package for one of the AutoMech repositories, you can
+trigger its `release` workflow by following these steps:
 
-This will automatically publish a new conda package for that repository to the
-[Auto-Mech channel](https://anaconda.org/Auto-Mech/).
+1. Submit a pull request as usual.
+2. In the pull request UI, click "Labels" and add the label `release:patch`.
+3. If and **only if** the tests pass, merge the pull request.
 
-If you have updated the conda package for a lower-level module such as `autoio`
-and want these changes to take effect in MechDriver, you will also need to
-update the following two tables in the MechDriver `pyproject.toml`.
+The `release:patch` label is the signal that tells GitHub Actions to run the
+`release` workflow.
+This will (1.) bump the version number, (2.) publish the conda package to the
+[`auto-mech` channel](https://anaconda.org/Auto-Mech/), and (3.) create an
+associated GitHub release.
+
+For now, if you have updated the conda package for a lower-level module such as
+`autoio` and want these changes to take effect in MechDriver, you will also need
+to update the following two tables in the MechDriver `pyproject.toml`.
 ```
 [tool.pixi.package.run-dependencies]
 ...
