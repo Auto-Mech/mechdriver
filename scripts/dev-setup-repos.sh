@@ -19,7 +19,7 @@ MODE=${3}
 BRANCH=${4:-dev}
 
 DEFAULT_USERNAME=$(git config --global user.name)
-if [ -z "$DEFAULT_USERNAME" ]; then
+if [[ -z "$DEFAULT_USERNAME" && -z "$USERNAME" ]]; then
     read -p "Please enter your GitHub username: " USERNAME
 fi
 
@@ -42,7 +42,11 @@ echo "  Username - ${USERNAME}"
 echo "  Update   - ${UPSTREAM}"
 echo "  Mode     - ${MODE}"
 echo "  Branch   - ${BRANCH}"
-read -p "Is this correct? If so, press enter to continue"
+if [[ -n "$1" && -n "$2" && -n "$3" ]]; then
+    echo "All arguments were provided via command line. Skipping confirmation."
+else
+    read -p "Is this correct? If so, press enter to continue"
+fi
 
 CLONE_PREFIX="https://github.com/${USERNAME}"
 if [ "${MODE}" == "ssh" ]; then
