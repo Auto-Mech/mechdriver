@@ -1,0 +1,35 @@
+
+input
+    run_prefix = ./run
+    save_prefix = ./save
+end input
+
+spc
+    1-5
+end spc
+
+pes
+    1: 1
+end pes
+
+els
+    spc init_geom   runlvl=pm3 inplvl=pm3
+    ts find_ts      runlvl=pm3 inplvl=pm3
+    all conf_samp   runlvl=pm3 inplvl=pm3
+    all conf_hess   runlvl=pm3 inplvl=pm3 cnf_range=n100
+    all conf_energy runlvl=dft  inplvl=pm3 cnf_range=min sort=freqs(pm3),sp(pm3),gibbs(700)
+    all hr_scan     runlvl=pm3 inplvl=pm3 cnf_range=min sort=freqs(pm3),sp(pm3),gibbs(700) tors_model=1dhrfa
+end els
+
+thermo
+    write_mess  kin_model=global spc_model=global cnf_range=min sort=freqs(pm3),sp(pm3),gibbs(700)
+    run_mess    kin_model=global spc_model=global cnf_range=min sort=freqs(pm3),sp(pm3),gibbs(700) nprocs=10
+    run_fits    kin_model=global spc_model=global cnf_range=min sort=freqs(pm3),sp(pm3),gibbs(700)
+end thermo
+
+ktp
+    write_mess  kin_model=global spc_model=global
+    run_mess    kin_model=global spc_model=global nprocs=10
+    run_fits    kin_model=global spc_model=global
+end ktp
+
