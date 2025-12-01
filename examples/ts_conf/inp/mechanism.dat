@@ -1,0 +1,5 @@
+REACTIONS    CAL/MOL   MOL
+
+CH4 + OH = CH3 + H2O              1.000      0.000      0.000         # pes.subpes.channel  1.1.1
+
+END
