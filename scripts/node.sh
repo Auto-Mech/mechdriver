@@ -7,7 +7,7 @@ WD=${INIT_CWD:-$(pwd)}
 # (Must be the first argument)
 NODE=${1}
 LOG=${2:-"out.log"}
-COMMAND=${3:-"automech run"}
+COMMAND=${3:-"mechdriver run"}
 
 echo "Arguments:"
 echo "  NODE=${NODE}"
