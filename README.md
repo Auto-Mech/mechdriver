@@ -87,6 +87,12 @@ running the following command inside it.
 pixi run --frozen dev-setup
 ```
 Follow the prompts to configure the set-up to your liking.
+Among other configurations, this set-up clones the other Auto-Mech repositories
+into the parent directory of your mechdriver repository.
+```
+ls ..
+autochem  autofile  autoio  mechanalyzer  mechdriver
+```
 If you run into issues, see [Appendix C](#appendix-c-manual-developer-setup) for
 manual set-up instructions.
 
@@ -106,6 +112,22 @@ For more information on activating Pixi environments, see
 
 You can then run any of the examples [in the `examples/` directory](./examples/)
 as [described above](#run).
+
+### Git Helper Tasks
+
+The following Pixi tasks are available to facilitate Git operations with your
+five local Auto-Mech repositories:
+
+1. `pixi run pull`. This does a `git pull --rebase upstream dev` on all five
+repositories to update them against the central Auto-Mech upstream.
+2. `pixi run git <commands>`. This runs whatever `git` commands you pass it in
+all five repositories.
+
+For example, a common operation you might wish to do is:
+```
+pixi run pull                   # Rebase each repo against upstream
+pixi run git push origin dev    # Push each repo to origin
+```
 
 ### Test
 
@@ -178,7 +200,7 @@ override the commit hash check on GitHub Actions and allow your tests to pass.
 
 > [!WARNING]
 > Versions are now automatically handled by the BumpVer versioning tool.
-> Therefore, do not manually change the version of a given package in its
+> Therefore, **do not** manually change the version of a given package in its
 > `pyproject.toml`.  Instead, the version will be automatically updated by
 > triggering the release workflow as described below.
 
@@ -195,22 +217,23 @@ This will (1.) bump the version number, (2.) publish the conda package to the
 [`auto-mech` channel](https://anaconda.org/Auto-Mech/), and (3.) create an
 associated GitHub release.
 
-For now, if you have updated the conda package for a lower-level module such as
-`autoio` and want these changes to take effect in MechDriver, you will also need
-to update the following two tables in the MechDriver `pyproject.toml`.
+If you have done this for one or more of the lower-level repositories, you will
+also need to update the MechDriver `pyproject.toml` file with their new version
+numbers.
+You can do so as follows:
 ```
-[tool.pixi.package.run-dependencies]
-...
-autoio = "==<new version number>"
-
-[tool.pixi.dependencies]
-...
-autoio = "==<new version number>"
+pixi run pull   # Pull the release commits from upstream
+pixi run update # Update the version numbers in pyproject.toml
 ```
-These two dependency tables **must match exactly** to ensure that the packaged
-version of the code matches the tested version.
+This will update the `package.run-dependencies` and `dependencies` tables in
+your `pyproject.toml` with the new version numbers of the lower-level
+repositories and update the lockfile.
+If you make any manual changes to these tables,
+**make sure that they match exactly**.
+This is necessary to ensure that the packaged version of the code matches the
+tested version.
 
-## Subtask Parallelization
+## Experimental Feature: Subtask Parallelization
 
 As an experimental feature in MechDriver, you can parallelize across subtasks in
 your workflow with

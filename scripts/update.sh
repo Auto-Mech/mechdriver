@@ -10,32 +10,16 @@
 #   - Branch to update (default: dev)
 
 set -e  # if any command fails, quit
-REPOS=("autochem" "autoio" "autofile" "mechanalyzer" "mechdriver")
+REPOS=("autochem" "autoio" "autofile" "mechanalyzer")
 
-# 0. Read arguments
-REMOTE=${1:-upstream}
-BRANCH=${2:-dev}
+# 1. Loop through each repo and update
+for repo in ${REPOS[@]}
+do
+    version=$(pixi run --manifest-path ../$repo current-version)
+    echo Setting $repo version to $version
+    sed -i -E "s/($repo *= *\"==)[0-9]+\.[0-9]+\.[0-9]+(\" *)/\1${version}\2/" pyproject.toml
+done
 
-echo "The following commands will be run in each repository:"
-echo "    git checkout ${BRANCH}"
-echo "    git pull --rebase ${REMOTE} ${BRANCH}"
-read -p "Is this what you want to do? [y/n] " yn
-
-if [[ $yn =~ ^[Yy]$ ]]; then
-    # 1. Navigate to mechdriver parent directory
-    (
-        cd ..
-
-        # 2. Loop through each repo and update
-        for repo in ${REPOS[@]}
-        do
-            printf "\n*** Updating in $(realpath ${repo}) ***\n"
-            (
-                cd ${repo} && \
-                git checkout ${BRANCH} && \
-                git pull --rebase ${REMOTE} ${BRANCH}
-            )
-            printf "******\n"
-        done
-    )
-fi
+# 2. Update lockfile
+echo Updating lockfile
+pixi lock
