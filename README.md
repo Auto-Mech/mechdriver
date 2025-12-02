@@ -87,6 +87,12 @@ running the following command inside it.
 pixi run --frozen dev-setup
 ```
 Follow the prompts to configure the set-up to your liking.
+Among other configurations, this set-up clones the other Auto-Mech repositories
+into the parent directory of your mechdriver repository.
+```
+ls ..
+autochem  autofile  autoio  mechanalyzer  mechdriver
+```
 If you run into issues, see [Appendix C](#appendix-c-manual-developer-setup) for
 manual set-up instructions.
 
@@ -106,6 +112,22 @@ For more information on activating Pixi environments, see
 
 You can then run any of the examples [in the `examples/` directory](./examples/)
 as [described above](#run).
+
+### Git Helper Tasks
+
+The following Pixi tasks are available to facilitate Git operations with your
+five local Auto-Mech repositories:
+
+1. `pixi run pull`. This does a `git pull --rebase upstream dev` on all five
+repositories to update them against the central Auto-Mech upstream.
+2. `pixi run git <commands>`. This runs whatever `git` commands you pass it in
+all five repositories.
+
+For example, a common operation you might wish to do is:
+```
+pixi run pull                   # Rebase each repo against upstream
+pixi run git push origin dev    # Push each repo to origin
+```
 
 ### Test
 
