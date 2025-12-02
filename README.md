@@ -7,8 +7,8 @@ MechDriver is the main driver for executing AutoMech workflows.
 MechDriver can be installed by your favorite conda package manager from the
 [`auto-mech` channel](https://anaconda.org/Auto-Mech/mechdriver), with
 dependencies from the `conda-forge` channel.
-We would highly recommend the Pixi package manager, which you can install in
-under a minute with [this command](https://pixi.sh/latest/#installation).
+We would highly recommend the Pixi package manager, which you can easily install
+with [this command](https://pixi.sh/latest/#installation).
 The Pixi command to install MechDriver is as follows.
 ```
 pixi global install mechdriver -c conda-forge -c auto-mech
@@ -19,7 +19,56 @@ special permissions, so you can do this anywhere.
 If you prefer, Pixi also allows you to install the code into
 [a local workspace environment](https://pixi.sh/latest/first_workspace/).
 
-### Developer Setup
+If the installation worked, you should have `mechdriver` and `mechanalyzer` in
+your path.
+You can check this by running the following help commands.
+```
+mechdriver --help
+mechanalyzer --help
+```
+Note that, if you are not using a globally installed version of the code, you
+will need to activate the appropriate environment first.
+
+## Run
+
+The easiest way to start running MechDriver is to try out one of the test
+examples
+These can be downloaded as follows:
+```
+wget https://github.com/avcopan/mechdriver/raw/refs/heads/dev/tests/archive.tgz
+mkdir examples
+tar -xzf archive.tgz -C examples
+```
+
+You can then run the `quick` example as follows.
+```
+cd examples/quick
+mechdriver run
+```
+This will run very quickly because it comes with pre-populated electronic
+structure data.
+
+> [!TIP]
+> To see live output as the calculation runs, you may need to turn off Python
+> output buffering:
+> ```
+> export PYTHONUNBUFFERED=1
+> ```
+> You can put this line in your `.bashrc`.
+
+To run from scratch, make sure the `g16` executable for Gaussian 16 is in your path.
+Then remove the `save` directory for the example and try running it again.
+This time, you may wish to write the output to a log file.
+```
+mechdriver run &> out.log &
+```
+Electronic structure calculations will run in a directory called `run`.
+The paths to these calculations will be printed to the log file as the workflow
+proceeds.
+
+## Developer Instructions
+
+### Setup
 
 > [!IMPORTANT]
 > Until you complete the developer set-up, you will need to add the `--frozen`
@@ -55,22 +104,10 @@ environment.
 For more information on activating Pixi environments, see
 [here](https://pixi.sh/dev/workspace/environment/#activation).
 
-## Run
+You can then run any of the examples [in the `examples/` directory](./examples/)
+as [described above](#run).
 
-The easiest way get started with MechDriver is to try out the examples
-[in the `examples/` directory](./examples/).
-The `quick` example is a good place to start.
-It can be run as follows.
-```
-cd examples/quick
-mechdriver run &> out.log &
-```
-Note that you will need the `g16` executable for Gaussian 16 in your path and,
-if you are not using a globally installed version of the code, you will need to
-[activate the environment](https://pixi.sh/dev/workspace/environment/#activation).
-Developers can do this with the `mechenv` command.
-
-## Test
+### Test
 
 > [!TIP]
 > This testing workflow uses the experimental "subtasks" module in MechDriver to

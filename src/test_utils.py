@@ -21,6 +21,7 @@ SKIP_COMMITS = (
     r"Merge pull request \S* from \S*",
     r"Merge \S* into \S*",
     r"Update README.md",
+    r"Release \S*",
 )
 
 
