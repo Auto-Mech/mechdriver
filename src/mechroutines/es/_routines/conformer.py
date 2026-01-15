@@ -25,104 +25,103 @@ from automol.extern import Ring_Reconstruction as RR
 from phydat import phycon
 
 # Initial conformer
-def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
-                      ini_cnf_save_fs, cnf_run_fs, cnf_save_fs,
-                      es_keyword_dct):
-    """ Assess if a conformer layer with a geometry exists in the save
-        filesys for the given species.
-        If not, attempt to generate some guess structure using InChI strings
-        or input geom from user.
-        and optimize
-        it with input method. Then assess if the optimized structure
-        corresponds to genuine minimum on the PES via a frequency calculation.
-        If a minimum is found, save the conformer geometry, zmatrix, energy,
+def initial_conformer(
+        spc_dct_i: dict,
+        spc_info: tuple,
+        ini_method_dct: dict,
+        method_dct: dict,
+        ini_cnf_save_fs: object,
+        cnf_run_fs: object,
+        cnf_save_fs: object,
+        es_keyword_dct: dict):
+    """ Create and optimize the first conformer for a species and method (init_geom).
+        - Ensure no conformer exists in the save filesys for the given species
+        at the run-LoT.
+        - Generate a guess structure with priority on input geometry from user
+        (inp/geomA.xyz) and then using RDKit geometries from InChI strings
+        - Optimize guess structure with the run-LoT
+        - Ensure optimized geometry is a minimum on the PES via a frequency calculation
+        (if imaginary frequencies are found, loop through kickoff/reoptimization procedure).
+        - If a minimum is found, save the conformer geometry, zmatrix, energy, 
         and torsions to the save filesys.
-        Also, the function assessess if the species is unstable and will
+        - Also, the function assessess if the species is unstable and will
         save the appropriate information.
+        :param spc_dct_i: Species dictionary for species i
+        :type spc_dct_i: dict
+        :param spc_info: Species info (InChI, charge, multiplicity)
+        :type spc_info: tuple
+        :param ini_method_dct: Initial method dictionary
+        :type ini_method_dct: dict
+        :param method_dct: Run Method dictionary
+        :type method_dct: dict
+        :param ini_cnf_save_fs: Initial conformer save filesystem
+        :type ini_cnf_save_fs: autofile.fs.conformer
+        :param cnf_run_fs: Conformer run filesystem
+        :type cnf_run_fs: autofile.fs.conformer
+        :param cnf_save_fs: Conformer save filesystem
+        :type cnf_save_fs: autofile.fs.conformer
+        :param es_keyword_dct: Electronic structure keyword dictionary
+        :type es_keyword_dct: dict
+        :returns: bool indicating if conformer was found
     """
-    ini_thy_info = tinfo.from_dct(ini_method_dct)
-    thy_info = tinfo.from_dct(method_dct)
-    mod_thy_info = tinfo.modify_orb_label(
-        thy_info, spc_info)
-    mod_ini_thy_info = tinfo.modify_orb_label(
-        ini_thy_info, spc_info)
-    [kickoff_size, kickoff_backward] = spc_dct_i['kickoff']
-
-    _, cnf_path = filesys.mincnf.min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info)
+    # check run and save filesystems for existing jobs
+    mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), spc_info)
     overwrite = es_keyword_dct['overwrite']
-    if not cnf_path:
+    if not _init_geom_is_needed(
+            cnf_save_fs, cnf_run_fs, mod_thy_info, overwrite):
+        return True
+
+    # obtain initial guess structure from user input or InChI
+    info_message('Obtaining initial guess geometry.')
+    mod_ini_thy_info = tinfo.modify_orb_label(
+        tinfo.from_dct(ini_method_dct), spc_info)
+    geo_init = _obtain_ini_geom(
+        spc_dct_i, ini_cnf_save_fs, mod_ini_thy_info, overwrite)
+    if geo_init is None:
+        warning_message(
+            'Unable to obtain an initial guess geometry')
+        return False
+
+    # Assign random ring and conformer IDs
+    rid = autofile.schema.generate_new_ring_id()
+    cid = autofile.schema.generate_new_conformer_id()
+    
+    # Check for common functional groups that cause instabilities
+    info_message(
+        'Assessing if there are any functional groups',
+        'that cause instability')
+    zma_init = automol.geom.zmatrix(geo_init)
+    instab_zmas = automol.reac.instability_product_zmas(zma_init)
+    if instab_zmas:
         info_message(
-            'No conformer found in save filesys. Checking for running jobs...')
-        if _init_geom_is_running(cnf_run_fs) and not overwrite:
-            _run = False
-        else:
-            info_message(
-                'No conformers are running in run filesys.' +
-                'Proceeding with optimization...')
-            _run = True
-    elif overwrite:
-        info_message(
-            'User specified to overwrite energy with new run...')
-        _run = True
+            'Found functional groups that cause instabilities')
+        filesys.save.instability(
+            zma_init, instab_zmas, cnf_save_fs,
+            rng_locs=(rid,), tors_locs=(cid,), zma_locs=(0,))
+        return True
+
+    # Optimize the initial geometry, including a loop through kickoffs
+    # until no imaginary frequencies remain or max attempts reached
+    cnf_run_fs[-1].create((rid, cid))
+    run_fs = autofile.fs.run(cnf_run_fs[-1].path((rid, cid)))
+    if not automol.geom.is_atom(geo_init):
+        [kickoff_size, kickoff_backward] = spc_dct_i['kickoff']
+        geo_found = _optimize_molecule(
+            spc_info, zma_init,
+            method_dct,
+            cnf_save_fs, (rid, cid),
+            run_fs,
+            overwrite,
+            kickoff_size=kickoff_size,
+            kickoff_backward=kickoff_backward)
     else:
-        _run = False
-
-    if _run:
-        info_message('Obtaining some initial guess geometry.')
-        geo_init = _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
-                                    mod_ini_thy_info,
-                                    overwrite)
-
-        if geo_init is not None:
-            info_message(
-                'Assessing if there are any functional groups',
-                'that cause instability')
-
-            zma_init = automol.geom.zmatrix(geo_init)
-
-            rid = autofile.schema.generate_new_ring_id()
-            cid = autofile.schema.generate_new_conformer_id()
-
-            # Determine if there is an instability, if so return prods
-            instab_zmas = automol.reac.instability_product_zmas(zma_init)
-            if not instab_zmas:
-
-                # Build a cid and a run fs
-                cnf_run_fs[-1].create((rid, cid))
-                run_fs = autofile.fs.run(cnf_run_fs[-1].path((rid, cid)))
-
-                if not automol.geom.is_atom(geo_init):
-                    geo_found = _optimize_molecule(
-                        spc_info, zma_init,
-                        method_dct,
-                        cnf_save_fs, (rid, cid),
-                        run_fs,
-                        overwrite,
-                        kickoff_size=kickoff_size,
-                        kickoff_backward=kickoff_backward)
-                else:
-                    geo_found = _optimize_atom(
-                        spc_info, zma_init,
-                        method_dct,
-                        cnf_save_fs, (rid, cid),
-                        run_fs,
-                        overwrite)
-            else:
-                info_message(
-                    'Found functional groups that cause instabilities')
-                filesys.save.instability(
-                    zma_init, instab_zmas, cnf_save_fs,
-                    rng_locs=(rid,), tors_locs=(cid,), zma_locs=(0,))
-                geo_found = True
-        else:
-            geo_found = False
-            warning_message(
-                'Unable to obtain an initial guess geometry')
-    else:
-        existing_path('Initial geometry', cnf_path)
-        geo_found = True
-
+        geo_found = _optimize_atom(
+            spc_info, zma_init,
+            method_dct,
+            cnf_save_fs, (rid, cid),
+            run_fs,
+            overwrite)
+    
     return geo_found
 
 
@@ -130,8 +129,9 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
                      mod_ini_thy_info, overwrite):
     """ Obtain an initial geometry to be optimized. Checks a hieratchy
         of places to obtain the initial geom.
-            (1) Geom dict which is the input from the user
-            (2) Geom from inchi
+        (1) Geom dict which is the input from the user (the geom dict is
+            populated during input parsing from inp/<anyfilename>.xyz if it exists)
+        (2) Geom from inchi
     """
 
     geo_init = None
@@ -145,6 +145,15 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
             info_message(
                 f'Getting inital geometry from inplvl at path {path}')
     else:
+        # Note: I think this print message makes no sense for what the code does
+        # I think the rmtree is fine? It's deleting anything saved in the 
+        # ini save filesystem if overwrite is True. I guess wiping the whole system
+        # would be a reasonable meaning of overwriting init_geom, but at the same
+        # time, this could wipe more than a user would expect.
+        # This was added in 2020 in a hard to track push because it was
+        # originally added to a no-longer existing geom.py file. 
+        # https://github.com/Auto-Mech/mechdriver/commit/e4c2d52c5185d940f6e8cc242430b34eeffc3879
+        # - Sarah 01/14/2026
         debug_message(
             'Removing original conformer save data for instability')
         for locs in ini_cnf_save_fs[-1].existing():
@@ -264,10 +273,9 @@ def _optimize_molecule(spc_info, zma_init,
             if conn and proper_stereo:
                 info_message(
                     'Saving structure as the first conformer...', newline=1)
-                filesys.save.conformer(
-                    ret, None, cnf_save_fs, mod_thy_info[1:],
-                    rng_locs=(locs[0],), tors_locs=(locs[1],),
-                    init_zma=zma)
+                save_conformer(
+                    ret, run_fs, cnf_save_fs, locs, mod_thy_info,
+                    orig_ich=spc_info[0], rid_traj=True, init_zma=zma)
             else:
                 if not conn:
                     info_message('Saving disconnected species...')
@@ -288,14 +296,27 @@ def _optimize_molecule(spc_info, zma_init,
     return conf_found
 
 
-def single_conformer(zma, spc_info, mod_thy_info,
-                     cnf_run_fs, cnf_save_fs,
-                     script_str, overwrite,
-                     retryfail=True, zrxn=None,
-                     use_locs=None, resave=False,
+def single_conformer(zma, spc_info: tuple, mod_thy_info: tuple, 
+                     cnf_run_fs: tuple, cnf_save_fs: tuple,
+                     script_str: str, overwrite: bool,
+                     retryfail: bool=True, zrxn: object=None,
+                     use_locs: tuple=None, resave: bool=False,
                      **kwargs):
-    """ generate single optimized geometry to be saved into a
-        filesystem
+    """ generate single optimized geometry to be saved into a filesystem
+        from an input zmatrix
+        :param zma: tuple(zip(symbs, key_mat, name_mat, val_mat)), 
+            automol-type Z-matrix to be optimized
+        :param spc_info: tuple, Species info (InChI, charge, multiplicity)
+        :param mod_thy_info: tuple, (program, method, basis, orb_label) to run
+        :param cnf_run_fs: autofile.fs.conformer, Conformer run filesystem
+        :param cnf_save_fs: autofile.fs.conformer, Conformer save filesystem
+        :param script_str: str, Script string for electronic structure package
+        :param overwrite: bool, Whether to overwrite existing files
+        :param retryfail: bool, Whether to retry failed jobs
+        :param zrxn: automol.reac.Reaction, automol reaction if TS optimization
+        :param use_locs: tuple, (rid, cid) to use for running
+        :param resave: bool, Whether to resave all conformers from run fs
+        :returns: None
     """
     skip_job = False
 
@@ -304,7 +325,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
             spc_info, cnf_run_fs, cnf_save_fs,
             mod_thy_info, zrxn=zrxn, rid=None, ref_zma=zma)
         if use_locs is None:
-            print('getting rid')
+            print('locating rid that corresponds to geometry...')
             rid = rng_loc_for_geo(
                 automol.zmat.geometry(zma), cnf_save_fs)
             if rid is not None:
@@ -322,15 +343,13 @@ def single_conformer(zma, spc_info, mod_thy_info,
             skip_job = True
 
     if not skip_job:
-        # Build the filesystem
+        # Build the run filesystem
         if use_locs is None:
             rid = autofile.schema.generate_new_ring_id()
             cid = autofile.schema.generate_new_conformer_id()
             locs = (rid, cid)
         else:
             locs = use_locs
-            rid = locs[0]
-
         cnf_run_fs[-1].create(locs)
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
@@ -353,100 +372,76 @@ def single_conformer(zma, spc_info, mod_thy_info,
         )
 
         if success:
-            inf_obj, _, out_str = ret
-            prog = inf_obj.prog
-            method = inf_obj.method
-            ene = elstruct.reader.energy(prog, method, out_str)
-            geo = elstruct.reader.opt_geometry(prog, out_str)
-            # zma = elstruct.reader.opt_zmatrix(prog, out_str)
-            saved_locs, saved_geos, saved_enes = _saved_cnf_info(
-                cnf_save_fs, mod_thy_info)
-
-            opt_zma = None
-            if zma is not None:
-                opt_zma = filesys.save.read_zma_from_geo(zma, geo)
-            if zma is None:
-                opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
-            viable = _geo_connected(geo, zrxn)
-            if viable:
-                if zrxn:
-                    viable = _ts_geo_viable(
-                        opt_zma, zrxn, cnf_save_fs, mod_thy_info, ref_zma=zma)
-                else:
-                    viable = _inchi_are_same(spc_info[0], geo)
-
-            if viable:
-                if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn=zrxn):
-                    sym_id = _sym_unique(
-                        geo, ene, saved_geos, saved_enes)
-                    if sym_id is None:
-                        if cnf_save_fs[0].file.info.exists():
-                            debug_message(
-                                'inf_obj path', cnf_save_fs[0].path())
-                            rinf_obj = cnf_save_fs[0].file.info.read()
-                            rinf = rinf_obj
-                            debug_message(
-                                'inf_obj for r', rinf)
-                            rnsampd = rinf_obj.nsamp
-                            rnsampd += 1
-                            rinf.nsamp = rnsampd
-                        else:
-                            rinf = autofile.schema.info_objects.conformer_trunk(0)
-                            rinf.nsamp = 1
-                        if cnf_save_fs[1].file.info.exists([locs[0]]):
-                            cinf_obj_s = cnf_save_fs[1].file.info.read([locs[0]])
-                            cinf = cinf_obj_s
-                            cnsampd = cinf_obj_s.nsamp
-                            cnsampd += 1
-                            cinf.nsamp = cnsampd
-                        else:
-                            cinf = autofile.schema.info_objects.conformer_branch(0)
-                            cinf.nsamp = 1
-                        cnf_save_fs[1].create([locs[0]])
-                        cnf_save_fs[0].file.info.write(rinf)
-                        cnf_save_fs[1].file.info.write(cinf, [locs[0]])
-                        filesys.save.conformer(
-                            ret, None, cnf_save_fs, mod_thy_info[1:],
-                            zrxn=zrxn, init_zma=zma,
-                            rng_locs=(locs[0],), tors_locs=(locs[1],))
-                        saved_geos.append(geo)
-                        saved_enes.append(ene)
-                        saved_locs.append(locs)
-
-                        # Update the conformer trajectory file
-                        obj('vspace')
-                        filesys.mincnf.traj_sort(
-                            cnf_save_fs, mod_thy_info)
-                        filesys.mincnf.traj_sort(
-                            cnf_save_fs, mod_thy_info, locs[0])
-                    else:
-                        sym_locs = saved_locs[sym_id]
-                        filesys.save.sym_indistinct_conformer(
-                            geo, cnf_save_fs, locs, sym_locs)
-                        if cnf_save_fs[-1].exists(locs):
-                            cnf_save_path = cnf_save_fs[-1].path(locs)
-                        if cnf_run_fs[-1].exists(locs):
-                            cnf_run_path = cnf_run_fs[-1].path(locs)
+            # Determine if the optimized ring puckering state already exists
+            inf_obj_temp, _, out_str = ret
+            prog = inf_obj_temp.prog
+            opt_geo = elstruct.reader.opt_geometry(prog, out_str)
+            existing_rid = rng_loc_for_geo(opt_geo, cnf_save_fs)
+            # increment sample count for rings and conformers,
+            # if csamp.yaml and rsamp.yaml exist 
+            # save_conformer will set these to 1 if 
+            # csamp.yaml and rsamp.yaml don't currently exist
+            if existing_rid is None:
+                if cnf_save_fs[0].file.info.exists():
+                    rinf_obj = cnf_save_fs[0].file.info.read()
+                    rsampd = rinf_obj.nsamp
+                    rsampd += 1
+                    rinf_obj.nsamp = rsampd
+                    cnf_save_fs[0].file.info.write(rinf_obj)
+                    cnf_run_fs[0].file.info.write(rinf_obj)
+            if cnf_save_fs[1].file.info.exists([locs[0]]):
+                cinf_obj = cnf_save_fs[1].file.info.read([locs[0]])
+                csampd = cinf_obj.nsamp
+                csampd += 1
+                cinf_obj.nsamp = csampd
+                cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
+                cnf_run_fs[1].file.info.write(cinf_obj, [locs[0]])
+            # use save_conformer to save the conformer if it passes
+            # viability and uniqueness checks
+            if existing_rid is not None:
+                rid = existing_rid
+            locs = [rid, cid]
+            save_conformer(
+                ret, cnf_run_fs, cnf_save_fs, locs, mod_thy_info,
+                zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True, init_zma=zma, ref_zma=zma)
 
 
-def conformer_sampling(zma, spc_info, thy_info,
-                       cnf_run_fs, cnf_save_fs, rid,
-                       script_str, overwrite,
-                       nsamp_par=(False, 3, 3, 1, 50, 50),
-                       tors_names=(),
-                       zrxn=None, two_stage=False,
-                       retryfail=False, resave=False,
-                       repulsion_thresh=40.0, print_debug=True,
+def conformer_sampling(zma, spc_info: tuple, mod_thy_info: tuple,
+                       cnf_run_fs: object, cnf_save_fs: object, rid: str,
+                       script_str: str, overwrite: bool,
+                       nsamp_par: tuple=(False, 3, 3, 1, 50, 50),
+                       tors_names: tuple=(),
+                       zrxn: object=None, two_stage: bool=False,
+                       retryfail: bool=False, resave: bool=False,
+                       repulsion_thresh: float=40.0, print_debug: bool=True,
                        **kwargs):
-    """ run sampling algorithm to find conformers
+    """ Sample the torsional configurations of a specific ring-puckering state
+        :param zma: tuple(zip(symbs, key_mat, name_mat, val_mat)), 
+            automol-type Z-matrix to be optimized
+        :param spc_info: tuple, Species info (InChI, charge, multiplicity)
+        :param mod_thy_info: tuple, (program, method, basis, orb_label) to run
+        :param cnf_run_fs: autofile.fs.conformer, Conformer run filesystem
+        :param cnf_save_fs: autofile.fs.conformer, Conformer save filesystem
+        :param rid: str, Ring ID for the puckering state
+        :param script_str: str, Script string for electronic structure package
+        :param overwrite: bool, Whether to overwrite existing files
+        :param nsamp_par: tuple, Parameters to determine the number of samples
+        :param tors_names: tuple, Names of torsions to sample
+        :param zrxn: automol.reac.Reaction, automol reaction if TS
+        :param two_stage: bool, Whether to use two-stage optimization
+        :param retryfail: bool, Whether to retry failed jobs
+        :param resave: bool, Whether to resave all conformers from run fs
+        :param repulsion_thresh: float, Threshold for relative repulsion energy
+        :param print_debug: bool, Whether to print debug messages
+        :returns: None
     """
-
     # Check if any saving needs to be done before hand
     ref_rid = rid
     cnf_run_fs[1].create([rid])
     if resave:
         _presamp_save(
-            spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn, rid=rid, ref_zma=zma)
+            spc_info, cnf_run_fs, cnf_save_fs, mod_thy_info, 
+            zrxn=zrxn, rid=rid, ref_zma=zma)
 
     # Build filesys
     cnf_save_fs[1].create([rid])
@@ -457,7 +452,6 @@ def conformer_sampling(zma, spc_info, thy_info,
         tors_names, nsamp_par, zma, zrxn=zrxn)
     nsamp0 = nsamp
     nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
-
     tot_samp = nsamp - nsampd
     brk_tot_samp = nsamp * 5
 
@@ -486,7 +480,6 @@ def conformer_sampling(zma, spc_info, thy_info,
                 f'Max sample num: 5*{nsamp} attempted, ending search',
                 'Run again if more samples desired.')
             break
-        print(f"Debug: new iteration, nsampd - {nsampd}")
         # Run the conformer sampling
         if nsampd > 0:
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
@@ -497,7 +490,11 @@ def conformer_sampling(zma, spc_info, thy_info,
             'Generating sample Z-Matrix that does not have',
             'high intramolecular repulsion...')
         bad_geo_cnt = 0
-        while not automol.zmat.has_low_relative_repulsion_energy(samp_zma, zma) and bad_geo_cnt < 1000:
+        # the repulsion_thresh argument is not being used, it seems like this would
+        # be the place to apply it -Sarah 01/15/2026
+        while not (
+                automol.zmat.has_low_relative_repulsion_energy(samp_zma, zma) 
+                and bad_geo_cnt < 1000):
             if print_debug:
                 warning_message('Structure has high repulsion.')
                 warning_message(
@@ -514,7 +511,6 @@ def conformer_sampling(zma, spc_info, thy_info,
 
         info_message(f"Run {samp_idx}/{tot_samp}")
         tors_names = tuple(tors_range_dct.keys())
-        print('two_stage test:', two_stage, tors_names)
         if two_stage and tors_names:
             frozen_coords_lst = (tors_names, ())
             success, ret = es_runner.multi_stage_optimization(
@@ -522,7 +518,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 run_fs=run_fs,
                 geo=samp_zma,
                 spc_info=spc_info,
-                thy_info=thy_info,
+                thy_info=mod_thy_info,
                 frozen_coords_lst=frozen_coords_lst,
                 zrxn=zrxn,
                 overwrite=overwrite,
@@ -537,7 +533,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 run_fs=run_fs,
                 geo=samp_zma,
                 spc_info=spc_info,
-                thy_info=thy_info,
+                thy_info=mod_thy_info,
                 zrxn=zrxn,
                 overwrite=overwrite,
                 saddle=bool(zrxn is not None),
@@ -556,7 +552,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 rid = autofile.schema.generate_new_ring_id()
             locs = [rid, cid]
             save_conformer(
-                ret, cnf_run_fs, cnf_save_fs, locs, thy_info,
+                ret, cnf_run_fs, cnf_save_fs, locs, mod_thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
                 init_zma=samp_zma, ref_zma=samp_zma)
             nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, ref_rid)
@@ -1348,51 +1344,71 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
             filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rloc[0])
 
 
-def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
-                   orig_ich='', rid_traj=False, init_zma=None, ref_zma=None):
-    """ save the conformers that have been found so far
-          # Only go through save procedure if conf not in save
-          # may need to get geo, ene, etc; maybe make function
+def save_conformer(
+        ret: tuple, cnf_run_fs: object, cnf_save_fs: object, locs: tuple,
+        mod_thy_info: tuple, zrxn: object=None, orig_ich: str='', 
+        rid_traj: bool=False, init_zma: object=None, ref_zma: object=None):
+    """ Save a conformer into the correct location if unique and viable
+        1) Check if geometry is properly connected
+        2) Check if geometry is totally or symmetrically unique (compared to saved) 
+        3) Save conformer accordingly
+        :param ret: tuple, (inf_obj, err_msg, out_str) from es_runner.read_job
+        :param cnf_run_fs: tuple(autofile.fs), conformer run filesystem
+        :param cnf_save_fs: tuple(autofile.fs), conformer save filesystem
+        :param locs: tuple(str), (ring_id, conf_id) location of conformer
+        :param thy_info: tuple, (program, method, basis, program, orb_res) theory information
+        :param zrxn: automol.reac.Reaction, reaction object if a TS else None
+        :param orig_ich: str, InChI string of original species
+        :param rid_traj: bool, whether to update traj for ring id
+        :param init_zma: automol.zmat.ZMatrix, initial zmatrix used in optimization
+        :param ref_zma: automol.zmat.ZMatrix, reference zmatrix for TS viability check 
+            (this differs from init_zma, which is the starting point of the optimization,
+            which is a perturbed structure along reactant coordinates for a TS whereas
+            the ref_zma is zma built by automol from the reactant geometries)
+        :return: None
     """
-
-    saved_locs, saved_geos, saved_enes = _saved_cnf_info(
-        cnf_save_fs, thy_info, locs)
-
+    # Read the electronic structure optimization job output
     inf_obj, _, out_str = ret
     prog = inf_obj.prog
     method = inf_obj.method
     ene = elstruct.reader.energy(prog, method, out_str)
     geo = elstruct.reader.opt_geometry(prog, out_str)
-    zma = None
-    if init_zma is not None:
-        zma = filesys.save.read_zma_from_geo(init_zma, geo)
+    zma = filesys.save.read_zma_from_geo(init_zma, geo)
     if zma is None:
         zma = filesys.save.read_job_zma(ret, init_zma=init_zma)
+
+    # Gather saved conformer information to ensure uniqueness of current output 
+    saved_locs, saved_geos, saved_enes = _saved_cnf_info(
+        cnf_save_fs, mod_thy_info, locs)
 
     # Assess if geometry is properly connected
     viable = _geo_connected(geo, zrxn)
     if viable:
         if zrxn:
             viable = _ts_geo_viable(
-                zma, zrxn, cnf_save_fs, thy_info, ref_zma=ref_zma)
+                zma, zrxn, cnf_save_fs, mod_thy_info, ref_zma=ref_zma)
         else:
             viable = _inchi_are_same(orig_ich, geo)
 
     # Determine uniqueness of conformer, save if needed
     if viable:
         if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
-            sym_id = _sym_unique(
-                geo, ene, saved_geos, saved_enes)
             # Determine correct ring location
             rid = rng_loc_for_geo(geo, cnf_save_fs)
             if rid is None:
                 rid = autofile.schema.generate_new_ring_id()
                 print("Generating new ring state folder RID")
-            _,cid = locs
-            locs = (rid,cid)
+            _, cid = locs
+            locs = (rid, cid)
+
+            # if symmetrical to saved conformer,
+            # save under SYM/ of corresponding saved conformer
+            # otherwise save it under its own CONF/rid/cid
+            sym_id = _sym_unique(
+                geo, ene, saved_geos, saved_enes)
             if sym_id is None:
                 filesys.save.conformer(
-                    ret, None, cnf_save_fs, thy_info[1:],
+                    ret, None, cnf_save_fs, mod_thy_info[1:],
                     init_zma=init_zma,  zrxn=zrxn,
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
@@ -1411,18 +1427,31 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                     check_dct = {'dist': 0.3, 'tors': None}
                 else:
                     check_dct = {'dist': 0.3}
-                unique, match_idx = automol.geom.is_unique(geo, sym_geos, check_dct=check_dct)
+                unique, match_idx = automol.geom.is_unique(
+                    geo, sym_geos, check_dct=check_dct)
                 if unique:
                     filesys.save.sym_indistinct_conformer(
                         geo, cnf_save_fs, locs, sym_locs, inf_obj=ret[0])
+            
+            # Update the conformer trajectory files rid/conf.t.xyz and potentially also
+            # rid/cid/conf.t.xyz
+            obj('vspace')
+            if rid_traj and rid in cnf_save_fs[-2].existing():
+                filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, rid=rid)
+            else:
+                filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, rid=None)
 
-            #     if cnf_save_fs[-1].exists(locs):
-            #         cnf_save_path = cnf_save_fs[-1].path(locs)
-            #         shutil.rmtree(cnf_save_path)
-            #     if cnf_run_fs[-1].exists(locs):
-            #         cnf_run_path = cnf_run_fs[-1].path(locs)
-            #         shutil.rmtree(cnf_run_path)
-        else:
+        else: 
+            # Note: this is clearing both the run and save filesystems
+            # if not unique. The save removal should always do nothing
+            # because it should not exist there if not unique.
+            # perhaps an old cleanup attempt:
+            # https://github.com/Auto-Mech/mechdriver/commit/f5f6bab75df92ba91230ee80469f86e50306767a
+            # I think removing the run is bad, because we have checks to see if
+            # a new conformer we want to optimize has already been run  
+            # but optimized into something non-unique. If we remove it here,
+            # we lose that record.
+            # - Sarah 01/15/2026
             if cnf_save_fs[-1].exists(locs):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 shutil.rmtree(cnf_save_path)
@@ -1430,19 +1459,11 @@ def save_conformer(ret, cnf_run_fs, cnf_save_fs, locs, thy_info, zrxn=None,
                 cnf_run_path = cnf_run_fs[-1].path(locs)
                 shutil.rmtree(cnf_run_path)
 
-        # Update the conformer trajectory file
-        obj('vspace')
-        rid = None
-        if rid_traj:
-            if rid in cnf_save_fs[-1].existing():
-                rid = locs[0]
-        filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
-
-def _saved_cnf_info(cnf_save_fs, mod_thy_info, orig_locs=None):
+def _saved_cnf_info(
+        cnf_save_fs: object, mod_thy_info: tuple, orig_locs: tuple=None):
     """ get the locs, geos and enes for saved conformers
     """
-
     saved_locs = list(cnf_save_fs[-1].existing())
     saved_locs = [locs for locs in saved_locs if not locs == orig_locs]
     saved_geos = [cnf_save_fs[-1].file.geometry.read(locs)
@@ -1486,45 +1507,84 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info, orig_locs=None):
     return found_saved_locs, found_saved_geos, found_saved_enes
 
 
-def _init_geom_is_running(cnf_run_fs):
+def _init_geom_is_needed(
+        cnf_save_fs: object, cnf_run_fs: object, 
+        mod_thy_info: tuple, overwrite: bool=False):
+    """ Determine if initial geometry optimization is needed
+    """
+    # Check to see if conformer already exists in the save filesys
+    _, cnf_path = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
+    if cnf_path:
+        if overwrite:
+            info_message(
+                f'Overwrite will search for new conformer'
+                f'despite existing conformer at {cnf_path}')
+            return True
+        existing_path('Initial geometry', cnf_path)
+        return False
+
+    # Check to see if it exists or is running in the run filesystem
+    info_message('No conformer found in save filesys. Checking for running jobs...')
+    if _init_geom_is_running(cnf_run_fs) and not overwrite:
+        info_message(
+            'No conformers are running in run filesys.'
+            'Proceeding with optimization...')
+        return False
+    return True
+
+
+def _init_geom_is_running(cnf_run_fs: object):
     """ Check the RUN filesystem for currently running initial geometry submissions
     """
-    running = False
     jobs = [elstruct.Job.OPTIMIZATION, elstruct.Job.HESSIAN]
     locs = cnf_run_fs[-1].existing()
     if not locs:
-        wait_time = random.randint(10, 60)
-        print('lets wait a bit', wait_time)
+        # this gives us a random chance to desynchronize jobs that were launched
+        # at the exact same time (which means they might both check the run.yaml
+        # for existing jobs at the same time, see none, and both launch)
+        # it is not the ideal solution, but it is simple and should work most of the time
+        wait_time = random.randint(5, 25)
+        print('Starting job in ', wait_time, 's if not other submissions launch it')
         time.sleep(wait_time)
         locs = cnf_run_fs[-1].existing()
-    print('im going to check locs',  cnf_run_fs[-1].existing())
+    
+    # Check all of the conformer locations for this species/LoT in the run filesystem
+    # to make sure the desired job is not already running/just succeeded
     for locs in cnf_run_fs[-1].existing():
-        cnf_run_path = cnf_run_fs[-1].path(locs)
-        run_fs = autofile.fs.run(cnf_run_path)
-        print('im going to check here',  cnf_run_path)
+        run_fs = autofile.fs.run(cnf_run_fs[-1].path(locs))
         for job in jobs:
             if not run_fs[-1].file.info.exists([job]):
                 continue
-            print('im going to check it job',  job)
             inf_obj = run_fs[-1].file.info.read([job])
             status = inf_obj.status
-            print('its job status is', status)
+            start_time = inf_obj.utc_start_time
+            current_time = autofile.schema.utc_time()
+            elapsed_time = (current_time - start_time).total_seconds()
             if status == autofile.schema.RunStatus.RUNNING:
-                start_time = inf_obj.utc_start_time
-                current_time = autofile.schema.utc_time()
-                _time = (current_time - start_time).total_seconds()
-                print('its jtime is', _time)
-                if _time < 3000000:
+                # a month is probably long enough for any initial geometry optimization
+                # but maybe someone decides to do an init geom with CCSDTQP
+                if elapsed_time < 3000000:
                     path = cnf_run_fs[-1].path(locs)
                     info_message(
-                        'init_geom was started in the last '
-                        f'{_time/3600:3.4f} hours in {path}.')
-                    running = True
-                    break
-    return running
+                        f'An init_geom task was started by another submission '
+                        f'in the last {elapsed_time/3600:3.4f} hours in {path}.')
+                    return True
+            elif status == autofile.schema.RunStatus.SUCCESS:
+                # this time should be stricter, its should only pass if a running job
+                # finished in the middle of the running check, otherwise finished
+                # jobs that didn't make it to save mean something was wrong with the
+                # final optimized structure
+                if elapsed_time < 500:
+                    path = cnf_run_fs[-1].path(locs)
+                    info_message(
+                        f'An init_geom was successfully completed by another submission '
+                        f'in the last {elapsed_time/3600:3.4f} hours in {path}.')
+                    return True
+    return False
 
 
-def this_conformer_was_run_in_save(zma, cnf_fs):
+def this_conformer_was_run_in_save(zma, cnf_fs: object):
     """ Assess if a conformer was run in save
     """
     running = False
@@ -1564,7 +1624,7 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
     return running
 
 
-def this_conformer_is_running(zma, cnf_run_fs):
+def this_conformer_is_running(zma, cnf_run_fs: object):
     """ Check the RUN filesystem for similar geometry
         submissions that are currently running
     """
@@ -1603,11 +1663,9 @@ def this_conformer_is_running(zma, cnf_run_fs):
     return running
 
 
-def _geo_connected(geo, rxn):
-    """ Assess if geometry is connected. Right now only works for
-        minima
+def _geo_connected(geo: object, rxn: object=None):
+    """ Assess if geometry is connected. Right now only works for minima
     """
-
     # Determine connectivity (only for minima)
     if rxn is None:
         gra = automol.geom.graph(geo)
@@ -1626,7 +1684,9 @@ def _geo_connected(geo, rxn):
     return connected
 
 
-def _geo_unique(geo, ene, seen_geos, seen_enes, zrxn=None):
+def _geo_unique(
+        geo: object, ene: float, 
+        seen_geos: list, seen_enes: list, zrxn: object=None):
     """ Assess if a geometry is unique to saved geos
         Need to pass the torsions
     """
@@ -1653,7 +1713,7 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, zrxn=None):
     return unique
 
 
-def _inchi_are_same(orig_ich, geo):
+def _inchi_are_same(orig_ich: str, geo: object):
     """ Assess if a geometry has the same connectivity to
      saved geos evaluated in temrs of inchi
     """
@@ -1670,21 +1730,12 @@ def _inchi_are_same(orig_ich, geo):
     return same
 
 
-def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
-    """
-    This assumes you already have bad geos in your save
-    """
-    for i, geoi in enumerate(seen_geos):
-        if not orig_ich == automol.geom.chi(geoi):
-            smi = automol.geom.smiles(geoi)
-            path = cnf_save_fs[-1].path(saved_locs[i])
-            error_message(
-                f'inchi do not match for {smi} at {path}')
-
-
-def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
+def _sym_unique(
+        geo: object, ene: float, saved_geos: list, 
+        saved_enes: list, ethresh: float=1.0e-5):
     """ Check if a conformer is symmetrically distinct from the
-        existing conformers in the filesystem
+        existing conformers in the filesystem, returns index of
+        the matching conformer if not symmetrically unique
     """
 
     sym_idx = None
@@ -1851,7 +1902,7 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
     return uni_ini_cnf_save_locs
 
 
-def rng_loc_for_geo(geo, cnf_save_fs):
+def rng_loc_for_geo(geo, cnf_save_fs, ang_tol=.2):
     """ Find the ring-conf locators for a given geometry in the
         conformer save filesystem
     """
@@ -1878,7 +1929,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
         
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
-                                     dist_rtol=0.018, ang_atol=.1):
+                                     dist_rtol=0.018, ang_atol=ang_tol):
             rid = locs[0]
             print("Debug: Zmat similar - locs: ", locs)
             break
