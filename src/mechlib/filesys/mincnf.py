@@ -455,7 +455,8 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
 
     locs_lst = save_fs[-1].existing()
     if locs_lst:
-        # Update the trajectory file in the CONFS/rid level for rings
+        # Update the trajectory file in the CONFS/conf.t.xyz level for
+        # all torsional configurations of all puckering configurations
         enes = []
         for locs in locs_lst:
             cnf_path = save_fs[-1].path(locs)
@@ -475,6 +476,8 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
         save_fs[0].file.trajectory.write(traj)
 
         if rid is not None:
+            # Update the trajectory file in the CONFS/rid/conf.t.xyz for the
+            # torsional configurations of a puckering configuration
             locs_lst = save_fs[-1].existing()
             if locs_lst:
                 enes, geos = [], []
