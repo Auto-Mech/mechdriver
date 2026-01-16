@@ -105,11 +105,11 @@ autoio = { path = "../autoio", editable = true }
 autofile = { path = "../autofile", editable = true }
 mechanalyzer = { path = "../mechanalyzer", editable = true }
 
-[tool.pixi.feature.dev.pypi-options.dependency-overrides]
-autochem = { path = "../autochem", editable = true }
-autoio = { path = "../autoio", editable = true }
-autofile = { path = "../autofile", editable = true }
-mechanalyzer = { path = "../mechanalyzer", editable = true }
+# [tool.pixi.feature.dev.pypi-options.dependency-overrides]
+# autochem = { path = "../autochem", editable = true }
+# autoio = { path = "../autoio", editable = true }
+# autofile = { path = "../autofile", editable = true }
+# mechanalyzer = { path = "../mechanalyzer", editable = true }
 
 [tool.pixi.system-requirements]
 linux = "3.10"
