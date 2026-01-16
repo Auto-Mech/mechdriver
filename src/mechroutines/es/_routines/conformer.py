@@ -3,7 +3,6 @@
 
 import shutil
 import time
-import random
 import subprocess
 import os
 import numpy
@@ -72,7 +71,7 @@ def initial_conformer(
         return True
 
     # obtain initial guess structure from user input or InChI
-    info_message('Obtaining initial guess geometry.')
+    # info_message('Obtaining initial guess geometry.')
     mod_ini_thy_info = tinfo.modify_orb_label(
         tinfo.from_dct(ini_method_dct), spc_info)
     geo_init = _obtain_ini_geom(
@@ -87,9 +86,9 @@ def initial_conformer(
     cid = autofile.schema.generate_new_conformer_id()
     
     # Check for common functional groups that cause instabilities
-    info_message(
-        'Assessing if there are any functional groups',
-        'that cause instability')
+    # info_message(
+    #     'Assessing if there are any functional groups',
+    #     'that cause instability')
     zma_init = automol.geom.zmatrix(geo_init)
     instab_zmas = automol.reac.instability_product_zmas(zma_init)
     if instab_zmas:
@@ -138,7 +137,7 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
     # Obtain geom from thy fs or remove the conformer filesystem if needed
     if not overwrite:
         ini_min_locs, ini_path = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
+            ini_cnf_save_fs, mod_ini_thy_info, print_level=0)
         if ini_path:
             geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
             path = ini_cnf_save_fs[-1].path(ini_min_locs)
@@ -162,14 +161,13 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
             shutil.rmtree(cnf_save_path)
 
     if geo_init is None:
-        if 'geo' in spc_dct_i:
-            geo_init = spc_dct_i['geo']
+        geo_init = spc_dct_i.get('init_geo', None)
+        if geo_init is not None:
             info_message(
                 'Getting initial geometry from geom dictionary')
-
-    if geo_init is None:
-        geo_init = automol.chi.geometry(spc_dct_i['canon_enant_ich'])
-        info_message('Getting initial geometry from inchi')
+        else:
+            geo_init = automol.chi.geometry(spc_dct_i['canon_enant_ich'])
+            info_message('Getting initial geometry from inchi')
 
     # Check if the init geometry is connected
     if geo_init is not None:
@@ -324,13 +322,6 @@ def single_conformer(zma, spc_info: tuple, mod_thy_info: tuple,
         _presamp_save(
             spc_info, cnf_run_fs, cnf_save_fs,
             mod_thy_info, zrxn=zrxn, rid=None, ref_zma=zma)
-        if use_locs is None:
-            print('locating rid that corresponds to geometry...')
-            rid = rng_loc_for_geo(
-                automol.zmat.geometry(zma), cnf_save_fs)
-            if rid is not None:
-                cid = autofile.schema.generate_new_conformer_id()
-                locs = (rid, cid)
 
     if this_conformer_is_running(zma, cnf_run_fs):
         skip_job = True
@@ -344,12 +335,21 @@ def single_conformer(zma, spc_info: tuple, mod_thy_info: tuple,
 
     if not skip_job:
         # Build the run filesystem
-        if use_locs is None:
-            rid = autofile.schema.generate_new_ring_id()
-            cid = autofile.schema.generate_new_conformer_id()
-            locs = (rid, cid)
+        existing_rid = rng_loc_for_geo(
+            automol.zmat.geometry(zma), cnf_save_fs)
+        if use_locs is not None:
+            rid, cid = use_locs
+            if existing_rid is not None:
+                rid = existing_rid
+            elif [rid] in cnf_save_fs[-2].existing():
+                rid = autofile.schema.generate_new_ring_id()
         else:
-            locs = use_locs
+            cid = autofile.schema.generate_new_conformer_id()
+            if existing_rid is not None:
+                rid = existing_rid
+            else:
+                rid = autofile.schema.generate_new_ring_id()
+        locs = (rid, cid)
         cnf_run_fs[-1].create(locs)
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
@@ -509,7 +509,7 @@ def conformer_sampling(zma, spc_info: tuple, mod_thy_info: tuple,
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        info_message(f"Run {samp_idx}/{tot_samp}")
+        info_message(f"Run {samp_idx}/{tot_samp}, Total {nsampd}/{nsamp0}")
         tors_names = tuple(tors_range_dct.keys())
         if two_stage and tors_names:
             frozen_coords_lst = (tors_names, ())
@@ -1376,7 +1376,6 @@ def save_conformer(
     zma = filesys.save.read_zma_from_geo(init_zma, geo)
     if zma is None:
         zma = filesys.save.read_job_zma(ret, init_zma=init_zma)
-
     # Gather saved conformer information to ensure uniqueness of current output 
     saved_locs, saved_geos, saved_enes = _saved_cnf_info(
         cnf_save_fs, mod_thy_info, locs)
@@ -1394,11 +1393,14 @@ def save_conformer(
     if viable:
         if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
             # Determine correct ring location
-            rid = rng_loc_for_geo(geo, cnf_save_fs)
-            if rid is None:
-                rid = autofile.schema.generate_new_ring_id()
-                print("Generating new ring state folder RID")
-            _, cid = locs
+            existing_rid = rng_loc_for_geo(geo, cnf_save_fs)
+            rid, cid = locs
+            if existing_rid is None:
+                if [rid] in cnf_save_fs[-2].existing():
+                    rid = autofile.schema.generate_new_ring_id()
+                    print("Generating new ring state folder RID")
+            else:
+                rid = existing_rid
             locs = (rid, cid)
 
             # if symmetrical to saved conformer,
@@ -1436,7 +1438,7 @@ def save_conformer(
             # Update the conformer trajectory files rid/conf.t.xyz and potentially also
             # rid/cid/conf.t.xyz
             obj('vspace')
-            if rid_traj and rid in cnf_save_fs[-2].existing():
+            if rid_traj and [rid] in cnf_save_fs[-2].existing():
                 filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, rid=rid)
             else:
                 filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, rid=None)
@@ -1525,7 +1527,7 @@ def _init_geom_is_needed(
         return False
 
     # Check to see if it exists or is running in the run filesystem
-    info_message('No conformer found in save filesys. Checking for running jobs...')
+    info_message('Checking for running jobs...')
     if _init_geom_is_running(cnf_run_fs) and not overwrite:
         info_message(
             'No conformers are running in run filesys.'
@@ -1544,8 +1546,10 @@ def _init_geom_is_running(cnf_run_fs: object):
         # at the exact same time (which means they might both check the run.yaml
         # for existing jobs at the same time, see none, and both launch)
         # it is not the ideal solution, but it is simple and should work most of the time
-        wait_time = random.randint(5, 25)
-        print('Starting job in ', wait_time, 's if not other submissions launch it')
+        # Get the unique PID and current time
+        rng = numpy.random.default_rng(os.getpid())
+        wait_time = rng.uniform(2, 40)
+        print(f'Starting job in {wait_time:3.2f}s if no other submissions launch it')
         time.sleep(wait_time)
         locs = cnf_run_fs[-1].existing()
     
@@ -1913,7 +1917,6 @@ def rng_loc_for_geo(geo, cnf_save_fs, ang_tol=.2):
         frag_zma = automol.geom.zmatrix(frag_geo)
     checked_rids = []
     for locs in cnf_save_fs[-1].existing():
-        print("Debug: locs", locs)        
         current_rid, _ = locs
         if current_rid in checked_rids:
             continue
