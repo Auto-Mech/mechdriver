@@ -250,7 +250,7 @@ def get_spc_locs_lst(
         hbond_cutoffs = spc_dct_i['hbond_cutoffs']
         min_locs_lst, _ = conformer_locators(
             cnf_save_fs, levelp, cnf_range=cnf_range,
-            sort_info_lst=mod_info_lst, print_enes=True,
+            sort_info_lst=mod_info_lst, print_level=2,
             hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
         for min_locs in min_locs_lst:
             cnf_run_fs[-1].create(min_locs)

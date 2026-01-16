@@ -172,7 +172,7 @@ def _etrans_fs(spc_dct, tgt_name, bath_name,
             cnf_range=etrans_keyword_dct['cnf_range'],
             sort_info_lst=cnf_sort_info_lst,
             hbond_cutoffs=spc_dct_i['hbond_cutoffs'],
-            print_enes=True,
+            print_level=2,
             nprocs=1)
         min_cnf_locs = cnf_rng_info[0][0]
 
