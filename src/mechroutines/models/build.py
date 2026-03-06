@@ -381,7 +381,7 @@ def mol_data(spc_name, spc_dct,
             zma_locs = ts_zma_locs(spc_dct, spc_name, zma_fs)
             zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
-    racemic = True
+    racemic = False
     ioprinter.info_message('Setting symmetry factors as racemic=', racemic)
     sym_factor = symm.symmetry_factor(
         pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma,

@@ -12,7 +12,7 @@ import automol
 import more_itertools as mit
 import pandas
 import pyparsing as pp
-from autochem.util.chemkin import parse_equation
+from chemkin_io.parser.reaction import rct_names, prd_names
 from pyparsing import common as ppc
 
 COMMENT_REGEX = re.compile(r"#.*$", flags=re.M)
@@ -360,9 +360,8 @@ def parse_mechanism_dat(mechanism_dat: str) -> dict[str, tuple[list[str], list[s
     for line in rxn_block_str.splitlines():
         line_match = re.search(r"\d\s*(!.*|# .*)?$", line)
         if line_match:
-            result = parse_equation(line)
-            reactants = result.reactants
-            products = result.products
+            reactants = list(rct_names(line))
+            products = list(prd_names(line))
             comment = line_match.group(1)
 
             if comment:

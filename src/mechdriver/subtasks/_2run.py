@@ -1,5 +1,7 @@
 """Standalone script to run AutoMech subtasks in parallel using HyperQueue."""
 
+import sys
+import traceback
 import contextlib
 import functools
 import itertools
@@ -205,12 +207,12 @@ def assign_atomic_function(
     """Create a HyperQueue task to run automech."""
     run_ = run_automech
 
+    # Ignore errors if requested
+    run_ = ignore_error_wrapper(run_) if ignore_error else run_
+
     # Create lock file if requested
     lock_path = log_path.with_suffix(Extension.running)
     run_ = lock_wrapper(run_, lock_file=lock_path) if lock else run_
-
-    # Ignore errors if requested
-    run_ = ignore_error_wrapper(run_) if ignore_error else run_
 
     resources = hq.resource_request(cpus=cpus, mem=mem)
     stdout = stderr = str(log_path)
@@ -232,8 +234,12 @@ def ignore_error_wrapper(func: Callable[..., None]) -> Callable[..., None]:
     def wrapper(*args, **kwargs) -> None:
         try:
             func(*args, **kwargs)
-        except Exception as err:
-            print(err)
+        except Exception as error:
+            trace = traceback.format_exc()
+            print(f"{error=}")
+            print("---traceback start---")
+            print(trace)
+            print("---traceback end---")
 
     return wrapper
 
