@@ -3221,8 +3221,8 @@ packages:
   timestamp: 1772765088653
 - pypi: ./
   name: mechdriver
-  version: 0.2025.0
-  sha256: f92d97fc3ecfd0c06ab555c96ff9f8f82a613a5dc8bbf21026d8c299d95c311c
+  version: 0.2026.0
+  sha256: 6465daa62798154ea96b63386a443487dc2fa16f2da184281659a7430b02bb87
   requires_dist:
   - hyperqueue
   requires_python: '>=3.11,<3.14'
