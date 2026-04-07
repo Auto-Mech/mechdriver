@@ -909,10 +909,10 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
     if saddle:
         dist_tol = 0.25
     for ini_locs in ini_cnf_save_locs_lst:
-
         match_dct[tuple(ini_locs)] = None
         # Loop over structs in cnf_save, see if they match the current struct
-        # inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        ##
+        inigeos = [ini_cnf_save_fs[-1].file.geometry.read(ini_locs)]
         # inizma = automol.geom.zmatrix(inigeo)
         # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
@@ -923,14 +923,18 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
         dtt = automol.zmat.conversion_info(inizmas[0])
         for sym_locs in ini_sym_fs[-1].existing():
             geo = ini_sym_fs[-1].file.geometry.read(sym_locs)
+            ##
+            inigeos.append(geo)
             geo_wdummy = automol.geom.apply_zmatrix_conversion(geo, dtt)
             try:
                 inizmas.append(automol.zmat.from_geometry(inizmas[0], geo_wdummy))
             except:
                 print('some structures have a different zmatrix')
-        for inizma in inizmas:
+        for idx, inizma in enumerate(inizmas):
             for locs in cnf_save_locs_lst:
-                # geo = cnf_save_fs[-1].file.geometry.read(locs)
+                print('checking against run', cnf_save_fs[-1].path(locs))
+                ##
+                geo = cnf_save_fs[-1].file.geometry.read(locs)
                 # zma = automol.geom.zmatrix(geo)
                 zma_save_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
                 zma = zma_save_fs[-1].file.zmatrix.read((0,))
@@ -942,6 +946,12 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                     #     f'- Similar structure found at {cnf_save_path}')
                     match_dct[tuple(ini_locs)] = tuple(locs)
                     break
+                _, sym_idx = automol.geom.is_unique(
+                    geo, [inigeos[idx]], check_dct={'coulomb': 1e-2})
+                if sym_idx is not None:
+                    print(' - Structure is not symmetrically unique.')
+                    match_dct[tuple(ini_locs)] = tuple(locs)
+ 
                 else:
                     sym_fs = autofile.fs.symmetry(cnf_save_fs[-1].path(locs))
                     dtt = automol.zmat.conversion_info(zma)
