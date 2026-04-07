@@ -384,14 +384,14 @@ def single_conformer(zma, spc_info: tuple, mod_thy_info: tuple,
             if existing_rid is None:
                 if cnf_save_fs[0].file.info.exists():
                     rinf_obj = cnf_save_fs[0].file.info.read()
-                    rsampd = rinf_obj.nsamp
+                    rsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs)
                     rsampd += 1
                     rinf_obj.nsamp = rsampd
                     cnf_save_fs[0].file.info.write(rinf_obj)
                     cnf_run_fs[0].file.info.write(rinf_obj)
             if cnf_save_fs[1].file.info.exists([locs[0]]):
                 cinf_obj = cnf_save_fs[1].file.info.read([locs[0]])
-                csampd = cinf_obj.nsamp
+                csampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, locs[0])
                 csampd += 1
                 cinf_obj.nsamp = csampd
                 cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
@@ -438,14 +438,12 @@ def conformer_sampling(zma, spc_info: tuple, mod_thy_info: tuple,
     # Check if any saving needs to be done before hand
     ref_rid = rid
     cnf_run_fs[1].create([rid])
+    cnf_save_fs[1].create([rid])
     if resave:
         _presamp_save(
             spc_info, cnf_run_fs, cnf_save_fs, mod_thy_info, 
             zrxn=zrxn, rid=rid, ref_zma=zma)
 
-    # Build filesys
-    cnf_save_fs[1].create([rid])
-    inf_obj = autofile.schema.info_objects.conformer_branch(0)
 
     # Set the samples
     nsamp, tors_range_dct = util.calc_nsamp(
@@ -486,9 +484,8 @@ def conformer_sampling(zma, spc_info: tuple, mod_thy_info: tuple,
         else:
             samp_zma = zma
 
-        info_message(
-            'Generating sample Z-Matrix that does not have',
-            'high intramolecular repulsion...')
+        info_message(f"Run {samp_idx}/{tot_samp}, Total {nsampd}/{nsamp0}")
+        info_message(' - Generating sample Z-Matrix')
         bad_geo_cnt = 0
         # the repulsion_thresh argument is not being used, it seems like this would
         # be the place to apply it -Sarah 01/15/2026
@@ -497,8 +494,7 @@ def conformer_sampling(zma, spc_info: tuple, mod_thy_info: tuple,
                 and bad_geo_cnt < 1000):
             if print_debug:
                 warning_message('Structure has high repulsion.')
-                warning_message(
-                    'Generating new sample Z-Matrix')
+                warning_message('Generating new sample Z-Matrix')
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
             bad_geo_cnt += 1
 
@@ -509,8 +505,7 @@ def conformer_sampling(zma, spc_info: tuple, mod_thy_info: tuple,
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        info_message(f"Run {samp_idx}/{tot_samp}, Total {nsampd}/{nsamp0}")
-        tors_names = tuple(tors_range_dct.keys())
+        tors_names = tuple(tors_range_dct.keys()) if tors_range_dct else ()
         if two_stage and tors_names:
             frozen_coords_lst = (tors_names, ())
             success, ret = es_runner.multi_stage_optimization(
@@ -555,12 +550,16 @@ def conformer_sampling(zma, spc_info: tuple, mod_thy_info: tuple,
                 ret, cnf_run_fs, cnf_save_fs, locs, mod_thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
                 init_zma=samp_zma, ref_zma=samp_zma)
+            if cnf_save_fs[1].file.info.exists([ref_rid]): 
+                cinf_obj = cnf_save_fs[1].file.info.read([ref_rid])
+            else:
+                cinf_obj = autofile.schema.info_objects.conformer_branch(0)
             nsampd = util.calc_nsampd(cnf_save_fs, cnf_run_fs, ref_rid)
             nsampd += 1
             samp_idx += 1
-            inf_obj.nsamp = nsampd
-            cnf_save_fs[1].file.info.write(inf_obj, [ref_rid])
-            cnf_run_fs[1].file.info.write(inf_obj, [ref_rid])
+            cinf_obj.nsamp = nsampd
+            cnf_save_fs[1].file.info.write(cinf_obj, [ref_rid])
+            cnf_run_fs[1].file.info.write(cinf_obj, [ref_rid])
 
         # Increment attempt counter
         samp_attempt_idx += 1
@@ -1912,29 +1911,29 @@ def rng_loc_for_geo(geo, cnf_save_fs, ang_tol=.2):
     """
 
     rid = None
+    checked_rids = []
+    
     frag_geo = automol.geom.ring_fragments_geometry(geo)
     if frag_geo is not None:
         frag_zma = automol.geom.zmatrix(frag_geo)
-    checked_rids = []
+    
     for locs in cnf_save_fs[-1].existing():
         current_rid, _ = locs
+        if frag_geo is None:
+            rid = current_rid 
+            break
         if current_rid in checked_rids:
             continue
         checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = automol.geom.ring_fragments_geometry(locs_geo)
-        if frag_geo is None:
-            rid = locs[0]
-            break
-        else:
-            if frag_locs_geo is None:
-                continue
+        if frag_locs_geo is None:
+            continue
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
         
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
                                      dist_rtol=0.018, ang_atol=ang_tol):
-            rid = locs[0]
-            print("Debug: Zmat similar - locs: ", locs)
+            rid = current_rid
             break
 
     return rid
