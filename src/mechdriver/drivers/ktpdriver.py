@@ -55,7 +55,11 @@ def run(pes_rlst, pes_grp_dct,
     run_fit_tsk = parser.run.extract_task('run_fits', ktp_tsk_lst)
 
     # Group the PESs into lists
-    pes_grps_rlst = parser.rlst.pes_groups(pes_rlst, pes_grp_dct)
+    if pes_rlst is None:
+        print('No channels requested by user, check input.')
+        pes_grps_rlst = []
+    else:
+        pes_grps_rlst = parser.rlst.pes_groups(pes_rlst, pes_grp_dct)
 
     # --------------------------------------- #
     # LOOP OVER ALL OF THE SUBPES in PES_RLST #

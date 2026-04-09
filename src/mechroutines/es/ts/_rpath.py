@@ -75,6 +75,8 @@ def internal_coordinates_scan(ts_zma, zrxn,
         coord_names=coord_names,
         coord_grids=coord_grids,
         scn_save_fs=_scn_save_fs,
+        scn_run_fs=_scn_run_fs,
+        scn_typ='relaxed',
         constraint_dct=constraint_dct,
     )
     if scan_finished_ and find_max:

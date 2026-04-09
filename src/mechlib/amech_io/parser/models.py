@@ -161,12 +161,11 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
         """ format weird energy calls
         """
         if isinstance(lvl_val, str):
-            lvl_val = lvl_val.replace(',','*').split('*')
+            lvl_val = lvl_val.replace(',','*').replace(' ','').split('*')
         if len(lvl_val) > 1:
             val_inf = (float(lvl_val[0]), tinfo.from_dct(thy_dct.get(lvl_val[1])))
         else:
             val_inf = (1.00, tinfo.from_dct(thy_dct.get(lvl_val[0])))
-
         return val_inf
 
     new_dct2 = {}
@@ -180,7 +179,6 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
                 _new_dct[key2] = val2
 
         new_dct2[key1] = _new_dct
-
     return new_dct2
 
 

@@ -142,7 +142,7 @@ def choose_conformers(
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
         cnf_range=cnf_range, sort_info_lst=sort_info_lst, hbond_cutoffs=hbond_cutoffs,
-        print_enes=True, nprocs=proc_keyword_dct['nprocs'])
+        print_level=2, nprocs=proc_keyword_dct['nprocs'])
     if populate_symm:
         for cnf_locs, cnf_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
             symm_fs = autofile.fs.symmetry(cnf_path)

@@ -35,8 +35,8 @@ def execute_scan(zma, spc_info, mod_thy_info,
 
     # Need a resave option
     _fin = scan_finished(
-        coord_names, coord_grids, scn_save_fs,
-        constraint_dct=constraint_dct, overwrite=overwrite)
+        coord_names, coord_grids, scn_save_fs, scn_run_fs,
+        scn_typ, constraint_dct=constraint_dct, overwrite=overwrite)
 
     if not _fin:
         run_scan(
@@ -524,8 +524,8 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     return coord_locs, scn_locs
 
 
-def scan_finished(coord_names, coord_grids, scn_save_fs,
-                   constraint_dct=None, overwrite=False):
+def scan_finished(coord_names, coord_grids, scn_save_fs, scn_run_fs,
+                   scn_typ, job=None, constraint_dct=None, overwrite=False):
     """ Assesses if the scan calculations requested by the user have been
         completed by assessing if Z-Matrices exist in the filesystem for
         all grid values of the scan coordinates.
@@ -536,6 +536,10 @@ def scan_finished(coord_names, coord_grids, scn_save_fs,
         :type coord_grids: tuple(tuple(float))
         :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
         :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
+        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_typ: label for scan type ('relaxed' or 'rigid')
+        :type scn_typ: str
         :param constraint_dct: values of coordinates to constrain during scan
         :type constraint_dct: dict[str: float]
         :param overwrite:
@@ -544,7 +548,7 @@ def scan_finished(coord_names, coord_grids, scn_save_fs,
     """
 
     run_finished = True
-
+    job = _set_job(scn_typ)
     if not overwrite:
         grid_vals = tuple(itertools.product(*coord_grids))
         for vals in grid_vals:
@@ -555,17 +559,34 @@ def scan_finished(coord_names, coord_grids, scn_save_fs,
                 locs = [constraint_dct] + locs
 
             # Check if ZMA (other info?) exists
-            if not scn_save_fs[-1].file.zmatrix.exists(locs):
-                run_finished = False
-                break
+            if scn_save_fs[-1].file.zmatrix.exists(locs):
+                continue
+
+            # If no zma, check if the scan is suceeded or failed
+            if scn_run_fs[-1].exists(locs):
+                run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
+                if run_fs[-1].file.info.exists([job]):
+                    inf_obj = run_fs[-1].file.info.read([job])
+                    if inf_obj.status == autofile.schema.RunStatus.FAILURE:
+                        ioprinter.info_message(
+                            'Scan point dropped at ', locs)
+                        continue
+                    if inf_obj.status == autofile.schema.RunStatus.RUNNING:
+                        ioprinter.info_message(
+                            'Scan job is currently running at ',
+                            coord_names, locs)
+                        run_finished = False
+                        break
+            ioprinter.info_message(
+                'Waiting for scan point to be started at ', locs)    
+            run_finished = False
+            break
     else:
         run_finished = False
         ioprinter.message('User elected to overwrite scan')
 
     if run_finished:
         ioprinter.message(f'Scan saved previously at {scn_save_fs[0].path()}')
-    else:
-        ioprinter.message('Need to run scans')
 
     return run_finished
 

@@ -19,7 +19,8 @@ from mechlib.amech_io import printer as ioprinter
 
 
 def min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info, hbond_cutoffs=None, nprocs=1):
+        cnf_save_fs, mod_thy_info, hbond_cutoffs=None, nprocs=1,
+        print_level=1):
     """ Obtain the (ring-id, tors-id) filesystem locator pair and
         path for the conformer of a species with the lowest energy
         for the specified electronic structure method that currently
@@ -37,7 +38,8 @@ def min_energy_conformer_locators(
 
     locs, paths = conformer_locators(
         cnf_save_fs, mod_thy_info,
-        cnf_range='min', hbond_cutoffs=hbond_cutoffs, nprocs=nprocs)
+        cnf_range='min', hbond_cutoffs=hbond_cutoffs, nprocs=nprocs,
+        print_level=print_level)
     if locs and paths:
         ret = locs[0], paths[0]
     else:
@@ -48,7 +50,7 @@ def min_energy_conformer_locators(
 
 def conformer_locators(
         cnf_save_fs, mod_thy_info,
-        cnf_range='min', sort_info_lst=None, print_enes=False,
+        cnf_range='min', sort_info_lst=None, print_level=1,
         hbond_cutoffs=None, nprocs=1):
     """ Obtain the (ring-id, tors-id) filesystem locator pair and
         path for all conformers meeting
@@ -79,7 +81,7 @@ def conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range='min',
             only_hbnds=True, only_nonhbnds=True,
             freq_info=None, sp_info=None, sort_prop_dct=None,
-            print_enes=False, already_counted_locs_lst=(), hbond_cutoffs=None,
+            print_level=1, already_counted_locs_lst=(), hbond_cutoffs=None,
             nprocs=1):
 
         fin_locs_lst, fin_paths_lst = (), ()
@@ -117,7 +119,7 @@ def conformer_locators(
             for idx, locs in enumerate(fin_locs_lst):
                 fin_paths_lst += (cnf_save_fs[-1].path(locs),)
 
-            if print_enes:
+            if print_level == 2:
                 header = '\nConformer Ordering'
                 if only_hbnds:
                     header += ' for only hydrogen bonded conformers'
@@ -136,7 +138,7 @@ def conformer_locators(
                         mark = ''
                     print(f'{locs[0]:<16}{locs[1]:<16}{_ene:<6.2f}{mark:<3}')
                 print()
-        else:
+        elif print_level > 0:
             print(f'No conformers located in {cnf_save_fs[0].path()}')
 
         return fin_locs_lst, fin_paths_lst
@@ -154,7 +156,7 @@ def conformer_locators(
             only_hbnds=True, only_nonhbnds=False,
             freq_info=freq_info, sp_info=sp_info,
             sort_prop_dct=sort_prop_dct,
-            print_enes=print_enes,
+            print_level=print_level,
             already_counted_locs_lst=union_locs_lst,
             hbond_cutoffs=hbond_cutoffs,
             nprocs=nprocs)
@@ -166,7 +168,7 @@ def conformer_locators(
             only_hbnds=False, only_nonhbnds=True,
             freq_info=freq_info, sp_info=sp_info,
             sort_prop_dct=sort_prop_dct,
-            print_enes=print_enes,
+            print_level=print_level,
             already_counted_locs_lst=union_locs_lst,
             hbond_cutoffs=hbond_cutoffs,
             nprocs=nprocs)
@@ -179,7 +181,7 @@ def conformer_locators(
             only_hbnds=False, only_nonhbnds=False,
             freq_info=freq_info, sp_info=sp_info,
             sort_prop_dct=sort_prop_dct,
-            print_enes=print_enes,
+            print_level=print_level,
             already_counted_locs_lst=union_locs_lst,
             hbond_cutoffs=hbond_cutoffs,
             nprocs=nprocs)
@@ -455,7 +457,8 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
 
     locs_lst = save_fs[-1].existing()
     if locs_lst:
-        # Update the trajectory file in the CONFS/rid level for rings
+        # Update the trajectory file in the CONFS/conf.t.xyz level for
+        # lowest torsional configurations of all puckering configurations
         enes = []
         for locs in locs_lst:
             cnf_path = save_fs[-1].path(locs)
@@ -464,10 +467,15 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
                 sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
         geos = [save_fs[-1].file.geometry.read(locs)
                 for locs in locs_lst]
-        traj = []
         traj_sort_data = sorted(zip(enes, geos, locs_lst), key=lambda x: x[0])
+        traj = []
+        used_rids = []
         for ene, geo, locs in traj_sort_data:
-            comment = f'energy: {ene:<15.10f} \t {locs[0]}'
+            trid, _ = locs
+            if trid in used_rids:
+                continue
+            used_rids.append(trid)
+            comment = f'energy: {ene:<15.10f} \t {trid}'
             traj.append((geo, comment))
         traj_path = save_fs[0].file.trajectory.path()
 
@@ -475,6 +483,8 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
         save_fs[0].file.trajectory.write(traj)
 
         if rid is not None:
+            # Update the trajectory file in the CONFS/rid/conf.t.xyz for the
+            # torsional configurations of a puckering configuration
             locs_lst = save_fs[-1].existing()
             if locs_lst:
                 enes, geos = [], []
@@ -899,10 +909,10 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
     if saddle:
         dist_tol = 0.25
     for ini_locs in ini_cnf_save_locs_lst:
-
         match_dct[tuple(ini_locs)] = None
         # Loop over structs in cnf_save, see if they match the current struct
-        # inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        ##
+        inigeos = [ini_cnf_save_fs[-1].file.geometry.read(ini_locs)]
         # inizma = automol.geom.zmatrix(inigeo)
         # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
@@ -913,14 +923,18 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
         dtt = automol.zmat.conversion_info(inizmas[0])
         for sym_locs in ini_sym_fs[-1].existing():
             geo = ini_sym_fs[-1].file.geometry.read(sym_locs)
+            ##
+            inigeos.append(geo)
             geo_wdummy = automol.geom.apply_zmatrix_conversion(geo, dtt)
             try:
                 inizmas.append(automol.zmat.from_geometry(inizmas[0], geo_wdummy))
             except:
                 print('some structures have a different zmatrix')
-        for inizma in inizmas:
+        for idx, inizma in enumerate(inizmas):
             for locs in cnf_save_locs_lst:
-                # geo = cnf_save_fs[-1].file.geometry.read(locs)
+                print('checking against run', cnf_save_fs[-1].path(locs))
+                ##
+                geo = cnf_save_fs[-1].file.geometry.read(locs)
                 # zma = automol.geom.zmatrix(geo)
                 zma_save_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
                 zma = zma_save_fs[-1].file.zmatrix.read((0,))
@@ -932,6 +946,12 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                     #     f'- Similar structure found at {cnf_save_path}')
                     match_dct[tuple(ini_locs)] = tuple(locs)
                     break
+                _, sym_idx = automol.geom.is_unique(
+                    geo, [inigeos[idx]], check_dct={'coulomb': 1e-2})
+                if sym_idx is not None:
+                    print(' - Structure is not symmetrically unique.')
+                    match_dct[tuple(ini_locs)] = tuple(locs)
+ 
                 else:
                     sym_fs = autofile.fs.symmetry(cnf_save_fs[-1].path(locs))
                     dtt = automol.zmat.conversion_info(zma)
